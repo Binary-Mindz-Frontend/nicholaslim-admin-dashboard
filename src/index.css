@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+:root {
+  font-family: Arial;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light dark;
+  background-color: white;
+  color: black;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+}
+
+/* Add to your CSS */
+.scrollable-table {
+  position: relative;
+}
+
+.scrollable-table::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(to left, rgba(22, 23, 23, 1), transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.scrollable-table.scrolled::after {
+  opacity: 1;
+}
