@@ -1,7 +1,6 @@
 
 
-// import { AdminSidebar } from "@/components/Shared/Sidebar/Sidebar";
-import AdminSidebar from "@/components/Shared/Sidebar/Sidebar";
+import { Sidebar } from "@/components/Shared/Sidebar/Sidebar";
 import { Outlet } from "react-router-dom";
 
 export default function DashboardLayout() {
@@ -9,12 +8,12 @@ export default function DashboardLayout() {
 		<div className="flex min-h-screen bg-white">
 			{/* Sidebar - Fixed Width */}
 			<div className="hidden lg:block max-w-[303px] shrink-0">
-				<AdminSidebar />
+				<Sidebar />
 			</div>
 
 			{/* Mobile Sidebar (Optional) */}
 			<div className="lg:hidden">
-				<AdminSidebar />
+				<Sidebar />
 			</div>
 
 			{/* Main Content - Takes remaining space */}
