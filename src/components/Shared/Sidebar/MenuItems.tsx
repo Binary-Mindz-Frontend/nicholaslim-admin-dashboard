@@ -30,7 +30,7 @@ interface MenuItem {
 }
 export const menuItems: MenuItem[] = [
     {
-      id: "dashboard",
+      id: "",
       label: "Dashboard",
       icon: <Layout className="w-5 h-5" />,
     },
