@@ -170,7 +170,7 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Header with Menu Button */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-slate-200 p-4 z-40 shadow-sm">
+      <div className="lg:hidden fixed top-0 left-0 right-0 border-b border-slate-200 p-4 z-40 shadow-sm">
         <div className="flex items-center justify-between ">
           <div className="flex items-center gap-2">
             <Layout className="w-5 h-5 text-slate-900" />
@@ -198,7 +198,7 @@ export function Sidebar() {
       <aside
         className={`
           fixed  lg:top-25 left-0 h-full lg:h-screen overflow-y-auto no-scrollbar
-          w-71 bg-slate-50 border-r border-slate-200 p-4
+          w-71 border-r border-slate-200 p-4
           transform transition-transform duration-300 ease-in-out z-50
      
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
