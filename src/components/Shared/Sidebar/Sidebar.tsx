@@ -68,11 +68,6 @@ export function Sidebar() {
     // If using React Router
     navigate(`/${pageId}`);
     
-    // If using regular links, you could use:
-    // window.location.href = `/${pageId}`;
-    
-    // If using state management for page content:
-    // setCurrentPage(pageId);
   };
 
   const toggleSidebar = () => {
@@ -87,7 +82,8 @@ export function Sidebar() {
   const renderMenuItems = (items: typeof menuItems, level: number = 0) => {
     return items.map((item) => {
       const isExpanded = expandedItems.has(item.id);
-      const hasChildren = item.children && item.children.length > 0;
+      // const hasChildren = item.children && item.children.length > 0;
+      const hasChildren = !!(item.children && item.children.length > 0);
       const isItemActive = item.id === activeItem;
       const isChildActive = hasChildren && item.children?.some(child => child.id === activeItem);
 
@@ -155,12 +151,6 @@ export function Sidebar() {
     <>
       {/* Header */}
       <div className="flex items-center justify-between lg:justify-start gap-2 mb-8">
-        {/* <div className="flex items-center gap-2">
-          <div className="w-5 h-5">
-            <Layout className="w-5 h-5 text-slate-900" />
-          </div>
-          <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
-        </div> */}
         {/* Close button for mobile */}
         <button
           onClick={closeSidebar}
@@ -199,7 +189,7 @@ export function Sidebar() {
       {/* Overlay for mobile */}
       {isSidebarOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="lg:hidden fixed inset-0 bg-black/90 bg-opacity-50 z-40"
           onClick={closeSidebar}
         />
       )}
@@ -207,10 +197,10 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={`
-          fixed lg:static top-0 left-0 h-full lg:h-screen
+          fixed  lg:top-25 left-0 h-full lg:h-screen overflow-y-auto no-scrollbar
           w-71 bg-slate-50 border-r border-slate-200 p-4
           transform transition-transform duration-300 ease-in-out z-50
-          overflow-y-auto
+     
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >

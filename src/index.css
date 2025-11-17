@@ -62,6 +62,29 @@
 }
 
 
+/* Add to your CSS */
+.scrollable-table {
+  position: relative;
+}
+
+.scrollable-table::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(to left, rgba(22, 23, 23, 1), transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.scrollable-table.scrolled::after {
+  opacity: 1;
+}
+
+
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -104,6 +127,7 @@
   --color-secondary: #FFFAE6;
   --color-black: #2B2B2B;
   --color-pink: #FF4D4F;
+  --color-green: #27C840;
 }
 
 .dark {
@@ -147,4 +171,12 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.custom-shadow{
+  border-radius: 14px;
+background: #FFF;
+
+/* Shadow01 */
+box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.04);
 }
