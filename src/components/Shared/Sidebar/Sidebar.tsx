@@ -155,12 +155,12 @@ export function Sidebar() {
     <>
       {/* Header */}
       <div className="flex items-center justify-between lg:justify-start gap-2 mb-8">
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <div className="w-5 h-5">
             <Layout className="w-5 h-5 text-slate-900" />
           </div>
           <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
-        </div>
+        </div> */}
         {/* Close button for mobile */}
         <button
           onClick={closeSidebar}
@@ -181,7 +181,7 @@ export function Sidebar() {
     <>
       {/* Mobile Header with Menu Button */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-slate-200 p-4 z-40 shadow-sm">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between ">
           <div className="flex items-center gap-2">
             <Layout className="w-5 h-5 text-slate-900" />
             <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
