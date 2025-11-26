@@ -63,7 +63,7 @@ export default function OrderInsight() {
   return (
     <div className="">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pt-5 lg:pt-0">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 my-6 pt-5 lg:pt-0">
         {/* Title */}
         <h2 className="text-2xl font-semibold text-gray-800">Order Insight</h2>
 
