@@ -150,7 +150,7 @@ export function Sidebar() {
   const SidebarContent = () => (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between lg:justify-start gap-2 mb-8">
+      <div className="flex items-center justify-between lg:justify-start gap-2 mb-4">
         {/* Close button for mobile */}
         <button
           onClick={closeSidebar}
@@ -198,7 +198,7 @@ export function Sidebar() {
       <aside
         className={`
           fixed  lg:top-25 left-0 h-full lg:h-screen overflow-y-auto no-scrollbar
-          w-71 border-r border-slate-200 p-4
+          w-71 border-r border-slate-200 bg-white p-4
           transform transition-transform duration-300 ease-in-out z-50
      
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
