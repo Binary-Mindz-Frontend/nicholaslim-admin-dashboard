@@ -6,6 +6,7 @@ import AddRemovePermission from "@/pages/Admin/AddRemovePermission/AddRemovePerm
 import UsersApp from "@/pages/Users/UsersApp/UsersApp";
 import UsersWebportal from "@/pages/Users/UsersWebportal/UsersWebportal";
 import AddNewUser from "@/pages/Users/AddNewUser/AddNewUser";
+import UserProfile from "@/pages/Users/UsersApp/EditProfile/UserProfile";
 
 
 const routes = createBrowserRouter([
@@ -29,6 +30,10 @@ const routes = createBrowserRouter([
 			{
 				path: "users-app",
 				element: <UsersApp />,
+			},
+			{
+			 path: "users-app/:id",
+				element: <UserProfile />,
 			},
 			{
 				path: "users-web-portal",

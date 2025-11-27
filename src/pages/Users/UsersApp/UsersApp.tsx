@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 
 
+
 export default function UsersPage() {
   const { userColumns, users } = useUserColumns(usersData);
   const [dateFilter, setDateFilter] = useState('');
@@ -28,7 +29,7 @@ export default function UsersPage() {
 
 
   return (
-    <div className="sm:p-6">
+    <div className="sm:p-6 bg-[#F5F7FA]">
       <div className="w-full mx-auto space-y-4 mb-6">
         {/* Header Section */}
         <div className="py-2">
@@ -36,7 +37,7 @@ export default function UsersPage() {
         </div>
 
         {/* Category List Section */}
-        <div className="bg-white sm:py-3">
+        <div className="sm:py-3">
           <div className="flex items-center gap-2">
             <span className="text-[#6B6B6B] text-xl font-semibold">Category List</span>
             <span className="bg-secondary text-gray-700 px-3 py-2 rounded-full text-base font-medium border border-[#969696]">
