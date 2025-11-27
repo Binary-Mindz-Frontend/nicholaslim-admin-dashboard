@@ -90,9 +90,6 @@ export default function EditDriverProfile() {
         console.log("UPDATED DRIVER:", data);
     };
 
-    // -------------------------
-    // ALL FIELDS FLATTENED HERE
-    // -------------------------
     const allFields: { key: keyof UserProfileType; label: string }[] = [
         { key: "firstName", label: "First Name" },
         { key: "lastName", label: "Last Name" },
@@ -170,10 +167,10 @@ export default function EditDriverProfile() {
                 <div className="text-center mt-4">
                     <p
                         className="
-    flex flex-wrap justify-center items-center 
-    gap-3 sm:gap-4 
-    text-base sm:text-lg font-medium text-center
-  "
+                            flex flex-wrap justify-center items-center 
+                            gap-3 sm:gap-4 
+                            text-base sm:text-lg font-medium text-center
+                        "
                     >
                         <span className="flex items-center gap-1">
                             <Star size={20} className="text-yellow-500" />
