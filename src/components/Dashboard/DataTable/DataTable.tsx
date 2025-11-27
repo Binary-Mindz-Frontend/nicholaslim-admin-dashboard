@@ -29,7 +29,7 @@ const CustomTable = <T extends object>({ columns, data }: ITableProps<T>) => {
             {columns.map((column, index) => (
               <th
                 key={index}
-                className="px-5 py-4 text-center text-sm font-semibold text-[#141414] border-b border-[#F0E5C9]"
+                className="px-5 py-4 text-center text-sm font-bold text-[#141414] border-b border-[#F0E5C9]"
               >
                 {column.header}
               </th>

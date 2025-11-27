@@ -199,17 +199,17 @@ export default function UserProfile() {
       <div className="border rounded-xl py-10 px-6 lg:px-32 bg-white shadow-sm relative">
         {/* UPLOAD / DOWNLOAD */}
         <div className="absolute top-6 right-6 flex gap-3">
-          <Button variant="outline" className="flex gap-2 text-black">
+          <Button variant="outline" className="flex gap-2 border border-green text-black">
             <Files size={16} /> Upload
           </Button>
-          <Button variant="outline" className="flex gap-2 text-black">
+          <Button variant="outline" className="flex gap-2 text-black border border-blue-500">
             <Files size={16} /> Download
           </Button>
         </div>
 
         {/* PROFILE IMAGE */}
         <div className="flex justify-center">
-          <label className="cursor-pointer">
+          <label className="cursor-pointer mt-8 sm:mt-0">
             <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border overflow-hidden">
               {profileImage ? (
                 <img
@@ -253,35 +253,35 @@ export default function UserProfile() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-10">
           {baseFields.map(([key, label]) => (
             <div key={key}>
-              <Label>{label}</Label>
+              <Label className="text-sm font-semibold pb-2">{label}</Label>
               <Input name={key} value={getStringValue(key)} onChange={handleChange} />
             </div>
           ))}
 
           {drivingLicenseFields.map(([key, label]) => (
             <div key={key}>
-              <Label>{label}</Label>
+              <Label className="text-sm font-semibold pb-2">{label}</Label>
               <Input name={key} value={getStringValue(key)} onChange={handleChange} />
             </div>
           ))}
 
           {vehicleFields.map(([key, label]) => (
             <div key={key}>
-              <Label>{label}</Label>
+              <Label className="text-sm font-semibold pb-2">{label}</Label>
               <Input name={key} value={getStringValue(key)} onChange={handleChange} />
             </div>
           ))}
 
           {insuranceFields.map(([key, label]) => (
             <div key={key}>
-              <Label>{label}</Label>
+              <Label className="text-sm font-semibold pb-2">{label}</Label>
               <Input name={key} value={getStringValue(key)} onChange={handleChange} />
             </div>
           ))}
 
           {bankFields.map(([key, label]) => (
             <div key={key}>
-              <Label>{label}</Label>
+              <Label className="text-sm font-semibold pb-2">{label}</Label>
               <Input name={key} value={getStringValue(key)} onChange={handleChange} />
             </div>
           ))}
