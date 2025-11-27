@@ -9,7 +9,7 @@ import AddNewUser from "@/pages/Users/AddNewUser/AddNewUser";
 import UserProfile from "@/pages/Users/UsersApp/EditProfile/UserProfile";
 import DriverList from "@/pages/Drivers/DriverList/DriverList";
 import AddNewDriver from "@/pages/Drivers/AddNewDriver/AddNewDriver";
-
+import EditDriverProfile from "@/pages/Drivers/DriverList/EditDriverProfile/EditDriverProfile";
 
 const routes = createBrowserRouter([
 	{
@@ -48,6 +48,10 @@ const routes = createBrowserRouter([
 			{
 				path: "driver-list",
 				element: <DriverList/>,
+			},
+			{
+				path: "driver-list/:id",
+				element: <EditDriverProfile />,
 			},
 			{
 				path: "add-new-driver",

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -23,6 +23,7 @@ type Props = {
 
 export default function DriverAction({ row }: Props) {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleDelete = () => {
     console.log("Delete Driver:", row.id);
@@ -33,7 +34,9 @@ export default function DriverAction({ row }: Props) {
     <div className="flex items-center justify-center gap-3">
       {/* EDIT ICON */}
       <button className="p-2 rounded hover:bg-gray-200 transition">
-        <Pencil className="h-4 w-4 text-blue-600" />
+        <Pencil className="h-4 w-4 text-blue-600"
+        onClick={() => navigate(`/driver-list/${row.id}`)}
+        />
       </button>
 
       {/* DELETE ICON + ALERT DIALOG */}
