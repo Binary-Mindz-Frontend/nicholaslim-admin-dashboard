@@ -19,7 +19,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { TUser } from "../userTable/userTable";
+import { TUser } from "../data/usersData";
+
 
 export default function ActionCell({ row }: { row: TUser }) {
   const [openDelete, setOpenDelete] = useState(false);

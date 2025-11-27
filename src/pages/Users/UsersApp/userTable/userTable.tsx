@@ -3,19 +3,8 @@ import { useState } from "react";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Switch } from "@/components/ui/switch";
 import ActionCell from "../ActionCell/ActionCell";
+import { TUser } from "../data/usersData";
 
-
-
-// Type
-export type TUser = {
-    id: string;
-    name: string;
-    contact: string;
-    totalOrder: number;
-    totalOrderAmount: string;
-    joiningDate: string;
-    isActive: boolean;
-};
 
 // State management hook
 export const useUserColumns = (initialData: TUser[]) => {
@@ -87,12 +76,12 @@ export const useUserColumns = (initialData: TUser[]) => {
                 </div>
             ),
         },
-{
-  header: "Action",
-  cell: (user: TUser) => {
-    return <ActionCell row={user} />;
-  },
-},
+        {
+            header: "Action",
+            cell: (user: TUser) => {
+                return <ActionCell row={user} />;
+            },
+        },
     ];
 
     return { userColumns, users };

@@ -7,6 +7,8 @@ import UsersApp from "@/pages/Users/UsersApp/UsersApp";
 import UsersWebportal from "@/pages/Users/UsersWebportal/UsersWebportal";
 import AddNewUser from "@/pages/Users/AddNewUser/AddNewUser";
 import UserProfile from "@/pages/Users/UsersApp/EditProfile/UserProfile";
+import DriverList from "@/pages/Drivers/DriverList/DriverList";
+import AddNewDriver from "@/pages/Drivers/AddNewDriver/AddNewDriver";
 
 
 const routes = createBrowserRouter([
@@ -42,6 +44,18 @@ const routes = createBrowserRouter([
 			{
 				path: "add-new-user",
 				element: <AddNewUser />,
+			},
+			{
+				path: "driver-list",
+				element: <DriverList/>,
+			},
+			{
+				path: "add-new-driver",
+				element: <AddNewDriver/>,
+			},
+			{
+				path: "new-join-request",
+				element: <AddNewDriver/>,
 			},
 
 
