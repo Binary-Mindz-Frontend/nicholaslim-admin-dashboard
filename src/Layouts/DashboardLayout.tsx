@@ -20,7 +20,7 @@ export default function DashboardLayout() {
         {/* Main Content - Takes remaining space */}
         <div className="flex-1 flex flex-col min-w-0">
           <Navbar />
-          <main className="flex-1 px-8 pt-24 lg:ml-65 pb-8 md:px-12 lg:pt-32overflow-y-auto">
+          <main className="flex-1 sm:px-8 pt-18 lg:ml-65 pb-8 md:px-12 lg:pt-32 overflow-y-auto">
             <Outlet />
           </main>
         </div>

@@ -11,6 +11,7 @@ import DriverList from "@/pages/Drivers/DriverList/DriverList";
 import AddNewDriver from "@/pages/Drivers/AddNewDriver/AddNewDriver";
 import EditDriverProfile from "@/pages/Drivers/DriverList/EditDriverProfile/EditDriverProfile";
 import NewJoinRequest from "@/pages/Drivers/NewJoinRequest/NewJoinRequest";
+import OrderList from "@/pages/Orders/OrderList/OrderList";
 
 const routes = createBrowserRouter([
 	{
@@ -61,6 +62,10 @@ const routes = createBrowserRouter([
 			{
 				path: "new-join-request",
 				element: <NewJoinRequest />,
+			},
+			{
+				path: "order-list",
+				element: <OrderList />,
 			},
 
 
