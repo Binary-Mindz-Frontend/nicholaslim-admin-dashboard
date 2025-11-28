@@ -29,7 +29,7 @@ export default function  DriverList() {
 
 
   return (
-    <div className="p-1 sm:p-6 bg-[#F5F7FA]">
+    <div className="px-8 sm:p-6 bg-[#F5F7FA]">
       <div className="w-full mx-auto space-y-4 mb-6">
         {/* Header Section */}
         <div className="py-2">

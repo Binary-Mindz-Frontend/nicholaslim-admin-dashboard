@@ -175,8 +175,8 @@ export default function AddNewDriver() {
     field.toLowerCase().includes("date") || field.includes("dob");
 
   return (
-    <div className="sm:p-6 mx-auto space-y-6 bg-[#F5F7FA]">
-      <h1 className="text-2xl font-semibold text-gray-900">Add New Driver</h1>
+    <div className="px-8 sm:p-6 mx-auto space-y-6 bg-[#F5F7FA]">
+      <h1 className="text-2xl font-semibold text-gray-900 pt-2 sm:pt-0">Add New Driver</h1>
 
       <div className="border rounded-xl py-10 px-6 lg:px-32 bg-white shadow-sm relative">
         
