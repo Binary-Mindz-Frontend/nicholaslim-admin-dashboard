@@ -14,7 +14,7 @@ export default function  NewJoinRequest() {
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
       <div className="w-full mx-auto space-y-4 mb-6">
         {/* Header Section */}
-        <div className="py-2">
+        <div className="pt-2 sm:py-2">
           <h1 className="text-black text-2xl font-bold">New Delivery Man Join Request</h1>
         </div>
 

@@ -34,7 +34,7 @@ export default function OrderList() {
       <div className="w-full mx-auto space-y-4 mb-6">
 
         {/* Header Section */}
-        <div className="py-2">
+        <div className="pt-2 sm:py-2">
           <h1 className="text-black text-2xl font-bold">All Order</h1>
         </div>
 

@@ -7,7 +7,7 @@ import RevenueChart from '@/components/Dashboard/RevenueChart/RevenueChart'
 
 const Dashboard = () => {
   return (
-    <div>
+    <div className='px-8 sm:px-0'>
       <OrderInsight/>
       <CustomAreaChart/>
       <RevenueChart/>

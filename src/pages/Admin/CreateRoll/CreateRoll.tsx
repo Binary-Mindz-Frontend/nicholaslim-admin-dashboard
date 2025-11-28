@@ -126,9 +126,9 @@ export default function CreateRollForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 lg:p-8">
+    <div className="min-h-screen bg-gray-50 px-8 sm:px-0 lg:p-8">
       <div>
-        <h1 className="text-3xl font-semibold text-gray-800 mb-8">Create Roll</h1>
+        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 pt-2 sm:pt-0 mb-8">Create Roll</h1>
         
         <div className="bg-white rounded-lg shadow-sm p-4 lg:p-32">
           {/* Upload Photo Section */}
