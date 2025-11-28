@@ -15,6 +15,7 @@ import OrderList from "@/pages/Orders/OrderList/OrderList";
 import SupportAndDisputes from "@/pages/SupportAndDisputes/SupportAndDisputes";
 import ViewSupport from "@/pages/SupportAndDisputes/ViewSupport/ViewSupport";
 import Payments from "@/pages/Payments/Payments";
+import Livemap from "@/pages/LiveMap/LiveMap";
 
 const routes = createBrowserRouter([
 	{
@@ -81,6 +82,10 @@ const routes = createBrowserRouter([
 			{
 				path: "payments",
 				element: <Payments />,
+			},
+			{
+				path: "live-map",
+				element: <Livemap />,
 			},
 
 
