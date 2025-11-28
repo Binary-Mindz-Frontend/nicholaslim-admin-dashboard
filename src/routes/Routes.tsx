@@ -14,6 +14,7 @@ import NewJoinRequest from "@/pages/Drivers/NewJoinRequest/NewJoinRequest";
 import OrderList from "@/pages/Orders/OrderList/OrderList";
 import SupportAndDisputes from "@/pages/SupportAndDisputes/SupportAndDisputes";
 import ViewSupport from "@/pages/SupportAndDisputes/ViewSupport/ViewSupport";
+import Payments from "@/pages/Payments/Payments";
 
 const routes = createBrowserRouter([
 	{
@@ -76,6 +77,10 @@ const routes = createBrowserRouter([
 			{
 				path: "support/view/:id",
 				element: <ViewSupport />,
+			},
+			{
+				path: "payments",
+				element: <Payments />,
 			},
 
 
