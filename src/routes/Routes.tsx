@@ -6,7 +6,11 @@ import AddRemovePermission from "@/pages/Admin/AddRemovePermission/AddRemovePerm
 import UsersApp from "@/pages/Users/UsersApp/UsersApp";
 import UsersWebportal from "@/pages/Users/UsersWebportal/UsersWebportal";
 import AddNewUser from "@/pages/Users/AddNewUser/AddNewUser";
-
+import UserProfile from "@/pages/Users/UsersApp/EditProfile/UserProfile";
+import DriverList from "@/pages/Drivers/DriverList/DriverList";
+import AddNewDriver from "@/pages/Drivers/AddNewDriver/AddNewDriver";
+import EditDriverProfile from "@/pages/Drivers/DriverList/EditDriverProfile/EditDriverProfile";
+import NewJoinRequest from "@/pages/Drivers/NewJoinRequest/NewJoinRequest";
 
 const routes = createBrowserRouter([
 	{
@@ -31,12 +35,32 @@ const routes = createBrowserRouter([
 				element: <UsersApp />,
 			},
 			{
+			 path: "users-app/:id",
+				element: <UserProfile />,
+			},
+			{
 				path: "users-web-portal",
 				element: <UsersWebportal />,
 			},
 			{
 				path: "add-new-user",
 				element: <AddNewUser />,
+			},
+			{
+				path: "driver-list",
+				element: <DriverList/>,
+			},
+			{
+				path: "driver-list/:id",
+				element: <EditDriverProfile />,
+			},
+			{
+				path: "add-new-driver",
+				element: <AddNewDriver/>,
+			},
+			{
+				path: "new-join-request",
+				element: <NewJoinRequest />,
 			},
 
 
