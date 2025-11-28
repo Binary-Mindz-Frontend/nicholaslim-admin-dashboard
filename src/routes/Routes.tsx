@@ -10,6 +10,7 @@ import UserProfile from "@/pages/Users/UsersApp/EditProfile/UserProfile";
 import DriverList from "@/pages/Drivers/DriverList/DriverList";
 import AddNewDriver from "@/pages/Drivers/AddNewDriver/AddNewDriver";
 import EditDriverProfile from "@/pages/Drivers/DriverList/EditDriverProfile/EditDriverProfile";
+import NewJoinRequest from "@/pages/Drivers/NewJoinRequest/NewJoinRequest";
 
 const routes = createBrowserRouter([
 	{
@@ -59,7 +60,7 @@ const routes = createBrowserRouter([
 			},
 			{
 				path: "new-join-request",
-				element: <AddNewDriver/>,
+				element: <NewJoinRequest />,
 			},
 
 
