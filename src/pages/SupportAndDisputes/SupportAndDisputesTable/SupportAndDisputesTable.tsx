@@ -4,10 +4,11 @@ import { useState } from "react";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Eye,Trash2 } from "lucide-react";
 import { TSupportDispute } from "../data/SupportData";
-
+import { useNavigate } from "react-router-dom";
 
 export const useSupportDisputeColumns = (initialData: TSupportDispute[]) => {
   const [rows] = useState<TSupportDispute[]>(initialData);
+  const navigate = useNavigate();
 
   const columns: Column<TSupportDispute>[] = [
     {
@@ -48,11 +49,15 @@ export const useSupportDisputeColumns = (initialData: TSupportDispute[]) => {
 
     {
       header: "ACTION",
-      cell: () => (
+      cell: (row) => (
         <div className="flex items-center gap-2">
-          <button className="bg-green-100 p-1.5 rounded border border-green-300">
-            <Eye size={16} className="text-green-700" />
-          </button>
+          <button
+          className="bg-green-100 p-1.5 rounded border border-green-300"
+          onClick={() => navigate(`/support/view/${encodeURIComponent(row.caseId)}`)}
+
+        >
+          <Eye size={16} className="text-green-700" />
+        </button>
 
           <button className="bg-red-100 p-1.5 rounded border border-red-300">
             <Trash2 size={16} className="text-red-700" />
@@ -70,7 +75,7 @@ export const useSupportDisputeColumns = (initialData: TSupportDispute[]) => {
             ? "bg-red-500 text-white"
             : row.priority === "Medium"
             ? "bg-yellow-300 text-gray-900"
-            : "bg-gray-600 text-white"; // Low
+            : "bg-gray-600 text-white"; 
 
         return (
           <span

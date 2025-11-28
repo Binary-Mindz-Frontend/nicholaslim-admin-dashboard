@@ -13,6 +13,7 @@ import EditDriverProfile from "@/pages/Drivers/DriverList/EditDriverProfile/Edit
 import NewJoinRequest from "@/pages/Drivers/NewJoinRequest/NewJoinRequest";
 import OrderList from "@/pages/Orders/OrderList/OrderList";
 import SupportAndDisputes from "@/pages/SupportAndDisputes/SupportAndDisputes";
+import ViewSupport from "@/pages/SupportAndDisputes/ViewSupport/ViewSupport";
 
 const routes = createBrowserRouter([
 	{
@@ -71,6 +72,10 @@ const routes = createBrowserRouter([
 			{
 				path: "support",
 				element: <SupportAndDisputes/>,
+			},
+			{
+				path: "support/view/:id",
+				element: <ViewSupport />,
 			},
 
 
