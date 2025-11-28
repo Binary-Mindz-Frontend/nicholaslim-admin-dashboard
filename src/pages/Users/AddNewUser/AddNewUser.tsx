@@ -70,7 +70,7 @@ export default function AddNewUser() {
 
   return (
     <div className="min-h-screen bg-gray-50 lg:p-8">
-      <h1 className="text-3xl font-semibold text-gray-800 mb-8">Create Role</h1>
+      <h1 className="text-3xl font-semibold text-gray-800 mb-8">Add New User</h1>
 
       <div className="bg-white rounded-lg shadow-sm p-4 lg:p-32">
         {/* ---------------------- PHOTO SECTION ---------------------- */}

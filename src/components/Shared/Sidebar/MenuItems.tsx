@@ -99,6 +99,18 @@ export const menuItems: MenuItem[] = [
       id: "order",
       label: "Order",
       icon: <Package className="w-5 h-5" />,
+      children:[
+        {
+          id:"order-list",
+          label:"order-list",
+          icon:null,
+        },
+        {
+          id:"order-track",
+          label:"order-track",
+          icon:null,
+        }
+      ]
     },
     {
       id: "support",
