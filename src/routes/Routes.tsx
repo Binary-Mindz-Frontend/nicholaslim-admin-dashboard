@@ -12,6 +12,7 @@ import AddNewDriver from "@/pages/Drivers/AddNewDriver/AddNewDriver";
 import EditDriverProfile from "@/pages/Drivers/DriverList/EditDriverProfile/EditDriverProfile";
 import NewJoinRequest from "@/pages/Drivers/NewJoinRequest/NewJoinRequest";
 import OrderList from "@/pages/Orders/OrderList/OrderList";
+import SupportAndDisputes from "@/pages/SupportAndDisputes/SupportAndDisputes";
 
 const routes = createBrowserRouter([
 	{
@@ -66,6 +67,10 @@ const routes = createBrowserRouter([
 			{
 				path: "order-list",
 				element: <OrderList />,
+			},
+			{
+				path: "support",
+				element: <SupportAndDisputes/>,
 			},
 
 
