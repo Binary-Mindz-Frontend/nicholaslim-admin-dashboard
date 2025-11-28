@@ -11,6 +11,8 @@ import DriverList from "@/pages/Drivers/DriverList/DriverList";
 import AddNewDriver from "@/pages/Drivers/AddNewDriver/AddNewDriver";
 import EditDriverProfile from "@/pages/Drivers/DriverList/EditDriverProfile/EditDriverProfile";
 import NewJoinRequest from "@/pages/Drivers/NewJoinRequest/NewJoinRequest";
+import VTPMserviceArea from "@/pages/Dashboard/vehicleType-PricingModel/service-area/VTPMserviceArea";
+import VehicleTypes from "@/pages/Dashboard/vehicleType-PricingModel/vehicle-types/VehicleTypes";
 
 const routes = createBrowserRouter([
 	{
@@ -62,6 +64,15 @@ const routes = createBrowserRouter([
 				path: "new-join-request",
 				element: <NewJoinRequest />,
 			},
+			{
+				path: "service-area",
+				element: <VTPMserviceArea />,
+			},
+			{
+				path: "vehicle-types",
+				element: <VehicleTypes />,
+			},
+
 
 
 			
