@@ -12,9 +12,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { useOrderColumns } from "../OrderTable/OrderTable";
-import { ordersData } from "../data/OrderData";
-import TrackOrderSection from "../TrackOrderSection/TrackOrderSection";
+import { useOrderColumns } from "./OrderTable/OrderTable";
+import { ordersData } from "./data/OrderData";
+import TrackOrderSection from "./TrackOrderSection/TrackOrderSection";
 
 export default function OrderList() {
   const { orderColumns, orders } = useOrderColumns(ordersData);

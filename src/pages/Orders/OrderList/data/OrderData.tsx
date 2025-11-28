@@ -26,7 +26,7 @@ export const ordersData: TOrder[] = [
     status: "Completed",
   },
   {
-    orderId: "00001",
+    orderId: "00002",
     customerName: "Christine Brooks",
     address: "8857 Frida Ports",
     date: "08 Oct 2025",
@@ -34,7 +34,7 @@ export const ordersData: TOrder[] = [
     status: "Pending",
   },
   {
-    orderId: "00001",
+    orderId: "00003",
     customerName: "Christine Brooks",
     address: "768 Destiny Lake Suite 600",
     date: "08 Oct 2025",
@@ -42,7 +42,7 @@ export const ordersData: TOrder[] = [
     status: "Completed",
   },
   {
-    orderId: "00001",
+    orderId: "00004",
     customerName: "Christine Brooks",
     address: "089 Kutch Green Apt. 448",
     date: "08 Oct 2025",
@@ -50,7 +50,7 @@ export const ordersData: TOrder[] = [
     status: "Cancelled",
   },
   {
-    orderId: "00001",
+    orderId: "00005",
     customerName: "Christine Brooks",
     address: "089 Kutch Green Apt. 448",
     date: "08 Oct 2025",
@@ -58,7 +58,7 @@ export const ordersData: TOrder[] = [
     status: "Ongoing",
   },
   {
-    orderId: "00001",
+    orderId: "00006",
     customerName: "Christine Brooks",
     address: "768 Destiny Lake Suite 600",
     date: "08 Oct 2025",
@@ -66,7 +66,7 @@ export const ordersData: TOrder[] = [
     status: "Cancelled",
   },
   {
-    orderId: "00001",
+    orderId: "00007",
     customerName: "Christine Brooks",
     address: "089 Kutch Green Apt. 448",
     date: "08 Oct 2025",
@@ -74,7 +74,7 @@ export const ordersData: TOrder[] = [
     status: "Scheduled",
   },
   {
-    orderId: "00001",
+    orderId: "00008",
     customerName: "Christine Brooks",
     address: "089 Kutch Green Apt. 448",
     date: "08 Oct 2025",

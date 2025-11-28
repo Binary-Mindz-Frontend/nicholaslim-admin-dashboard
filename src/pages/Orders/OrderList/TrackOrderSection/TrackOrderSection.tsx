@@ -70,7 +70,7 @@ export default function TrackOrderSection() {
                        shadow-sm border"
           >
             <div>
-              <p className="text-gray-600 text-sm font-medium">{card.title}</p>
+              <p className="text-black text-sm sm:text-base font-semibold">{card.title}</p>
               <h2 className="text-xl font-bold">{card.value}</h2>
             </div>
 
