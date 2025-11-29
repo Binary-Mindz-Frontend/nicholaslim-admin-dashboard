@@ -19,6 +19,7 @@ import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
 import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
 import PlatformFeeManagement from "@/pages/Admin/PlatformFeeManagement/PlatformFeeManagement";
 import ContentManagement from "@/pages/Admin/ContentManagement/ContentManagement";
+import DeliveryTypesPage from "@/pages/Dashboard/vehicleType-PricingModel/types-of-delivery/TypesOfDelivery";
 
 
 const routes = createBrowserRouter([
@@ -80,6 +81,10 @@ const routes = createBrowserRouter([
 				path: "vehicle-types",
 				element: <VehicleTypes />,
 			},
+      {
+        path: "types-of-delivery",
+        element: <DeliveryTypesPage />
+      },
 			{
 				path: "vehicle-pricing-page",
 				element: <AddVehiclePage />,
