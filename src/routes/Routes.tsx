@@ -22,6 +22,7 @@ import PlatformFeeManagement from "@/pages/Admin/PlatformFeeManagement/PlatformF
 import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
 import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
 import Orders from "@/pages/Reports/Orders/Orders";
+import DriverPerformance from "@/pages/Reports/DriverPerformance/DriverPerformance";
 
 const routes = createBrowserRouter([
   {
@@ -151,6 +152,10 @@ const routes = createBrowserRouter([
       {
         path: "orders",
         element: <Orders />,
+      },
+      {
+        path: "driver-performance",
+        element: <DriverPerformance />,
       },
      
     ],
