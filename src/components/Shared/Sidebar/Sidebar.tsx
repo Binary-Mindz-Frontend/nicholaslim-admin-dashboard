@@ -92,14 +92,14 @@ export function Sidebar() {
           {/* Parent Item */}
           <button
             onClick={() => handleItemClick(item.id, hasChildren, level > 0)}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium transition-colors relative group ${
+            className={`w-full flex items-center cursor-pointer gap-3 px-4 py-2.5 rounded-lg font-medium transition-colors relative group ${
               isItemActive || isChildActive
                 ? "bg-primary text-slate-900" 
                 : "text-slate-700 hover:bg-slate-100"
             } ${level > 0 ? 'ml-4' : ''}`}
           >
             {(isItemActive || isChildActive) && level === 0 && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-lg" />
+              <div className="absolute  left-0 top-0 bottom-0 w-1 bg-primary rounded-l-lg" />
             )}
 
             <span className="shrink-0">{item.icon}</span>
@@ -124,7 +124,7 @@ export function Sidebar() {
                   <button
                     key={child.id}
                     onClick={() => handleItemClick(child.id, false, true)}
-                    className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                    className={`w-full cursor-pointer flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
                       isChildItemActive
                         ? "text-yellow-600 font-medium bg-yellow-50"
                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -170,7 +170,7 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Header with Menu Button */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 border-b border-slate-200 p-4 z-40 shadow-sm">
+      <div className="lg:hidden fixed top-0 left-0 right-0 border-b border-slate-200 p-4 z-50 shadow-sm bg-white">
         <div className="flex items-center justify-between ">
           <div className="flex items-center gap-2">
             <Layout className="w-5 h-5 text-slate-900" />
@@ -197,8 +197,8 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={`
-          fixed  lg:top-25 left-0 h-full lg:h-screen overflow-y-auto no-scrollbar
-          w-71 border-r border-slate-200 bg-white p-4
+          fixed  lg:top-25 md:pb-32 left-0 h-full lg:min-h-screen overflow-y-auto no-scrollbar
+          w-75 shadow-md bg-white p-4
           transform transition-transform duration-300 ease-in-out z-50
      
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}

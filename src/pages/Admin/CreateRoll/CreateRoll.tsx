@@ -126,7 +126,7 @@ export default function CreateRollForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 lg:p-8">
+    <div className="min-h-screen lg:p-8">
       <div>
         <h1 className="text-3xl font-semibold text-gray-800 mb-8">Create Roll</h1>
         
