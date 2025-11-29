@@ -15,8 +15,10 @@ interface Coin {
   eventTrigger: string
   coinAmount: number
   expiryDuration: number
+}
 
-
+interface CoinSystemTableProps {
+  onEdit: (row: Coin) => void
 }
 
 const wallet : Coin[] = [
@@ -32,7 +34,7 @@ const wallet : Coin[] = [
   { id: 10, eventTrigger: "Clementi", coinAmount: 15, expiryDuration: 95,  },
 ]
 
-const CoinSystemTable: React.FC = () => {
+const CoinSystemTable: React.FC<CoinSystemTableProps> = ({ onEdit }) => {
     // const navigate = useNavigate()
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
@@ -41,7 +43,6 @@ const CoinSystemTable: React.FC = () => {
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
   const displayData = wallet.slice(startIndex, endIndex)
-
 
 
   const columns = [
@@ -60,20 +61,22 @@ const CoinSystemTable: React.FC = () => {
       label: "EXPIRY DURATION",
       render: (value: number) => `${value} Days`,
     },
-   {
+  {
   label: "ACTION",
   render: (_: any, row: Coin) => (
     <div className="flex gap-2">
 
+      {/* EDIT */}
       <Button
-    //   onClick={()=> navigate(`/wallet-driver/${row.id}`)}
         variant="ghost"
         size="sm"
+        onClick={() => onEdit(row)}
         className="p-2 h-auto border cursor-pointer border-[#00BFFF] hover:bg-blue-100"
       >
         <LuPencil size={16} className="text-[#00BFFF]" />
       </Button>
 
+      {/* DELETE */}
       <Button
         variant="ghost"
         size="sm"
@@ -84,6 +87,7 @@ const CoinSystemTable: React.FC = () => {
     </div>
   ),
 }
+
 
     
   ]
