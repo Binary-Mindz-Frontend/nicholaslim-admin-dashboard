@@ -53,7 +53,7 @@ const PolicyCard: React.FC<PolicyCardProps> = ({ policy, onEdit, onDelete }) => 
         </Button>
         <button
           onClick={() => onDelete(policy.id)}
-          className="p-2 text-red-500 hover:bg-red-50 rounded border border-red-200 cursor-pointer"
+          className="p-2 text-[#FF4D4F] hover:bg-red-50 rounded border border-[#FF4D4F] cursor-pointer"
           aria-label="Delete policy"
         >
           <FiTrash className="w-5 h-5" />

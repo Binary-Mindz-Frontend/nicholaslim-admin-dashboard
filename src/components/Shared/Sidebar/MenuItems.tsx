@@ -102,14 +102,10 @@ export const menuItems: MenuItem[] = [
       children:[
         {
           id:"order-list",
-          label:"order-list",
+          label:"Order list",
           icon:null,
         },
-        {
-          id:"order-track",
-          label:"order-track",
-          icon:null,
-        }
+       
       ]
     },
     {
@@ -138,6 +134,39 @@ export const menuItems: MenuItem[] = [
       id: "reports",
       label: "Reports & Analytics",
       icon: <BarChart className="w-5 h-5" />,
+      children:[
+        {
+          id:"report-orders",
+          label:"Orders",
+          icon:null,
+        },
+        {
+          id:"driver-performance",
+          label:"Driver Performance",
+          icon:null,
+        },
+        {
+          id:"customer-report",
+          label:"Customer Report",
+          icon:null,
+        },
+        {
+          id:"kpi",
+          label:"KPI’s",
+          icon:null,
+        },
+        {
+          id:"coins",
+          label:"Coins",
+          icon:null,
+        },
+        {
+          id:"incentives",
+          label:"Incentives",
+          icon:null,
+        },
+       
+      ]
     },
 
     {
@@ -174,13 +203,13 @@ export const menuItems: MenuItem[] = [
     },
 
     {
-      id: "quiz",
+      id: "quiz-create-edit",
       label: "Quiz",
       icon: <HelpCircle className="w-5 h-5" />,
-      children: [
-        { id: "quiz-create-edit", label: "Create/Edit", icon: null },
-        { id: "quiz-track-drivers", label: "Track Drivers", icon: null },
-      ],
+      // children: [
+      //   { id: "quiz-create-edit", label: "Create/Edit", icon: null },
+      //   { id: "quiz-track-drivers", label: "Track Drivers", icon: null },
+      // ],
     },
 
     {

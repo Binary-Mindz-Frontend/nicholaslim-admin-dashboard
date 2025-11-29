@@ -44,7 +44,7 @@ const SelectTrigger = ({
   <button
     type="button"
     onClick={onClick}
-    className={`flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 disabled:cursor-not-allowed disabled:opacity-50 ${className} transition-colors shadow-sm`}
+    className={`flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 disabled:cursor-not-allowed disabled:opacity-50 ${className} transition-colors shadow-sm cursor-pointer`}
     aria-haspopup="listbox"
     aria-expanded={isOpen}
   >
@@ -175,7 +175,7 @@ export default function ArticleManagement() {
   const inputClasses =
     "w-full p-3 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-base shadow-sm";
   const buttonPrimary =
-    "bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-16 rounded-xl text-lg transition-colors shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-yellow-300";
+    "bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-16 rounded-xl text-lg transition-colors shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-yellow-300 cursor-pointer";
 
   return (
     <div className="bg-white rounded-xl  p-6 md:p-10">
