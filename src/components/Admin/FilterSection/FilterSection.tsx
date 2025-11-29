@@ -31,7 +31,7 @@ export default function FilterSection({
   handleResetFilter,
 }: FilterSectionProps) {
   return (
-    <div className="w-full bg-white rounded-md px-4 py-2">
+    <div className="w-full bg-white rounded-md px-4 py-1">
       <div className="flex flex-wrap items-center gap-3">
 
         {/* Filter By */}
@@ -40,12 +40,12 @@ export default function FilterSection({
           w-full sm:w-[48%] md:w-auto"
         >
           <Filter className="h-4 w-4" />
-          <span className="text-sm py-2 font-medium">Filter By</span>
+          <span className="text-sm py-1 font-medium">Filter By</span>
         </div>
 
         {/* Date Dropdown */}
         <div
-          className="px-4 py-2 border border-yellow-400 rounded-md 
+          className="px-4 py-1 border border-yellow-400 rounded-md 
           w-full sm:w-[48%] md:w-auto"
         >
           <Select value={dateFilter} onValueChange={setDateFilter}>
@@ -64,7 +64,7 @@ export default function FilterSection({
 
         {/* Active Dropdown */}
         <div
-          className="px-4 py-2 border border-yellow-400 rounded-md 
+          className="px-4 py-1 border border-yellow-400 rounded-md 
           w-full sm:w-[48%] md:w-auto"
         >
           <Select value={activeFilter} onValueChange={setActiveFilter}>
@@ -80,7 +80,7 @@ export default function FilterSection({
 
         {/* All Dropdown */}
         <div
-          className="px-4 py-2 border border-yellow-400 rounded-md 
+          className="px-4 py-1 border border-yellow-400 rounded-md 
           w-full sm:w-[48%] md:w-auto"
         >
           <Select value={allFilter} onValueChange={setAllFilter}>
@@ -96,7 +96,7 @@ export default function FilterSection({
         </div>
 
         {/* Reset Button */}
-        <div className="px-4 py-2 border border-yellow-400 rounded-md w-full md:flex-1">
+        <div className="px-4 py-1 border border-yellow-400 rounded-md w-full md:flex-1">
           <Button
             variant="ghost"
             className="text-red-500 hover:text-red-600 hover:bg-white flex items-center gap-2 w-full justify-start"

@@ -38,7 +38,12 @@ import DriverOrderCompetition from "@/pages/Admin/DriverOrder/DriverOrder";
 import CustomerOrderConfirmation from "@/pages/Admin/CustomerOrder/CustomerOrderConfirmation";
 import UserCoinDetails from "@/pages/Dashboard/coins/_components/UserCoinDetails/UserCoinDetails";
 import OrderList from "@/pages/Orders/OrderList/OrderList";
-
+import Orders from "@/pages/Reports/Orders/Orders";
+import DriverPerformance from "@/pages/Reports/DriverPerformance/DriverPerformance";
+import CustomerReport from "@/pages/Reports/CustomerReport/CustomerReport";
+import Kpis from "@/pages/Reports/Kpis/Kpis";
+import Coins from "@/pages/Reports/Coins/Coins";
+import Incentive from "@/pages/Reports/Incentives/Incentives";
 
 const routes = createBrowserRouter([
   {
@@ -265,9 +270,39 @@ const routes = createBrowserRouter([
       {
         path : "coin-system/:id" ,
         element: <UserCoinDetails />
-      }
+      },
+      {
+        path: "report-orders",
+        element: <Orders />,
+      },
+      {
+        path: "driver-performance",
+        element: <DriverPerformance />,
+      },
+      {
+        path: "customer-report",
+        element: <CustomerReport />,
+      },
+      {
+        path: "kpi",
+        element: <Kpis />,
+      },
+      {
+        path: "kpi",
+        element: <Kpis />,
+      },
+      {
+        path: "coins",
+        element: <Coins />,
+      },
+      {
+        path: "incentives",
+        element: <Incentive />,
+      },
+     
     ],
-  },
+},
+
 ]);
 
 export default routes;

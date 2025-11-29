@@ -31,7 +31,7 @@ const SCustomTable = React.forwardRef<HTMLDivElement, CustomTableProps<any>>(
       <div ref={ref} className="w-full overflow-x-auto">
         <table className="w-full ">
           <thead>
-            <tr className="bg-[#FFD52B25] border border-[#FFD52B]  border">
+            <tr className="bg-[#FFD52B25] border border-[#FFD52B]">
               {columns.map((column) => (
                 <th key={String(column.key)} className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                   {column.label}
