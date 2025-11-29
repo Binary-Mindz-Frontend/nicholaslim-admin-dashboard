@@ -1,5 +1,3 @@
-"use client";
-
 import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 import { useState } from 'react';
 import { Filter, Repeat } from 'lucide-react';

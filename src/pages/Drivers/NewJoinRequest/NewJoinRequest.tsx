@@ -1,4 +1,3 @@
-"use client";
 
 import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 import { requestData } from "./data/RequestData";

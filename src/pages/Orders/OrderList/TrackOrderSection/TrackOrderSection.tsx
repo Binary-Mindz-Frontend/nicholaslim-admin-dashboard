@@ -1,4 +1,3 @@
-"use client";
 
 import { useState } from "react";
 import { Package, Clock, Calendar, Truck } from "lucide-react";

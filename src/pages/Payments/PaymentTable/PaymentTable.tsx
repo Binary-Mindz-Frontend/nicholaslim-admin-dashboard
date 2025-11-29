@@ -1,4 +1,3 @@
-"use client";
 
 import { useState } from "react";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";

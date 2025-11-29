@@ -1,4 +1,3 @@
-"use client";
 
 import { CirclePercent, ClockFading, DollarSign} from "lucide-react";
 import { ReactNode } from "react";
