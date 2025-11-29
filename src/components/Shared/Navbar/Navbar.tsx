@@ -4,7 +4,7 @@ import logo from "@/assets/images/logo.svg";
 
 const Navbar = () => {
   return (
-    <nav className="w-full hidden fixed  left-0 top-0 lg:block bg-white border-b border-[#E6EFF5] z-50">
+    <nav className="w-full hidden fixed left-0 top-0 lg:block bg-white border-b border-[#E6EFF5] z-999">
       <div className="flex items-center px-4 gap-4">
         {/* Left Section - 50% */}
         <div className="flex  items-center gap-6 w-1/2">

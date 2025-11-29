@@ -17,24 +17,29 @@ import ViewSupport from "@/pages/SupportAndDisputes/ViewSupport/ViewSupport";
 import Payments from "@/pages/Payments/Payments";
 import Livemap from "@/pages/LiveMap/LiveMap";
 import Notifications from "@/pages/Notifications/Notifications";
+import ContentManagementApp from "@/pages/Admin/ContentManagement/ContentManagement";
+import PlatformFeeManagement from "@/pages/Admin/PlatformFeeManagement/PlatformFeeManagement";
+import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
+import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
 
 const routes = createBrowserRouter([
-	{
-		path: "/",
-		element: <DashboardLayout />,
-		children: [
-			{
-				index: true,
-				element: <Dashboard />,
-			},
-			{
-				path: "create-edit-role",
-				element: <CreateRoll />,
-			},
-			{
-				path: "add-remove-permission",
-				element: <AddRemovePermission />,
-			},
+  {
+    path: "/",
+    element: <DashboardLayout />,
+    children: [
+      {
+        index: true,
+        element: <Dashboard/>,
+      },
+      {
+        path: "create-edit-role",
+        element: <CreateRoll />,
+      },
+      {
+        path: "add-remove-permission",
+        element: <AddRemovePermission />,
+      },
+
 
 			{
 				path: "users-app",
@@ -93,10 +98,58 @@ const routes = createBrowserRouter([
 				element: <Notifications />,
 			},
 
+      {
+        path: "users-app",
+        element: <UsersApp />,
+      },
+      {
+        path: "users-app/:id",
+        element: <UserProfile />,
+      },
+      {
+        path: "users-web-portal",
+        element: <UsersWebportal />,
+      },
+      {
+        path: "add-new-user",
+        element: <AddNewUser />,
+      },
+      {
+        path: "driver-list",
+        element: <DriverList />,
+      },
+      {
+        path: "driver-list/:id",
+        element: <EditDriverProfile />,
+      },
+      {
+        path: "add-new-driver",
+        element: <AddNewDriver />,
+      },
+      {
+        path: "new-join-request",
+        element: <NewJoinRequest />,
+      },
 
-			
-		],
-	},
+      {
+        path: "quiz-create-edit",
+        element: <CreateOrEditQuiz />,
+      },
+      {
+        path: "advertisement",
+        element: <Advertisement />,
+      },
+      {
+        path: "platform-fee",
+        element: <PlatformFeeManagement />,
+      },
+      {
+        path: "content-management",
+        element: <ContentManagementApp />,
+      },
+    ],
+  },
+
 ]);
 
 export default routes;
