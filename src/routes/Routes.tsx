@@ -21,6 +21,7 @@ import ContentManagementApp from "@/pages/Admin/ContentManagement/ContentManagem
 import PlatformFeeManagement from "@/pages/Admin/PlatformFeeManagement/PlatformFeeManagement";
 import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
 import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
+import Orders from "@/pages/Reports/Orders/Orders";
 
 const routes = createBrowserRouter([
   {
@@ -147,6 +148,11 @@ const routes = createBrowserRouter([
         path: "content-management",
         element: <ContentManagementApp />,
       },
+      {
+        path: "orders",
+        element: <Orders />,
+      },
+     
     ],
   },
 
