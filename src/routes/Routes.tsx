@@ -154,7 +154,7 @@ const routes = createBrowserRouter([
         element: <ContentManagementApp />,
       },
       {
-        path: "orders",
+        path: "report-orders",
         element: <Orders />,
       },
       {

@@ -136,7 +136,7 @@ export const menuItems: MenuItem[] = [
       icon: <BarChart className="w-5 h-5" />,
       children:[
         {
-          id:"orders",
+          id:"report-orders",
           label:"Orders",
           icon:null,
         },
