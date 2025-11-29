@@ -1,8 +1,11 @@
+import OrderPlacementPage from "@/components/OrderPlacement/Order/Order"
 
 
 const Order = () => {
   return (
-    <div>Order</div>
+    <div>
+      <OrderPlacementPage/>
+    </div>
   )
 }
 
