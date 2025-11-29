@@ -1,12 +1,12 @@
 import { useNavigate } from "react-router-dom"
-import CustomButton from "../_components/CustomButton"
+import CustomButton from "../../_components/CustomButton"
 import VTtablesData from "./_components/VTtablesData"
 
 
 const VehicleTypes = () => {
     const navigate = useNavigate()
   return (
-    <div className="mt-12 ">
+    <div className="my-12  mx-6 sm:mx-12">
         <div className="flex justify-between">
                    <h1 className="text-3xl font-bold text-gray-900 ">Vehicle Types</h1>
                    <div className="flex  gap-2">

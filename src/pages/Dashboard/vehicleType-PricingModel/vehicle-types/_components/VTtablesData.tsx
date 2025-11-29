@@ -3,12 +3,12 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { FiTrash } from "react-icons/fi";
-import CustomTable from "../../_components/CutomTable";
-import TablePagination from "../../_components/TablePagination";
+import TablePagination from "../../../_components/TablePagination";
 
 import { StatusSwitch } from "./StatusSwitch";
+import SCustomTable from "../../../_components/CutomTable";
 
-interface ServiceArea {
+interface Vehicle {
   id: number
   vehicleType: string
   maxPayload: number
@@ -17,7 +17,7 @@ interface ServiceArea {
   status: "Active" | "Inactive"
 }
 
-const mockData: ServiceArea[] = [
+const data : Vehicle[] = [
   { id: 1, vehicleType: "Ang Mo Kio", maxPayload: 15, baseRate : 100, status: "Active" , Dimensions: "1.8m x 0.8m"},
   { id: 2, vehicleType: "Punggol", maxPayload: 15, baseRate : 100, status: "Active" , Dimensions: "1.8m x 0.8m" },
   { id: 3, vehicleType: "Bishan", maxPayload: 15, baseRate : 100, status: "Active", Dimensions: "1.8m x 0.8m" },
@@ -37,16 +37,8 @@ const VTtablesData: React.FC = () => {
 
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
-  const displayData = mockData.slice(startIndex, endIndex)
+  const displayData = data.slice(startIndex, endIndex)
 
-  const handleRowAction = (actionType: string, rowData: ServiceArea, id: number | string) => {
-    if (actionType === "edit") {
-      console.log("Edit zone:", id, rowData)
-
-    } else if (actionType === "delete") {
-      console.log("Delete zone:", id, rowData)
-    }
-  }
 
 const columns = [
   {
@@ -72,12 +64,11 @@ const columns = [
   {
     key: "actions" as const,
     label: "Actions",
-    render: (_: any, row: ServiceArea) => (
+    render: (_: any, row: Vehicle) => (
       <div className="flex gap-2">
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => handleRowAction("delete", row, row.id)}
           className="p-2 h-auto cursor-pointer border border-[#FF4D4F] hover:bg-red-100"
         >
           <FiTrash size={16} className="text-[#FF4D4F]" />
@@ -88,7 +79,7 @@ const columns = [
  {
   key: "status" as const,
   label: "Status",
-  render: (_: any, row: ServiceArea) => (
+  render: (_: any, row: Vehicle) => (
     <StatusSwitch
       status={row.status}
       onChange={(newStatus) => {
@@ -105,7 +96,7 @@ const columns = [
   return (
 
        <div>
-         <CustomTable data={displayData} columns={columns} onRowAction={handleRowAction} />
+         <SCustomTable data={displayData} columns={columns}  />
         <TablePagination
           currentPage={currentPage}
           totalItems={totalItems}
