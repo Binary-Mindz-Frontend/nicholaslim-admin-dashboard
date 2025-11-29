@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -12,7 +11,7 @@ import { X } from "lucide-react";
 export function FilterBar() {
   return (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-4">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-col sm:flex-row">
         <span className="text-sm font-medium text-slate-700">Filter By</span>
 
         <Select defaultValue="today">
