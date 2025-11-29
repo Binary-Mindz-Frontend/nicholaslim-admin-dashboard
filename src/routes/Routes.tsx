@@ -11,6 +11,22 @@ import DriverList from "@/pages/Drivers/DriverList/DriverList";
 import AddNewDriver from "@/pages/Drivers/AddNewDriver/AddNewDriver";
 import EditDriverProfile from "@/pages/Drivers/DriverList/EditDriverProfile/EditDriverProfile";
 import NewJoinRequest from "@/pages/Drivers/NewJoinRequest/NewJoinRequest";
+
+import VTPMserviceArea from "@/pages/Dashboard/vehicleType-PricingModel/service-area/VTPMserviceArea";
+import VehicleTypes from "@/pages/Dashboard/vehicleType-PricingModel/vehicle-types/VehicleTypes";
+import AddVehiclePage from "@/pages/Dashboard/vehicleType-PricingModel/vehicle-types/addVehicleTypes/AddVehiclePage";
+import PolicyManagementPage from "@/pages/Dashboard/vehicleType-PricingModel/policy-management/PolicyManagement";
+import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
+import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
+import PlatformFeeManagement from "@/pages/Admin/PlatformFeeManagement/PlatformFeeManagement";
+import DeliveryTypesPage from "@/pages/Dashboard/vehicleType-PricingModel/types-of-delivery/TypesOfDelivery";
+import UserWallet from "@/pages/Dashboard/Wallets/userWallet/UserWallet";
+import SingleUserWalletDetils from "@/pages/Dashboard/Wallets/userWallet/UserWalletDetails/SingleUserWalletDetils";
+import DriverWallet from "@/pages/Dashboard/Wallets/driverWallet/DriverWallet";
+import DriverWalletDetails from "@/pages/Dashboard/Wallets/driverWallet/DriverWalletDetails/DriverWalletDetails";
+import IncentiveManagementPage from "@/pages/Dashboard/Wallets/IncentinveManagement/IncentinveManagement";
+import CoinPage from "@/pages/Dashboard/coins/CoinPage";
+import UserCoinDetails from "@/pages/Dashboard/coins/_components/UserCoinDetails/UserCoinDetails";
 import OrderList from "@/pages/Orders/OrderList/OrderList";
 import SupportAndDisputes from "@/pages/SupportAndDisputes/SupportAndDisputes";
 import ViewSupport from "@/pages/SupportAndDisputes/ViewSupport/ViewSupport";
@@ -26,6 +42,7 @@ import OrderHistory from "@/pages/Orders/OrderHistory/OrderHistory";
 import PaymentOptionsPage from "@/pages/Orders/PaymentOptions/PaymentOptionsPage";
 import DriverOrderCompetition from "@/pages/Admin/DriverOrder/DriverOrder";
 import CustomerOrderConfirmation from "@/pages/Admin/CustomerOrder/CustomerOrderConfirmation";
+
 
 const routes = createBrowserRouter([
   {
@@ -45,6 +62,59 @@ const routes = createBrowserRouter([
         element: <AddRemovePermission />,
       },
 
+
+			{
+				path: "users-app",
+				element: <UsersApp />,
+			},
+			{
+			 path: "users-app/:id",
+				element: <UserProfile />,
+			},
+			{
+				path: "users-web-portal",
+				element: <UsersWebportal />,
+			},
+			{
+				path: "add-new-user",
+				element: <AddNewUser />,
+			},
+			{
+				path: "driver-list",
+				element: <DriverList/>,
+			},
+			{
+				path: "driver-list/:id",
+				element: <EditDriverProfile />,
+			},
+			{
+				path: "add-new-driver",
+				element: <AddNewDriver/>,
+			},
+			{
+				path: "new-join-request",
+				element: <NewJoinRequest />,
+			},
+			{
+				path: "service-area",
+				element: <VTPMserviceArea />,
+			},
+			{
+				path: "vehicle-types",
+				element: <VehicleTypes />,
+			},
+      {
+        path: "types-of-delivery",
+        element: <DeliveryTypesPage />
+      },
+			{
+				path: "vehicle-pricing-page",
+				element: <AddVehiclePage />,
+			},
+			{
+				path: "policy-management",
+				element: <PolicyManagementPage />
+			},
       {
         path: "users-app",
         element: <UsersApp />,
@@ -171,6 +241,35 @@ const routes = createBrowserRouter([
         path: "customer-order-confirmation",
         element: <CustomerOrderConfirmation />,
       },
+      {
+        path: "wallet-user" ,
+        element : <UserWallet />
+      },
+      {
+        path: "wallet-user/:id" ,
+        element : <SingleUserWalletDetils />
+      },
+       {
+        path: "wallet-driver" ,
+        element : <DriverWallet />
+      },
+      {
+        path: "wallet-driver/:id" ,
+        element : <DriverWalletDetails />
+      }
+      ,
+      {
+        path: "incentive-management" ,
+        element : <IncentiveManagementPage />
+      },
+      {
+        path: "coin-system" ,
+        element: <CoinPage />
+      },
+      {
+        path : "coin-system/:id" ,
+        element: <UserCoinDetails />
+      }
     ],
   },
 ]);
