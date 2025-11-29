@@ -156,6 +156,11 @@ export const menuItems: MenuItem[] = [
           icon:null,
         },
         {
+          id:"coins",
+          label:"Coins",
+          icon:null,
+        },
+        {
           id:"incentives",
           label:"Incentives",
           icon:null,
