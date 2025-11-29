@@ -1,12 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
-
 :root {
-   font-family: 'Nunito Sans', sans-serif;
+  font-family: "Nunito Sans", sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light dark;
@@ -58,9 +57,7 @@
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
-
 }
-
 
 /* Add to your CSS */
 .scrollable-table {
@@ -68,7 +65,7 @@
 }
 
 .scrollable-table::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   right: 0;
@@ -83,8 +80,6 @@
 .scrollable-table.scrolled::after {
   opacity: 1;
 }
-
-
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -123,11 +118,11 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --color-primary: #FC0;
-  --color-secondary: #FFFAE6;
-  --color-black: #2B2B2B;
-  --color-pink: #FF4D4F;
-  --color-green: #27C840;
+  --color-primary: #fc0;
+  --color-secondary: #fffae6;
+  --color-black: #2b2b2b;
+  --color-pink: #ff4d4f;
+  --color-green: #27c840;
 }
 
 .dark {
@@ -173,10 +168,19 @@
   }
 }
 
-.custom-shadow{
+.custom-shadow {
   border-radius: 14px;
-background: #FFF;
+  background: #fff;
 
-/* Shadow01 */
-box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.04);
+  /* Shadow01 */
+  box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.04);
+}
+
+@layer components {
+  .card-badge {
+    @apply px-4 py-1.5 rounded-full text-sm font-medium border;
+  }
+  .btn-yellow {
+    @apply bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-black font-bold rounded-full transition-all shadow-lg;
+  }
 }

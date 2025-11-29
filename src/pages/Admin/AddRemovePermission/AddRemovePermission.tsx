@@ -58,7 +58,7 @@ export default function AddRemovePermission() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 sm:p-6 lg:p-8">
+    <div className="min-h-screen sm:p-6 lg:p-8">
       <h1 className="text-2xl font-semibold text-gray-800 mb-6">
         Add/Remove Permission
       </h1>
