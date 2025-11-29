@@ -170,7 +170,7 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Header with Menu Button */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 border-b border-slate-200 p-4 z-40 shadow-sm">
+      <div className="lg:hidden fixed top-0 left-0 right-0 border-b border-slate-200 p-4 z-50 shadow-sm bg-white">
         <div className="flex items-center justify-between ">
           <div className="flex items-center gap-2">
             <Layout className="w-5 h-5 text-slate-900" />
