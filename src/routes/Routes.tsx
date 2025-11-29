@@ -11,10 +11,15 @@ import DriverList from "@/pages/Drivers/DriverList/DriverList";
 import AddNewDriver from "@/pages/Drivers/AddNewDriver/AddNewDriver";
 import EditDriverProfile from "@/pages/Drivers/DriverList/EditDriverProfile/EditDriverProfile";
 import NewJoinRequest from "@/pages/Drivers/NewJoinRequest/NewJoinRequest";
+import VTPMserviceArea from "@/pages/Dashboard/vehicleType-PricingModel/service-area/VTPMserviceArea";
+import VehicleTypes from "@/pages/Dashboard/vehicleType-PricingModel/vehicle-types/VehicleTypes";
+import AddVehiclePage from "@/pages/Dashboard/vehicleType-PricingModel/vehicle-types/_components/addVehicleTypes/AddVehiclePage";
+import PolicyManagementPage from "@/pages/Dashboard/vehicleType-PricingModel/policy-management/PolicyManagement";
 import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
 import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
 import PlatformFeeManagement from "@/pages/Admin/PlatformFeeManagement/PlatformFeeManagement";
 import ContentManagement from "@/pages/Admin/ContentManagement/ContentManagement";
+
 
 const routes = createBrowserRouter([
   {
@@ -33,6 +38,56 @@ const routes = createBrowserRouter([
         path: "add-remove-permission",
         element: <AddRemovePermission />,
       },
+
+
+			{
+				path: "users-app",
+				element: <UsersApp />,
+			},
+			{
+			 path: "users-app/:id",
+				element: <UserProfile />,
+			},
+			{
+				path: "users-web-portal",
+				element: <UsersWebportal />,
+			},
+			{
+				path: "add-new-user",
+				element: <AddNewUser />,
+			},
+			{
+				path: "driver-list",
+				element: <DriverList/>,
+			},
+			{
+				path: "driver-list/:id",
+				element: <EditDriverProfile />,
+			},
+			{
+				path: "add-new-driver",
+				element: <AddNewDriver/>,
+			},
+			{
+				path: "new-join-request",
+				element: <NewJoinRequest />,
+			},
+			{
+				path: "service-area",
+				element: <VTPMserviceArea />,
+			},
+			{
+				path: "vehicle-types",
+				element: <VehicleTypes />,
+			},
+			{
+				path: "vehicle-pricing-page",
+				element: <AddVehiclePage />,
+			},
+			{
+				path: "policy-management",
+				element: <PolicyManagementPage />
+			},
 
       {
         path: "users-app",
@@ -85,6 +140,7 @@ const routes = createBrowserRouter([
       },
     ],
   },
+
 ]);
 
 export default routes;
