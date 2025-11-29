@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -11,9 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PromoCodeIcons } from "@/components/Icons/Icons";
-import { Switch } from "@/components/ui/switch";
+
+import BulkOrdersTable from "../BulkOrder/BulkOrderTable/BulkOrderTable";
+import OrderSummery from "../IndivisualOrder/OrderSummery/OrderSummery";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { DropIcons } from "@/components/Icons/Icons";
+import { Download } from "lucide-react";
 
 export default function OrderPlacementPage() {
   const radioClassName = `
@@ -32,20 +35,21 @@ export default function OrderPlacementPage() {
 
         {/* Main Tabs - Individual Order and Bulk Order */}
         <Tabs defaultValue="individual" className="">
-          <div className="border border-[#2B2B2B]/60 rounded-full w-3/12 flex items-center justify-center">
-            <TabsList className="grid grid-cols-2 gap-4 mb-5 border-0 bg-transparent">
+          <div className="border border-[#2B2B2B]/60 rounded-full w-full max-w-[400px] flex items-center justify-center px-1 py-4.5 overflow-hidden bg-white ">
+            <TabsList className="grid grid-cols-2 gap-4 bg-transparent border-0 rounded-full w-full  -mt-4 ">
               <TabsTrigger
                 value="individual"
-                className="px-8 py-3 cursor-pointer rounded-full border-2 font-medium transition-colors data-[state=active]:bg-[#FFFAE6] data-[state=active]:border-[#FC0] data-[state=active]:text-gray-900
-    data-[state=inactive]:bg-white data-[state=inactive]:border-gray-300 data-[state=inactive]:text-gray-900"
+                className="px-6 py-3 text-center cursor-pointer  shadow  rounded-full font-medium transition-colors
+              data-[state=active]:bg-[#FFFAE6] data-[state=active]:border-[#FC0] data-[state=active]:text-gray-900
+              data-[state=inactive]:bg-white data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-900"
               >
                 Individual Order
               </TabsTrigger>
 
               <TabsTrigger
                 value="bulk"
-                className="px-8 py-3 cursor-pointer rounded-full border-2 font-medium transition-colors data-[state=active]:bg-[#FFFAE6] data-[state=active]:border-[#FC0] data-[state=active]:text-gray-900
-    data-[state=inactive]:bg-white data-[state=inactive]:border-gray-300 data-[state=inactive]:text-gray-900"
+                className="px-6 py-3 text-center cursor-pointer shadow rounded-full font-medium transition-colors  data-[state=active]:bg-[#FFFAE6] data-[state=active]:border-[#FC0] data-[state=active]:text-gray-900
+              data-[state=inactive]:bg-white data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-900             "
               >
                 Bulk Order
               </TabsTrigger>
@@ -266,102 +270,27 @@ export default function OrderPlacementPage() {
             </div>
 
             {/* Order Summary Section */}
-            <div className="bg-white rounded-lg p-8 border border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                Order Summary
-              </h2>
-
-              <div className="space-y-4 mb-8">
-                <div className="flex justify-between text-gray-700">
-                  <span>Delivery</span>
-                  <span>+S$15.00</span>
-                </div>
-                <div className="flex justify-between text-gray-700">
-                  <span>Additional Services</span>
-                  <span>+S$15.00</span>
-                </div>
-                <div className="flex justify-between text-gray-700">
-                  <span>Fee</span>
-                  <span>+S$0.00</span>
-                </div>
-                <div className="border-t pt-4 flex justify-between text-lg font-semibold text-gray-900">
-                  <span>Total</span>
-                  <span>+S$30.00</span>
-                </div>
-              </div>
-
-              <div className="mb-6 flex justify-between">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-yellow-500">
-                    <PromoCodeIcons />
-                  </span>
-                  <Label className="text-sm font-medium">Promo Code</Label>
-                </div>
-
-                <Input placeholder="Enter Code" className="w-[20%]" />
-              </div>
-
-              <div className="space-y-3 mb-6 pb-6 border-b">
-                <div className="flex items-center justify-between">
-                  <Label className="text-gray-700">Redeem 10 Coins</Label>
-                  <Switch />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label className="text-gray-700">Favourite Riders</Label>
-                  <Switch />
-                </div>
-              </div>
-
-              <div className="space-y-3 mb-8">
-                <div className="flex justify-between text-gray-700">
-                  <span>Subtotal</span>
-                  <span>S$30.00</span>
-                </div>
-                <div className="flex justify-between text-gray-700">
-                  <span>Coin/s redeemed</span>
-                  <span>S$0.00</span>
-                </div>
-                <div className="flex justify-between text-red-600 font-medium">
-                  <span>Saved</span>
-                  <span>S$50.00</span>
-                </div>
-                <div className="border-t pt-3 flex justify-between text-lg font-bold text-gray-900">
-                  <span>Total</span>
-                  <span>S$-20.00</span>
-                </div>
-              </div>
-
-              <div className="mb-6 flex items-center justify-between">
-                <Label className="mb-0">Payment method</Label>
-                <Select defaultValue="stripe">
-                  <SelectTrigger className="w-[20%]">
-                    <SelectValue placeholder="Select payment method" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="stripe">Stripe account</SelectItem>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="card">Card</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
+            <OrderSummery />
             <Link to="/order-confirm">
               <Button className="w-full cursor-pointer bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3">
                 Confirm order
               </Button>
             </Link>
-            </div>
           </TabsContent>
 
           {/* Bulk Order Tab */}
           <TabsContent value="bulk" className="space-y-8">
             <div className="bg-white rounded-lg p-8 border border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                Bulk Order Upload
-              </h2>
-
-              <div className="border-2 border-dashed border-gray-400 rounded-lg p-12 text-center cursor-pointer hover:bg-gray-50 transition-colors">
+              <div className="flex justify-between py-4">
+                <h2 className="text-lg font-semibold text-gray-900 mb-6">
+                  Bulk Order Upload
+                </h2>
+                <Button className=" px-6 text-xl text-black cursor-pointer font-medium rounded-lg ransition-colors flex items-center justify-center gap-2">
+                  <Download />
+                  as CSV
+                </Button>
+              </div>
+              <div className="border-3 border-dashed border-gray-400 rounded-lg p-12 text-center cursor-pointer hover:bg-gray-50 transition-colors">
                 <input
                   type="file"
                   id="file-upload"
@@ -370,15 +299,9 @@ export default function OrderPlacementPage() {
                 />
                 <label htmlFor="file-upload" className="cursor-pointer">
                   <div className="mb-4 flex justify-center">
-                    <svg
-                      className="w-16 h-16 text-blue-500"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54h2.86v2h-4v-2h2.19L9.5 8.5c-.12-.15-.04-.42.12-.58.16-.16.43-.24.58-.12l3.22 2.87.64-.73c.12-.15.04-.42-.12-.58-.16-.16-.43-.24-.58-.12l-.9 1.03z" />
-                    </svg>
+                    <DropIcons />
                   </div>
-                  <p className="text-blue-600 font-medium text-lg mb-1">
+                  <p className="text-[#2F6EED] font-semibold text-lg lg:text-3xl mb-1">
                     Drop your spreadsheet here
                   </p>
                   <p className="text-gray-600 text-sm mb-1">
@@ -392,7 +315,7 @@ export default function OrderPlacementPage() {
             </div>
 
             {/* Bulk Order Summary */}
-            <div className="bg-white rounded-lg p-8 border border-gray-200">
+            {/* <div className="bg-white rounded-lg p-8 border border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">
                 Bulk Order Summary
               </h2>
@@ -411,7 +334,15 @@ export default function OrderPlacementPage() {
                   <span>S$0.00</span>
                 </div>
               </div>
-            </div>
+            </div> */}
+            <BulkOrdersTable />
+
+            <OrderSummery />
+            <Link to="/order-confirm">
+              <Button className="w-full cursor-pointer bg-gray-300 hover:bg-gray-400 text-gray-900 font-bold py-3">
+                Confirm order
+              </Button>
+            </Link>
           </TabsContent>
         </Tabs>
       </div>

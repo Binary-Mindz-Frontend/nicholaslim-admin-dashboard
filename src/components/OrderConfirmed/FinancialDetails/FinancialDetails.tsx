@@ -6,7 +6,7 @@ interface FinancialDetailsProps {
 
 export default function FinancialDetails({ onCancelClick }: FinancialDetailsProps) {
   return (
-    <div className="w-full max-w-2xl bg-white rounded-lg p-6 md:p-8">
+    <div className="w-full bg-white rounded-lg p-6 md:p-8">
       <h2 className="text-2xl md:text-3xl font-bold mb-8 text-gray-900">Financial Details</h2>
 
       <div className="space-y-6">
@@ -59,7 +59,7 @@ export default function FinancialDetails({ onCancelClick }: FinancialDetailsProp
       <div className="mt-8">
         <button
           onClick={onCancelClick}
-          className="w-full px-6 py-3 border-2 border-red-500 text-red-500 font-medium rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+          className="w-full px-6 cursor-pointer py-3 border-2 border-red-500 text-red-500 font-medium rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
         >
           Cancel Order
           <span className="text-lg">✕</span>
