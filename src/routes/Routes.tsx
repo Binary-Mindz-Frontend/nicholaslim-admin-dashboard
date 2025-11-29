@@ -11,10 +11,16 @@ import DriverList from "@/pages/Drivers/DriverList/DriverList";
 import AddNewDriver from "@/pages/Drivers/AddNewDriver/AddNewDriver";
 import EditDriverProfile from "@/pages/Drivers/DriverList/EditDriverProfile/EditDriverProfile";
 import NewJoinRequest from "@/pages/Drivers/NewJoinRequest/NewJoinRequest";
-import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
-import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
+import OrderList from "@/pages/Orders/OrderList/OrderList";
+import SupportAndDisputes from "@/pages/SupportAndDisputes/SupportAndDisputes";
+import ViewSupport from "@/pages/SupportAndDisputes/ViewSupport/ViewSupport";
+import Payments from "@/pages/Payments/Payments";
+import Livemap from "@/pages/LiveMap/LiveMap";
+import Notifications from "@/pages/Notifications/Notifications";
+import ContentManagementApp from "@/pages/Admin/ContentManagement/ContentManagement";
 import PlatformFeeManagement from "@/pages/Admin/PlatformFeeManagement/PlatformFeeManagement";
-import ContentManagement from "@/pages/Admin/ContentManagement/ContentManagement";
+import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
+import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
 import Order from "@/pages/OrderPlacement/Order/Order";
 import LiveOrderTracking from "@/pages/OrderPlacement/LiveOrderTracking/LiveOrderTracking";
 import OrderHistory from "@/pages/OrderPlacement/OrderHistory/OrderHistory";
@@ -28,7 +34,7 @@ const routes = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Dashboard />,
+        element: <Dashboard/>,
       },
       {
         path: "create-edit-role",
@@ -38,6 +44,64 @@ const routes = createBrowserRouter([
         path: "add-remove-permission",
         element: <AddRemovePermission />,
       },
+
+
+			{
+				path: "users-app",
+				element: <UsersApp />,
+			},
+			{
+			 path: "users-app/:id",
+				element: <UserProfile />,
+			},
+			{
+				path: "users-web-portal",
+				element: <UsersWebportal />,
+			},
+			{
+				path: "add-new-user",
+				element: <AddNewUser />,
+			},
+			{
+				path: "driver-list",
+				element: <DriverList/>,
+			},
+			{
+				path: "driver-list/:id",
+				element: <EditDriverProfile />,
+			},
+			{
+				path: "add-new-driver",
+				element: <AddNewDriver/>,
+			},
+			{
+				path: "new-join-request",
+				element: <NewJoinRequest />,
+			},
+			{
+				path: "order-list",
+				element: <OrderList />,
+			},
+			{
+				path: "support",
+				element: <SupportAndDisputes/>,
+			},
+			{
+				path: "support/view/:id",
+				element: <ViewSupport />,
+			},
+			{
+				path: "payments",
+				element: <Payments />,
+			},
+			{
+				path: "live-map",
+				element: <Livemap />,
+			},
+			{
+				path: "notifications",
+				element: <Notifications />,
+			},
 
       {
         path: "users-app",
@@ -86,7 +150,7 @@ const routes = createBrowserRouter([
       },
       {
         path: "content-management",
-        element: <ContentManagement />,
+        element: <ContentManagementApp />,
       },
 
       // Order Placement
@@ -112,6 +176,7 @@ const routes = createBrowserRouter([
       },
     ],
   },
+
 ]);
 
 export default routes;
