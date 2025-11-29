@@ -62,7 +62,7 @@ export default function StandardCommissionRate() {
         </h2>
         <button
           onClick={handleAddRule}
-          className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-lg text-sm transition-colors"
+          className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-lg text-sm transition-colors cursor-pointer"
         >
           Add Rate
         </button>
@@ -119,7 +119,7 @@ export default function StandardCommissionRate() {
             <button
               type="button" // Important: type="button" to prevent form submission
               onClick={() => handleRemoveRule(index)}
-              className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center"
+              className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center cursor-pointer"
               aria-label="Remove rule"
             >
               <Trash2 className="w-5 h-5" />
@@ -130,7 +130,7 @@ export default function StandardCommissionRate() {
         <div className="flex justify-center pt-4">
           <button
             type="submit"
-            className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-12 rounded-xl text-lg transition-colors"
+            className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-12 rounded-xl text-lg transition-colors cursor-pointer"
           >
             Save
           </button>

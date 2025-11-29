@@ -97,7 +97,7 @@ const ToggleSwitch = ({
 }) => (
   <button
     onClick={onToggle}
-    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
       isActive ? "bg-green-500" : "bg-gray-300"
     }`}
     aria-checked={isActive}
@@ -125,7 +125,7 @@ const ActionButton = ({
 }) => (
   <button
     onClick={onClick}
-    className={`p-2 rounded-lg hover:opacity-80 transition-opacity ${className}`}
+    className={`p-2 rounded-lg hover:opacity-80 transition-opacity cursor-pointer ${className}`}
   >
     <Icon className="w-5 h-5" />
   </button>
@@ -234,12 +234,12 @@ export default function ContentHistoryTable() {
                     <ActionButton
                       icon={Pencil}
                       onClick={() => handleEdit(item.id)}
-                      className="text-blue-500 bg-blue-50 hover:bg-blue-100"
+                      className="text-blue-500 bg-blue-50 hover:bg-blue-100 cursor-pointer"
                     />
                     <ActionButton
                       icon={Trash2}
                       onClick={() => handleDelete(item.id)}
-                      className="text-red-500 bg-red-50 hover:bg-red-100"
+                      className="text-red-500 bg-red-50 hover:bg-red-100 cursor-pointer"
                     />
                   </div>
                 </td>
@@ -257,7 +257,7 @@ export default function ContentHistoryTable() {
             <button
               onClick={() => handlePageChange("prev")}
               disabled={currentPage === 1}
-              className="p-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              className="p-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -265,7 +265,7 @@ export default function ContentHistoryTable() {
               onClick={() => handlePageChange("next")}
               // Simplified disabled logic for dummy data
               disabled={data.length < itemsPerPage}
-              className="p-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              className="p-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors cursor-pointer"
             >
               <ChevronRight className="w-5 h-5" />
             </button>

@@ -23,7 +23,7 @@ export default function QuizList({
           </h1>
           <button
             onClick={onCreate}
-            className="btn-yellow px-4 py-2 text-xl flex items-center gap-4 rounded-sm"
+            className="btn-yellow px-4 py-2 text-xl flex items-center gap-4 rounded-sm cursor-pointer"
           >
             Create Questions
           </button>
