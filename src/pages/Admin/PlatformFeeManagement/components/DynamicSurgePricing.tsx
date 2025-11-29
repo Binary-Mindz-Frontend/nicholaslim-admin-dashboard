@@ -118,7 +118,7 @@ export default function DynamicSurgePricing() {
       <button
         type="button"
         onClick={() => handleRemoveSurgeRule(index)}
-        className="text-gray-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center"
+        className="text-gray-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center cursor-pointer"
         aria-label="Remove surge rule"
       >
         <Trash2 className="w-5 h-5" />
@@ -134,7 +134,7 @@ export default function DynamicSurgePricing() {
         </h2>
         <button
           onClick={handleAddSurgeRule}
-          className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-lg text-sm transition-colors"
+          className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-lg text-sm transition-colors cursor-pointer"
         >
           Add Surge Rule
         </button>
@@ -156,7 +156,7 @@ export default function DynamicSurgePricing() {
         <div className="flex justify-center pt-6">
           <button
             type="submit"
-            className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-12 rounded-xl text-lg transition-colors"
+            className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-12 rounded-xl text-lg transition-colors cursor-pointer"
           >
             Save
           </button>

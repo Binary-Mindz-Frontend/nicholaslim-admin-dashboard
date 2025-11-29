@@ -161,9 +161,9 @@ export default function FAQManagement() {
   const inputClasses =
     "w-full p-3 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-base shadow-sm";
   const buttonPrimary =
-    "bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-8 rounded-xl transition-colors shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-yellow-300";
+    "bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-8 rounded-xl transition-colors shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-yellow-300 cursor-pointer";
   const buttonSecondary =
-    "bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-8 rounded-xl transition-colors shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-yellow-300 flex items-center justify-center gap-2";
+    "bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-8 rounded-xl transition-colors shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-yellow-300 flex items-center justify-center gap-2 cursor-pointer";
 
   return (
     <div className="bg-white rounded-xl  p-6 md:p-10">
@@ -206,7 +206,7 @@ export default function FAQManagement() {
               <button
                 type="button"
                 onClick={() => handleDeleteQuestion(item.id)}
-                className="absolute right-0 top-0 text-red-500 hover:text-red-600"
+                className="absolute right-0 top-0 text-red-500 hover:text-red-600 cursor-pointer"
               >
                 <Trash2 className="w-5 h-5" />
               </button>
