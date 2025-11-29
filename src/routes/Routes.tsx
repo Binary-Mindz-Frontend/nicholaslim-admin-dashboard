@@ -23,6 +23,7 @@ import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
 import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
 import Orders from "@/pages/Reports/Orders/Orders";
 import DriverPerformance from "@/pages/Reports/DriverPerformance/DriverPerformance";
+import CustomerReport from "@/pages/Reports/CustomerReport/CustomerReport";
 
 const routes = createBrowserRouter([
   {
@@ -156,6 +157,10 @@ const routes = createBrowserRouter([
       {
         path: "driver-performance",
         element: <DriverPerformance />,
+      },
+      {
+        path: "customer-report",
+        element: <CustomerReport />,
       },
      
     ],

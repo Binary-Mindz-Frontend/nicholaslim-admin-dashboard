@@ -97,7 +97,7 @@ export default function DriverPerformance() {
             <h1 className="text-base sm:text-xl font-bold mt-10 mb-5">Driver Performance Details</h1>
             <CustomTable columns={columns} data={driversData} />
 
-            <div className="w-full bg-white p-6 my-10 rounded-xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-10">
+            <div className="w-full bg-white p-6 my-5 rounded-xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-10">
                 <div>
                     <h2 className="text-lg font-semibold">Download Reports</h2>
                     <p className="text-sm text-gray-500">
