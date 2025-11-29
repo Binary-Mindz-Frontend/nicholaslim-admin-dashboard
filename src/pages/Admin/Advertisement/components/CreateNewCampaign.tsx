@@ -146,7 +146,7 @@ export default function CreateNewCampaign() {
           <div className="pt-6 flex justify-center">
             <button
               type="submit"
-              className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-12 rounded-xl text-xl shadow-lg transition-colors w-full md:w-auto"
+              className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-12 rounded-xl text-xl shadow-lg transition-colors w-full md:w-auto cursor-pointer"
             >
               Create new Campaign
             </button>
