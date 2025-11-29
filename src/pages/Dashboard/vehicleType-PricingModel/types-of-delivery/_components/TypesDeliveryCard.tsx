@@ -29,13 +29,14 @@ const TypesDeliveryCard: React.FC<TypesDeliveryCardProps> = ({ delivery, onSave 
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-      {/* Title */}
-      <h3 className="text-center text-lg font-semibold text-gray-900 mb-6">{formData.name}</h3>
+    <div className="bg-white   rounded-lg p-6 shadow-sm">
+      <div className="max-w-3xl mx-auto">
+        {/* Title */}
+      <h3 className="text-center text-xl font-semibold text-gray-900 mb-6">{formData.name}</h3>
 
       {/* Percentage Field */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Percentage</label>
+      <div className="mb-6  w-full sm:w-[50%] mx-auto">
+        <label className="block text-base font-medium text-gray-700 mb-2">Percentage</label>
         <input
           type="number"
           value={formData.percentage}
@@ -48,9 +49,9 @@ const TypesDeliveryCard: React.FC<TypesDeliveryCardProps> = ({ delivery, onSave 
       {/* Pickup Time and Delivery Time Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Pickup Time */}
-        <div>
-        <div className="flex  justify-between">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Time</label>
+        <div className=" space-y-1">
+        <div className="flex  justify-between items-center">
+            <label className="block text-base font-medium text-gray-700 mb-2">Pickup Time</label>
            <Select value={formData.pickupUnit} onValueChange={(value: any) => setFormData({ ...formData, pickupUnit: value })}>
               <SelectTrigger className="w-24 border-gray-300">
                 <SelectValue />
@@ -74,17 +75,10 @@ const TypesDeliveryCard: React.FC<TypesDeliveryCardProps> = ({ delivery, onSave 
         </div>
 
         {/* Delivery Time */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Time</label>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              value={formData.deliveryTime}
-              onChange={(e) => setFormData({ ...formData, deliveryTime: Number(e.target.value) })}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#FFCC00] focus:border-transparent outline-none"
-              placeholder="1"
-            />
-            <Select value={formData.deliveryUnit} onValueChange={(value: any) => setFormData({ ...formData, deliveryUnit: value })}>
+        <div className="space-y-1">
+         <div className="flex justify-between items-center">
+           <label className="block text-base font-medium text-gray-700 mb-2">Delivery Time</label>
+          <Select value={formData.deliveryUnit} onValueChange={(value: any) => setFormData({ ...formData, deliveryUnit: value })}>
               <SelectTrigger className="w-24 border-gray-300">
                 <SelectValue />
               </SelectTrigger>
@@ -93,6 +87,16 @@ const TypesDeliveryCard: React.FC<TypesDeliveryCardProps> = ({ delivery, onSave 
                 <SelectItem value="Hour">Hour</SelectItem>
               </SelectContent>
             </Select>
+         </div>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              value={formData.deliveryTime}
+              onChange={(e) => setFormData({ ...formData, deliveryTime: Number(e.target.value) })}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#FFCC00] focus:border-transparent outline-none"
+              placeholder="1"
+            />
+            
           </div>
         </div>
       </div>
@@ -101,10 +105,11 @@ const TypesDeliveryCard: React.FC<TypesDeliveryCardProps> = ({ delivery, onSave 
       <div className="flex justify-center">
         <Button
           onClick={handleSave}
-          className="bg-[#FFCC00] hover:bg-[#E6B800] text-black font-semibold px-8 py-2 rounded transition-colors"
+          className="bg-[#FFCC00] hover:bg-[#E6B800] text-black font-semibold text-lg px-8 py-2 rounded transition-colors cursor-pointer"
         >
           Save
         </Button>
+      </div>
       </div>
     </div>
   )

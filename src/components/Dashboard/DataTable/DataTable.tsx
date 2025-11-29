@@ -59,11 +59,11 @@ const CustomTable = <T extends object>({ columns, data }: ITableProps<T>) => {
                     className="
                       px-5 py-4 text-sm text-[#1E1E1E] text-center whitespace-nowrap
                       pointer-events-auto
-                    "                                  // ✅ Fix interaction inside cells
+                    "                                
                   >
                     <div
                       className="inline-block"
-                      onClick={(e) => e.stopPropagation()}     // ✅ Prevent row from eating clicks
+                      onClick={(e) => e.stopPropagation()}    
                       onMouseDown={(e) => e.stopPropagation()}
                     >
                       {content}

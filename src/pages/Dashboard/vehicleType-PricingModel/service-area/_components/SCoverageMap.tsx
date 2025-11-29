@@ -6,7 +6,7 @@ import { MapContainer, TileLayer, Polygon } from "react-leaflet"
 import { useEffect } from "react"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
-import CustomButton from "../../_components/CustomButton"
+import CustomButton from "../../../_components/CustomButton"
 import type { LatLngTuple } from "leaflet"
 
 const polygonCoords: LatLngTuple[] = [

@@ -42,7 +42,7 @@ const DeliveryTypesPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Delivery Types Configuration</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Type of Delivery</h1>
 
         {/* Grid of Delivery Cards */}
         <div className="flex flex-col gap-6">

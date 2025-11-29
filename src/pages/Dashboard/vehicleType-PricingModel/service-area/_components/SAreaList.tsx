@@ -2,8 +2,8 @@
 import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import CustomTable from "../../_components/CutomTable"
-import TablePagination from "../../_components/TablePagination"
+import CustomTable from "../../../_components/CutomTable"
+import TablePagination from "../../../_components/TablePagination"
 import { FiTrash } from "react-icons/fi";
 import { LuPencil } from "react-icons/lu";
 
@@ -37,15 +37,7 @@ const SAreaList: React.FC = () => {
   const endIndex = startIndex + itemsPerPage
   const displayData = mockData.slice(startIndex, endIndex)
 
-  const handleRowAction = (actionType: string, rowData: ServiceArea, id: number | string) => {
-    if (actionType === "edit") {
-      console.log("Edit zone:", id, rowData)
-      // Add your edit logic here - open modal, navigate, etc.
-    } else if (actionType === "delete") {
-      console.log("Delete zone:", id, rowData)
-      // Add your delete logic here - confirm dialog, API call, etc.
-    }
-  }
+
 
   const columns = [
     {
@@ -69,7 +61,6 @@ const SAreaList: React.FC = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleRowAction("edit", row, row.id)}
             className="p-2 h-auto border cursor-pointer border-[#00BFFF] hover:bg-blue-100"
           >
             <LuPencil size={16} className="text-[#00BFFF]" />
@@ -77,7 +68,6 @@ const SAreaList: React.FC = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleRowAction("delete", row, row.id)}
             className="p-2 h-auto cursor-pointer border border-[#FF4D4F] hover:bg-red-100"
           >
             <FiTrash size={16} className="text-[#FF4D4F]" />
@@ -91,25 +81,27 @@ const SAreaList: React.FC = () => {
       render: (status: string) => {
         const getStatusColor = (status: string) => {
           if (status === "Active") {
-            return " bg-[#32620B50] px-5 py-1"
+            return " bg-[#32620B60] text-[#32620B] px-5 py-1"
           }
           return " bg-[#FFEA96] px-4 py-1"
         }
         return (
-          <span className={` rounded-sm w-12 h-10 text-xs font-semibold ${getStatusColor(status)}`}>{status}</span>
+          <span
+        className={`inline-flex items-center justify-center 
+          ${getStatusColor(status)}
+          w-[90px] h-[32px]       
+          text-xs font-semibold rounded-sm`}
+      >
+        {status}
+      </span>
         )
       },
     },
   ]
 
   return (
-    // <Card>
-    //   <CardHeader className="bg-yellow-50 border-b">
-    //     {/* <CardTitle className="text-lg">Service Area List</CardTitle> */}
-    //   </CardHeader>
-    //   <CardContent className="p-0">
        <div>
-         <CustomTable data={displayData} columns={columns} onRowAction={handleRowAction} />
+         <CustomTable data={displayData} columns={columns}  />
         <TablePagination
           currentPage={currentPage}
           totalItems={totalItems}
@@ -117,8 +109,6 @@ const SAreaList: React.FC = () => {
           onPageChange={setCurrentPage}
         />
        </div>
-    //   </CardContent>
-    // </Card>
   )
 }
 
