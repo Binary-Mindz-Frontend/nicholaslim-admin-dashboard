@@ -9,7 +9,7 @@ export default function PlatformFeeManagement() {
   const [activeTab, setActiveTab] = useState<"user" | "driver">("user");
 
   const getTabClasses = (tab: "user" | "driver") =>
-    `px-6 py-2 text-base font-medium rounded-full transition-colors ${
+    `px-6 py-2 text-base font-medium rounded-full transition-colors cursor-pointer ${
       activeTab === tab
         ? "bg-yellow-50 text-gray-900 border border-yellow-400 shadow-sm"
         : "text-gray-600 bg-white hover:bg-gray-50 border border-gray-300"

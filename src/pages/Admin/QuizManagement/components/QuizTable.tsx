@@ -178,7 +178,7 @@ export default function QuizAttemptsTable() {
               {/* Reset Filter Button */}
               <Button
                 variant="outline"
-                className="text-red-600 border-red-300 hover:bg-red-50"
+                className="text-red-600 border-red-300 hover:bg-red-50  cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset Filter
@@ -240,10 +240,10 @@ export default function QuizAttemptsTable() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-center gap-4">
-                        <button className="p-2 rounded-lg hover:bg-green-50 transition">
+                        <button className="p-2 rounded-lg hover:bg-green-50 transition cursor-pointer">
                           <Eye className="w-5 h-5 text-green-600" />
                         </button>
-                        <button className="p-2 rounded-lg hover:bg-red-50 transition">
+                        <button className="p-2 rounded-lg hover:bg-red-50 transition cursor-pointer">
                           <Trash2 className="w-5 h-5 text-red-600" />
                         </button>
                       </div>
@@ -270,12 +270,13 @@ export default function QuizAttemptsTable() {
                 size="sm"
                 disabled={page === 1}
                 onClick={() => setPage((p) => p - 1)}
+                className=" cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <Button
                 size="sm"
-                className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium"
+                className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium cursor-pointer"
                 onClick={() => setPage((p) => p + 1)}
               >
                 <ChevronRight className="w-4 h-4" />

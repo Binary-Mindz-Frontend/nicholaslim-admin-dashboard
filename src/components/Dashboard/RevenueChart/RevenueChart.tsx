@@ -23,10 +23,10 @@ export default function RevenueChart() {
   return (
    
       <div>
-        <div className="bg-white rounded-lg shadow-sm border border-border mt-8 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-border mt-8 p-2 sm:p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-semibold text-foreground">Total Revenue</h1>
+            <h1 className="text-base sm:text-xl md:text-3xl font-semibold text-foreground">Total Revenue</h1>
             <div className="flex items-center gap-6">
               {/* Legend */}
               <div className="flex items-center gap-4">
