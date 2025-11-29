@@ -69,9 +69,9 @@ export default function QuestionForm({ question, onSave, onBack }: Props) {
         {/* Adjusted padding */}
         <button
           onClick={onBack}
-          className="flex items-center gap-3 text-gray-700 hover:text-gray-900 mb-8 text-lg font-medium" // Adjusted margin and hover
+          className="flex items-center gap-3 text-gray-700 hover:text-gray-900 mb-8 text-lg font-medium cursor-pointer"
         >
-          <ArrowLeft className="w-5 h-5" /> {/* Slightly smaller icon */}
+          <ArrowLeft className="w-5 h-5" />
           Back to Quiz Management
         </button>
         <h2 className="text-4xl font-bold text-gray-900 mb-10">
@@ -104,11 +104,11 @@ export default function QuestionForm({ question, onSave, onBack }: Props) {
                     setType("Multiple Choice");
                     setCorrect(""); // Clear correct answer when switching type
                   }}
-                  className={`px-6 py-3 rounded-full text-base font-medium transition-all border ${
+                  className={`px-6 py-3 rounded-full text-base font-medium transition-all border cursor-pointer ${
                     // Smaller padding, rounded, border
                     type === "Multiple Choice"
-                      ? "bg-yellow-400 text-gray-900 border-yellow-400 shadow-md" // Yellow button style
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50" // Neutral button style
+                      ? "bg-yellow-400 text-gray-900 border-yellow-400 shadow-md"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                   }`}
                 >
                   Multiple Questions
@@ -120,7 +120,7 @@ export default function QuestionForm({ question, onSave, onBack }: Props) {
                     // Reset options if they were for multiple choice, though True/False doesn't use them
                     setOptions(["", "", "", ""]);
                   }}
-                  className={`px-6 py-3 rounded-full text-base font-medium transition-all border ${
+                  className={`px-6 py-3 rounded-full text-base font-medium transition-all border  cursor-pointer${
                     // Smaller padding, rounded, border
                     type === "True/False"
                       ? "bg-yellow-400 text-gray-900 border-yellow-400 shadow-md" // Yellow button style
@@ -287,7 +287,7 @@ export default function QuestionForm({ question, onSave, onBack }: Props) {
                             name="ans"
                             checked={correct === opt}
                             onChange={() => setCorrect(opt)}
-                            className="w-5 h-5 text-green-600 focus:ring-green-500 mr-4" // Styled radio button
+                            className="w-5 h-5 text-green-600 focus:ring-green-500 mr-4"
                           />
                           <span
                             className={`text-lg font-medium ${
@@ -308,7 +308,7 @@ export default function QuestionForm({ question, onSave, onBack }: Props) {
               {/* Adjusted padding */}
               <button
                 onClick={handleSave}
-                className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-16 rounded-xl text-xl shadow-lg transition-colors" // Styled button
+                className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-16 rounded-xl text-xl shadow-lg transition-colors cursor-pointer"
               >
                 {question ? "Edit" : "Create"}{" "}
                 {/* Changed text to "Edit" as in the image */}

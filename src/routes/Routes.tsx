@@ -24,6 +24,8 @@ import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
 import OrderTracking from "@/pages/Orders/OrderTracking/OrderTracking";
 import OrderHistory from "@/pages/Orders/OrderHistory/OrderHistory";
 import PaymentOptionsPage from "@/pages/Orders/PaymentOptions/PaymentOptionsPage";
+import DriverOrderCompetition from "@/pages/Admin/DriverOrder/DriverOrder";
+import CustomerOrderConfirmation from "@/pages/Admin/CustomerOrder/CustomerOrderConfirmation";
 
 const routes = createBrowserRouter([
   {
@@ -32,7 +34,7 @@ const routes = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Dashboard/>,
+        element: <Dashboard />,
       },
       {
         path: "create-edit-role",
@@ -43,63 +45,62 @@ const routes = createBrowserRouter([
         element: <AddRemovePermission />,
       },
 
-
-			{
-				path: "users-app",
-				element: <UsersApp />,
-			},
-			{
-			 path: "users-app/:id",
-				element: <UserProfile />,
-			},
-			{
-				path: "users-web-portal",
-				element: <UsersWebportal />,
-			},
-			{
-				path: "add-new-user",
-				element: <AddNewUser />,
-			},
-			{
-				path: "driver-list",
-				element: <DriverList/>,
-			},
-			{
-				path: "driver-list/:id",
-				element: <EditDriverProfile />,
-			},
-			{
-				path: "add-new-driver",
-				element: <AddNewDriver/>,
-			},
-			{
-				path: "new-join-request",
-				element: <NewJoinRequest />,
-			},
-			{
-				path: "order-list",
-				element: <OrderList />,
-			},
-			{
-				path: "support",
-				element: <SupportAndDisputes/>,
-			},
-			{
-				path: "support/view/:id",
-				element: <ViewSupport />,
-			},
-			{
-				path: "payments",
-				element: <Payments />,
-			},
-			{
-				path: "live-map",
-				element: <Livemap />,
-			},
-			{
-				path: "notifications",
-				element: <Notifications />,
-			},
+      {
+        path: "users-app",
+        element: <UsersApp />,
+      },
+      {
+        path: "users-app/:id",
+        element: <UserProfile />,
+      },
+      {
+        path: "users-web-portal",
+        element: <UsersWebportal />,
+      },
+      {
+        path: "add-new-user",
+        element: <AddNewUser />,
+      },
+      {
+        path: "driver-list",
+        element: <DriverList />,
+      },
+      {
+        path: "driver-list/:id",
+        element: <EditDriverProfile />,
+      },
+      {
+        path: "add-new-driver",
+        element: <AddNewDriver />,
+      },
+      {
+        path: "new-join-request",
+        element: <NewJoinRequest />,
+      },
+      {
+        path: "order-list",
+        element: <OrderList />,
+      },
+      {
+        path: "support",
+        element: <SupportAndDisputes />,
+      },
+      {
+        path: "support/view/:id",
+        element: <ViewSupport />,
+      },
+      {
+        path: "payments",
+        element: <Payments />,
+      },
+      {
+        path: "live-map",
+        element: <Livemap />,
+      },
+      {
+        path: "notifications",
+        element: <Notifications />,
+      },
 
       {
         path: "users-app",
@@ -162,9 +163,16 @@ const routes = createBrowserRouter([
         path: "payment-options",
         element: <PaymentOptionsPage />,
       },
+      {
+        path: "driver-order-competition",
+        element: <DriverOrderCompetition />,
+      },
+      {
+        path: "customer-order-confirmation",
+        element: <CustomerOrderConfirmation />,
+      },
     ],
   },
-
 ]);
 
 export default routes;

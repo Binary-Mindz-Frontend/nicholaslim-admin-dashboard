@@ -27,7 +27,7 @@ export default function QuizCard({ question, onEdit, onDelete }: Props) {
             <button
               onClick={onEdit}
               aria-label="Edit question"
-              className="p-2 border border-gray-300 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+              className="p-2 border border-gray-300 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
             >
               <Pencil className="w-5 h-5" />
             </button>
@@ -59,7 +59,7 @@ export default function QuizCard({ question, onEdit, onDelete }: Props) {
           <button
             onClick={onDelete}
             aria-label="Delete question"
-            className="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition-colors"
+            className="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
           >
             <Trash2 className="w-6 h-6" />
           </button>

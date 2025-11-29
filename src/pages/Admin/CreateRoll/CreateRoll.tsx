@@ -128,8 +128,10 @@ export default function CreateRollForm() {
   return (
     <div className="min-h-screen bg-gray-50 px-8 sm:px-0 lg:p-8">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 pt-2 sm:pt-0 mb-8">Create Roll</h1>
-        
+        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 pt-2 sm:pt-0 mb-8">
+          Create Roll
+        </h1>
+
         <div className="bg-white rounded-lg shadow-sm p-4 lg:p-32">
           {/* Upload Photo Section */}
           <div className="flex flex-col items-center mb-12">
@@ -140,17 +142,21 @@ export default function CreateRollForm() {
               accept="image/*"
               className="hidden"
             />
-            <div 
+            <div
               onClick={handlePhotoClick}
               className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mb-3 cursor-pointer hover:bg-yellow-100 transition-colors overflow-hidden"
             >
               {photo ? (
-                <img src={photo} alt="Upload preview" className="w-full h-full object-cover" />
+                <img
+                  src={photo}
+                  alt="Upload preview"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <Camera className="w-8 h-8 text-gray-400" />
               )}
             </div>
-            <p 
+            <p
               onClick={handlePhotoClick}
               className="text-gray-800 font-medium cursor-pointer hover:text-gray-600"
             >
@@ -174,11 +180,15 @@ export default function CreateRollForm() {
                   onChange={handleChange}
                   onBlur={handleBlur}
                   className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                    errors.firstName && touched.firstName ? 'focus:ring-red-400 ring-2 ring-red-400' : 'focus:ring-yellow-400'
+                    errors.firstName && touched.firstName
+                      ? "focus:ring-red-400 ring-2 ring-red-400"
+                      : "focus:ring-yellow-400"
                   }`}
                 />
                 {errors.firstName && touched.firstName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.firstName}
+                  </p>
                 )}
               </div>
               <div>
@@ -193,7 +203,9 @@ export default function CreateRollForm() {
                   onChange={handleChange}
                   onBlur={handleBlur}
                   className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                    errors.lastName && touched.lastName ? 'focus:ring-red-400 ring-2 ring-red-400' : 'focus:ring-yellow-400'
+                    errors.lastName && touched.lastName
+                      ? "focus:ring-red-400 ring-2 ring-red-400"
+                      : "focus:ring-yellow-400"
                   }`}
                 />
                 {errors.lastName && touched.lastName && (
@@ -216,7 +228,9 @@ export default function CreateRollForm() {
                   onChange={handleChange}
                   onBlur={handleBlur}
                   className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                    errors.email && touched.email ? 'focus:ring-red-400 ring-2 ring-red-400' : 'focus:ring-yellow-400'
+                    errors.email && touched.email
+                      ? "focus:ring-red-400 ring-2 ring-red-400"
+                      : "focus:ring-yellow-400"
                   }`}
                 />
                 {errors.email && touched.email && (
@@ -235,7 +249,9 @@ export default function CreateRollForm() {
                   onChange={handleChange}
                   onBlur={handleBlur}
                   className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                    errors.phone && touched.phone ? 'focus:ring-red-400 ring-2 ring-red-400' : 'focus:ring-yellow-400'
+                    errors.phone && touched.phone
+                      ? "focus:ring-red-400 ring-2 ring-red-400"
+                      : "focus:ring-yellow-400"
                   }`}
                 />
                 {errors.phone && touched.phone && (
@@ -257,7 +273,9 @@ export default function CreateRollForm() {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 appearance-none focus:outline-none focus:ring-2 cursor-pointer ${
-                      errors.role && touched.role ? 'focus:ring-red-400 ring-2 ring-red-400' : 'focus:ring-yellow-400'
+                      errors.role && touched.role
+                        ? "focus:ring-red-400 ring-2 ring-red-400"
+                        : "focus:ring-yellow-400"
                     }`}
                   >
                     <option value="Finance">Finance</option>
@@ -284,7 +302,9 @@ export default function CreateRollForm() {
                   onChange={handleChange}
                   onBlur={handleBlur}
                   className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                    errors.password && touched.password ? 'focus:ring-red-400 ring-2 ring-red-400' : 'focus:ring-yellow-400'
+                    errors.password && touched.password
+                      ? "focus:ring-red-400 ring-2 ring-red-400"
+                      : "focus:ring-yellow-400"
                   }`}
                 />
                 {errors.password && touched.password && (
@@ -297,7 +317,7 @@ export default function CreateRollForm() {
             <div className="flex justify-center">
               <button
                 onClick={handleSubmit}
-                className="px-12 py-3 bg-yellow-400 cursor-pointer font-bold hover:bg-yellow-500 text-black rounded transition-colors"
+                className="px-12 py-3 bg-yellow-400 cursor-pointer font-bold hover:bg-yellow-500 text-black rounded transition-colors cursor-pointer"
               >
                 Add Now
               </button>
