@@ -44,6 +44,12 @@ import CustomerReport from "@/pages/Reports/CustomerReport/CustomerReport";
 import Kpis from "@/pages/Reports/Kpis/Kpis";
 import Coins from "@/pages/Reports/Coins/Coins";
 import Incentive from "@/pages/Reports/Incentives/Incentives";
+import Order from "@/pages/OrderPlacement/Order/Order";
+import LiveOrderTracking from "@/pages/OrderPlacement/LiveOrderTracking/LiveOrderTracking";
+// import OrderHistory from "@/pages/OrderPlacement/OrderHistory/OrderHistory";
+import SavedOrders from "@/pages/OrderPlacement/SavedOrders/SavedOrders";
+import PaymentOptions from "@/pages/OrderPlacement/PaymentOptions/PaymentOptions";
+import OrderConfirmed from "@/pages/OrderConfirmed/OrderConfirmed";
 
 const routes = createBrowserRouter([
   {
@@ -300,6 +306,32 @@ const routes = createBrowserRouter([
         element: <Incentive />,
       },
      
+
+      // Order Placement
+      {
+        path: "order",
+        element: <Order/>,
+      },
+      {
+        path: "live-order-tracking",
+        element: <LiveOrderTracking/>,
+      },
+       {
+        path: "order-history",
+        element: <OrderHistory/>,
+      },
+      {
+        path: "saved-order",
+        element: <SavedOrders/>,
+      },
+      {
+        path: "payment-options",
+        element: <PaymentOptions/>,
+      },
+      {
+        path: "order-confirm",
+        element: <OrderConfirmed/>,
+      },
     ],
 },
 
