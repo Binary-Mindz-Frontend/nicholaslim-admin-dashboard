@@ -65,21 +65,21 @@ export default function OrderInsight() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 sm:pt-5">
         {/* Title */}
-        <h2 className="text-2xl font-semibold text-gray-800">Order Insight</h2>
+        <h2 className="text-2xl font-semibold text-gray-800 pt-2 sm:pt-0">Order Insight</h2>
 
         {/* Buttons */}
-        <div className="flex flex-wrap items-center gap-3">
-          <button className="flex items-center gap-2 bg-white border px-4 py-2 rounded-lg shadow-sm hover:bg-gray-100 transition">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <button className="flex items-center gap-2 bg-white border px-3 sm:px-4 py-2 rounded-lg shadow-sm hover:bg-gray-100 transition">
             <Plus size={20} />
             <span>New Order</span>
           </button>
 
-          <button className="flex items-center gap-2 bg-white border px-4 py-2 rounded-lg shadow-sm hover:bg-gray-100 transition">
+          <button className="flex items-center gap-2 bg-white border px-3 sm:px-4 py-2 rounded-lg shadow-sm hover:bg-gray-100 transition">
             <BarChart2 size={20} />
             <span>View Reports</span>
           </button>
 
-          <button className="flex items-center gap-2 bg-primary text-gray-900 px-4 py-2 rounded-lg shadow hover:bg-primary/80 transition">
+          <button className="flex items-center gap-2 bg-primary text-gray-900 px-3 sm:px-4 py-2 rounded-lg shadow hover:bg-primary/80 transition">
             <Download size={20} />
             <span>Export Data</span>
           </button>
