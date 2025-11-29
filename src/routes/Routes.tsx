@@ -13,7 +13,7 @@ import EditDriverProfile from "@/pages/Drivers/DriverList/EditDriverProfile/Edit
 import NewJoinRequest from "@/pages/Drivers/NewJoinRequest/NewJoinRequest";
 import VTPMserviceArea from "@/pages/Dashboard/vehicleType-PricingModel/service-area/VTPMserviceArea";
 import VehicleTypes from "@/pages/Dashboard/vehicleType-PricingModel/vehicle-types/VehicleTypes";
-import AddVehiclePage from "@/pages/Dashboard/vehicleType-PricingModel/vehicle-types/_components/addVehicleTypes/AddVehiclePage";
+import AddVehiclePage from "@/pages/Dashboard/vehicleType-PricingModel/vehicle-types/addVehicleTypes/AddVehiclePage";
 import PolicyManagementPage from "@/pages/Dashboard/vehicleType-PricingModel/policy-management/PolicyManagement";
 import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
 import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
