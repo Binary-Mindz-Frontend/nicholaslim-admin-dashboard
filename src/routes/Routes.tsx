@@ -15,6 +15,11 @@ import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
 import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
 import PlatformFeeManagement from "@/pages/Admin/PlatformFeeManagement/PlatformFeeManagement";
 import ContentManagement from "@/pages/Admin/ContentManagement/ContentManagement";
+import Order from "@/pages/OrderPlacement/Order/Order";
+import LiveOrderTracking from "@/pages/OrderPlacement/LiveOrderTracking/LiveOrderTracking";
+import OrderHistory from "@/pages/OrderPlacement/OrderHistory/OrderHistory";
+import SavedOrders from "@/pages/OrderPlacement/SavedOrders/SavedOrders";
+import PaymentOptions from "@/pages/OrderPlacement/PaymentOptions/PaymentOptions";
 
 const routes = createBrowserRouter([
   {
@@ -82,6 +87,28 @@ const routes = createBrowserRouter([
       {
         path: "content-management",
         element: <ContentManagement />,
+      },
+
+      // Order Placement
+      {
+        path: "order",
+        element: <Order/>,
+      },
+      {
+        path: "live-order-tracking",
+        element: <LiveOrderTracking/>,
+      },
+       {
+        path: "order-history",
+        element: <OrderHistory/>,
+      },
+      {
+        path: "saved-order",
+        element: <SavedOrders/>,
+      },
+      {
+        path: "payment-options",
+        element: <PaymentOptions/>,
       },
     ],
   },
