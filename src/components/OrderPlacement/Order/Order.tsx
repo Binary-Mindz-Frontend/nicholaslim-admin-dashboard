@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PromoCodeIcons } from "@/components/Icons/Icons";
 import { Switch } from "@/components/ui/switch";
+import { Link } from "react-router-dom";
 
 export default function OrderPlacementPage() {
   const radioClassName = `
@@ -345,9 +346,11 @@ export default function OrderPlacementPage() {
                 </Select>
               </div>
 
+            <Link to="/order-confirm">
               <Button className="w-full cursor-pointer bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3">
                 Confirm order
               </Button>
+            </Link>
             </div>
           </TabsContent>
 

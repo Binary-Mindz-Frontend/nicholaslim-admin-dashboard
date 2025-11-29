@@ -26,6 +26,7 @@ import LiveOrderTracking from "@/pages/OrderPlacement/LiveOrderTracking/LiveOrde
 import OrderHistory from "@/pages/OrderPlacement/OrderHistory/OrderHistory";
 import SavedOrders from "@/pages/OrderPlacement/SavedOrders/SavedOrders";
 import PaymentOptions from "@/pages/OrderPlacement/PaymentOptions/PaymentOptions";
+import OrderConfirmed from "@/pages/OrderConfirmed/OrderConfirmed";
 
 const routes = createBrowserRouter([
   {
@@ -173,6 +174,10 @@ const routes = createBrowserRouter([
       {
         path: "payment-options",
         element: <PaymentOptions/>,
+      },
+      {
+        path: "order-confirm",
+        element: <OrderConfirmed/>,
       },
     ],
   },
