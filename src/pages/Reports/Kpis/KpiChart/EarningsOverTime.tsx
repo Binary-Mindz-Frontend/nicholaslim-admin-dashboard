@@ -38,7 +38,7 @@ export default function EarningsOverTime() {
             <Tooltip formatter={(value) => [`$${value}`, "Earnings"]} />
 
             <Line
-              type="monotone"
+              type="linear"
               dataKey="value"
               stroke="#fbbf24"
               strokeWidth={3}

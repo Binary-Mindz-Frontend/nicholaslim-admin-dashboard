@@ -26,6 +26,7 @@ import DriverPerformance from "@/pages/Reports/DriverPerformance/DriverPerforman
 import CustomerReport from "@/pages/Reports/CustomerReport/CustomerReport";
 import Kpis from "@/pages/Reports/Kpis/Kpis";
 import Coins from "@/pages/Reports/Coins/Coins";
+import Incentive from "@/pages/Reports/Incentives/Incentives";
 
 const routes = createBrowserRouter([
   {
@@ -175,6 +176,10 @@ const routes = createBrowserRouter([
       {
         path: "coins",
         element: <Coins />,
+      },
+      {
+        path: "incentives",
+        element: <Incentive />,
       },
      
     ],
