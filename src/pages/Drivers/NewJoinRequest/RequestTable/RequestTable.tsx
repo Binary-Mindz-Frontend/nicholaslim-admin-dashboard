@@ -55,7 +55,7 @@ export const useRequestColumns = (initialData: TRequest[]) => {
     {
       header: "Add Delivery Man",
       cell: () => (
-        <button className=" text-black px-6 py-1.5 rounded-full text-sm hover:bg-yellow-400 transition">
+        <button className=" text-black px-6 py-1.5 rounded-full text-sm bg-yellow-400 transition">
           Add
         </button>
       ),
