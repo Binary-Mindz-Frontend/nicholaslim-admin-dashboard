@@ -29,9 +29,15 @@ interface LeafletStatic {
     url: string,
     options: { attribution: string }
   ) => LeafletTileLayer;
-  divIcon: (options: LeafletIcon) => any;
-  marker: (latlng: [number, number], options: { icon: any }) => LeafletMarker;
+
+  divIcon: (options: LeafletIcon) => LeafletIcon;
+
+  marker: (
+    latlng: [number, number],
+    options: { icon: LeafletIcon }
+  ) => LeafletMarker;
 }
+
 
 declare global {
   interface Window {
@@ -264,7 +270,7 @@ export default function FleetMapHeader() {
         </div>
 
         {/* Last Updated */}
-        <div className="absolute bottom-4 right-4 bg-white px-4 py-2 rounded-lg shadow-md z-[1000]">
+        <div className="absolute bottom-4 right-4 bg-white px-4 py-2 rounded-lg shadow-md z-1000">
           <span className="text-sm text-gray-500">
             Last updated {lastUpdated}
           </span>

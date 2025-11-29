@@ -1,4 +1,4 @@
-"use client"
+
 import { useState } from "react";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Switch } from "@/components/ui/switch";

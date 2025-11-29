@@ -11,15 +11,16 @@ import DriverList from "@/pages/Drivers/DriverList/DriverList";
 import AddNewDriver from "@/pages/Drivers/AddNewDriver/AddNewDriver";
 import EditDriverProfile from "@/pages/Drivers/DriverList/EditDriverProfile/EditDriverProfile";
 import NewJoinRequest from "@/pages/Drivers/NewJoinRequest/NewJoinRequest";
-import VTPMserviceArea from "@/pages/Dashboard/vehicleType-PricingModel/service-area/VTPMserviceArea";
-import VehicleTypes from "@/pages/Dashboard/vehicleType-PricingModel/vehicle-types/VehicleTypes";
-import AddVehiclePage from "@/pages/Dashboard/vehicleType-PricingModel/vehicle-types/_components/addVehicleTypes/AddVehiclePage";
-import PolicyManagementPage from "@/pages/Dashboard/vehicleType-PricingModel/policy-management/PolicyManagement";
-import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
-import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
+import OrderList from "@/pages/Orders/OrderList/OrderList";
+import SupportAndDisputes from "@/pages/SupportAndDisputes/SupportAndDisputes";
+import ViewSupport from "@/pages/SupportAndDisputes/ViewSupport/ViewSupport";
+import Payments from "@/pages/Payments/Payments";
+import Livemap from "@/pages/LiveMap/LiveMap";
+import Notifications from "@/pages/Notifications/Notifications";
+import ContentManagementApp from "@/pages/Admin/ContentManagement/ContentManagement";
 import PlatformFeeManagement from "@/pages/Admin/PlatformFeeManagement/PlatformFeeManagement";
-import ContentManagement from "@/pages/Admin/ContentManagement/ContentManagement";
-
+import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
+import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
 
 const routes = createBrowserRouter([
   {
@@ -28,7 +29,7 @@ const routes = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Dashboard />,
+        element: <Dashboard/>,
       },
       {
         path: "create-edit-role",
@@ -73,20 +74,28 @@ const routes = createBrowserRouter([
 				element: <NewJoinRequest />,
 			},
 			{
-				path: "service-area",
-				element: <VTPMserviceArea />,
+				path: "order-list",
+				element: <OrderList />,
 			},
 			{
-				path: "vehicle-types",
-				element: <VehicleTypes />,
+				path: "support",
+				element: <SupportAndDisputes/>,
 			},
 			{
-				path: "vehicle-pricing-page",
-				element: <AddVehiclePage />,
+				path: "support/view/:id",
+				element: <ViewSupport />,
 			},
 			{
-				path: "policy-management",
-				element: <PolicyManagementPage />
+				path: "payments",
+				element: <Payments />,
+			},
+			{
+				path: "live-map",
+				element: <Livemap />,
+			},
+			{
+				path: "notifications",
+				element: <Notifications />,
 			},
 
       {
@@ -136,7 +145,7 @@ const routes = createBrowserRouter([
       },
       {
         path: "content-management",
-        element: <ContentManagement />,
+        element: <ContentManagementApp />,
       },
     ],
   },
