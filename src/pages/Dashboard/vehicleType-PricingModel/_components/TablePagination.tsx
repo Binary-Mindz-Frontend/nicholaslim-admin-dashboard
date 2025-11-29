@@ -38,7 +38,7 @@ const TablePagination: React.FC<TablePaginationProps> = ({
           <button
            
             disabled={currentPage === 1}
-            className="flex items-center justify-center disabled:opacity-50"
+            className="flex items-center justify-center disabled:opacity-50 cursor-pointer"
           >
             <ChevronLeft size={16} />
           </button>
@@ -49,7 +49,7 @@ const TablePagination: React.FC<TablePaginationProps> = ({
           <button
 
             disabled={currentPage >= totalPages}
-            className="flex items-center justify-center disabled:opacity-50"
+            className="flex items-center justify-center disabled:opacity-50 cursor-pointer"
           >
             <ChevronRight size={16} />
           </button>

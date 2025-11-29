@@ -1,8 +1,10 @@
+import { useNavigate } from "react-router-dom"
 import CustomButton from "../_components/CustomButton"
 import VTtablesData from "./_components/VTtablesData"
 
 
 const VehicleTypes = () => {
+    const navigate = useNavigate()
   return (
     <div className="mt-12 ">
         <div className="flex justify-between">
@@ -49,7 +51,7 @@ const VehicleTypes = () => {
             <VTtablesData />
         </div>
         <div className="flex justify-center ">
-            <button className="bg-[#FFCC00] rounded-md py-4 px-12">
+            <button onClick={()=> navigate("/vehicle-pricing-page")} className="bg-[#FFCC00] rounded-md py-2 px-8 cursor-pointer">
                 Add Vehicle Type
             </button>
             <div className="w-[25%]">

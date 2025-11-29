@@ -13,6 +13,14 @@ import EditDriverProfile from "@/pages/Drivers/DriverList/EditDriverProfile/Edit
 import NewJoinRequest from "@/pages/Drivers/NewJoinRequest/NewJoinRequest";
 import VTPMserviceArea from "@/pages/Dashboard/vehicleType-PricingModel/service-area/VTPMserviceArea";
 import VehicleTypes from "@/pages/Dashboard/vehicleType-PricingModel/vehicle-types/VehicleTypes";
+import AddVehiclePage from "@/pages/Dashboard/vehicleType-PricingModel/vehicle-types/_components/addVehicleTypes/AddVehiclePage";
+import PolicyManagementPage from "@/pages/Dashboard/vehicleType-PricingModel/policy-management/PolicyManagement";
+
+
+
+
+
+
 
 const routes = createBrowserRouter([
 	{
@@ -72,10 +80,17 @@ const routes = createBrowserRouter([
 				path: "vehicle-types",
 				element: <VehicleTypes />,
 			},
+			{
+				path: "vehicle-pricing-page",
+				element: <AddVehiclePage />,
+			},
+			{
+				path: "policy-management",
+				element: <PolicyManagementPage />
+			}
 
 
 
-			
 		],
 	},
 ]);

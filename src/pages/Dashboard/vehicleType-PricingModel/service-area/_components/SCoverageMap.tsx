@@ -1,3 +1,5 @@
+"use client"
+
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
 import { MapPin } from "lucide-react"
 import { MapContainer, TileLayer, Polygon } from "react-leaflet"
@@ -5,8 +7,9 @@ import { useEffect } from "react"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import CustomButton from "../../_components/CustomButton"
+import type { LatLngTuple } from "leaflet"
 
-const polygonCoords = [
+const polygonCoords: LatLngTuple[] = [
   [1.344, 103.830],
   [1.360, 103.850],
   [1.372, 103.840],
@@ -17,7 +20,6 @@ const polygonCoords = [
 
 export default function SCoverageMap() {
   useEffect(() => {
-    // Fix Leaflet icon issue for Next.js
     delete (L.Icon.Default.prototype as any)._getIconUrl
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
@@ -29,18 +31,19 @@ export default function SCoverageMap() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex justify-between gap-2 ">
-         <div className="flex justify-center items-center gap-1">
-             <MapPin size={20} />
-            <span>  Service Coverage Map </span>
-         </div>
-         <CustomButton
-                bgColor="#FFE16B60"
-                borderColor="#FFE16B"
-                indicatorColor="#27C840"
-                text="Active Areas"
-                onClick={() => console.log("Clicked!")}
-              />
+        <CardTitle className="flex justify-between gap-2">
+          <div className="flex justify-center items-center gap-1">
+            <MapPin size={20} />
+            <span>Service Coverage Map</span>
+          </div>
+
+          <CustomButton
+            bgColor="#FFE16B60"
+            borderColor="#FFE16B"
+            indicatorColor="#27C840"
+            text="Active Areas"
+            click={() => console.log("Clicked!")}
+          />
         </CardTitle>
       </CardHeader>
 
@@ -50,15 +53,14 @@ export default function SCoverageMap() {
             center={[1.355, 103.82]}
             zoom={12}
             scrollWheelZoom={true}
-            className="h-full w-full -z-50"
+            className="h-full w-full"
           >
-            {/* Real Map Layer */}
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution="© OpenStreetMap contributors"
             />
 
-            {/* Pink Polygon - matches your screenshot */}
+            {/* Polygon */}
             <Polygon
               positions={polygonCoords}
               pathOptions={{
@@ -69,12 +71,6 @@ export default function SCoverageMap() {
               }}
             />
           </MapContainer>
-
-          {/* Legend */}
-          <div className="absolute top-4 right-4 bg-white shadow rounded px-3 py-1 flex items-center gap-2 text-sm">
-            <span className="w-3 h-3 rounded-full bg-green-500"></span>
-            Active Areas
-          </div>
         </div>
 
         <p className="text-sm text-gray-500 mt-4 text-center">
