@@ -25,7 +25,7 @@ interface CustomTableProps<T extends { id?: number | string }> {
 }
 
 const SCustomTable = React.forwardRef<HTMLDivElement, CustomTableProps<any>>(
-  ({ data, columns, rowClassName = "", onEdit, onDelete, onRowAction }, ref) => {
+  ({ data, columns, rowClassName = "" }, ref) => {
 
     return (
       <div ref={ref} className="w-full overflow-x-auto">

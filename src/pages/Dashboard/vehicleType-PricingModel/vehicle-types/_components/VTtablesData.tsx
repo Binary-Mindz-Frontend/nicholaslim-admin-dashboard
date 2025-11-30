@@ -64,7 +64,7 @@ const columns = [
   {
     key: "actions" as const,
     label: "Actions",
-    render: (_: any, row: Vehicle) => (
+    render: () => (
       <div className="flex gap-2">
         <Button
           variant="ghost"

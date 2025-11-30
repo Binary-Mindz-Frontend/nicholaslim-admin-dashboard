@@ -78,7 +78,7 @@ const UserAuditTable: React.FC = () => {
     },
    {
   label: "ACTION",
-  render: (_: any, row: UserCoin) => (
+  render: () => (
     <div className="flex gap-2">
       <Button
         variant="ghost"
