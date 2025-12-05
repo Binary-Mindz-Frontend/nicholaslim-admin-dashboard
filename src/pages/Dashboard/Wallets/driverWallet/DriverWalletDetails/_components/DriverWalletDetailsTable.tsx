@@ -64,7 +64,7 @@ const DriverWalletDetailsTable: React.FC = () => {
     },   
    {
   label: "ACTION",
-  render: (_: any, row: WalletDetails) => (
+  render: () => (
     <div className="flex ">
 
       <Button

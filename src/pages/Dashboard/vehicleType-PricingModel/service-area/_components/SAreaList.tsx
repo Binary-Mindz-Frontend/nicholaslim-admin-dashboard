@@ -56,7 +56,7 @@ const SAreaList: React.FC = () => {
     {
       key: "status" as const,
       label: "ACTION",
-      render: (_: any, row: ServiceArea) => (
+      render: () => (
         <div className="flex gap-2">
           <Button
             variant="ghost"

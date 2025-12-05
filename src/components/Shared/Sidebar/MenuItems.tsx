@@ -203,13 +203,13 @@ export const menuItems: MenuItem[] = [
     },
 
     {
-      id: "quiz",
+      id: "quiz-create-edit",
       label: "Quiz",
       icon: <HelpCircle className="w-5 h-5" />,
-      children: [
-        { id: "quiz-create-edit", label: "Create/Edit", icon: null },
-        { id: "quiz-track-drivers", label: "Track Drivers", icon: null },
-      ],
+      // children: [
+      //   { id: "quiz-create-edit", label: "Create/Edit", icon: null },
+      //   { id: "quiz-track-drivers", label: "Track Drivers", icon: null },
+      // ],
     },
 
     {
