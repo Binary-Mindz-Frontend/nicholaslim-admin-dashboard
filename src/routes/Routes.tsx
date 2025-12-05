@@ -50,6 +50,7 @@ import LiveOrderTracking from "@/pages/OrderPlacement/LiveOrderTracking/LiveOrde
 import SavedOrders from "@/pages/OrderPlacement/SavedOrders/SavedOrders";
 import PaymentOptions from "@/pages/OrderPlacement/PaymentOptions/PaymentOptions";
 import OrderConfirmed from "@/pages/OrderConfirmed/OrderConfirmed";
+import Login from "@/pages/Login/Login";
 
 const routes = createBrowserRouter([
   {
@@ -69,59 +70,58 @@ const routes = createBrowserRouter([
         element: <AddRemovePermission />,
       },
 
-
-			{
-				path: "users-app",
-				element: <UsersApp />,
-			},
-			{
-			 path: "users-app/:id",
-				element: <UserProfile />,
-			},
-			{
-				path: "users-web-portal",
-				element: <UsersWebportal />,
-			},
-			{
-				path: "add-new-user",
-				element: <AddNewUser />,
-			},
-			{
-				path: "driver-list",
-				element: <DriverList/>,
-			},
-			{
-				path: "driver-list/:id",
-				element: <EditDriverProfile />,
-			},
-			{
-				path: "add-new-driver",
-				element: <AddNewDriver/>,
-			},
-			{
-				path: "new-join-request",
-				element: <NewJoinRequest />,
-			},
-			{
-				path: "service-area",
-				element: <VTPMserviceArea />,
-			},
-			{
-				path: "vehicle-types",
-				element: <VehicleTypes />,
-			},
+      {
+        path: "users-app",
+        element: <UsersApp />,
+      },
+      {
+        path: "users-app/:id",
+        element: <UserProfile />,
+      },
+      {
+        path: "users-web-portal",
+        element: <UsersWebportal />,
+      },
+      {
+        path: "add-new-user",
+        element: <AddNewUser />,
+      },
+      {
+        path: "driver-list",
+        element: <DriverList />,
+      },
+      {
+        path: "driver-list/:id",
+        element: <EditDriverProfile />,
+      },
+      {
+        path: "add-new-driver",
+        element: <AddNewDriver />,
+      },
+      {
+        path: "new-join-request",
+        element: <NewJoinRequest />,
+      },
+      {
+        path: "service-area",
+        element: <VTPMserviceArea />,
+      },
+      {
+        path: "vehicle-types",
+        element: <VehicleTypes />,
+      },
       {
         path: "types-of-delivery",
-        element: <DeliveryTypesPage />
+        element: <DeliveryTypesPage />,
       },
-			{
-				path: "vehicle-pricing-page",
-				element: <AddVehiclePage />,
-			},
-			{
-				path: "policy-management",
-				element: <PolicyManagementPage />
-			},
+      {
+        path: "vehicle-pricing-page",
+        element: <AddVehiclePage />,
+      },
+      {
+        path: "policy-management",
+        element: <PolicyManagementPage />,
+      },
       {
         path: "users-app",
         element: <UsersApp />,
@@ -249,33 +249,32 @@ const routes = createBrowserRouter([
         element: <CustomerOrderConfirmation />,
       },
       {
-        path: "wallet-user" ,
-        element : <UserWallet />
+        path: "wallet-user",
+        element: <UserWallet />,
       },
       {
-        path: "wallet-user/:id" ,
-        element : <SingleUserWalletDetils />
-      },
-       {
-        path: "wallet-driver" ,
-        element : <DriverWallet />
+        path: "wallet-user/:id",
+        element: <SingleUserWalletDetils />,
       },
       {
-        path: "wallet-driver/:id" ,
-        element : <DriverWalletDetails />
-      }
-      ,
-      {
-        path: "incentive-management" ,
-        element : <IncentiveManagementPage />
+        path: "wallet-driver",
+        element: <DriverWallet />,
       },
       {
-        path: "coin-system" ,
-        element: <CoinPage />
+        path: "wallet-driver/:id",
+        element: <DriverWalletDetails />,
       },
       {
-        path : "coin-system/:id" ,
-        element: <UserCoinDetails />
+        path: "incentive-management",
+        element: <IncentiveManagementPage />,
+      },
+      {
+        path: "coin-system",
+        element: <CoinPage />,
+      },
+      {
+        path: "coin-system/:id",
+        element: <UserCoinDetails />,
       },
       {
         path: "report-orders",
@@ -305,36 +304,39 @@ const routes = createBrowserRouter([
         path: "incentives",
         element: <Incentive />,
       },
-     
 
       // Order Placement
       {
         path: "order",
-        element: <Order/>,
+        element: <Order />,
       },
       {
         path: "live-order-tracking",
-        element: <LiveOrderTracking/>,
+        element: <LiveOrderTracking />,
       },
-       {
+      {
         path: "order-history",
-        element: <OrderHistory/>,
+        element: <OrderHistory />,
       },
       {
         path: "saved-order",
-        element: <SavedOrders/>,
+        element: <SavedOrders />,
       },
       {
         path: "payment-options",
-        element: <PaymentOptions/>,
+        element: <PaymentOptions />,
       },
       {
         path: "order-confirm",
-        element: <OrderConfirmed/>,
+        element: <OrderConfirmed />,
       },
     ],
-},
+  },
 
+  {
+    path: "/login",
+    element: <Login />,
+  }
 ]);
 
 export default routes;
