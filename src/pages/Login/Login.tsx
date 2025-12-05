@@ -42,8 +42,8 @@ const Login: React.FC = () => {
         dispatch(
           setCredentials({
             accessToken: result.access_token,
-            refreshToken: result.refresh_token,
-            expiresIn: result.expires_in,
+            // refreshToken: result.refresh_token,
+            // expiresIn: result.expires_in,
           })
         );
 
