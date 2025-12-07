@@ -14,14 +14,20 @@ const baseQuery = fetchBaseQuery({
   credentials: "include",
 });
 
+const redirectToLogin = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('accessToken');
+    window.location.href = '/login';
+  }
+};
+
 const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   let result = await baseQuery(args, api, extraOptions);
 
-  // Handle unauthorized errors (401/403)
   if (result?.error?.status === 401 || result?.error?.status === 403) {
     api.dispatch(logout());
+    redirectToLogin();
   }
-
   return result;
 };
 
