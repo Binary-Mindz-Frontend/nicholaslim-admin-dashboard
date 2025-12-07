@@ -25,8 +25,8 @@ const deliveryTypesApi = baseApi.injectEndpoints({
       invalidatesTags: ["DeliveryType"],
     }),
     updateDeliveryType: builder.mutation({
-      query: (data) => ({
-        url: `/delivery-types/${data.id}`,
+      query: ({ id, ...data }) => ({
+        url: `/delivery-types/${id}`,
         method: "PATCH",
         body: data,
       }),
