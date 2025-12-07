@@ -19,6 +19,7 @@ import {
   BarChart,
   Bell,
   Map,
+  LogOut,
 } from "lucide-react";
 
 interface MenuItem {
@@ -254,4 +255,9 @@ export const menuItems: MenuItem[] = [
         { id: "payment-options", label: "Payment Options", icon: null },
       ],
     },
+    {
+      id: "login",
+      label: "Logout",
+      icon: <LogOut className="w-5 h-5" />,
+    }
   ];

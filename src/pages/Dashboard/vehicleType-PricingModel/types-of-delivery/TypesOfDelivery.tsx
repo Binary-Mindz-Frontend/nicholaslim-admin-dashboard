@@ -7,58 +7,38 @@ import {
 } from "@/redux/features/deliveryTypes/deliveryTypesApi";
 import toast from "react-hot-toast";
 
-// API response type
 interface ApiDeliveryType {
   id: string;
   name: string;
   percentage: string;
   pickup_duration: number;
-  delivery_duration: number;
+  delivery_duration: number; 
   created_at: string;
   updated_at: string;
 }
 
-// Convert API data to frontend format
 const convertToFrontendFormat = (apiData: ApiDeliveryType): FrontendDeliveryType => {
-  // Convert pickup_duration (minutes) to hours/minutes
-  const pickupHours = Math.floor(apiData.pickup_duration / 60);
-  const pickupMinutes = apiData.pickup_duration % 60;
-  const pickupTime = pickupHours > 0 ? pickupHours : pickupMinutes;
-  const pickupUnit = pickupHours > 0 ? "Hour" as const : "Min" as const;
-
-  // Convert delivery_duration (minutes) to hours/minutes
-  const deliveryHours = Math.floor(apiData.delivery_duration / 60);
-  const deliveryMinutes = apiData.delivery_duration % 60;
-  const deliveryTime = deliveryHours > 0 ? deliveryHours : deliveryMinutes;
-  const deliveryUnit = deliveryHours > 0 ? "Hour" as const : "Min" as const;
+  const pickupUnit = apiData.pickup_duration >= 60 ? "Hour" as const : "Min" as const;
+  const deliveryUnit = apiData.delivery_duration >= 60 ? "Hour" as const : "Min" as const;
 
   return {
-    id: apiData.id,
+    id: apiData.id.toString(),
     name: apiData.name,
-    percentage: parseFloat(apiData.percentage),
-    pickupTime,
-    pickupUnit,
-    deliveryTime,
-    deliveryUnit,
+    percentage: parseFloat(apiData.percentage) || 0,
+    pickupTime: apiData.pickup_duration,
+    pickupUnit: pickupUnit,
+    deliveryTime: apiData.delivery_duration,  
+    deliveryUnit: deliveryUnit,
   };
 };
 
-// Convert frontend format to API format
 const convertToApiFormat = (frontendData: FrontendDeliveryType) => {
-  // Convert hours to minutes if needed
-  const pickupDuration = frontendData.pickupUnit === "Hour" 
-    ? frontendData.pickupTime * 60 
-    : frontendData.pickupTime;
-
-  const deliveryDuration = frontendData.deliveryUnit === "Hour"
-    ? frontendData.deliveryTime * 60
-    : frontendData.deliveryTime;
-
   return {
-    name: frontendData.name.toUpperCase(), // API expects uppercase
+    id: frontendData.id, // ID in payload
+    name: frontendData.name.toUpperCase(),
     percentage: frontendData.percentage,
-    pickup_duration: pickupDuration,
-    delivery_duration: deliveryDuration,
+    pickup_duration: frontendData.pickupTime,
+    delivery_duration: frontendData.deliveryTime,
   };
 };
 
@@ -76,33 +56,26 @@ const DeliveryTypesPage: React.FC = () => {
   }, [apiResponse]);
 
   const handleSave = async (updatedDelivery: FrontendDeliveryType) => {
+    toast.loading("Updating delivery type...");
     try {
-      // Convert to API format
       const apiData = convertToApiFormat(updatedDelivery);
       
-      // Add ID for update
-      const updateData = {
-        id: updatedDelivery.id,
-        ...apiData,
-      };
-
-      const result = await updateDeliveryType(updateData).unwrap();
+      const result = await updateDeliveryType(apiData).unwrap();
       
       if (result.success) {
+        toast.dismiss();
         toast.success("Delivery type updated successfully!");
         
-        // Update local state
         setDeliveryTypes(prev => 
           prev.map(delivery => 
             delivery.id === updatedDelivery.id ? updatedDelivery : delivery
           )
         );
-        
-        // Optionally refetch
         refetch();
-      }
+      } 
     } catch (error: any) {
       console.error("Update failed:", error);
+      toast.dismiss();
       toast.error(error?.data?.message || "Failed to update delivery type");
     }
   };
