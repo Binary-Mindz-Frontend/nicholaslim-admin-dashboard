@@ -51,6 +51,7 @@ import SavedOrders from "@/pages/OrderPlacement/SavedOrders/SavedOrders";
 import PaymentOptions from "@/pages/OrderPlacement/PaymentOptions/PaymentOptions";
 import OrderConfirmed from "@/pages/OrderConfirmed/OrderConfirmed";
 import Login from "@/pages/Login/Login";
+import Quiz from "@/pages/Admin/QuizManagement/Quiz";
 
 const routes = createBrowserRouter([
   {
@@ -211,7 +212,10 @@ const routes = createBrowserRouter([
         path: "new-join-request",
         element: <NewJoinRequest />,
       },
-
+{
+  path: "quiz",
+  element: <Quiz />,
+},
       {
         path: "quiz-create-edit",
         element: <CreateOrEditQuiz />,
