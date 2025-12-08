@@ -59,8 +59,6 @@ const Quiz: React.FC = () => {
       } : undefined
     };
 
-    console.log("Update payload:", payload);
-
     try {
       const result = await updateQuiz({ id: editingQuiz.id, ...payload }).unwrap();
 
@@ -86,23 +84,42 @@ const Quiz: React.FC = () => {
   const handleDeleteQuiz = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this quiz?")) {
       try {
-        await deleteQuiz(id).unwrap();
+        const result = await deleteQuiz(id).unwrap();
+
+        if (!result.success) {
+          toast.error(result.message);
+          return;
+        }
+        toast.success("Quiz deleted successfully!");
         refetch();
       } catch (error) {
         console.error("Failed to delete quiz:", error);
+        toast.error("Failed to delete quiz");
       }
     }
   };
 
   const handleToggleActive = async (quiz: any) => {
+    toast.loading("Toggling active status...");
     try {
-      await updateQuiz({ 
+      const result = await updateQuiz({ 
         id: quiz.id!, 
         is_active: !quiz.is_active 
       }).unwrap();
+
+      if (!result.success) {
+        toast.dismiss();
+        toast.error(result.message);
+        return;
+      }
+
+      toast.dismiss();
+      toast.success("Active status toggled successfully!");
       refetch();
     } catch (error) {
       console.error("Failed to toggle active status:", error);
+      toast.dismiss();
+      toast.error("Failed to toggle active status");
     }
   };
 
