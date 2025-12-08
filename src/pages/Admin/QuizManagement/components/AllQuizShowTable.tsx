@@ -1,5 +1,6 @@
 import React from "react";
-import { Plus, Edit, Trash2, Clock, CheckCircle, XCircle, BookOpen, Layers } from "lucide-react";
+import { Plus, Edit, Trash2, Clock, BookOpen, Layers } from "lucide-react";
+import { StatusSwitch } from "@/pages/Dashboard/vehicleType-PricingModel/vehicle-types/_components/StatusSwitch";
 
 interface QuizTableProps {
   quizzes: any[];
@@ -92,26 +93,17 @@ const AllQuizShowTable: React.FC<QuizTableProps> = ({
                 </div>
               </td>
               <td className="px-8 py-5">
-                <button
-                  onClick={() => onToggleActive(quiz)}
-                  className={`px-4 py-2 rounded-full text-xs font-medium flex items-center cursor-pointer transition-all duration-200 ${
-                    quiz.is_active
-                      ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                      : 'bg-red-100 text-red-800 hover:bg-red-200'
-                  }`}
-                >
-                  {quiz.is_active ? (
-                    <>
-                      <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                      Active
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="w-3.5 h-3.5 mr-1.5" />
-                      Inactive
-                    </>
-                  )}
-                </button>
+                <StatusSwitch
+                  status={quiz.is_active ? "Active" : "Inactive"}
+                  onChange={(newStatus) => {
+                    // Handle the status change
+                    const shouldBeActive = newStatus === "Active";
+                    // Only trigger toggle if status actually changed
+                    if (shouldBeActive !== quiz.is_active) {
+                      onToggleActive(quiz);
+                    }
+                  }}
+                />
               </td>
               <td className="px-8 py-5">
                 <div className="flex space-x-3">
