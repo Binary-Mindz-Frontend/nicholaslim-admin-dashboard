@@ -2,7 +2,7 @@ import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 import { useState } from 'react';
 import { driversData } from "../data/DriverData";
 import { useDriverColumns } from "./DriverTable/DriverTable";
-import FilterSection from "@/components/Admin/FilterSection/FilterSection";
+import FilterSection from "@/components/Shared/FilterSection/FilterSection";
 
 
 

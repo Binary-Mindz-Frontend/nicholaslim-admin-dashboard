@@ -31,7 +31,7 @@ export default function FilterSection({
   handleResetFilter,
 }: FilterSectionProps) {
   return (
-    <div className="w-full bg-white rounded-md px-4 py-1">
+    <div className="w-full bg-white rounded-md px-1 py-1">
       <div className="flex flex-wrap items-center gap-3">
 
         {/* Filter By */}

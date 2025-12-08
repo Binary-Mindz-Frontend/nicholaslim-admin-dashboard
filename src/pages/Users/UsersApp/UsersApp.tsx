@@ -2,7 +2,7 @@
 import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 import { useUserColumns } from "./userTable/userTable";
 import { usersData } from "./data/usersData";
-import FilterSection from "@/components/Admin/FilterSection/FilterSection";
+import FilterSection from "@/components/Shared/FilterSection/FilterSection";
 import { useState } from "react";
 
 

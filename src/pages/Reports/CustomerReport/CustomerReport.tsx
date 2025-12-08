@@ -1,4 +1,4 @@
-import FilterSection from "@/components/Admin/FilterSection/FilterSection";
+import FilterSection from "@/components/Shared/FilterSection/FilterSection";
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";

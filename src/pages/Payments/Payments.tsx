@@ -5,7 +5,7 @@ import { paymentsData } from "./data/PaymentsData";
 import { usePaymentColumns } from "./PaymentTable/PaymentTable";
 import RevenueChart from "@/components/Dashboard/RevenueChart/RevenueChart";
 import DashboardStats from "./StatCard/StatCard";
-import FilterSection from "@/components/Admin/FilterSection/FilterSection";
+import FilterSection from "@/components/Shared/FilterSection/FilterSection";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 
