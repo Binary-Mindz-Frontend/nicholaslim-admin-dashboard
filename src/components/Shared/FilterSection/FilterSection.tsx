@@ -12,9 +12,6 @@ interface FilterSectionProps {
   dateFilter: string;
   setDateFilter: (value: string) => void;
 
-  activeFilter: string;
-  setActiveFilter: (value: string) => void;
-
   allFilter: string;
   setAllFilter: (value: string) => void;
 
@@ -24,8 +21,6 @@ interface FilterSectionProps {
 export default function FilterSection({
   dateFilter,
   setDateFilter,
-  activeFilter,
-  setActiveFilter,
   allFilter,
   setAllFilter,
   handleResetFilter,
@@ -62,22 +57,6 @@ export default function FilterSection({
           </Select>
         </div>
 
-        {/* Active Dropdown */}
-        <div
-          className="px-4 py-1 border border-yellow-400 rounded-md 
-          w-full sm:w-[48%] md:w-auto"
-        >
-          <Select value={activeFilter} onValueChange={setActiveFilter}>
-            <SelectTrigger className="w-full md:w-[130px] border-none shadow-none px-0">
-              <SelectValue placeholder="Active" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         {/* All Dropdown */}
         <div
           className="px-4 py-1 border border-yellow-400 rounded-md 
@@ -89,6 +68,8 @@ export default function FilterSection({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Users</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
               <SelectItem value="verified">Verified</SelectItem>
               <SelectItem value="unverified">Unverified</SelectItem>
             </SelectContent>
@@ -99,7 +80,7 @@ export default function FilterSection({
         <div className="px-4 py-1 border border-yellow-400 rounded-md w-full md:flex-1">
           <Button
             variant="ghost"
-            className="text-red-500 hover:text-red-600 hover:bg-white flex items-center gap-2 w-full justify-start"
+            className="text-red-500 cursor-pointer hover:text-red-600 hover:bg-white flex items-center gap-2 w-full justify-start"
             onClick={handleResetFilter}
           >
             <Repeat className="h-4 w-4" />

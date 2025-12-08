@@ -1,88 +1,105 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useGetUserTypesQuery } from "@/redux/features/usersTypes/usersTypesApi"; // RTK Query hook
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Switch } from "@/components/ui/switch";
 import ActionCell from "../ActionCell/ActionCell";
 import { TUser } from "../data/usersData";
 
+export const useUserColumns = () => {
+  const [users, setUsers] = useState<TUser[]>([]);
 
-// State management hook
-export const useUserColumns = (initialData: TUser[]) => {
-    const [users, setUsers] = useState<TUser[]>(initialData);
+  // Fetch user data using the custom RTK query hook
+  const { data: usersData, isLoading, isError } = useGetUserTypesQuery({
+    active: "", // Filter active status if needed
+    verified: "", // Filter verified status if needed
+    deleted: "", // Add other filters if needed
+    dateFilter: "", // Apply date filter if needed
+  });
 
-    const handleToggleActive = (userId: string) => {
-        setUsers((prevUsers) =>
-            prevUsers.map((user) =>
-                user.id === userId ? { ...user, isActive: !user.isActive } : user
-            )
-        );
-    };
+  // Update users when data is fetched and avoid setting data before it's available
+  useEffect(() => {
+    if (usersData?.data?.data) {
+      setUsers(usersData.data.data); // Set users data after fetching
+    }
+  }, [usersData]); // Only update when usersData changes
 
-    const userColumns: Column<TUser>[] = [
-        {
-            header: "User ID",
-            accessor: "id",
-            cell: (row: TUser) => (
-                <a href="#" className="text-blue-600 underline">
-                    {row.id}
-                </a>
-            ),
-        },
+  // Handle toggle active status
+  const handleToggleActive = (userId: string) => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.id === userId ? { ...user, isActive: !user.isActive } : user
+      )
+    );
+  };
 
-        {
-            header: "Name",
-            accessor: "name",
-            cell: (row: TUser) => (
-                <a href="#" className="text-blue-600 underline">
-                    {row.name}
-                </a>
-            ),
-        },
+  // Column definitions for the table
+  const userColumns: Column<TUser>[] = [
+    {
+      header: "User ID",
+      accessor: "id",
+      cell: (row: TUser) => (
+        <a href="#" className="text-blue-600 underline">
+          {row.id}
+        </a>
+      ),
+    },
 
-        {
-            header: "Contact",
-            cell: (row: TUser) => (
-                <span>{row.contact.slice(0, 2) + "******"}</span>
-            ),
-        },
+    {
+      header: "Name",
+      accessor: "name",
+      cell: (row: TUser) => (
+        <a href="#" className="text-blue-600 underline">
+          {row.name}
+        </a>
+      ),
+    },
 
-        {
-            header: "Total Order",
-            accessor: "totalOrder",
-        },
+    {
+      header: "Contact",
+      cell: (row: TUser) => {
+        // Check if contact exists and is a valid string before calling slice
+        const contact = row.contact || "";
+        return <span>{contact.slice(0, 2) + "******"}</span>;
+      },
+    },
 
-        {
-            header: "Total Order Account",
-            accessor: "totalOrderAmount",
-        },
+    {
+      header: "Total Order",
+      accessor: "totalOrder",
+    },
 
-        {
-            header: "Joining Date",
-            accessor: "joiningDate",
-        },
+    {
+      header: "Total Order Amount",
+      accessor: "totalOrderAmount",
+    },
 
-        {
-            header: "Active/Inactive",
-            cell: (row: TUser) => (
-                <div
-                    onClick={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                >
-                    <Switch
-                        checked={row.isActive}
-                        onCheckedChange={() => handleToggleActive(row.id)}
-                        className="data-[state=checked]:bg-green data-[state=unchecked]:bg-gray-300"
-                    />
-                </div>
-            ),
-        },
-        {
-            header: "Action",
-            cell: (user: TUser) => {
-                return <ActionCell row={user} />;
-            },
-        },
-    ];
+    {
+      header: "Joining Date",
+      accessor: "joiningDate",
+    },
 
-    return { userColumns, users };
+    {
+      header: "Active/Inactive",
+      cell: (row: TUser) => (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <Switch
+            checked={row.activeStatus}
+            onCheckedChange={() => handleToggleActive(row.id)}
+            className="data-[state=checked]:bg-green data-[state=unchecked]:bg-gray-300"
+          />
+        </div>
+      ),
+    },
+    {
+      header: "Action",
+      cell: (user: TUser) => {
+        return <ActionCell row={user} />;
+      },
+    },
+  ];
+
+  return { userColumns, users, isLoading, isError };
 };
