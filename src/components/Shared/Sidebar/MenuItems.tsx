@@ -204,7 +204,7 @@ export const menuItems: MenuItem[] = [
     },
 
     {
-      id: "quiz-create-edit",
+      id: "quiz",
       label: "Quiz",
       icon: <HelpCircle className="w-5 h-5" />,
       // children: [
