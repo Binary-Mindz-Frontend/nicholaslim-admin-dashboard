@@ -9,7 +9,7 @@ export default function UsersPage() {
   const [allFilter, setAllFilter] = useState("");
 
   // Fetching user data using the custom RTK query hook
-  const { data: usersData, isLoading, isError } = useGetUserTypesQuery({
+  const { isLoading, isError } = useGetUserTypesQuery({
     active: "", // Filter active status if needed
     verified: "", // Filter verified status if needed
     deleted: "", // Add other filters if needed
@@ -23,14 +23,15 @@ export default function UsersPage() {
   };
 
   // Get columns and users from the custom hook
-  const { userColumns, users } = useUserColumns(); // Passing users data dynamically
+  const { userColumns, users } = useUserColumns();
 
   // Filter the users based on the selected filters
   const filteredUsers = users.filter((user) => {
     if (dateFilter === "today" && new Date(user.joiningDate).toLocaleDateString() !== new Date().toLocaleDateString()) return false;
     if (dateFilter === "yesterday" && new Date(user.joiningDate).toLocaleDateString() !== new Date(new Date().setDate(new Date().getDate() - 1)).toLocaleDateString()) return false;
-    if (dateFilter === "last7days" && (new Date() - new Date(user.joiningDate)) / (1000 * 3600 * 24) > 7) return false;
-    if (dateFilter === "last30days" && (new Date() - new Date(user.joiningDate)) / (1000 * 3600 * 24) > 30) return false;
+    const daysSinceJoining = (new Date().getTime() - new Date(user.joiningDate).getTime()) / (1000 * 3600 * 24);
+    if (dateFilter === "last7days" && daysSinceJoining > 7) return false;
+    if (dateFilter === "last30days" && daysSinceJoining > 30) return false;
     if (dateFilter === "thismonth" && new Date(user.joiningDate).getMonth() !== new Date().getMonth()) return false;
 
     if (allFilter === "active" && user.activeStatus === false) return false;
