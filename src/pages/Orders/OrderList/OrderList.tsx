@@ -10,12 +10,12 @@ export default function OrderList() {
     const { orderColumns, orders } = useOrderColumns(ordersData);
 
     const [dateFilter, setDateFilter] = useState("");
-    const [activeFilter, setActiveFilter] = useState("");
+    // const [activeFilter, setActiveFilter] = useState("");
     const [allFilter, setAllFilter] = useState("");
 
     const handleResetFilter = () => {
         setDateFilter("");
-        setActiveFilter("");
+        // setActiveFilter("");
         setAllFilter("");
     };
 
@@ -34,8 +34,8 @@ export default function OrderList() {
                 <FilterSection
                     dateFilter={dateFilter}
                     setDateFilter={setDateFilter}
-                    activeFilter={activeFilter}
-                    setActiveFilter={setActiveFilter}
+                    // activeFilter={activeFilter}
+                    // setActiveFilter={setActiveFilter}
                     allFilter={allFilter}
                     setAllFilter={setAllFilter}
                     handleResetFilter={handleResetFilter}

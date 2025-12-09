@@ -8,12 +8,12 @@ import DeliveryHeatmap from "./DeliveryHeatmap/DeliveryHeatmap";
 
 export default function CustomerReport() {
     const [dateFilter, setDateFilter] = useState("");
-    const [activeFilter, setActiveFilter] = useState("");
+    // const [activeFilter, setActiveFilter] = useState("");
     const [allFilter, setAllFilter] = useState("");
 
     const handleResetFilter = () => {
         setDateFilter("");
-        setActiveFilter("");
+        // setActiveFilter("");
         setAllFilter("");
     };
 
@@ -30,8 +30,8 @@ export default function CustomerReport() {
                 <FilterSection
                     dateFilter={dateFilter}
                     setDateFilter={setDateFilter}
-                    activeFilter={activeFilter}
-                    setActiveFilter={setActiveFilter}
+                    // activeFilter={activeFilter}
+                    // setActiveFilter={setActiveFilter}
                     allFilter={allFilter}
                     setAllFilter={setAllFilter}
                     handleResetFilter={handleResetFilter}

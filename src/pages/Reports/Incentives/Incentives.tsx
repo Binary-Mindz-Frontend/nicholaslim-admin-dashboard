@@ -8,12 +8,12 @@ import IncentiveAnalytics from "./IncentiveAnalytics/IncentiveAnalytics";
 
 export default function Incentive() {
     const [dateFilter, setDateFilter] = useState("");
-    const [activeFilter, setActiveFilter] = useState("");
+    // const [activeFilter, setActiveFilter] = useState("");
     const [allFilter, setAllFilter] = useState("");
 
     const handleResetFilter = () => {
         setDateFilter("");
-        setActiveFilter("");
+        // setActiveFilter("");
         setAllFilter("");
     };
 
@@ -31,8 +31,8 @@ export default function Incentive() {
                 <FilterSection
                     dateFilter={dateFilter}
                     setDateFilter={setDateFilter}
-                    activeFilter={activeFilter}
-                    setActiveFilter={setActiveFilter}
+                    // activeFilter={activeFilter}
+                    // setActiveFilter={setActiveFilter}
                     allFilter={allFilter}
                     setAllFilter={setAllFilter}
                     handleResetFilter={handleResetFilter}

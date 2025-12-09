@@ -6,7 +6,8 @@
 
 
 
-export default function UsersPage() {
+
+// export default function UsersPage() {
   // const { userWebColumns, users } = useUserColumns(usersData);
   // const [dateFilter, setDateFilter] = useState('');
   // const [allFilter, setAllFilter] = useState('');
@@ -55,4 +56,13 @@ export default function UsersPage() {
   //     </div>
   //   </div>
   // );
+// }
+
+export default function UsersPage(){
+return(
+  <>
+  
+  </>
+)
+
 }

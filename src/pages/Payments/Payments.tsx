@@ -13,12 +13,12 @@ export default function Payments() {
   const { paymentColumns, payments } = usePaymentColumns(paymentsData);
 
   const [dateFilter, setDateFilter] = useState("");
-  const [activeFilter, setActiveFilter] = useState("");
+  // const [activeFilter, setActiveFilter] = useState("");
   const [allFilter, setAllFilter] = useState("");
 
   const handleResetFilter = () => {
     setDateFilter("");
-    setActiveFilter("");
+    // setActiveFilter("");
     setAllFilter("");
   };
 
@@ -35,8 +35,8 @@ export default function Payments() {
         <FilterSection
         dateFilter={dateFilter}
         setDateFilter={setDateFilter}
-        activeFilter={activeFilter}
-        setActiveFilter={setActiveFilter}
+        // activeFilter={activeFilter}
+        // setActiveFilter={setActiveFilter}
         allFilter={allFilter}
         setAllFilter={setAllFilter}
         handleResetFilter={handleResetFilter}

@@ -9,11 +9,11 @@ import FilterSection from "@/components/Shared/FilterSection/FilterSection";
 export default function  DriverList() {
   const { driverColumns, drivers } = useDriverColumns(driversData);
   const [dateFilter, setDateFilter] = useState('');
-  const [activeFilter, setActiveFilter] = useState('');
+  // const [activeFilter, setActiveFilter] = useState('');
   const [allFilter, setAllFilter] = useState('');
   const handleResetFilter = () => {
     setDateFilter('');
-    setActiveFilter('');
+    // setActiveFilter('');
     setAllFilter('');
   };
 
@@ -40,8 +40,8 @@ export default function  DriverList() {
         <FilterSection
         dateFilter={dateFilter}
         setDateFilter={setDateFilter}
-        activeFilter={activeFilter}
-        setActiveFilter={setActiveFilter}
+        // activeFilter={activeFilter}
+        // setActiveFilter={setActiveFilter}
         allFilter={allFilter}
         setAllFilter={setAllFilter}
         handleResetFilter={handleResetFilter}

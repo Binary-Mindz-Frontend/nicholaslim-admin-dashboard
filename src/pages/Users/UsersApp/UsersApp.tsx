@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useGetUserTypesQuery } from "@/redux/features/usersTypes/usersTypesApi"; // RTK Query hook
-import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 import FilterSection from "@/components/Shared/FilterSection/FilterSection";
 import { useUserColumns } from "./userTable/userTable"; // The updated hook
+import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 
 export default function UsersPage() {
   const [dateFilter, setDateFilter] = useState("");

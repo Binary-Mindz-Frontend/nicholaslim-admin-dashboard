@@ -39,7 +39,7 @@ export const useUserColumns = () => {
       accessor: "id",
       cell: (row: TUser) => (
         <a href="#" className="text-blue-600 underline">
-          {row.id}
+          U{row.id}
         </a>
       ),
     },
