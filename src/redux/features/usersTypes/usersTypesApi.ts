@@ -60,12 +60,23 @@ const userTypesApi = baseApi.injectEndpoints({
             }),
             // Invalidate the 'UserTypes' tag to refetch the list and the specific user's details
             invalidatesTags: (_, __, { id }) => [
-                "UserTypes", 
+                "UserTypes",
                 { type: "UserTypes", id }
-            ], 
+            ],
         }),
-        // Additional mutation queries for adding, updating, and deleting users
-        // addUserType, updateUserType, deleteUserType...
+
+        // 🚀 UPDATED Mutation to add a user (Admin Create User)
+        addUserType: builder.mutation({
+            query: (newUser) => ({
+                // 👈 Changed URL from /auth/signup to /users/admin/create-user
+                url: `/users/admin/create-user`,
+                method: "POST",
+                body: newUser, // Expects { username, email, phone, password, role }
+            }),
+            // Invalidate the 'UserTypes' tag to refetch the main list of users
+            invalidatesTags: ["UserTypes"],
+        }),
+
     }),
 });
 
@@ -75,4 +86,5 @@ export const {
     useDeleteUserTypeMutation,
     useToggleUserActiveStatusMutation,
     useUpdateUserTypeMutation,
+    useAddUserTypeMutation,
 } = userTypesApi;

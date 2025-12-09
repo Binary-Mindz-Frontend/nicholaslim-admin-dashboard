@@ -403,7 +403,7 @@ export default function UserProfile() {
 
     // ------------------ ONLY THE REQUIRED FIELDS ------------------
     const baseFields = [
-        ["username", "Username"],
+        ["username", "Full Name"],
         ["email", "Email Address"],
         ["phone", "Phone Number"],
     ] as Array<[keyof UserProfileType, string]>; // Removed firstName and lastName
