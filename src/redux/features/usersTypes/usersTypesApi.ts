@@ -50,6 +50,20 @@ const userTypesApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["UserTypes"], // Refetch users after toggle
         }),
+
+        // Mutation to update a user by ID using PATCH
+        updateUserType: builder.mutation({
+            query: ({ id, updatedData }) => ({
+                url: `/users/${id}`,
+                method: "PATCH",
+                body: updatedData, // Send the fields to be updated in the request body
+            }),
+            // Invalidate the 'UserTypes' tag to refetch the list and the specific user's details
+            invalidatesTags: (_, __, { id }) => [
+                "UserTypes", 
+                { type: "UserTypes", id }
+            ], 
+        }),
         // Additional mutation queries for adding, updating, and deleting users
         // addUserType, updateUserType, deleteUserType...
     }),
@@ -60,4 +74,5 @@ export const {
     useGetUserTypeByIdQuery,
     useDeleteUserTypeMutation,
     useToggleUserActiveStatusMutation,
+    useUpdateUserTypeMutation,
 } = userTypesApi;
