@@ -5,7 +5,7 @@ import { paymentsData } from "./data/PaymentsData";
 import { usePaymentColumns } from "./PaymentTable/PaymentTable";
 import RevenueChart from "@/components/Dashboard/RevenueChart/RevenueChart";
 import DashboardStats from "./StatCard/StatCard";
-import FilterSection from "@/components/Admin/FilterSection/FilterSection";
+import FilterSection from "@/components/Shared/FilterSection/FilterSection";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 
@@ -13,12 +13,12 @@ export default function Payments() {
   const { paymentColumns, payments } = usePaymentColumns(paymentsData);
 
   const [dateFilter, setDateFilter] = useState("");
-  const [activeFilter, setActiveFilter] = useState("");
+  // const [activeFilter, setActiveFilter] = useState("");
   const [allFilter, setAllFilter] = useState("");
 
   const handleResetFilter = () => {
     setDateFilter("");
-    setActiveFilter("");
+    // setActiveFilter("");
     setAllFilter("");
   };
 
@@ -35,8 +35,8 @@ export default function Payments() {
         <FilterSection
         dateFilter={dateFilter}
         setDateFilter={setDateFilter}
-        activeFilter={activeFilter}
-        setActiveFilter={setActiveFilter}
+        // activeFilter={activeFilter}
+        // setActiveFilter={setActiveFilter}
         allFilter={allFilter}
         setAllFilter={setAllFilter}
         handleResetFilter={handleResetFilter}

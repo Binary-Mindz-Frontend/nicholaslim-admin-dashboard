@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,11 +19,23 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { TUser } from "../data/usersData";
-
+import { useDeleteUserTypeMutation } from "@/redux/features/usersTypes/usersTypesApi";
 
 export default function ActionCell({ row }: { row: TUser }) {
   const [openDelete, setOpenDelete] = useState(false);
   const navigate = useNavigate();
+  const [deleteUser, { isLoading }] = useDeleteUserTypeMutation();  // Initialize the delete user mutation
+
+const handleDelete = async () => {
+    try {
+      // Pass the user ID in an array, as required by the backend
+      await deleteUser([row.id]).unwrap();  // Call the delete mutation with the user ID in an array
+      setOpenDelete(false); 
+    } catch (error) {
+      console.error("Failed to delete user:", error);
+      // You can show an error message here if needed
+    }
+  };
 
   return (
     <>
@@ -37,7 +48,9 @@ export default function ActionCell({ row }: { row: TUser }) {
 
         <DropdownMenuContent align="end" className="w-36">
           {/* VIEW */}
-          <DropdownMenuItem className="flex items-center gap-2">
+          <DropdownMenuItem
+            onClick={() => navigate(`/users-app/${row.id}`)}
+            className="flex items-center gap-2">
             <Eye size={16} className="text-blue-600" />
             <span>View</span>
           </DropdownMenuItem>
@@ -75,11 +88,10 @@ export default function ActionCell({ row }: { row: TUser }) {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                console.log("Deleted", row.id);
-              }}
+              onClick={handleDelete}  // Call handleDelete when "Yes, Delete" is clicked
+              disabled={isLoading}  // Disable the button while the mutation is loading
             >
-              Yes, Delete
+              {isLoading ? "Deleting..." : "Yes, Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

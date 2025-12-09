@@ -1,4 +1,4 @@
-import FilterSection from "@/components/Admin/FilterSection/FilterSection";
+import FilterSection from "@/components/Shared/FilterSection/FilterSection";
 import { useState } from "react";
 import DriverPerformanceChart from "./DriverChart/DriverChart";
 import { Input } from "@/components/ui/input";
@@ -12,12 +12,12 @@ import { Download } from "lucide-react";
 
 export default function DriverPerformance() {
     const [dateFilter, setDateFilter] = useState("");
-    const [activeFilter, setActiveFilter] = useState("");
+    // const [activeFilter, setActiveFilter] = useState("");
     const [allFilter, setAllFilter] = useState("");
 
     const handleResetFilter = () => {
         setDateFilter("");
-        setActiveFilter("");
+        // setActiveFilter("");
         setAllFilter("");
     };
 
@@ -36,8 +36,8 @@ export default function DriverPerformance() {
                 <FilterSection
                     dateFilter={dateFilter}
                     setDateFilter={setDateFilter}
-                    activeFilter={activeFilter}
-                    setActiveFilter={setActiveFilter}
+                    // activeFilter={activeFilter}
+                    // setActiveFilter={setActiveFilter}
                     allFilter={allFilter}
                     setAllFilter={setAllFilter}
                     handleResetFilter={handleResetFilter}

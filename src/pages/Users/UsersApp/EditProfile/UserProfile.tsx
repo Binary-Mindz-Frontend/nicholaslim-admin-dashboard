@@ -1,24 +1,12 @@
-
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router-dom"; 
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-
 import { Camera, Star, Files, Rss } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useGetUserTypeByIdQuery } from "@/redux/features/usersTypes/usersTypesApi";
 
 // ------------------ TYPES ------------------
 export interface UserProfileType {
@@ -64,72 +52,31 @@ export interface UserProfileType {
 
 export default function UserProfile() {
   const { id } = useParams();
-
+  const { data: userData, isLoading, isError } = useGetUserTypeByIdQuery(id); // Fetch user data by ID
   const [formData, setFormData] = useState<UserProfileType | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null); // Profile image state
+ 
+ 
+console.log("Fetched user data:", userData); // Check the structure of the response
 
-  // IMAGE STATE
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-
-  // --------- No backend: DUMMY DATA ----------
   useEffect(() => {
-    if (!id) return;
+    if (userData && userData.data) {
+      setFormData(userData.data); // Set the fetched user data into the formData state
+    }
+  }, [userData]);
 
-    const fakeUser: UserProfileType = {
-      id: id,
-      firstName: "User",
-      lastName: id,
-      email: `${id.toLowerCase()}@gmail.com`,
-      phone: "+8801*********",
-      dob: "1995-04-10",
-      gender: "Male",
-      emergencyContact: "+88017********",
-      driverId: "D" + id,
-      address: "Dhaka, Bangladesh",
-      city: "Dhaka",
-      state: "BD",
-      postal: "1207",
-      rating: 4.7,
-      followers: 250,
-      deliveries: 540,
-      cancellations: 12,
-      incentives: "৳8500",
+  if (isLoading) return <p>Loading user data...</p>;
+  if (isError || !formData) return <p>Error fetching user data.</p>;
 
-      drivingLicense: "668 885***",
-      dlIssueDate: "20/10/2020",
-      dlExpiryDate: "20/10/2025",
-
-      vehiclePlate1: "SNL2665P",
-      vehicleType: "Car",
-      vehiclePlate2: "SNL2665P",
-      model: "Corolla Touring SE",
-      registrationDate: "20/10/2024",
-      vehicleLog: "486******",
-      vehicleIssueDate: "20/10/2024",
-      vehicleExpiryDate: "20/10/2026",
-
-      policyNumber: "635******",
-      policyIssue: "20/10/2024",
-      policyExpiry: "20/10/2026",
-
-      bank: "Standard Chartered",
-      accountNumber: "555********",
-    };
-
-    setFormData(fakeUser);
-  }, [id]);
-
-  if (!formData) return <p className="text-center mt-10">Loading user...</p>;
-
-  // IMAGE UPLOAD HANDLER
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const imageURL = URL.createObjectURL(file);
-    setProfileImage(imageURL);
+    setProfileImage(imageURL); // Update profile image
   };
 
-  // ---- FORM HANDLER ----
+  // Form field change handler
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.name as keyof UserProfileType;
     const value = e.target.value;
@@ -141,13 +88,20 @@ export default function UserProfile() {
     });
   };
 
-  const handleEdit = () => console.log("Updated User:", formData);
-  const handleDelete = () => console.log("User Deleted:", id);
+  const handleEdit = () => {
+    // Handle profile update logic
+    console.log("Updated User:", formData);
+  };
+
+  const handleDelete = () => {
+    // Handle delete logic
+    console.log("User Deleted:", id);
+  };
 
   const getStringValue = (key: keyof UserProfileType): string =>
     String(formData[key] ?? "");
 
-  // FIELD LISTS
+  // Form field groups
   const baseFields = [
     ["firstName", "First Name"],
     ["lastName", "Last Name"],
@@ -161,13 +115,13 @@ export default function UserProfile() {
     ["city", "City"],
     ["state", "State"],
     ["postal", "Zip / Postal Code"],
-  ] as Array<[keyof UserProfileType, string]>;
+  ] as Array<[keyof UserProfileType, string]>; // Base fields for the form
 
   const drivingLicenseFields = [
     ["drivingLicense", "Driving License Number"],
     ["dlIssueDate", "Issue Date"],
     ["dlExpiryDate", "Expiry Date"],
-  ] as Array<[keyof UserProfileType, string]>;
+  ] as Array<[keyof UserProfileType, string]>; // Driving License fields
 
   const vehicleFields = [
     ["vehiclePlate1", "Vehicle Number Plate"],
@@ -178,18 +132,18 @@ export default function UserProfile() {
     ["vehicleLog", "Vehicle Log Number"],
     ["vehicleIssueDate", "Issue Date"],
     ["vehicleExpiryDate", "Expiry Date"],
-  ] as Array<[keyof UserProfileType, string]>;
+  ] as Array<[keyof UserProfileType, string]>; // Vehicle fields
 
   const insuranceFields = [
     ["policyNumber", "Vehicle Policy Number"],
     ["policyIssue", "Issue Date"],
     ["policyExpiry", "Expiry Date"],
-  ] as Array<[keyof UserProfileType, string]>;
+  ] as Array<[keyof UserProfileType, string]>; // Insurance fields
 
   const bankFields = [
     ["bank", "Bank"],
     ["accountNumber", "Account Number"],
-  ] as Array<[keyof UserProfileType, string]>;
+  ] as Array<[keyof UserProfileType, string]>; // Bank details fields
 
   return (
     <div className="sm:p-6 mx-auto space-y-6 bg-[#F5F7FA]">

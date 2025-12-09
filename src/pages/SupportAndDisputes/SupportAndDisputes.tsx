@@ -3,18 +3,18 @@ import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 import { useState } from "react";
 import { supportAndDisputesData } from "./data/SupportData";
 import { useSupportDisputeColumns } from "./SupportAndDisputesTable/SupportAndDisputesTable";
-import FilterSection from "@/components/Admin/FilterSection/FilterSection";
+import FilterSection from "@/components/Shared/FilterSection/FilterSection";
 
 export default function SupportAndDisputes() {
   const { columns, rows } = useSupportDisputeColumns(supportAndDisputesData);
 
   const [dateFilter, setDateFilter] = useState("");
-  const [activeFilter, setActiveFilter] = useState("");
+  // const [activeFilter, setActiveFilter] = useState("");
   const [allFilter, setAllFilter] = useState("");
 
   const handleResetFilter = () => {
     setDateFilter("");
-    setActiveFilter("");
+    // setActiveFilter("");
     setAllFilter("");
   };
 
@@ -31,8 +31,8 @@ export default function SupportAndDisputes() {
         <FilterSection
         dateFilter={dateFilter}
         setDateFilter={setDateFilter}
-        activeFilter={activeFilter}
-        setActiveFilter={setActiveFilter}
+        // activeFilter={activeFilter}
+        // setActiveFilter={setActiveFilter}
         allFilter={allFilter}
         setAllFilter={setAllFilter}
         handleResetFilter={handleResetFilter}

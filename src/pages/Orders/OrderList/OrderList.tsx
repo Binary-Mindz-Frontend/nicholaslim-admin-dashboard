@@ -4,18 +4,18 @@ import { useState } from "react";
 import { useOrderColumns } from "./OrderTable/OrderTable";
 import { ordersData } from "./data/OrderData";
 import TrackOrderSection from "./TrackOrderSection/TrackOrderSection";
-import FilterSection from "@/components/Admin/FilterSection/FilterSection";
+import FilterSection from "@/components/Shared/FilterSection/FilterSection";
 
 export default function OrderList() {
     const { orderColumns, orders } = useOrderColumns(ordersData);
 
     const [dateFilter, setDateFilter] = useState("");
-    const [activeFilter, setActiveFilter] = useState("");
+    // const [activeFilter, setActiveFilter] = useState("");
     const [allFilter, setAllFilter] = useState("");
 
     const handleResetFilter = () => {
         setDateFilter("");
-        setActiveFilter("");
+        // setActiveFilter("");
         setAllFilter("");
     };
 
@@ -34,8 +34,8 @@ export default function OrderList() {
                 <FilterSection
                     dateFilter={dateFilter}
                     setDateFilter={setDateFilter}
-                    activeFilter={activeFilter}
-                    setActiveFilter={setActiveFilter}
+                    // activeFilter={activeFilter}
+                    // setActiveFilter={setActiveFilter}
                     allFilter={allFilter}
                     setAllFilter={setAllFilter}
                     handleResetFilter={handleResetFilter}
