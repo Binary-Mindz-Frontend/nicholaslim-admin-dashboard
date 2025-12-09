@@ -1,27 +1,38 @@
 import { useState, useEffect } from "react";
-import { useGetUserTypesQuery } from "@/redux/features/usersTypes/usersTypesApi"; // RTK Query hook
+import { useGetUserTypesQuery } from "@/redux/features/usersTypes/usersTypesApi";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Switch } from "@/components/ui/switch";
 import ActionCell from "../ActionCell/ActionCell";
 import { TUser } from "../data/usersData";
 
-export const useUserColumns = () => {
+interface UseUserColumnsParams {
+  status?: string;
+  dateFilter?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: string;
+}
+
+export const useUserColumns = (params: UseUserColumnsParams = {}) => {
   const [users, setUsers] = useState<TUser[]>([]);
 
-  // Fetch user data using the custom RTK query hook
+  // Fetch user data using the custom RTK query hook with params
   const { data: usersData, isLoading, isError } = useGetUserTypesQuery({
-    active: "", // Filter active status if needed
-    verified: "", // Filter verified status if needed
-    deleted: "", // Add other filters if needed
-    dateFilter: "", // Apply date filter if needed
+    status: params.status || "",
+    dateFilter: params.dateFilter || "",
+    page: params.page || 1,
+    limit: params.limit || 10,
+    sortBy: params.sortBy || "createdAt",
+    sortOrder: params.sortOrder || "desc",
   });
 
-  // Update users when data is fetched and avoid setting data before it's available
+  // Update users when data is fetched
   useEffect(() => {
     if (usersData?.data?.data) {
-      setUsers(usersData.data.data); // Set users data after fetching
+      setUsers(usersData.data.data);
     }
-  }, [usersData]); // Only update when usersData changes
+  }, [usersData]);
 
   // Handle toggle active status
   const handleToggleActive = (userId: string) => {
@@ -57,7 +68,6 @@ export const useUserColumns = () => {
     {
       header: "Contact",
       cell: (row: TUser) => {
-        // Check if contact exists and is a valid string before calling slice
         const contact = row.contact || "";
         return <span>{contact.slice(0, 2) + "******"}</span>;
       },
@@ -101,5 +111,8 @@ export const useUserColumns = () => {
     },
   ];
 
-  return { userColumns, users, isLoading, isError };
+  // Get total count from API response
+  const totalItems = usersData?.data?.meta?.total || usersData?.data?.total || 0;
+
+  return { userColumns, users, isLoading, isError, totalItems };
 };
