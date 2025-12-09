@@ -212,12 +212,12 @@ const routes = createBrowserRouter([
         path: "new-join-request",
         element: <NewJoinRequest />,
       },
-{
-  path: "quiz",
-  element: <Quiz />,
-},
       {
-        path: "quiz-create-edit",
+        path: "quiz",
+        element: <Quiz />,
+      },
+      {
+        path: "quiz-create-edit/:id",
         element: <CreateOrEditQuiz />,
       },
       {
@@ -340,7 +340,7 @@ const routes = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
-  }
+  },
 ]);
 
 export default routes;
