@@ -184,3 +184,11 @@
     @apply bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-black font-bold rounded-full transition-all shadow-lg;
   }
 }
+
+@layer components {
+  .subgrid-layout {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span 4;
+  }
+}
