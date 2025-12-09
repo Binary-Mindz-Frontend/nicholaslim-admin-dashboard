@@ -32,16 +32,24 @@ const userTypesApi = baseApi.injectEndpoints({
             providesTags: ["UserTypes"],
         }),
 
-       // Mutation to permanently delete user(s) by ID(s)
-    deleteUserType: builder.mutation({
-      query: (ids) => ({
-        url: `/users/permanent`,  // Updated URL for permanent deletion
-        method: "DELETE",
-        body: { ids },  // Send the "ids" array in the request body
-      }),
-      invalidatesTags: ["UserTypes"],
-    }),
+        // Mutation to permanently delete user(s) by ID(s)
+        deleteUserType: builder.mutation({
+            query: (ids) => ({
+                url: `/users/permanent`,  // Updated URL for permanent deletion
+                method: "DELETE",
+                body: { ids },  // Send the "ids" array in the request body
+            }),
+            invalidatesTags: ["UserTypes"],
+        }),
 
+        // Mutation to toggle active status
+        toggleUserActiveStatus: builder.mutation({
+            query: (id) => ({
+                url: `/users/active/${id}`,
+                method: "PATCH", // or "PUT" depending on your backend
+            }),
+            invalidatesTags: ["UserTypes"], // Refetch users after toggle
+        }),
         // Additional mutation queries for adding, updating, and deleting users
         // addUserType, updateUserType, deleteUserType...
     }),
@@ -50,5 +58,6 @@ const userTypesApi = baseApi.injectEndpoints({
 export const {
     useGetUserTypesQuery,
     useGetUserTypeByIdQuery,
-     useDeleteUserTypeMutation,
+    useDeleteUserTypeMutation,
+    useToggleUserActiveStatusMutation,
 } = userTypesApi;

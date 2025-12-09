@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useGetUserTypesQuery } from "@/redux/features/usersTypes/usersTypesApi";
+import { useGetUserTypesQuery, useToggleUserActiveStatusMutation } from "@/redux/features/usersTypes/usersTypesApi";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Switch } from "@/components/ui/switch";
 import ActionCell from "../ActionCell/ActionCell";
 import { TUser } from "../data/usersData";
+import toast from "react-hot-toast"; // Import toast
 
 interface UseUserColumnsParams {
   status?: string;
@@ -26,6 +27,9 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
     sortBy: params.sortBy || "createdAt",
     sortOrder: params.sortOrder || "desc",
   });
+  
+// Add the mutation hook
+  const [toggleActiveStatus] = useToggleUserActiveStatusMutation();
 
   // Update users when data is fetched
   useEffect(() => {
@@ -34,13 +38,35 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
     }
   }, [usersData]);
 
-  // Handle toggle active status
-  const handleToggleActive = (userId: string) => {
-    setUsers((prevUsers) =>
-      prevUsers.map((user) =>
-        user.id === userId ? { ...user, isActive: !user.isActive } : user
-      )
-    );
+  // Handle toggle active status - now calls the API
+  const handleToggleActive = async (userId: string) => {
+    try {
+      // Optimistic update (update UI immediately)
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userId ? { ...user, activeStatus: !user.activeStatus } : user
+        )
+      );
+
+      // Call the API to update on the server
+      await toggleActiveStatus(userId).unwrap();
+      
+      // Show success toast if successful
+      toast.success("User status updated successfully!");
+
+    } catch (error) {
+      console.error("Failed to toggle active status:", error);
+      
+      // Revert the optimistic update on error
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userId ? { ...user, activeStatus: !user.activeStatus } : user
+        )
+      );
+      
+      // Show error toast if failed
+      toast.error("Failed to update user status. Please try again.");
+    }
   };
 
   // Column definitions for the table
