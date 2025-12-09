@@ -136,7 +136,7 @@ const Quiz: React.FC = () => {
   };
 
   const handleAddQuestions = (quizId: number) => {
-    navigate(`/quiz-create-edit:${quizId}`);
+    navigate(`/quiz-create-edit/${quizId}`);
   };
 
   if (isLoading) {

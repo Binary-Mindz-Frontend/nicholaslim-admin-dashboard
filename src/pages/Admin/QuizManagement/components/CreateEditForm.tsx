@@ -1,72 +1,127 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ArrowLeft } from "lucide-react";
-import { useState } from "react";
-import type { Question } from "../types";
+import { useState, useEffect } from "react";
+import type { Question } from "@/types/questionsTypes";
+import toast from "react-hot-toast";
 
 interface Props {
   question?: Question | null;
+  quizId?: number;
   onSave: (data: any) => void;
   onBack: () => void;
 }
 
-export default function QuestionForm({ question, onSave, onBack }: Props) {
-  const [type, setType] = useState<"Multiple Choice" | "True/False">(
-    question?.type || "Multiple Choice"
+export default function QuestionForm({
+  question,
+  quizId: propQuizId,
+  onSave,
+  onBack,
+}: Props) {
+  const [quizId] = useState<number>(propQuizId || question?.quizId || 1);
+  const [quesType, setQuesType] = useState<"MULTIPLE" | "BOOLEAN">(
+    question?.quesType === "MULTIPLE" || question?.quesType === "BOOLEAN"
+      ? question.quesType
+      : "MULTIPLE"
   );
-  const [category, setCategory] = useState(
-    question?.category || "Safety Procedures"
+  const [quesCategory, setQuesCategory] = useState<
+    "SAFETY_PROCUDURE" | "EQUIPMENT" | "PROTOCOL" | "GENERAL_KNOWLEDGE"
+  >(question?.quesCategory || "SAFETY_PROCUDURE");
+  const [quesDifficulty, setQuesDifficulty] = useState<
+    "EASY" | "MEDIUM" | "HARD"
+  >(question?.quesDeficulty || "EASY");
+  const [question_text, setQuestionText] = useState(
+    question?.question_text || ""
   );
-  const [difficulty, setDifficulty] = useState(question?.difficulty || "Easy");
-  const [text, setText] = useState(question?.question || "");
-  const [options, setOptions] = useState<string[]>(
-    question?.type === "Multiple Choice"
-      ? question.options || ["", "", "", ""]
-      : ["", "", "", ""]
+  const [options, setOptions] = useState<any[]>(
+    question?.options || [
+      { option_text: "", is_correct: false },
+      { option_text: "", is_correct: false },
+      { option_text: "", is_correct: false },
+      { option_text: "", is_correct: false },
+    ]
   );
-  const [correct, setCorrect] = useState(question?.correctAnswer || "");
+
+  useEffect(() => {
+    if (question) {
+      setQuesType(question.quesType as "MULTIPLE" | "BOOLEAN");
+      setQuesCategory(question.quesCategory);
+      setQuesDifficulty(question.quesDeficulty);
+      setQuestionText(question.question_text);
+
+      if (question.quesType === "BOOLEAN") {
+        setOptions([
+          { option_text: "True", is_correct: false },
+          { option_text: "False", is_correct: false },
+        ]);
+      } else {
+        setOptions(
+          question.options || [
+            { option_text: "", is_correct: false },
+            { option_text: "", is_correct: false },
+            { option_text: "", is_correct: false },
+            { option_text: "", is_correct: false },
+          ]
+        );
+      }
+    }
+  }, [question]);
 
   const handleSave = () => {
-    // Check if the correct answer is selected for Multiple Choice, or if it's True/False
-    // and if True/False, ensure 'True' or 'False' is selected.
-    if (
-      !text ||
-      (type === "Multiple Choice" && !correct) ||
-      (type === "True/False" && !correct)
-    ) {
-      alert("Please fill all required fields and select an answer.");
+    if (!question_text.trim()) {
+      toast.error("Please enter a question");
       return;
     }
 
-    // For multiple choice, ensure all option fields are filled if the question type is selected
-    if (
-      type === "Multiple Choice" &&
-      options.some((option) => !option.trim())
-    ) {
-      alert("Please fill all multiple choice options.");
-      return;
+    if (quesType === "MULTIPLE") {
+      const hasEmptyOption = options.some((opt) => !opt.option_text.trim());
+      const hasCorrectOption = options.some((opt) => opt.is_correct);
+
+      if (hasEmptyOption) {
+        toast.error("Please enter all options");
+        return;
+      }
+
+      if (!hasCorrectOption) {
+        toast.error("Please select the correct answer");
+        return;
+      }
     }
 
-    onSave({
-      question: text,
-      category,
-      difficulty,
-      type,
-      options: type === "Multiple Choice" ? options : undefined,
-      correctAnswer: correct,
-    });
+    if (quesType === "BOOLEAN") {
+      const hasCorrectOption = options.some((opt) => opt.is_correct);
+      if (!hasCorrectOption) {
+        toast.error("Please select the correct answer");
+        return;
+      }
+    }
+
+    const data = {
+      quizId,
+      quesType,
+      quesCategory,
+      quesDeficulty: quesDifficulty,
+      question_text,
+      options,
+    };
+
+    onSave(data);
   };
 
-  const handleOptionChange = (index: number, value: string) => {
+  const handleOptionChange = (index: number, field: string, value: any) => {
     const newOptions = [...options];
-    newOptions[index] = value;
+    newOptions[index] = { ...newOptions[index], [field]: value };
+
+    if (field === "is_correct" && value === true) {
+      newOptions.forEach((opt, i) => {
+        if (i !== index) opt.is_correct = false;
+      });
+    }
+
     setOptions(newOptions);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-8 py-12">
-        {" "}
-        {/* Adjusted padding */}
+      <div className="px-8 py-12">
         <button
           onClick={onBack}
           className="flex items-center gap-3 text-gray-700 hover:text-gray-900 mb-8 text-lg font-medium cursor-pointer"
@@ -75,243 +130,175 @@ export default function QuestionForm({ question, onSave, onBack }: Props) {
           Back to Quiz Management
         </button>
         <h2 className="text-4xl font-bold text-gray-900 mb-10">
-          {" "}
-          {/* Adjusted margin */}
-          Edit Questions
+          {question ? "Edit Question" : "Create Question"}
         </h2>
         <div className="bg-white rounded-3xl shadow-lg p-12">
-          {" "}
-          {/* Adjusted shadow */}
           <div className="space-y-10">
-            {" "}
-            {/* Adjusted general spacing between sections */}
             <div>
               <p className="text-xl font-semibold text-gray-800 mb-6">
-                {" "}
-                {/* Larger, bolder title */}
                 Questions Management
               </p>
               <p className="text-lg font-semibold text-gray-800 mb-6">
-                {" "}
-                {/* Larger, bolder title */}
                 Select Question Type
               </p>
               <div className="flex gap-4 justify-center">
-                {" "}
-                {/* Reduced gap */}
                 <button
                   onClick={() => {
-                    setType("Multiple Choice");
-                    setCorrect(""); // Clear correct answer when switching type
+                    setQuesType("MULTIPLE");
+                    setOptions([
+                      { option_text: "", is_correct: false },
+                      { option_text: "", is_correct: false },
+                      { option_text: "", is_correct: false },
+                      { option_text: "", is_correct: false },
+                    ]);
                   }}
                   className={`px-6 py-3 rounded-full text-base font-medium transition-all border cursor-pointer ${
-                    // Smaller padding, rounded, border
-                    type === "Multiple Choice"
+                    quesType === "MULTIPLE"
                       ? "bg-yellow-400 text-gray-900 border-yellow-400 shadow-md"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                   }`}
                 >
-                  Multiple Questions
+                  Multiple Choice
                 </button>
                 <button
                   onClick={() => {
-                    setType("True/False");
-                    setCorrect(""); // Clear correct answer when switching type
-                    // Reset options if they were for multiple choice, though True/False doesn't use them
-                    setOptions(["", "", "", ""]);
+                    setQuesType("BOOLEAN");
+                    setOptions([
+                      { option_text: "True", is_correct: false },
+                      { option_text: "False", is_correct: false },
+                    ]);
                   }}
-                  className={`px-6 py-3 rounded-full text-base font-medium transition-all border  cursor-pointer${
-                    // Smaller padding, rounded, border
-                    type === "True/False"
-                      ? "bg-yellow-400 text-gray-900 border-yellow-400 shadow-md" // Yellow button style
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50" // Neutral button style
+                  className={`px-6 py-3 rounded-full text-base font-medium transition-all border cursor-pointer ${
+                    quesType === "BOOLEAN"
+                      ? "bg-yellow-400 text-gray-900 border-yellow-400 shadow-md"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                   }`}
                 >
                   True/False
                 </button>
               </div>
             </div>
+
             <div className="grid grid-cols-2 gap-8">
-              {" "}
-              {/* Reduced gap */}
               <div>
                 <label className="block text-lg font-medium text-gray-800 mb-3">
-                  {" "}
-                  {/* Smaller label */}
                   Category
                 </label>
                 <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:ring-yellow-500 focus:border-yellow-500" // Styled to match image inputs
+                  value={quesCategory}
+                  onChange={(e) =>
+                    setQuesCategory(e.target.value as typeof quesCategory)
+                  }
+                  className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:ring-yellow-500 focus:border-yellow-500"
                 >
-                  <option>Safety Procedures</option>
-                  <option>Platform Rules</option>
+                  <option value="SAFETY_PROCUDURE">Safety Procedure</option>
+                  <option value="GENERAL">General</option>
+                  <option value="IQ">IQ</option>
                 </select>
               </div>
               <div>
                 <label className="block text-lg font-medium text-gray-800 mb-3">
-                  {" "}
-                  {/* Smaller label */}
                   Difficulty
                 </label>
                 <select
-                  value={difficulty}
-                  onChange={(e) => setDifficulty(e.target.value as any)}
-                  className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:ring-yellow-500 focus:border-yellow-500" // Styled to match image inputs
+                  value={quesDifficulty}
+                  onChange={(e) =>
+                    setQuesDifficulty(
+                      e.target.value as "EASY" | "MEDIUM" | "HARD"
+                    )
+                  }
+                  className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:ring-yellow-500 focus:border-yellow-500"
                 >
-                  <option>Easy</option>
-                  <option>Medium</option>
-                  <option>Hard</option>
+                  <option value="EASY">Easy</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HARD">Hard</option>
                 </select>
               </div>
             </div>
             <div>
               <label className="block text-lg font-medium text-gray-800 mb-3">
-                {" "}
-                {/* Smaller label */}
                 Write a Question
               </label>
               <textarea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base resize-none focus:ring-yellow-500 focus:border-yellow-500" // Styled to match image inputs
-                rows={4} // Adjusted rows for visual fit
+                value={question_text}
+                onChange={(e) => setQuestionText(e.target.value)}
+                className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base resize-none focus:ring-yellow-500 focus:border-yellow-500"
+                rows={4}
                 placeholder="What is the first action to take before starting your vehicle?"
               />
             </div>
-            {type === "Multiple Choice" && (
-              <div className="grid grid-cols-2 gap-8">
-                {" "}
-                {/* Reduced gap */}
-                {/* Options 1 & 2 */}
-                <div>
-                  <label className="block text-lg font-medium text-gray-800 mb-3">
-                    Options 1
-                  </label>
-                  <input
-                    type="text"
-                    value={options[0]}
-                    onChange={(e) => handleOptionChange(0, e.target.value)}
-                    className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:ring-yellow-500 focus:border-yellow-500 mb-6" // Styled to match inputs, adjusted margin
-                    placeholder="What is the first action to ..."
-                  />
-                  <label className="block text-lg font-medium text-gray-800 mb-3">
-                    Options 3
-                  </label>
-                  <input
-                    type="text"
-                    value={options[2]}
-                    onChange={(e) => handleOptionChange(2, e.target.value)}
-                    className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:ring-yellow-500 focus:border-yellow-500" // Styled to match inputs
-                    placeholder="What is the first action to ..."
-                  />
-                </div>
-                {/* Options 3 & 4 */}
-                <div>
-                  <label className="block text-lg font-medium text-gray-800 mb-3">
-                    Options 2
-                  </label>
-                  <input
-                    type="text"
-                    value={options[1]}
-                    onChange={(e) => handleOptionChange(1, e.target.value)}
-                    className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:ring-yellow-500 focus:border-yellow-500 mb-6" // Styled to match inputs, adjusted margin
-                    placeholder="What is the first action to ..."
-                  />
-                  <label className="block text-lg font-medium text-gray-800 mb-3">
-                    Options 4
-                  </label>
-                  <input
-                    type="text"
-                    value={options[3]}
-                    onChange={(e) => handleOptionChange(3, e.target.value)}
-                    className="w-full px-5 py-3 border border-gray-300 rounded-xl text-base focus:ring-yellow-500 focus:border-yellow-500" // Styled to match inputs
-                    placeholder="What is the first action to ..."
-                  />
-                </div>
-              </div>
-            )}
             <div>
-              <p className="text-xl font-medium text-gray-800 mb-6">
-                {" "}
-                {/* Larger, bolder title */}
-                Answer Options
-              </p>
-              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                {" "}
-                {/* Grid for answer options, adjusted gap */}
-                {type === "True/False"
-                  ? ["True", "False"].map((val) => (
-                      <label
-                        key={val}
-                        className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors
-                          ${
-                            correct === val
-                              ? "bg-green-50 border-green-500 shadow-sm"
-                              : "bg-gray-50 border-gray-200 hover:bg-gray-100"
-                          }`} // Styled answer options
-                      >
+              <p className="text-xl font-medium text-gray-800 mb-6">Options</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {options.map((option, index) => (
+                  <div key={index} className="space-y-3">
+                    <label className="block text-lg font-medium text-gray-800">
+                      {quesType === "BOOLEAN"
+                        ? option.option_text === "True"
+                          ? "True"
+                          : "False"
+                        : `Option ${index + 1}`}
+                    </label>
+                    <div className="flex items-center gap-3">
+                      {quesType === "MULTIPLE" && (
+                        <input
+                          type="text"
+                          value={option.option_text}
+                          onChange={(e) =>
+                            handleOptionChange(
+                              index,
+                              "option_text",
+                              e.target.value
+                            )
+                          }
+                          className="flex-1 px-5 py-3 border border-gray-300 rounded-xl text-base focus:ring-yellow-500 focus:border-yellow-500"
+                          placeholder={`Option ${index + 1}`}
+                        />
+                      )}
+                      {quesType === "BOOLEAN" && (
+                        <div className="flex-1 px-5 py-3 border border-gray-300 rounded-xl text-base bg-gray-50">
+                          {option.option_text}
+                        </div>
+                      )}
+                      <label className="flex items-center space-x-2">
                         <input
                           type="radio"
-                          name="ans"
-                          checked={correct === val}
-                          onChange={() => setCorrect(val)}
-                          className="w-5 h-5 text-green-600 focus:ring-green-500 mr-4" // Styled radio button
+                          name="correct-answer"
+                          checked={option.is_correct}
+                          onChange={(e) =>
+                            handleOptionChange(
+                              index,
+                              "is_correct",
+                              e.target.checked
+                            )
+                          }
+                          className="w-5 h-5 text-green-600 rounded-full focus:ring-green-500"
                         />
-                        <span
-                          className={`text-lg font-medium ${
-                            correct === val ? "text-green-700" : "text-gray-800"
-                          }`}
-                        >
-                          {val}
+                        <span className="text-sm font-medium text-gray-700">
+                          Correct Answer
                         </span>
                       </label>
-                    ))
-                  : options.filter(Boolean).map(
-                      (
-                        opt,
-                        i // Filter out empty options for display
-                      ) => (
-                        <label
-                          key={i}
-                          className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors
-                          ${
-                            correct === opt
-                              ? "bg-green-50 border-green-500 shadow-sm"
-                              : "bg-gray-50 border-gray-200 hover:bg-gray-100"
-                          }`} // Styled answer options
-                        >
-                          <input
-                            type="radio"
-                            name="ans"
-                            checked={correct === opt}
-                            onChange={() => setCorrect(opt)}
-                            className="w-5 h-5 text-green-600 focus:ring-green-500 mr-4"
-                          />
-                          <span
-                            className={`text-lg font-medium ${
-                              correct === opt
-                                ? "text-green-700"
-                                : "text-gray-800"
-                            }`}
-                          >
-                            {opt}
-                          </span>
-                        </label>
-                      )
-                    )}
+                    </div>
+                  </div>
+                ))}
               </div>
+              {quesType === "MULTIPLE" && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Note: Fill all 4 options for multiple choice questions
+                </p>
+              )}
+              {quesType === "BOOLEAN" && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Note: Select whether the statement is True or False
+                </p>
+              )}
             </div>
             <div className="flex justify-center pt-8">
-              {" "}
-              {/* Adjusted padding */}
               <button
                 onClick={handleSave}
                 className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-16 rounded-xl text-xl shadow-lg transition-colors cursor-pointer"
               >
-                {question ? "Edit" : "Create"}{" "}
-                {/* Changed text to "Edit" as in the image */}
+                {question ? "Update Question" : "Create Question"}
               </button>
             </div>
           </div>
