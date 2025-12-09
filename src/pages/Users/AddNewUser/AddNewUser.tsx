@@ -5,7 +5,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAddUserTypeMutation } from "@/redux/features/usersTypes/usersTypesApi"; // Import the mutation
 import toast from "react-hot-toast";
-
+import { useNavigate } from "react-router-dom";
 // ---------------------- ZOD SCHEMA ----------------------
 const userSchema = z.object({
   fullName: z.string().min(1, { message: "Full name is required" }),
@@ -24,7 +24,7 @@ type FormData = z.infer<typeof userSchema>;
 export default function AddNewUser() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
-
+ const navigate = useNavigate(); 
   // ---------------------- REACT HOOK FORM ----------------------
   const {
     register,
@@ -46,6 +46,7 @@ export default function AddNewUser() {
 
   // ---------------------- ON SUBMIT ----------------------
   const onSubmit = async (data: FormData) => {
+    
     console.log("Form Submitted:", data);
     console.log("Photo:", photo);
 
@@ -69,6 +70,7 @@ export default function AddNewUser() {
       // Reset form
       reset();
       setPhoto(null);
+      navigate("/users-app"); // Navigate back to users list
     } catch (error) {
       // Show error message
       toast.error("Failed to create user. Please try again.");

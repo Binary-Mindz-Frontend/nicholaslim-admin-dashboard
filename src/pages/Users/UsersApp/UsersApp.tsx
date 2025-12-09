@@ -4,10 +4,12 @@ import FilterSection from "@/components/Shared/FilterSection/FilterSection";
 import { useUserColumns } from "./userTable/userTable";
 import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 import TablePagination from "@/pages/Dashboard/_components/TablePagination";
+import { useNavigate } from "react-router-dom";
 
 export default function UsersPage() {
   const [dateFilter, setDateFilter] = useState("");
   const [allFilter, setAllFilter] = useState("");
+  const navigate = useNavigate();
   
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,7 +77,7 @@ export default function UsersPage() {
 
       {/* Add New User Button */}
       <div className="flex justify-center my-6">
-        <button
+        <button onClick={()=>navigate('/add-new-user')}
           className="px-3 sm:px-6 py-3 bg-yellow-400 cursor-pointer sm:font-bold hover:bg-yellow-500 text-black rounded transition-colors"
         >
           Add new user

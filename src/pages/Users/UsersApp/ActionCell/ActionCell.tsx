@@ -7,7 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { MessagesSquare, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,6 +55,13 @@ const handleDelete = async () => {
             <span>View</span>
           </DropdownMenuItem> */}
 
+          {/* EDIT → NAVIGATE */}
+          <DropdownMenuItem
+            className="flex items-center gap-2"
+          >
+            <MessagesSquare size={16} className="text-green" />
+            <span>Message</span>
+          </DropdownMenuItem>
           {/* EDIT → NAVIGATE */}
           <DropdownMenuItem
             onClick={() => navigate(`/users-app/${row.id}`)}
