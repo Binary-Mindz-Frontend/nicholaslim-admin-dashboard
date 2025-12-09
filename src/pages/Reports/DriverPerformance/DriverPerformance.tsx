@@ -1,4 +1,4 @@
-import FilterSection from "@/components/Shared/FilterSection/FilterSection";
+import FilterSection from "@/components/Users/FilterSection/FilterSection";
 import { useState } from "react";
 import DriverPerformanceChart from "./DriverChart/DriverChart";
 import { Input } from "@/components/ui/input";

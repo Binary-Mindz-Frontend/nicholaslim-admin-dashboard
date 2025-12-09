@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import RealTimeFleetMap from '@/components/Dashboard/RealTimeFleetMap/RealTimeFleetMap'
-import FilterSection from "@/components/Shared/FilterSection/FilterSection";
+import FilterSection from "@/components/Users/FilterSection/FilterSection";
 
 export default function Livemap() {
   const [dateFilter, setDateFilter] = useState("");

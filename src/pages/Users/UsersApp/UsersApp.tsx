@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import FilterSection from "@/components/Shared/FilterSection/FilterSection";
+import FilterSection from "@/components/Users/FilterSection/FilterSection";
 import { useUserColumns } from "./userTable/userTable";
 import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 import TablePagination from "@/pages/Dashboard/_components/TablePagination";
