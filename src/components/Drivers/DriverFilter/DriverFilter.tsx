@@ -106,7 +106,7 @@ export default function DriverFilter({
         <div className="px-4 py-1 border border-yellow-400 rounded-md w-full sm:w-[48%] md:w-auto">
           <Button
             variant="ghost"
-            className="text-black cursor-pointer hover:text-blue-700 hover:bg-white flex items-center gap-2 w-full justify-start"
+            className="text-black cursor-pointer hover:text-black-700 hover:bg-white flex items-center gap-2 w-full justify-start"
             onClick={handleApplyFilters}
           >
             <Search className="h-4 w-4 text-yellow-400" />

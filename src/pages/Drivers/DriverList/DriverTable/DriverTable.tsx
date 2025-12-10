@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 
 // import { useState } from "react";
@@ -183,9 +184,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
   const [drivers, setDrivers] = useState<TDriver[]>([]);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Use mutation hook for POST request
   const [getRiderProfiles, { isLoading, isError }] = useGetRiderProfilesMutation();
-
 
   const fetchDrivers = useCallback(
     debounce(async (fetchParams: UseDriverColumnsParams) => {
@@ -207,19 +206,23 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       } catch (error) {
         console.error("Failed to fetch drivers:", error);
       }
-    }, 500), // Wait 500ms after user stops typing
+    }, 500),
     [getRiderProfiles]
   );
 
-  // Fetch driver data when params change
   useEffect(() => {
     fetchDrivers(params);
     
-    // Cleanup function to cancel pending debounced calls
     return () => {
       fetchDrivers.cancel();
     };
   }, [params.page, params.limit, params.sortBy, params.sortOrder, params.raiderId, params.raider_name, params.raiderVerificationFromAdmin, fetchDrivers]);
+
+  // Create a refetch function
+  const handleRefetch = useCallback(() => {
+    fetchDrivers(params);
+  }, [fetchDrivers, params]);
+
   // Define columns for the driver data
   const driverColumns: Column<TDriver>[] = [
     {
@@ -325,8 +328,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
     },
     {
       header: "Action",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      cell: (row) => <DriverAction row={row as any} />,
+      cell: (row) => <DriverAction row={row as any} onDeleteSuccess={handleRefetch} />,
     },
   ];
 
