@@ -1,45 +1,35 @@
+
 import { useState } from "react";
-import { useGetUserTypesQuery } from "@/redux/features/usersTypes/usersTypesApi"; // RTK Query hook
-import FilterSection from "@/components/Shared/FilterSection/FilterSection";
-import { useUserColumns } from "./userTable/userTable"; // The updated hook
+import FilterSection from "@/components/Users/FilterSection/FilterSection";
+import { useUserColumns } from "./userTable/userTable";
 import CustomTable from "@/components/Dashboard/DataTable/DataTable";
+import TablePagination from "@/pages/Dashboard/_components/TablePagination";
+import { useNavigate } from "react-router-dom";
 
 export default function UsersPage() {
   const [dateFilter, setDateFilter] = useState("");
   const [allFilter, setAllFilter] = useState("");
+  const navigate = useNavigate();
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
-  // Fetching user data using the custom RTK query hook
-  const { isLoading, isError } = useGetUserTypesQuery({
-    active: "", // Filter active status if needed
-    verified: "", // Filter verified status if needed
-    deleted: "", // Add other filters if needed
-    dateFilter: "", // Apply date filter if needed
-  });
-
-  // Reset all filters
+  // Reset all filters and go back to page 1
   const handleResetFilter = () => {
     setDateFilter("");
     setAllFilter("");
+    setCurrentPage(1);
   };
 
-  // Get columns and users from the custom hook
-  const { userColumns, users } = useUserColumns();
-
-  // Filter the users based on the selected filters
-  const filteredUsers = users.filter((user) => {
-    if (dateFilter === "today" && new Date(user.joiningDate).toLocaleDateString() !== new Date().toLocaleDateString()) return false;
-    if (dateFilter === "yesterday" && new Date(user.joiningDate).toLocaleDateString() !== new Date(new Date().setDate(new Date().getDate() - 1)).toLocaleDateString()) return false;
-    const daysSinceJoining = (new Date().getTime() - new Date(user.joiningDate).getTime()) / (1000 * 3600 * 24);
-    if (dateFilter === "last7days" && daysSinceJoining > 7) return false;
-    if (dateFilter === "last30days" && daysSinceJoining > 30) return false;
-    if (dateFilter === "thismonth" && new Date(user.joiningDate).getMonth() !== new Date().getMonth()) return false;
-
-    if (allFilter === "active" && user.activeStatus === false) return false;
-    if (allFilter === "inactive" && user.activeStatus === true) return false;
-    if (allFilter === "verified" && user.is_verified === false) return false;
-    if (allFilter === "unverified" && user.is_verified === true) return false;
-
-    return true;
+  // Get columns and users from the custom hook WITH pagination params
+  const { userColumns, users, isLoading, isError, totalItems } = useUserColumns({
+    status: allFilter,
+    dateFilter: dateFilter,
+    page: currentPage,
+    limit: itemsPerPage,
+    sortBy: "createdAt",
+    sortOrder: "desc",
   });
 
   // Check if data is still loading or if there was an error
@@ -59,7 +49,7 @@ export default function UsersPage() {
           <div className="flex items-center gap-2">
             <span className="text-[#6B6B6B] text-xl font-semibold">Category List</span>
             <span className="bg-secondary text-gray-700 px-3 py-1 rounded-full text-base font-medium border border-[#969696]">
-              {filteredUsers.length}
+              {totalItems}
             </span>
           </div>
         </div>
@@ -74,12 +64,20 @@ export default function UsersPage() {
         />
       </div>
 
-      {/* Custom Table Section */}
-      <CustomTable columns={userColumns} data={filteredUsers} />
+      {/* Custom Table Section - Now uses server-paginated data */}
+      <CustomTable columns={userColumns} data={users} />
+
+      {/* Pagination Component */}
+      <TablePagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+      />
 
       {/* Add New User Button */}
       <div className="flex justify-center my-6">
-        <button
+        <button onClick={()=>navigate('/add-new-user')}
           className="px-3 sm:px-6 py-3 bg-yellow-400 cursor-pointer sm:font-bold hover:bg-yellow-500 text-black rounded transition-colors"
         >
           Add new user

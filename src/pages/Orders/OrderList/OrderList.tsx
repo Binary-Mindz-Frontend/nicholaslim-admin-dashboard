@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useOrderColumns } from "./OrderTable/OrderTable";
 import { ordersData } from "./data/OrderData";
 import TrackOrderSection from "./TrackOrderSection/TrackOrderSection";
-import FilterSection from "@/components/Shared/FilterSection/FilterSection";
+import FilterSection from "@/components/Users/FilterSection/FilterSection";
 
 export default function OrderList() {
     const { orderColumns, orders } = useOrderColumns(ordersData);

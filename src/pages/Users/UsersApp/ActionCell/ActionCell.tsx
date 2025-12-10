@@ -7,7 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { MessagesSquare, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,13 +48,20 @@ const handleDelete = async () => {
 
         <DropdownMenuContent align="end" className="w-36">
           {/* VIEW */}
-          <DropdownMenuItem
+          {/* <DropdownMenuItem
             onClick={() => navigate(`/users-app/${row.id}`)}
             className="flex items-center gap-2">
             <Eye size={16} className="text-blue-600" />
             <span>View</span>
-          </DropdownMenuItem>
+          </DropdownMenuItem> */}
 
+          {/* EDIT → NAVIGATE */}
+          <DropdownMenuItem
+            className="flex items-center gap-2"
+          >
+            <MessagesSquare size={16} className="text-green" />
+            <span>Message</span>
+          </DropdownMenuItem>
           {/* EDIT → NAVIGATE */}
           <DropdownMenuItem
             onClick={() => navigate(`/users-app/${row.id}`)}

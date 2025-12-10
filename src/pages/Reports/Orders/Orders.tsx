@@ -1,4 +1,4 @@
-import FilterSection from "@/components/Shared/FilterSection/FilterSection";
+import FilterSection from "@/components/Users/FilterSection/FilterSection";
 import { useState } from "react";
 import OverviewSection from "./OverviewSection/OverViewSection";
 
