@@ -50,25 +50,27 @@ const driversApi = baseApi.injectEndpoints({
             invalidatesTags: ["RiderProfiles"],
         }),
 
-        // Mutation to add a new rider profile
         addRiderProfile: builder.mutation({
-            query: (newRider) => ({
+            query: (data) => ({
                 url: `/raider-profile/admin/create-rider`,
                 method: "POST",
-                body: newRider,
+                body: data, // Send as JSON
+                headers: {
+                    'Content-Type': 'application/json', // Explicitly set JSON header
+                },
             }),
             invalidatesTags: ["RiderProfiles"],
         }),
-// Mutation to update rider profile
-    updateRiderProfile: builder.mutation({
-      query: ({ id, data }) => ({
-        url: `/raider-profile/admin/update-rider/${id}`,
-        method: "PATCH",
-        body: data,
-      }),
-      invalidatesTags: ["RiderProfiles"],
-    }),
-        
+        // Mutation to update rider profile
+        updateRiderProfile: builder.mutation({
+            query: ({ id, data }) => ({
+                url: `/raider-profile/admin/update-rider/${id}`,
+                method: "PATCH",
+                body: data,
+            }),
+            invalidatesTags: ["RiderProfiles"],
+        }),
+
     }),
 });
 

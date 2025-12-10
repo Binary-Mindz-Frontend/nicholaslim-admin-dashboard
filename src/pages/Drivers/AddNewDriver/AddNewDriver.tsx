@@ -1,236 +1,534 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Camera, Upload, X } from "lucide-react";
 import toast from "react-hot-toast";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Camera } from "lucide-react";
-
-import {
-  userProfileSchema,
-  UserProfileType,
-} from "../DriverList/EditDriverProfile/userProfile.schema";
 import { useAddRiderProfileMutation } from "@/redux/features/drivers/driversApi";
 
-import UploadBox from "./components/UploadBox";
+// --- START: Component Interfaces (for all components) ---
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  children: React.ReactNode;
+  className?: string;
+}
 
-export default function AddNewDriver() {
-  // ⭐ Profile Image State + Preview
-  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
-  const [profilePreview, setProfilePreview] = useState<string | null>(null);
+const Button = ({ children, className = "", ...props }: ButtonProps) => (
+  <button
+    className={`px-4 py-2 rounded font-medium transition-colors ${className}`}
+    {...props}
+  >
+    {children}
+  </button>
+);
 
-  // ⭐ Document Upload States
-  const [documents, setDocuments] = useState({
-    nidFront: null as File | null,
-    nidBack: null as File | null,
-    licenseFront: null as File | null,
-    licenseBack: null as File | null,
-    vehicleFront: null as File | null,
-    vehicleBack: null as File | null,
-    driverSide: null as File | null,
-    passengerSide: null as File | null,
-    vehicleLog: null as File | null,
-    vehiclePolicy: null as File | null,
-  });
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  className?: string;
+}
 
-  // ⭐ API Mutation
-  const [addRider, { isLoading }] = useAddRiderProfileMutation();
+const Input = ({ className = "", ...props }: InputProps) => (
+  <input
+    className={`w-full border rounded px-3 py-2 bg-gray-100 focus:outline-none focus:border-yellow-400 ${className}`}
+    {...props}
+  />
+);
 
-  // ⭐ Form Setup
-  const form = useForm<UserProfileType>({
-    resolver: zodResolver(userProfileSchema),
-    defaultValues: {
-      raider_name: "",
-      contact_number: "",
-      email_address: "",
-      dob: "",
-      gender: "",
-      driver_photos: [],
-      emergency_contact_name: "",
-      emergency_contact_number: "",
-      identity_card_number: "",
-      nid_front_images: "",
-      nid_back_images: "",
-      driving_license_number: "",
-      driving_license_issue_date: "",
-      driving_license_expire_date: "",
-      driving_license_front_images: "",
-      driving_license_back_images: "",
-      vehicle_plate_number: "",
-      vehicle_type: "",
-      vehicle_brand: "",
-      registration_date: "",
-      vehicle_front_images: "",
-      vehicle_back_images: "",
-      vehicle_driver_side_images: "",
-      vehicle_passenger_side_images: "",
-      vehicle_log_number: "",
-      vehicle_log_issue_date: "",
-      vehicle_log_expire_date: "",
-      vehicle_log_images: "",
-      vehicle_policy_number: "",
-      vehicle_policy_issue_date: "",
-      vehicle_policy_expire_date: "",
-      vehicle_policy_images: "",
-      current_address: "",
-      current_apartment: "",
-      current_state_province: "",
-      current_city: "",
-      current_country: "",
-      current_zip_post_code: "",
-      permanent_address: "",
-      permanent_apartment: "",
-      permanent_state_province: "",
-      permanent_city: "",
-      permanent_country: "",
-      permanent_zip_post_code: "",
-      bank_name: "",
-      account_number: "",
-    },
-  });
+interface LabelProps {
+  children: React.ReactNode;
+  className?: string;
+}
 
-  const { register, handleSubmit, formState } = form;
+const Label = ({ children, className = "" }: LabelProps) => (
+  <label className={`block text-sm font-semibold mb-2 ${className}`}>
+    {children}
+  </label>
+);
 
-  // ⭐ Profile Image Upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+// Interface specifically for UploadBox props
+interface UploadBoxProps {
+  label: string;
+  onChange: (file: File | null) => void;
+  error?: string | null;
+}
+
+// UploadBox Component (FIXED)
+const UploadBox = ({ label, onChange, error }: UploadBoxProps) => {
+  const [preview, setPreview] = useState<string | null>(null);
+  const [fileName, setFileName] = useState("");
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
 
-    setProfileImageFile(file);
     if (file) {
-      setProfilePreview(URL.createObjectURL(file));
+      setFileName(file.name);
+      onChange(file);
+
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+
+        reader.onloadend = (event: ProgressEvent<FileReader>) => {
+          if (event.target?.result && typeof event.target.result === 'string') {
+            setPreview(event.target.result);
+          } else {
+            setPreview(null);
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setPreview(null);
+      }
+    } else {
+      handleClear();
     }
   };
 
-  // ⭐ Document Upload
-  const handleDocumentChange = (key: string, file: File | null) => {
-    setDocuments((prev) => ({ ...prev, [key]: file }));
+  const handleClear = () => {
+    setPreview(null);
+    setFileName("");
+    onChange(null);
+    const inputElement = document.getElementById(`upload-${label.replace(/\s+/g, "-")}`) as HTMLInputElement;
+    if (inputElement) {
+      inputElement.value = "";
+    }
+  };
+  return (
+    <div>
+      <Label>{label}</Label>
+      <div className="relative">
+        <input
+          type="file"
+          className="hidden"
+          id={`upload-${label.replace(/\s+/g, "-")}`}
+          accept="image/*,.pdf"
+          onChange={handleFileChange}
+        />
+
+        <label
+          htmlFor={`upload-${label.replace(/\s+/g, "-")}`}
+          className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${error ? "border-red-400 bg-red-50" : "border-gray-300 bg-gray-50 hover:bg-gray-100"
+            }`}
+        >
+          {preview ? (
+            <div className="relative w-full h-full p-2">
+              <img
+                src={preview}
+                alt="Preview"
+                className="w-full h-full object-contain rounded"
+              />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleClear();
+                }}
+                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ) : fileName ? (
+            <div className="flex flex-col items-center gap-2">
+              <Upload size={24} className="text-gray-500" />
+              <p className="text-sm text-gray-600 text-center px-2">{fileName}</p>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleClear();
+                }}
+                className="text-xs text-red-500 hover:text-red-700"
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <Upload size={32} className="text-gray-400" />
+              <p className="text-sm text-gray-500">Click to upload</p>
+              <p className="text-xs text-gray-400">PNG, JPG or PDF</p>
+            </div>
+          )}
+        </label>
+      </div>
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+  );
+};
+
+export default function AddNewDriver() {
+  // Profile Image State
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profilePreview, setProfilePreview] = useState<string | null>(null);
+
+  // Document Upload States
+  const [documents, setDocuments] = useState({
+    nidFront: null,
+    nidBack: null,
+    licenseFront: null,
+    licenseBack: null,
+    vehicleFront: null,
+    vehicleBack: null,
+    driverSide: null,
+    passengerSide: null,
+    vehicleLog: null,
+    vehiclePolicy: null,
+  });
+
+  // Document validation errors
+  const [documentErrors, setDocumentErrors] = useState({
+    nidFront: null as string | null,
+    nidBack: null as string | null,
+    licenseFront: null as string | null,
+    licenseBack: null as string | null,
+    vehicleFront: null as string | null,
+    vehicleBack: null as string | null,
+    driverSide: null as string | null,
+    passengerSide: null as string | null,
+    vehicleLog: null as string | null,
+    vehiclePolicy: null as string | null,
+  });
+
+  // React Hook Form Setup
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    mode: "onSubmit",
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      dob: "",
+      gender: "",
+      emergencyContact: "",
+      emergencyContactNumber: "",
+      driverId: "",
+      currentaddress: "",
+      currentapartment: "",
+      currentcity: "",
+      currentstate: "",
+      currentpostal: "",
+      permanentaddress: "",
+      permanentapartment: "",
+      permanentcity: "",
+      permanentstate: "",
+      permanentpostal: "",
+      drivingLicense: "",
+      dlIssueDate: "",
+      dlExpiryDate: "",
+      vehiclePlate1: "",
+      vehicleType: "",
+      vehiclePlate2: "",
+      model: "",
+      registrationDate: "",
+      vehicleLog: "",
+      vehicleIssueDate: "",
+      vehicleExpiryDate: "",
+      policyNumber: "",
+      policyIssue: "",
+      policyExpiry: "",
+      bank: "",
+      accountNumber: "",
+    },
+  });
+
+  // Use Mutation Hook for Adding Rider Profile
+  const [addRiderProfile, { isLoading }] = useAddRiderProfileMutation();
+
+  // Profile Image Upload
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setProfileImageFile(file);
+
+    if (file) {
+      setProfilePreview(URL.createObjectURL(file));
+    } else {
+      setProfilePreview(null);
+    }
   };
 
-  // ⭐ On Submit
-  const onSubmit = async (data: UserProfileType) => {
-    try {
-      console.log("📌 FORM DATA:", data);
-      console.log("📌 PROFILE IMAGE:", profileImageFile);
-      console.log("📌 DOCUMENT FILES:", documents);
+  // Document Upload
+  const handleDocumentChange = (key: string, file: File | null) => {
+    setDocuments((prev) => ({ ...prev, [key]: file }));
+    if (file) {
+      setDocumentErrors((prev) => ({ ...prev, [key]: null }));
+    }
+  };
 
-      // TODO: Upload images to server and get URLs
-      // For now, using placeholder strings
-      const riderData = {
-        ...data,
-        driver_photos: profileImageFile ? ["uploaded_profile.jpg"] : [],
-        nid_front_images: documents.nidFront ? "nid_front.jpg" : "",
-        nid_back_images: documents.nidBack ? "nid_back.jpg" : "",
-        driving_license_front_images: documents.licenseFront ? "dl_front.jpg" : "",
-        driving_license_back_images: documents.licenseBack ? "dl_back.jpg" : "",
-        vehicle_front_images: documents.vehicleFront ? "vehicle_front.jpg" : "",
-        vehicle_back_images: documents.vehicleBack ? "vehicle_back.jpg" : "",
-        vehicle_driver_side_images: documents.driverSide ? "driver_side.jpg" : "",
-        vehicle_passenger_side_images: documents.passengerSide ? "passenger_side.jpg" : "",
-        vehicle_log_images: documents.vehicleLog ? "log.jpg" : "",
-        vehicle_policy_images: documents.vehiclePolicy ? "policy.jpg" : "",
+  // Validate documents
+  const validateDocuments = () => {
+    const errors: {
+      nidFront: string | null;
+      nidBack: string | null;
+      licenseFront: string | null;
+      licenseBack: string | null;
+      vehicleFront: string | null;
+      vehicleBack: string | null;
+      driverSide: string | null;
+      passengerSide: string | null;
+      vehicleLog: string | null;
+      vehiclePolicy: string | null;
+    } = {
+      nidFront: null,
+      nidBack: null,
+      licenseFront: null,
+      licenseBack: null,
+      vehicleFront: null,
+      vehicleBack: null,
+      driverSide: null,
+      passengerSide: null,
+      vehicleLog: null,
+      vehiclePolicy: null,
+    };
+
+    const requiredDocs = [
+      "nidFront",
+      "nidBack",
+      "licenseFront",
+      "licenseBack",
+      "vehicleFront",
+      "vehicleBack",
+      "driverSide",
+      "passengerSide",
+      "vehicleLog",
+      "vehiclePolicy",
+    ] as const;
+
+    requiredDocs.forEach((doc) => {
+      if (!documents[doc]) {
+        errors[doc] = "This document is required";
+      }
+    });
+
+    setDocumentErrors(errors);
+    return Object.values(errors).every((v) => v === null);
+  };
+
+  // Helper function to convert date to ISO string
+  const formatDateToISO = (dateString: string) => {
+    if (!dateString || dateString.trim() === "") {
+      return "";
+    }
+    
+    const date = new Date(dateString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.error("Invalid date:", dateString);
+      return "";
+    }
+    
+    return date.toISOString();
+  };
+
+  // Helper function to map gender to API format
+  const mapGender = (gender: string) => {
+    const genderMap: { [key: string]: string } = {
+      "Male": "MALE",
+      "Female": "FEMALE",
+      "Other": "OTHER"
+    };
+    return genderMap[gender] || gender.toUpperCase();
+  };
+
+  // Helper function to map vehicle type to API format
+  const mapVehicleType = (vehicleType: string) => {
+    const vehicleMap: { [key: string]: string } = {
+      "Bike": "MOTORCYCLE",
+      "Car": "CAR",
+      "Pickup": "PICKUP",
+      "CNG": "CNG",
+      "Truck": "TRUCK"
+    };
+    return vehicleMap[vehicleType] || vehicleType.toUpperCase();
+  };
+
+  // Submit Handler
+  const onSubmit = async (data: any) => {
+    // Validate documents first
+    const documentsValid = validateDocuments();
+
+    // Check profile image
+    if (!profileImageFile) {
+      toast.error("Please upload a profile image!");
+      return;
+    }
+
+    // Check if all required documents are uploaded
+    if (!documentsValid) {
+      toast.error("Please upload all required documents!");
+      return;
+    }
+
+    // Validate all date fields are filled
+    const dateFields = [
+      { value: data.dob, name: "Date of Birth" },
+      { value: data.dlIssueDate, name: "License Issue Date" },
+      { value: data.dlExpiryDate, name: "License Expiry Date" },
+      { value: data.registrationDate, name: "Registration Date" },
+      { value: data.vehicleIssueDate, name: "Vehicle Issue Date" },
+      { value: data.vehicleExpiryDate, name: "Vehicle Expiry Date" },
+      { value: data.policyIssue, name: "Policy Issue Date" },
+      { value: data.policyExpiry, name: "Policy Expiry Date" },
+    ];
+
+    for (const field of dateFields) {
+      if (!field.value || field.value.trim() === "") {
+        toast.error(`${field.name} is required!`);
+        return;
+      }
+    }
+
+    try {
+      // Debug: Log all form data before processing
+      console.log("Raw form data:", data);
+      
+      const formData = {
+        raider_name: data.firstName + " " + data.lastName,
+        contact_number: data.phone,
+        email_address: data.email,
+        dob: formatDateToISO(data.dob),
+        gender: mapGender(data.gender),
+        driver_photos: profileImageFile ? [profileImageFile.name] : [],
+        emergency_contact_name: data.emergencyContact,
+        emergency_contact_number: data.emergencyContactNumber,
+        identity_card_number: data.driverId,
+        nid_front_images: documents.nidFront ? documents.nidFront.name : '',
+        nid_back_images: documents.nidBack ? documents.nidBack.name : '',
+        driving_license_number: data.drivingLicense,
+        driving_license_issue_date: formatDateToISO(data.dlIssueDate),
+        driving_license_expire_date: formatDateToISO(data.dlExpiryDate),
+        driving_license_front_images: documents.licenseFront ? documents.licenseFront.name : '',
+        driving_license_back_images: documents.licenseBack ? documents.licenseBack.name : '',
+        vehicle_plate_number: data.vehiclePlate1 + "-" + data.vehiclePlate2,
+        vehicle_type: mapVehicleType(data.vehicleType),
+        vehicle_brand: data.model,
+        registration_date: formatDateToISO(data.registrationDate),
+        vehicle_front_images: documents.vehicleFront ? documents.vehicleFront.name : '',
+        vehicle_back_images: documents.vehicleBack ? documents.vehicleBack.name : '',
+        vehicle_driver_side_images: documents.driverSide ? documents.driverSide.name : '',
+        vehicle_passenger_side_images: documents.passengerSide ? documents.passengerSide.name : '',
+        vehicle_log_number: data.vehicleLog,
+        vehicle_log_issue_date: formatDateToISO(data.vehicleIssueDate),
+        vehicle_log_expire_date: formatDateToISO(data.vehicleExpiryDate),
+        vehicle_log_images: documents.vehicleLog ? documents.vehicleLog.name : '',
+        vehicle_policy_number: data.policyNumber,
+        vehicle_policy_issue_date: formatDateToISO(data.policyIssue),
+        vehicle_policy_expire_date: formatDateToISO(data.policyExpiry),
+        vehicle_policy_images: documents.vehiclePolicy ? documents.vehiclePolicy.name : '',
+        current_address: data.currentaddress,
+        current_apartment: data.currentapartment,
+        current_state_province: data.currentstate,
+        current_city: data.currentcity,
+        current_country: "Bangladesh",
+        current_zip_post_code: data.currentpostal,
+        permanent_address: data.permanentaddress,
+        permanent_apartment: data.permanentapartment,
+        permanent_state_province: data.permanentstate,
+        permanent_city: data.permanentcity,
+        permanent_country: "Bangladesh",
+        permanent_zip_post_code: data.permanentpostal,
+        bank_name: data.bank,
+        account_number: data.accountNumber,
       };
 
-      await addRider(riderData).unwrap();
-      toast.success("Driver added successfully!");
+      console.log("Processed form data:", formData); // Debug log
+
+      await addRiderProfile(formData).unwrap();
+      
+      toast.success("Rider profile created successfully!");
     } catch (error: any) {
-      console.error("Failed to add driver:", error);
-      toast.error(error?.data?.message || "Failed to add driver");
+      console.error("Error creating rider profile:", error);
+      toast.error(error?.data?.message || "Failed to create rider profile");
     }
   };
 
   // Dropdown Options
-  const genderOptions = ["MALE", "FEMALE", "OTHER"];
+  const genderOptions = ["Male", "Female", "Other"];
   const stateOptions = [
-    "Dhaka Division",
-    "Chattogram Division",
-    "Khulna Division",
-    "Sylhet Division",
-    "Rajshahi Division",
-    "Barishal Division",
-    "Rangpur Division",
-    "Mymensingh Division",
+    "Dhaka",
+    "Chattogram",
+    "Khulna",
+    "Sylhet",
+    "Rajshahi",
+    "Barishal",
+    "Rangpur",
+    "Mymensingh",
   ];
-  const vehicleTypes = ["MOTORCYCLE", "CAR", "PICKUP", "CNG", "TRUCK"];
-  const bankOptions = ["Dutch-Bangla Bank", "BRAC Bank", "Sonali Bank", "City Bank", "IBBL"];
-  const countryOptions = ["Bangladesh", "India", "Pakistan"];
+  const vehicleTypes = ["Bike", "Car", "Pickup", "CNG", "Truck"];
+  const bankOptions = ["DBBL", "BRAC Bank", "Sonali Bank", "City Bank", "IBBL"];
 
-  // All Fields with NEW schema keys
-  const allFields: { key: keyof UserProfileType; label: string }[] = [
-    { key: "raider_name", label: "Full Name" },
-    { key: "contact_number", label: "Phone Number" },
-    { key: "email_address", label: "Email Address" },
+  const allFields = [
+    { key: "firstName", label: "First Name" },
+    { key: "lastName", label: "Last Name" },
+    { key: "email", label: "Email Address" },
+    { key: "phone", label: "Phone Number" },
     { key: "dob", label: "Date of Birth" },
     { key: "gender", label: "Gender" },
-    { key: "emergency_contact_name", label: "Emergency Contact Name" },
-    { key: "emergency_contact_number", label: "Emergency Contact Number" },
-    { key: "identity_card_number", label: "Identity Card Number" },
-
-    // Current Address
-    { key: "current_address", label: "Current Address" },
-    { key: "current_apartment", label: "Current Apartment" },
-    { key: "current_city", label: "Current City" },
-    { key: "current_state_province", label: "Current State/Province" },
-    { key: "current_country", label: "Current Country" },
-    { key: "current_zip_post_code", label: "Current Postal Code" },
-
-    // Permanent Address
-    { key: "permanent_address", label: "Permanent Address" },
-    { key: "permanent_apartment", label: "Permanent Apartment" },
-    { key: "permanent_city", label: "Permanent City" },
-    { key: "permanent_state_province", label: "Permanent State/Province" },
-    { key: "permanent_country", label: "Permanent Country" },
-    { key: "permanent_zip_post_code", label: "Permanent Postal Code" },
-
-    // Driving License
-    { key: "driving_license_number", label: "Driving License Number" },
-    { key: "driving_license_issue_date", label: "License Issue Date" },
-    { key: "driving_license_expire_date", label: "License Expiry Date" },
-
-    // Vehicle Information
-    { key: "vehicle_plate_number", label: "Vehicle Plate Number" },
-    { key: "vehicle_type", label: "Vehicle Type" },
-    { key: "vehicle_brand", label: "Vehicle Brand" },
-    { key: "registration_date", label: "Registration Date" },
-    { key: "vehicle_log_number", label: "Vehicle Log Number" },
-    { key: "vehicle_log_issue_date", label: "Vehicle Log Issue Date" },
-    { key: "vehicle_log_expire_date", label: "Vehicle Log Expiry Date" },
-
-    // Vehicle Policy
-    { key: "vehicle_policy_number", label: "Policy Number" },
-    { key: "vehicle_policy_issue_date", label: "Policy Issue Date" },
-    { key: "vehicle_policy_expire_date", label: "Policy Expiry Date" },
-
-    // Bank Information
-    { key: "bank_name", label: "Bank Name" },
-    { key: "account_number", label: "Account Number" },
+    { key: "emergencyContact", label: "Emergency Contact Name" },
+    { key: "emergencyContactNumber", label: "Emergency Contact Number" },
+    { key: "driverId", label: "Driver ID" },
+    { key: "currentaddress", label: "Current Address" },
+    { key: "currentapartment", label: "Current Apartment" },
+    { key: "currentcity", label: "Current City" },
+    { key: "currentstate", label: "Current State" },
+    { key: "currentpostal", label: "Current Postal Code" },
+    { key: "permanentaddress", label: "Permanent Address" },
+    { key: "permanentapartment", label: "Permanent Apartment" },
+    { key: "permanentcity", label: "Permanent City" },
+    { key: "permanentstate", label: "Permanent State" },
+    { key: "permanentpostal", label: "Permanent Postal Code" },
+    { key: "drivingLicense", label: "Driving License Number" },
+    { key: "dlIssueDate", label: "License Issue Date" },
+    { key: "dlExpiryDate", label: "License Expiry Date" },
+    { key: "vehiclePlate1", label: "Vehicle Number Plate 1" },
+    { key: "vehiclePlate2", label: "Vehicle Number Plate 2" },
+    { key: "vehicleType", label: "Vehicle Type" },
+    { key: "model", label: "Vehicle Model" },
+    { key: "registrationDate", label: "Registration Date" },
+    { key: "vehicleLog", label: "Vehicle Log Number" },
+    { key: "vehicleIssueDate", label: "Vehicle Issue Date" },
+    { key: "vehicleExpiryDate", label: "Vehicle Expiry Date" },
+    { key: "policyNumber", label: "Policy Number" },
+    { key: "policyIssue", label: "Policy Issue Date" },
+    { key: "policyExpiry", label: "Policy Expiry Date" },
+    { key: "bank", label: "Bank Name" },
+    { key: "accountNumber", label: "Account Number" },
   ];
 
-  const isDateField = (field: string) =>
-    field.toLowerCase().includes("date") || field.includes("dob");
+  const isDateField = (field: string) => {
+    const dateFields = [
+      "dob",
+      "dlIssueDate",
+      "dlExpiryDate",
+      "registrationDate",
+      "vehicleIssueDate",
+      "vehicleExpiryDate",
+      "policyIssue",
+      "policyExpiry"
+    ];
+    return dateFields.includes(field);
+  };
 
   return (
     <div className="px-8 sm:p-6 mx-auto space-y-6 bg-[#F5F7FA]">
-      <h1 className="text-2xl font-semibold text-gray-900 pt-2 sm:pt-0">Add New Driver</h1>
-
+      <h1 className="text-2xl font-semibold text-gray-900 pt-2 sm:pt-0">
+        Add New Driver
+      </h1>
       <div className="border rounded-xl py-10 px-6 lg:px-32 bg-white shadow-sm relative">
-        {/* ⭐ Profile Image */}
+        {/* Profile Image */}
         <div className="flex justify-center">
           <label className="cursor-pointer mt-8 sm:mt-0">
             <div className="w-32 h-32 rounded-full bg-secondary flex items-center justify-center border overflow-hidden">
               {profilePreview ? (
                 <img
                   src={profilePreview}
-                  className="w-full h-full object-cover"
                   alt="Profile"
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 <Camera size={32} className="text-gray-500" />
               )}
             </div>
-
             <input
               type="file"
               className="hidden"
@@ -240,7 +538,7 @@ export default function AddNewDriver() {
           </label>
         </div>
 
-        {/* ⭐ Form Fields */}
+        {/* Form Fields */}
         <div className="mt-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {allFields.map(({ key, label }) => (
@@ -249,89 +547,101 @@ export default function AddNewDriver() {
 
                 {/* Gender */}
                 {key === "gender" && (
-                  <select {...register(key)} className="w-full border bg-secondary rounded p-2">
+                  <select
+                    {...register(key, { required: `${label} is required` })}
+                    className="w-full border bg-secondary rounded p-2"
+                  >
                     <option value="">Select Gender</option>
                     {genderOptions.map((g) => (
-                      <option key={g} value={g}>{g}</option>
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
                     ))}
                   </select>
                 )}
 
-                {/* State/Province */}
-                {(key === "current_state_province" || key === "permanent_state_province") && (
-                  <select {...register(key)} className="w-full border bg-secondary rounded p-2">
+                {/* Current State */}
+                {key === "currentstate" && (
+                  <select
+                    {...register(key, { required: `${label} is required` })}
+                    className="w-full border bg-secondary rounded p-2"
+                  >
                     <option value="">Select State</option>
                     {stateOptions.map((s) => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
                     ))}
                   </select>
                 )}
 
-                {/* Country */}
-                {(key === "current_country" || key === "permanent_country") && (
-                  <select {...register(key)} className="w-full border bg-secondary rounded p-2">
-                    <option value="">Select Country</option>
-                    {countryOptions.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                {/* Permanent State */}
+                {key === "permanentstate" && (
+                  <select
+                    {...register(key, { required: `${label} is required` })}
+                    className="w-full border bg-secondary rounded p-2"
+                  >
+                    <option value="">Select State</option>
+                    {stateOptions.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
                     ))}
                   </select>
                 )}
 
                 {/* Vehicle Type */}
-                {key === "vehicle_type" && (
-                  <select {...register(key)} className="w-full border bg-secondary rounded p-2">
+                {key === "vehicleType" && (
+                  <select
+                    {...register(key, { required: `${label} is required` })}
+                    className="w-full border bg-secondary rounded p-2"
+                  >
                     <option value="">Select Vehicle Type</option>
                     {vehicleTypes.map((v) => (
-                      <option key={v} value={v}>{v}</option>
+                      <option key={v} value={v}>
+                        {v}
+                      </option>
                     ))}
                   </select>
                 )}
 
                 {/* Bank */}
-                {key === "bank_name" && (
-                  <select {...register(key)} className="w-full border bg-secondary rounded p-2">
+                {key === "bank" && (
+                  <select
+                    {...register(key, { required: `${label} is required` })}
+                    className="w-full border bg-secondary rounded p-2"
+                  >
                     <option value="">Select Bank</option>
                     {bankOptions.map((b) => (
-                      <option key={b} value={b}>{b}</option>
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
                     ))}
                   </select>
                 )}
 
                 {/* Date Fields */}
                 {isDateField(key) &&
-                  ![
-                    "gender",
-                    "current_state_province",
-                    "permanent_state_province",
-                    "current_country",
-                    "permanent_country",
-                    "vehicle_type",
-                    "bank_name",
-                  ].includes(key) && (
+                  !["gender", "currentstate", "permanentstate", "vehicleType", "bank"].includes(key) && (
                     <input
                       type="date"
-                      {...register(key)}
+                      {...register(key as any, { required: `${label} is required` })}
                       className="w-full border bg-secondary rounded p-2"
                     />
                   )}
 
                 {/* Normal Input */}
-                {![
-                  "gender",
-                  "current_state_province",
-                  "permanent_state_province",
-                  "current_country",
-                  "permanent_country",
-                  "vehicle_type",
-                  "bank_name",
-                ].includes(key) &&
+                {!["gender", "currentstate", "permanentstate", "vehicleType", "bank"].includes(key) &&
                   !isDateField(key) && (
-                    <Input className="bg-secondary rounded" {...register(key)} />
+                    <Input
+                      className="bg-secondary rounded"
+                      {...register(key as any, { required: `${label} is required` })}
+                    />
                   )}
 
-                {formState.errors[key] && (
+                {errors[key as keyof typeof errors] && (
                   <p className="text-red-500 text-xs mt-1">
-                    {formState.errors[key]?.message}
+                    {errors[key as keyof typeof errors]?.message}
                   </p>
                 )}
               </div>
@@ -339,7 +649,7 @@ export default function AddNewDriver() {
           </div>
         </div>
 
-        {/* ⭐ Document Upload Sections */}
+        {/* Document Upload Sections */}
         <div className="mt-10 space-y-10">
           {/* Identity Card */}
           <div>
@@ -350,10 +660,12 @@ export default function AddNewDriver() {
               <UploadBox
                 label="Front side photo of your Identity card"
                 onChange={(file) => handleDocumentChange("nidFront", file)}
+                error={documentErrors.nidFront}
               />
               <UploadBox
                 label="Back side photo of your Identity card"
                 onChange={(file) => handleDocumentChange("nidBack", file)}
+                error={documentErrors.nidBack}
               />
             </div>
           </div>
@@ -367,10 +679,12 @@ export default function AddNewDriver() {
               <UploadBox
                 label="Front of Driving License"
                 onChange={(file) => handleDocumentChange("licenseFront", file)}
+                error={documentErrors.licenseFront}
               />
               <UploadBox
                 label="Back of Driving License"
                 onChange={(file) => handleDocumentChange("licenseBack", file)}
+                error={documentErrors.licenseBack}
               />
             </div>
           </div>
@@ -384,18 +698,22 @@ export default function AddNewDriver() {
               <UploadBox
                 label="Vehicle Front Side"
                 onChange={(file) => handleDocumentChange("vehicleFront", file)}
+                error={documentErrors.vehicleFront}
               />
               <UploadBox
                 label="Vehicle Back Side"
                 onChange={(file) => handleDocumentChange("vehicleBack", file)}
+                error={documentErrors.vehicleBack}
               />
               <UploadBox
                 label="Driver Side"
                 onChange={(file) => handleDocumentChange("driverSide", file)}
+                error={documentErrors.driverSide}
               />
               <UploadBox
                 label="Passenger Side"
                 onChange={(file) => handleDocumentChange("passengerSide", file)}
+                error={documentErrors.passengerSide}
               />
             </div>
           </div>
@@ -411,16 +729,18 @@ export default function AddNewDriver() {
               <UploadBox
                 label="Vehicle Log Photo"
                 onChange={(file) => handleDocumentChange("vehicleLog", file)}
+                error={documentErrors.vehicleLog}
               />
               <UploadBox
                 label="Vehicle Policy Photo"
                 onChange={(file) => handleDocumentChange("vehiclePolicy", file)}
+                error={documentErrors.vehiclePolicy}
               />
             </div>
           </div>
         </div>
 
-        {/* ⭐ Submit Button */}
+        {/* Submit Button */}
         <div className="flex justify-center mt-10">
           <Button
             className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-10 py-5 text-lg rounded-lg"
