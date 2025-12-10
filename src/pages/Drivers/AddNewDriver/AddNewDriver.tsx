@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { Camera, Upload, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAddRiderProfileMutation } from "@/redux/features/drivers/driversApi";
+import { useNavigate } from "react-router-dom";
 
 // --- START: Component Interfaces (for all components) ---
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -156,9 +157,21 @@ export default function AddNewDriver() {
   // Profile Image State
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
-
+  const navigate = useNavigate();
+  type DocumentFileState = {
+  nidFront: File | null;
+  nidBack: File | null;
+  licenseFront: File | null;
+  licenseBack: File | null;
+  vehicleFront: File | null;
+  vehicleBack: File | null;
+  driverSide: File | null;
+  passengerSide: File | null;
+  vehicleLog: File | null;
+  vehiclePolicy: File | null;
+};
   // Document Upload States
-  const [documents, setDocuments] = useState({
+  const [documents, setDocuments] = useState<DocumentFileState>({
     nidFront: null,
     nidBack: null,
     licenseFront: null,
@@ -379,9 +392,7 @@ export default function AddNewDriver() {
     }
 
     try {
-      // Debug: Log all form data before processing
-      console.log("Raw form data:", data);
-      
+   
       const formData = {
         raider_name: data.firstName + " " + data.lastName,
         contact_number: data.phone,
@@ -431,13 +442,14 @@ export default function AddNewDriver() {
         account_number: data.accountNumber,
       };
 
-      console.log("Processed form data:", formData); // Debug log
+      // console.log("Processed form data:", formData); // Debug log
 
       await addRiderProfile(formData).unwrap();
       
       toast.success("Rider profile created successfully!");
+      navigate("/driver-list");
     } catch (error: any) {
-      console.error("Error creating rider profile:", error);
+      
       toast.error(error?.data?.message || "Failed to create rider profile");
     }
   };
