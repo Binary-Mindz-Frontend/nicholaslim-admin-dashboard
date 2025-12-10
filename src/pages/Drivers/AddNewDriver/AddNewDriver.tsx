@@ -56,22 +56,12 @@ const UploadBox = ({ label, onChange, error }: UploadBoxProps) => {
   const [fileName, setFileName] = useState("");
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-
     if (file) {
       setFileName(file.name);
       onChange(file);
-
       if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-
-        reader.onloadend = (event: ProgressEvent<FileReader>) => {
-          if (event.target?.result && typeof event.target.result === 'string') {
-            setPreview(event.target.result);
-          } else {
-            setPreview(null);
-          }
-        };
-        reader.readAsDataURL(file);
+        const url = URL.createObjectURL(file);
+        setPreview(url);
       } else {
         setPreview(null);
       }
@@ -79,7 +69,6 @@ const UploadBox = ({ label, onChange, error }: UploadBoxProps) => {
       handleClear();
     }
   };
-
   const handleClear = () => {
     setPreview(null);
     setFileName("");
@@ -100,18 +89,17 @@ const UploadBox = ({ label, onChange, error }: UploadBoxProps) => {
           accept="image/*,.pdf"
           onChange={handleFileChange}
         />
-
         <label
           htmlFor={`upload-${label.replace(/\s+/g, "-")}`}
-          className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${error ? "border-red-400 bg-red-50" : "border-gray-300 bg-gray-50 hover:bg-gray-100"
+          className={`border-2 border-dashed rounded-xl p-6 w-full flex flex-col items-center justify-center text-center cursor-pointer transition min-h-[180px] relative overflow-hidden ${error ? "border-red-400 bg-red-50 hover:bg-red-100" : "border-green-500 bg-white hover:bg-green-50"
             }`}
         >
           {preview ? (
-            <div className="relative w-full h-full p-2">
+            <>
               <img
                 src={preview}
-                alt="Preview"
-                className="w-full h-full object-contain rounded"
+                alt="preview"
+                className="absolute inset-0 w-full h-full object-cover rounded-xl"
               />
               <button
                 type="button"
@@ -119,32 +107,35 @@ const UploadBox = ({ label, onChange, error }: UploadBoxProps) => {
                   e.preventDefault();
                   handleClear();
                 }}
-                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 z-10 shadow-lg"
               >
                 <X size={16} />
               </button>
-            </div>
+            </>
           ) : fileName ? (
             <div className="flex flex-col items-center gap-2">
-              <Upload size={24} className="text-gray-500" />
-              <p className="text-sm text-gray-600 text-center px-2">{fileName}</p>
+              <Upload size={24} className="text-green-600" />
+              <p className="text-sm text-gray-700 text-center px-2">{fileName}</p>
               <button
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   handleClear();
                 }}
-                className="text-xs text-red-500 hover:text-red-700"
+                className="text-xs text-red-500 hover:text-red-700 font-medium"
               >
                 Remove
               </button>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2">
-              <Upload size={32} className="text-gray-400" />
-              <p className="text-sm text-gray-500">Click to upload</p>
-              <p className="text-xs text-gray-400">PNG, JPG or PDF</p>
-            </div>
+            <>
+              <p className="text-sm text-gray-700 mb-2">{label}</p>
+              <span className="flex items-center gap-0.5 justify-center border border-green-500 rounded-md px-2 py-1">
+                <Camera className="text-green-600" size={22} />
+                <span className="text-xs sm:text-sm text-gray-700">Upload Photo</span>
+              </span>
+              <p className="text-xs text-gray-400 mt-2">PNG, JPG or PDF</p>
+            </>
           )}
         </label>
       </div>
@@ -159,17 +150,17 @@ export default function AddNewDriver() {
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const navigate = useNavigate();
   type DocumentFileState = {
-  nidFront: File | null;
-  nidBack: File | null;
-  licenseFront: File | null;
-  licenseBack: File | null;
-  vehicleFront: File | null;
-  vehicleBack: File | null;
-  driverSide: File | null;
-  passengerSide: File | null;
-  vehicleLog: File | null;
-  vehiclePolicy: File | null;
-};
+    nidFront: File | null;
+    nidBack: File | null;
+    licenseFront: File | null;
+    licenseBack: File | null;
+    vehicleFront: File | null;
+    vehicleBack: File | null;
+    driverSide: File | null;
+    passengerSide: File | null;
+    vehicleLog: File | null;
+    vehiclePolicy: File | null;
+  };
   // Document Upload States
   const [documents, setDocuments] = useState<DocumentFileState>({
     nidFront: null,
@@ -321,15 +312,15 @@ export default function AddNewDriver() {
     if (!dateString || dateString.trim() === "") {
       return "";
     }
-    
+
     const date = new Date(dateString);
-    
+
     // Check if date is valid
     if (isNaN(date.getTime())) {
       console.error("Invalid date:", dateString);
       return "";
     }
-    
+
     return date.toISOString();
   };
 
@@ -392,7 +383,7 @@ export default function AddNewDriver() {
     }
 
     try {
-   
+
       const formData = {
         raider_name: data.firstName + " " + data.lastName,
         contact_number: data.phone,
@@ -445,11 +436,11 @@ export default function AddNewDriver() {
       // console.log("Processed form data:", formData); // Debug log
 
       await addRiderProfile(formData).unwrap();
-      
+
       toast.success("Rider profile created successfully!");
       navigate("/driver-list");
     } catch (error: any) {
-      
+
       toast.error(error?.data?.message || "Failed to create rider profile");
     }
   };
@@ -755,7 +746,7 @@ export default function AddNewDriver() {
         {/* Submit Button */}
         <div className="flex justify-center mt-10">
           <Button
-            className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-10 py-5 text-lg rounded-lg"
+            className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-10 py-3 text-lg rounded-lg"
             onClick={handleSubmit(onSubmit)}
             disabled={isLoading}
           >
