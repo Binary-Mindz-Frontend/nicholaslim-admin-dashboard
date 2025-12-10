@@ -41,16 +41,14 @@ const driversApi = baseApi.injectEndpoints({
         // Mutation to delete rider profile
         deleteRiderProfile: builder.mutation({
             query: (id) => {
-    const request = {
-      url: `/raider-profile/${id}`,
-      method: "DELETE",
-    };
-    console.log("Delete API Request:", request);
-    console.log("Full URL will be: /api/v1/raider-profile/" + id);
-    return request;
-  },
-  invalidatesTags: ["RiderProfiles"],
-}),
+                const request = {
+                    url: `/raider-profile/${id}`,
+                    method: "DELETE",
+                };
+                return request;
+            },
+            invalidatesTags: ["RiderProfiles"],
+        }),
 
         // Mutation to add a new rider profile
         addRiderProfile: builder.mutation({
@@ -61,6 +59,16 @@ const driversApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["RiderProfiles"],
         }),
+// Mutation to update rider profile
+    updateRiderProfile: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/raider-profile/admin/update-rider/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["RiderProfiles"],
+    }),
+        
     }),
 });
 
@@ -69,4 +77,5 @@ export const {
     useToggleRiderActiveStatusMutation,
     useDeleteRiderProfileMutation,
     useAddRiderProfileMutation,
+    useUpdateRiderProfileMutation,
 } = driversApi;

@@ -105,8 +105,19 @@ import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Switch } from "@/components/ui/switch";
 
 import toast from "react-hot-toast"; // Import toast
-import { TUser } from "../../UsersApp/data/usersData";
 import ActionCell from "../../UsersApp/ActionCell/ActionCell";
+
+export type TUser = {
+  is_verified: boolean;
+  activeStatus: boolean;
+  id: string;
+  name: string;
+  contact: string;
+  totalOrder: number;
+  totalOrderAmount: string;
+  joiningDate: string;
+  isActive: boolean;
+};
 
 interface UseUserColumnsParams {
   status?: string;
