@@ -2,6 +2,16 @@ import { baseApi } from "@/redux/api/baseApi";
 
 const driversApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
+        // Image upload mutation
+        uploadImage: builder.mutation({
+  query: (formData) => ({
+    url: "/auth/upload", // Your backend endpoint
+    method: "POST",
+    body: formData, // Send FormData object containing multiple files
+    // No need to set Content-Type header, the browser will do it automatically
+  }),
+}),
+
         getRiderProfiles: builder.mutation({
             query: ({
                 raiderVerificationFromAdmin,
@@ -29,7 +39,6 @@ const driversApi = baseApi.injectEndpoints({
             invalidatesTags: ["RiderProfiles"],
         }),
 
-        // Mutation to toggle rider status (e.g., active/inactive)
         toggleRiderActiveStatus: builder.mutation({
             query: (id) => ({
                 url: `/raider-profile/active/${id}`,
@@ -38,7 +47,6 @@ const driversApi = baseApi.injectEndpoints({
             invalidatesTags: ["RiderProfiles"],
         }),
 
-        // Mutation to delete rider profile
         deleteRiderProfile: builder.mutation({
             query: (id) => {
                 const request = {
@@ -54,14 +62,14 @@ const driversApi = baseApi.injectEndpoints({
             query: (data) => ({
                 url: `/raider-profile/admin/create-rider`,
                 method: "POST",
-                body: data, // Send as JSON
+                body: data,
                 headers: {
-                    'Content-Type': 'application/json', // Explicitly set JSON header
+                    'Content-Type': 'application/json',
                 },
             }),
             invalidatesTags: ["RiderProfiles"],
         }),
-        // Mutation to update rider profile
+
         updateRiderProfile: builder.mutation({
             query: ({ id, data }) => ({
                 url: `/raider-profile/admin/update-rider/${id}`,
@@ -70,11 +78,11 @@ const driversApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["RiderProfiles"],
         }),
-
     }),
 });
 
 export const {
+    useUploadImageMutation,
     useGetRiderProfilesMutation,
     useToggleRiderActiveStatusMutation,
     useDeleteRiderProfileMutation,

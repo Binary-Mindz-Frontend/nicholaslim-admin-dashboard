@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Camera, Upload, X } from "lucide-react";
 import toast from "react-hot-toast";
-import { useAddRiderProfileMutation } from "@/redux/features/drivers/driversApi";
+import { useAddRiderProfileMutation, useUploadImageMutation } from "@/redux/features/drivers/driversApi";
 import { useNavigate } from "react-router-dom";
 
 // --- START: Component Interfaces (for all components) ---
@@ -46,38 +47,64 @@ const Label = ({ children, className = "" }: LabelProps) => (
 // Interface specifically for UploadBox props
 interface UploadBoxProps {
   label: string;
+  // onChange now expects the File object OR null (for clear)
   onChange: (file: File | null) => void;
   error?: string | null;
+  isUploading?: boolean;
+  // IMPORTANT: This URL comes from the parent's uploaded URL state (e.g., documentUrls.nidFront)
+  currentPreviewUrl?: string | null;
 }
 
-// UploadBox Component (FIXED)
-const UploadBox = ({ label, onChange, error }: UploadBoxProps) => {
-  const [preview, setPreview] = useState<string | null>(null);
-  const [fileName, setFileName] = useState("");
+// UploadBox Component (FIXED to prioritize uploaded URL)
+const UploadBox = ({ label, onChange, error, isUploading, currentPreviewUrl }: UploadBoxProps) => {
+  // Local state to hold the file selected before API upload (for instant preview)
+  const [localFileUrl, setLocalFileUrl] = useState<string | null>(null);
+
+  // Determine which preview to show: 
+  // 1. Uploaded URL (if available, it's the final source of truth)
+  // 2. Local File URL (while waiting for API upload)
+  const preview = currentPreviewUrl || localFileUrl;
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    if (file) {
-      setFileName(file.name);
-      onChange(file);
-      if (file.type.startsWith("image/")) {
-        const url = URL.createObjectURL(file);
-        setPreview(url);
-      } else {
-        setPreview(null);
-      }
+    if (!file) return;
+
+    // 1. Update local preview URL
+    if (file.type.startsWith("image/")) {
+      // Revoke previous local object URL to prevent memory leak
+      if (localFileUrl) URL.revokeObjectURL(localFileUrl);
+      setLocalFileUrl(URL.createObjectURL(file));
     } else {
-      handleClear();
+      setLocalFileUrl(null);
     }
+
+    // 2. Notify parent component with the File object (to trigger API upload)
+    onChange(file);
+
+    // Clearing the input allows re-uploading the same file, but now it's less critical
+    // e.target.value = ""; 
   };
-  const handleClear = () => {
-    setPreview(null);
-    setFileName("");
+
+  const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // 1. Clear local preview if it exists
+    if (localFileUrl) {
+      URL.revokeObjectURL(localFileUrl);
+      setLocalFileUrl(null);
+    }
+
+    // 2. Notify parent to clear the File and URL state (documentUrls[key] in parent)
     onChange(null);
+
+    // Force clear the input element (optional, but good practice)
     const inputElement = document.getElementById(`upload-${label.replace(/\s+/g, "-")}`) as HTMLInputElement;
     if (inputElement) {
       inputElement.value = "";
     }
   };
+
   return (
     <div>
       <Label>{label}</Label>
@@ -88,13 +115,18 @@ const UploadBox = ({ label, onChange, error }: UploadBoxProps) => {
           id={`upload-${label.replace(/\s+/g, "-")}`}
           accept="image/*,.pdf"
           onChange={handleFileChange}
+          disabled={isUploading}
         />
         <label
           htmlFor={`upload-${label.replace(/\s+/g, "-")}`}
-          className={`border-2 border-dashed rounded-xl p-6 w-full flex flex-col items-center justify-center text-center cursor-pointer transition min-h-[180px] relative overflow-hidden ${error ? "border-red-400 bg-red-50 hover:bg-red-100" : "border-green-500 bg-white hover:bg-green-50"
-            }`}
+          className={`border-2 border-dashed rounded-xl p-6 w-full flex flex-col items-center justify-center text-center cursor-pointer transition min-h-[180px] relative overflow-hidden ${error ? "border-red-400 bg-red-50 hover:bg-red-100" : "border-green-500 bg-white hover:bg-green-50"} ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
         >
-          {preview ? (
+          {isUploading ? (
+            <div className="flex flex-col items-center gap-2">
+              <Upload size={24} className="text-green-600 animate-pulse" />
+              <p className="text-sm text-gray-700">Uploading...</p>
+            </div>
+          ) : preview ? ( // Use the determined preview URL
             <>
               <img
                 src={preview}
@@ -103,30 +135,12 @@ const UploadBox = ({ label, onChange, error }: UploadBoxProps) => {
               />
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleClear();
-                }}
+                onClick={handleClear}
                 className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 z-10 shadow-lg"
               >
                 <X size={16} />
               </button>
             </>
-          ) : fileName ? (
-            <div className="flex flex-col items-center gap-2">
-              <Upload size={24} className="text-green-600" />
-              <p className="text-sm text-gray-700 text-center px-2">{fileName}</p>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleClear();
-                }}
-                className="text-xs text-red-500 hover:text-red-700 font-medium"
-              >
-                Remove
-              </button>
-            </div>
           ) : (
             <>
               <p className="text-sm text-gray-700 mb-2">{label}</p>
@@ -144,24 +158,32 @@ const UploadBox = ({ label, onChange, error }: UploadBoxProps) => {
   );
 };
 
+
 export default function AddNewDriver() {
-  // Profile Image State
-  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
-  const [profilePreview, setProfilePreview] = useState<string | null>(null);
+  const [uploadImage] = useUploadImageMutation();
+  // 1. Profile Image States
+  const [profileFile, setProfileFile] = useState<File | null>(null);
+  const [profilePreview, setProfilePreview] = useState<string | null>(null); // For immediate local preview
+  const [profileImageUrls, setProfileImageUrls] = useState<string[]>([]); // To store the uploaded URL(s)
+  const [isProfileUploading, setIsProfileUploading] = useState(false);
   const navigate = useNavigate();
-  type DocumentFileState = {
-    nidFront: File | null;
-    nidBack: File | null;
-    licenseFront: File | null;
-    licenseBack: File | null;
-    vehicleFront: File | null;
-    vehicleBack: File | null;
-    driverSide: File | null;
-    passengerSide: File | null;
-    vehicleLog: File | null;
-    vehiclePolicy: File | null;
-  };
-  // Document Upload States
+
+  // Type for document state for clarity
+  type DocumentKey =
+    | "nidFront"
+    | "nidBack"
+    | "licenseFront"
+    | "licenseBack"
+    | "vehicleFront"
+    | "vehicleBack"
+    | "driverSide"
+    | "passengerSide"
+    | "vehicleLog"
+    | "vehiclePolicy";
+
+  // State to hold the File object before upload (used mostly for temporary local state)
+  type DocumentFileState = Record<DocumentKey, File | null>;
+
   const [documents, setDocuments] = useState<DocumentFileState>({
     nidFront: null,
     nidBack: null,
@@ -175,21 +197,41 @@ export default function AddNewDriver() {
     vehiclePolicy: null,
   });
 
-  // Document validation errors
-  const [documentErrors, setDocumentErrors] = useState({
-    nidFront: null as string | null,
-    nidBack: null as string | null,
-    licenseFront: null as string | null,
-    licenseBack: null as string | null,
-    vehicleFront: null as string | null,
-    vehicleBack: null as string | null,
-    driverSide: null as string | null,
-    passengerSide: null as string | null,
-    vehicleLog: null as string | null,
-    vehiclePolicy: null as string | null,
+  // State to hold the uploaded URL (this is the source of truth for submission)
+  type DocumentUrlState = Record<DocumentKey, string>;
+
+  const [documentUrls, setDocumentUrls] = useState<DocumentUrlState>({
+    nidFront: "",
+    nidBack: "",
+    licenseFront: "",
+    licenseBack: "",
+    vehicleFront: "",
+    vehicleBack: "",
+    driverSide: "",
+    passengerSide: "",
+    vehicleLog: "",
+    vehiclePolicy: "",
   });
 
-  // React Hook Form Setup
+  // State to track currently uploading documents
+  const [uploadingDocs, setUploadingDocs] = useState<Set<DocumentKey>>(new Set());
+
+  // State to hold validation errors for documents
+  type DocumentErrorState = Record<DocumentKey, string | null>;
+
+  const [documentErrors, setDocumentErrors] = useState<DocumentErrorState>({
+    nidFront: null,
+    nidBack: null,
+    licenseFront: null,
+    licenseBack: null,
+    vehicleFront: null,
+    vehicleBack: null,
+    driverSide: null,
+    passengerSide: null,
+    vehicleLog: null,
+    vehiclePolicy: null,
+  });
+
   const {
     register,
     handleSubmit,
@@ -235,43 +277,104 @@ export default function AddNewDriver() {
     },
   });
 
-  // Use Mutation Hook for Adding Rider Profile
   const [addRiderProfile, { isLoading }] = useAddRiderProfileMutation();
 
-  // Profile Image Upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setProfileImageFile(file);
+  // Handler for Profile Image (single)
+  const handleProfileImageChange = (file: File | null) => {
+    // 1. Set local file and preview immediately
+    setProfileFile(file);
+    setProfilePreview(file ? URL.createObjectURL(file) : null);
 
+    // 2. Trigger API upload if a file exists
     if (file) {
-      setProfilePreview(URL.createObjectURL(file));
+      handleImageUpload([file]);
     } else {
+      // Clear uploaded URL if the user clears the image
+      setProfileImageUrls([]);
+    }
+  };
+
+  // Single function to handle API upload for multiple images (Profile)
+  const handleImageUpload = async (files: File[]) => {
+    if (files.length === 0) {
+      setProfileImageUrls([]);
+      return;
+    }
+
+    setIsProfileUploading(true);
+    try {
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append("images", file); // Use the correct key 'images'
+      });
+
+      const response = await uploadImage(formData).unwrap();
+      const uploadedUrls = response.data; // This is expected to be array<string>
+
+      setProfileImageUrls(uploadedUrls); // Store the uploaded URLs
+      // Removed: toast.success("Profile image uploaded successfully!");
+    } catch (error: any) {
+      toast.error("Failed to upload profile image.");
+      console.error("Upload error:", error);
+      setProfileFile(null); // Clear file and URL on failure
       setProfilePreview(null);
+      setProfileImageUrls([]);
+    } finally {
+      setIsProfileUploading(false);
     }
   };
 
-  // Document Upload
-  const handleDocumentChange = (key: string, file: File | null) => {
-    setDocuments((prev) => ({ ...prev, [key]: file }));
-    if (file) {
+  // Single function to handle API upload for a single document (Documents)
+  const handleDocumentUpload = async (key: DocumentKey, file: File | null) => {
+    if (!file) {
+      // If file is null, the user is clearing the document
+      setDocumentUrls((prev) => ({ ...prev, [key]: "" }));
+      setUploadingDocs((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(key);
+        return newSet;
+      });
+      setDocumentErrors((prev) => ({ ...prev, [key]: "This document is required" }));
+      return;
+    }
+
+    try {
+      setUploadingDocs((prev) => new Set(prev).add(key));
+
+      const formData = new FormData();
+      formData.append("images", file);
+
+      const response = await uploadImage(formData).unwrap();
+      const uploadedUrl = response.data[0]; // Expecting data: ["url"]
+
+      // Update the states
+      setDocumentUrls((prev) => ({ ...prev, [key]: uploadedUrl }));
       setDocumentErrors((prev) => ({ ...prev, [key]: null }));
+
+      // **FIX: Removed the success toast here to prevent alert for every single document upload**
+      // toast.success(`${key} uploaded successfully!`);
+    } catch (error: any) {
+      toast.error(`Failed to upload ${key}`);
+      setDocumentUrls((prev) => ({ ...prev, [key]: "" })); // Clear URL on error
+      setDocuments((prev) => ({ ...prev, [key]: null }));
+      setDocumentErrors((prev) => ({ ...prev, [key]: `Failed to upload ${key}` }));
+      console.error("Upload error:", error);
+    } finally {
+      setUploadingDocs((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(key);
+        return newSet;
+      });
     }
   };
 
-  // Validate documents
+  // The change handler now just calls the upload logic
+  const handleDocumentChange = (key: DocumentKey, file: File | null) => {
+    handleDocumentUpload(key, file);
+  };
+
   const validateDocuments = () => {
-    const errors: {
-      nidFront: string | null;
-      nidBack: string | null;
-      licenseFront: string | null;
-      licenseBack: string | null;
-      vehicleFront: string | null;
-      vehicleBack: string | null;
-      driverSide: string | null;
-      passengerSide: string | null;
-      vehicleLog: string | null;
-      vehiclePolicy: string | null;
-    } = {
+    const errors: DocumentErrorState = {
       nidFront: null,
       nidBack: null,
       licenseFront: null,
@@ -284,7 +387,7 @@ export default function AddNewDriver() {
       vehiclePolicy: null,
     };
 
-    const requiredDocs = [
+    const requiredDocs: DocumentKey[] = [
       "nidFront",
       "nidBack",
       "licenseFront",
@@ -295,10 +398,10 @@ export default function AddNewDriver() {
       "passengerSide",
       "vehicleLog",
       "vehiclePolicy",
-    ] as const;
+    ];
 
     requiredDocs.forEach((doc) => {
-      if (!documents[doc]) {
+      if (!documentUrls[doc]) {
         errors[doc] = "This document is required";
       }
     });
@@ -307,7 +410,6 @@ export default function AddNewDriver() {
     return Object.values(errors).every((v) => v === null);
   };
 
-  // Helper function to convert date to ISO string
   const formatDateToISO = (dateString: string) => {
     if (!dateString || dateString.trim() === "") {
       return "";
@@ -315,55 +417,59 @@ export default function AddNewDriver() {
 
     const date = new Date(dateString);
 
-    // Check if date is valid
     if (isNaN(date.getTime())) {
       console.error("Invalid date:", dateString);
       return "";
     }
 
+    // The local date string is usually in YYYY-MM-DD format. 
+    // To prevent timezone issues shifting the date, we can just return the local date string 
+    // if the API expects YYYY-MM-DDT00:00:00.000Z. For this example, we keep toISOString 
+    // but ensure the input is valid.
     return date.toISOString();
   };
 
-  // Helper function to map gender to API format
   const mapGender = (gender: string) => {
     const genderMap: { [key: string]: string } = {
-      "Male": "MALE",
-      "Female": "FEMALE",
-      "Other": "OTHER"
+      Male: "MALE",
+      Female: "FEMALE",
+      Other: "OTHER",
     };
     return genderMap[gender] || gender.toUpperCase();
   };
 
-  // Helper function to map vehicle type to API format
   const mapVehicleType = (vehicleType: string) => {
     const vehicleMap: { [key: string]: string } = {
-      "Bike": "MOTORCYCLE",
-      "Car": "CAR",
-      "Pickup": "PICKUP",
-      "CNG": "CNG",
-      "Truck": "TRUCK"
+      Bike: "MOTORCYCLE",
+      Car: "CAR",
+      Pickup: "PICKUP",
+      CNG: "CNG",
+      Truck: "TRUCK",
     };
     return vehicleMap[vehicleType] || vehicleType.toUpperCase();
   };
 
-  // Submit Handler
   const onSubmit = async (data: any) => {
-    // Validate documents first
+    // 1. Check for ongoing uploads
+    if (uploadingDocs.size > 0) {
+      toast.error("Please wait for all images to finish uploading!");
+      return;
+    }
+
+    // 2. Validate all document URLs
     const documentsValid = validateDocuments();
 
-    // Check profile image
-    if (!profileImageFile) {
+    if (!profileImageUrls.length) {
       toast.error("Please upload a profile image!");
       return;
     }
 
-    // Check if all required documents are uploaded
     if (!documentsValid) {
       toast.error("Please upload all required documents!");
       return;
     }
 
-    // Validate all date fields are filled
+    // 3. Check for required date fields
     const dateFields = [
       { value: data.dob, name: "Date of Birth" },
       { value: data.dlIssueDate, name: "License Issue Date" },
@@ -383,40 +489,39 @@ export default function AddNewDriver() {
     }
 
     try {
-
       const formData = {
         raider_name: data.firstName + " " + data.lastName,
         contact_number: data.phone,
         email_address: data.email,
         dob: formatDateToISO(data.dob),
         gender: mapGender(data.gender),
-        driver_photos: profileImageFile ? [profileImageFile.name] : [],
+        driver_photos: profileImageUrls, // Send URL
         emergency_contact_name: data.emergencyContact,
         emergency_contact_number: data.emergencyContactNumber,
         identity_card_number: data.driverId,
-        nid_front_images: documents.nidFront ? documents.nidFront.name : '',
-        nid_back_images: documents.nidBack ? documents.nidBack.name : '',
+        nid_front_images: documentUrls.nidFront, // Send URL
+        nid_back_images: documentUrls.nidBack, // Send URL
         driving_license_number: data.drivingLicense,
         driving_license_issue_date: formatDateToISO(data.dlIssueDate),
         driving_license_expire_date: formatDateToISO(data.dlExpiryDate),
-        driving_license_front_images: documents.licenseFront ? documents.licenseFront.name : '',
-        driving_license_back_images: documents.licenseBack ? documents.licenseBack.name : '',
+        driving_license_front_images: documentUrls.licenseFront, // Send URL
+        driving_license_back_images: documentUrls.licenseBack, // Send URL
         vehicle_plate_number: data.vehiclePlate1 + "-" + data.vehiclePlate2,
         vehicle_type: mapVehicleType(data.vehicleType),
         vehicle_brand: data.model,
         registration_date: formatDateToISO(data.registrationDate),
-        vehicle_front_images: documents.vehicleFront ? documents.vehicleFront.name : '',
-        vehicle_back_images: documents.vehicleBack ? documents.vehicleBack.name : '',
-        vehicle_driver_side_images: documents.driverSide ? documents.driverSide.name : '',
-        vehicle_passenger_side_images: documents.passengerSide ? documents.passengerSide.name : '',
+        vehicle_front_images: documentUrls.vehicleFront, // Send URL
+        vehicle_back_images: documentUrls.vehicleBack, // Send URL
+        vehicle_driver_side_images: documentUrls.driverSide, // Send URL
+        vehicle_passenger_side_images: documentUrls.passengerSide, // Send URL
         vehicle_log_number: data.vehicleLog,
         vehicle_log_issue_date: formatDateToISO(data.vehicleIssueDate),
         vehicle_log_expire_date: formatDateToISO(data.vehicleExpiryDate),
-        vehicle_log_images: documents.vehicleLog ? documents.vehicleLog.name : '',
+        vehicle_log_images: documentUrls.vehicleLog, // Send URL
         vehicle_policy_number: data.policyNumber,
         vehicle_policy_issue_date: formatDateToISO(data.policyIssue),
         vehicle_policy_expire_date: formatDateToISO(data.policyExpiry),
-        vehicle_policy_images: documents.vehiclePolicy ? documents.vehiclePolicy.name : '',
+        vehicle_policy_images: documentUrls.vehiclePolicy, // Send URL
         current_address: data.currentaddress,
         current_apartment: data.currentapartment,
         current_state_province: data.currentstate,
@@ -433,19 +538,19 @@ export default function AddNewDriver() {
         account_number: data.accountNumber,
       };
 
-      // console.log("Processed form data:", formData); // Debug log
+      console.log("Data being sent to API:", formData); // Added console log
 
       await addRiderProfile(formData).unwrap();
 
       toast.success("Rider profile created successfully!");
       navigate("/driver-list");
     } catch (error: any) {
-
+      console.error("API Submission Error:", error);
       toast.error(error?.data?.message || "Failed to create rider profile");
     }
   };
 
-  // Dropdown Options
+  // Dropdown Options (Rest of the component's non-logic code is unchanged)
   const genderOptions = ["Male", "Female", "Other"];
   const stateOptions = [
     "Dhaka",
@@ -507,7 +612,7 @@ export default function AddNewDriver() {
       "vehicleIssueDate",
       "vehicleExpiryDate",
       "policyIssue",
-      "policyExpiry"
+      "policyExpiry",
     ];
     return dateFields.includes(field);
   };
@@ -522,12 +627,14 @@ export default function AddNewDriver() {
         <div className="flex justify-center">
           <label className="cursor-pointer mt-8 sm:mt-0">
             <div className="w-32 h-32 rounded-full bg-secondary flex items-center justify-center border overflow-hidden">
-              {profilePreview ? (
+              {profilePreview || profileImageUrls[0] ? ( // Show local preview or uploaded URL
                 <img
-                  src={profilePreview}
+                  src={profilePreview || profileImageUrls[0]}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
+              ) : isProfileUploading ? (
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500"></div>
               ) : (
                 <Camera size={32} className="text-gray-500" />
               )}
@@ -535,8 +642,10 @@ export default function AddNewDriver() {
             <input
               type="file"
               className="hidden"
-              accept="image/*"
-              onChange={handleImageUpload}
+              id="upload-images"
+              accept="image/*" // Only images for profile
+              onChange={(e) => handleProfileImageChange(e.target.files?.[0] || null)} // Adapted to use the new simple handler
+              disabled={isProfileUploading}
             />
           </label>
         </div>
@@ -548,90 +657,28 @@ export default function AddNewDriver() {
               <div key={key}>
                 <Label className="text-sm font-semibold pb-2">{label}</Label>
 
-                {/* Gender */}
-                {key === "gender" && (
+                {/* Dropdown Fields */}
+                {["gender", "currentstate", "permanentstate", "vehicleType", "bank"].includes(key) && (
                   <select
                     {...register(key, { required: `${label} is required` })}
                     className="w-full border bg-secondary rounded p-2"
                   >
-                    <option value="">Select Gender</option>
-                    {genderOptions.map((g) => (
-                      <option key={g} value={g}>
-                        {g}
-                      </option>
-                    ))}
-                  </select>
-                )}
-
-                {/* Current State */}
-                {key === "currentstate" && (
-                  <select
-                    {...register(key, { required: `${label} is required` })}
-                    className="w-full border bg-secondary rounded p-2"
-                  >
-                    <option value="">Select State</option>
-                    {stateOptions.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                )}
-
-                {/* Permanent State */}
-                {key === "permanentstate" && (
-                  <select
-                    {...register(key, { required: `${label} is required` })}
-                    className="w-full border bg-secondary rounded p-2"
-                  >
-                    <option value="">Select State</option>
-                    {stateOptions.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                )}
-
-                {/* Vehicle Type */}
-                {key === "vehicleType" && (
-                  <select
-                    {...register(key, { required: `${label} is required` })}
-                    className="w-full border bg-secondary rounded p-2"
-                  >
-                    <option value="">Select Vehicle Type</option>
-                    {vehicleTypes.map((v) => (
-                      <option key={v} value={v}>
-                        {v}
-                      </option>
-                    ))}
-                  </select>
-                )}
-
-                {/* Bank */}
-                {key === "bank" && (
-                  <select
-                    {...register(key, { required: `${label} is required` })}
-                    className="w-full border bg-secondary rounded p-2"
-                  >
-                    <option value="">Select Bank</option>
-                    {bankOptions.map((b) => (
-                      <option key={b} value={b}>
-                        {b}
-                      </option>
-                    ))}
+                    <option value="">Select {label.split(' ').slice(-1).join(' ')}</option>
+                    {key === "gender" && genderOptions.map((g) => (<option key={g} value={g}>{g}</option>))}
+                    {["currentstate", "permanentstate"].includes(key) && stateOptions.map((s) => (<option key={s} value={s}>{s}</option>))}
+                    {key === "vehicleType" && vehicleTypes.map((v) => (<option key={v} value={v}>{v}</option>))}
+                    {key === "bank" && bankOptions.map((b) => (<option key={b} value={b}>{b}</option>))}
                   </select>
                 )}
 
                 {/* Date Fields */}
-                {isDateField(key) &&
-                  !["gender", "currentstate", "permanentstate", "vehicleType", "bank"].includes(key) && (
-                    <input
-                      type="date"
-                      {...register(key as any, { required: `${label} is required` })}
-                      className="w-full border bg-secondary rounded p-2"
-                    />
-                  )}
+                {isDateField(key) && (
+                  <input
+                    type="date"
+                    {...register(key as any, { required: `${label} is required` })}
+                    className="w-full border bg-secondary rounded p-2"
+                  />
+                )}
 
                 {/* Normal Input */}
                 {!["gender", "currentstate", "permanentstate", "vehicleType", "bank"].includes(key) &&
@@ -664,11 +711,15 @@ export default function AddNewDriver() {
                 label="Front side photo of your Identity card"
                 onChange={(file) => handleDocumentChange("nidFront", file)}
                 error={documentErrors.nidFront}
+                isUploading={uploadingDocs.has("nidFront")}
+              //        currentPreviewUrl={documentUrls.nidFront} // **FIX: Pass the uploaded URL**
               />
               <UploadBox
                 label="Back side photo of your Identity card"
                 onChange={(file) => handleDocumentChange("nidBack", file)}
                 error={documentErrors.nidBack}
+                isUploading={uploadingDocs.has("nidBack")}
+              //        currentPreviewUrl={documentUrls.nidBack} // **FIX: Pass the uploaded URL**
               />
             </div>
           </div>
@@ -683,11 +734,15 @@ export default function AddNewDriver() {
                 label="Front of Driving License"
                 onChange={(file) => handleDocumentChange("licenseFront", file)}
                 error={documentErrors.licenseFront}
+                isUploading={uploadingDocs.has("licenseFront")}
+              //        currentPreviewUrl={documentUrls.licenseFront} // **FIX: Pass the uploaded URL**
               />
               <UploadBox
                 label="Back of Driving License"
                 onChange={(file) => handleDocumentChange("licenseBack", file)}
                 error={documentErrors.licenseBack}
+                isUploading={uploadingDocs.has("licenseBack")}
+              //        currentPreviewUrl={documentUrls.licenseBack} // **FIX: Pass the uploaded URL**
               />
             </div>
           </div>
@@ -702,21 +757,29 @@ export default function AddNewDriver() {
                 label="Vehicle Front Side"
                 onChange={(file) => handleDocumentChange("vehicleFront", file)}
                 error={documentErrors.vehicleFront}
+                isUploading={uploadingDocs.has("vehicleFront")}
+              //        currentPreviewUrl={documentUrls.vehicleFront} // **FIX: Pass the uploaded URL**
               />
               <UploadBox
                 label="Vehicle Back Side"
                 onChange={(file) => handleDocumentChange("vehicleBack", file)}
                 error={documentErrors.vehicleBack}
+                isUploading={uploadingDocs.has("vehicleBack")}
+              //        currentPreviewUrl={documentUrls.vehicleBack} // **FIX: Pass the uploaded URL**
               />
               <UploadBox
                 label="Driver Side"
                 onChange={(file) => handleDocumentChange("driverSide", file)}
                 error={documentErrors.driverSide}
+                isUploading={uploadingDocs.has("driverSide")}
+              //        currentPreviewUrl={documentUrls.driverSide} // **FIX: Pass the uploaded URL**
               />
               <UploadBox
                 label="Passenger Side"
                 onChange={(file) => handleDocumentChange("passengerSide", file)}
                 error={documentErrors.passengerSide}
+                isUploading={uploadingDocs.has("passengerSide")}
+              //        currentPreviewUrl={documentUrls.passengerSide} // **FIX: Pass the uploaded URL**
               />
             </div>
           </div>
@@ -733,11 +796,15 @@ export default function AddNewDriver() {
                 label="Vehicle Log Photo"
                 onChange={(file) => handleDocumentChange("vehicleLog", file)}
                 error={documentErrors.vehicleLog}
+                isUploading={uploadingDocs.has("vehicleLog")}
+              //        currentPreviewUrl={documentUrls.vehicleLog} // **FIX: Pass the uploaded URL**
               />
               <UploadBox
                 label="Vehicle Policy Photo"
                 onChange={(file) => handleDocumentChange("vehiclePolicy", file)}
                 error={documentErrors.vehiclePolicy}
+                isUploading={uploadingDocs.has("vehiclePolicy")}
+              //        currentPreviewUrl={documentUrls.vehiclePolicy} // **FIX: Pass the uploaded URL**
               />
             </div>
           </div>
@@ -748,9 +815,9 @@ export default function AddNewDriver() {
           <Button
             className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-10 py-3 text-lg rounded-lg"
             onClick={handleSubmit(onSubmit)}
-            disabled={isLoading}
+            disabled={isLoading || uploadingDocs.size > 0 || isProfileUploading}
           >
-            {isLoading ? "Adding..." : "Add Now"}
+            {(isLoading || uploadingDocs.size > 0 || isProfileUploading) ? "Adding..." : "Add Now"}
           </Button>
         </div>
       </div>
