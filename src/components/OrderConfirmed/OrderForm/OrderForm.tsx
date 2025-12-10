@@ -16,7 +16,7 @@ export default function OrderForm() {
   ]
 
   return (
-    <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 mt-8">
+    <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 my-8 rounded-2xl border border-gray-200">
       <div className="">
         {/* Header */}
         <h1 className="text-3xl font-bold text-center text-gray-900 mb-12">
