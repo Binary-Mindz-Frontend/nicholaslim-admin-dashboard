@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { logout } from "../features/auth/authSlice";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "http://10.10.10.44:3000/api/v1",
+  baseUrl: "http://10.10.20.130:3000/api/v1",
   prepareHeaders: (headers, { getState }) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const token = (getState() as any).auth.accessToken;
@@ -15,12 +15,12 @@ const baseQuery = fetchBaseQuery({
   credentials: "include",
 });
 
-const redirectToLogin = () => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('accessToken');
-    window.location.href = '/login';
-  }
-};
+// const redirectToLogin = () => {
+//   if (typeof window !== 'undefined') {
+//     localStorage.removeItem('accessToken');
+//     window.location.href = '/login';
+//   }
+// };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
@@ -28,7 +28,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 
   if (result?.error?.status === 401 || result?.error?.status === 403) {
     api.dispatch(logout());
-    redirectToLogin();
+    // redirectToLogin();
   }
   return result;
 };
@@ -36,6 +36,6 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["VehicleType", "DeliveryType", "Quizzes", "Questions", "QuizResults", "UserTypes"],
+  tagTypes: ["VehicleType", "DeliveryType", "Quizzes", "Questions", "QuizResults", "UserTypes", "StandardCommissionRate", "RaiderCompensationRole", "RaiderDeductionFee", "UserFeeStructure", "DynamicSurgePricing", "UserDynamicSurge"],
   endpoints: () => ({}),
 });
