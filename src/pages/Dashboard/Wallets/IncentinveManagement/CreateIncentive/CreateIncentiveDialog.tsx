@@ -1,9 +1,12 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "lucide-react"
 import { useState } from "react"
+import toast from "react-hot-toast"
+import { useGetUserProfileQuery } from "@/redux/features/usersTypes/usersTypesApi"
+import { useCreateIncentiveMutation } from "@/redux/features/incentives/incentivesApi"
+
 
 interface Props {
   open: boolean
@@ -17,6 +20,52 @@ const CreateIncentiveDialog: React.FC<Props> = ({ open, onOpenChange }) => {
   const [endDate, setEndDate] = useState("")
   const [amount, setAmount] = useState("")
 
+  // API hooks
+  const { data: userData } = useGetUserProfileQuery(undefined);
+  const [createIncentive, { isLoading }] = useCreateIncentiveMutation();
+
+  const handleCreate = async () => {
+    if (!name || !type || !startDate || !endDate || !amount) {
+      toast.error("All fields are required");
+      return;
+    }
+
+    const adminId = userData?.data?.adminProfiles?.[0]?.id;
+    console.log('adminId', adminId)
+
+    if (!adminId) {
+      toast.error("Admin ID not found");
+      return;
+    }
+
+    const payload = {
+      adminId: adminId,
+      incentive_name: name,
+      type: type.toUpperCase(), // "REFERRAL", "PERFORMANCE"
+      start_date: new Date(startDate).toISOString(),
+      end_date: new Date(endDate).toISOString(),
+      incentive_amount: Number(amount),
+      status: "ONGOING",
+    };
+
+    try {
+     await createIncentive(payload).unwrap();
+      toast.success("Incentive created successfully");
+
+      // Reset fields
+      setName("");
+      setType("");
+      setStartDate("");
+      setEndDate("");
+      setAmount("");
+
+      onOpenChange(false); // close modal
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to create incentive");
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg rounded-2xl p-6">
@@ -25,14 +74,15 @@ const CreateIncentiveDialog: React.FC<Props> = ({ open, onOpenChange }) => {
         </DialogHeader>
 
         <div className="space-y-5 mt-2">
+
           {/* Name */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium">Incentive Name</label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Weekby Completion Bonus"
-              className="bg-gray-100 py-5 focus:!ring-1 focus:!ring-[#FFCC00] focus:!border-[#FFCC00]"
+              placeholder="Weekly Bonus"
+              className="bg-gray-100 py-5"
             />
           </div>
 
@@ -40,34 +90,32 @@ const CreateIncentiveDialog: React.FC<Props> = ({ open, onOpenChange }) => {
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium">Type</label>
             <select
-              className="w-full px-3 py-2 rounded-md bg-gray-100 focus:!ring-1 focus:!ring-[#FFCC00] focus:!border-[#FFCC00] border text-sm"
+              className="w-full px-3 py-2 bg-gray-100 rounded-md border text-sm"
               value={type}
               onChange={(e) => setType(e.target.value)}
             >
               <option value="">Select type</option>
-              <option value="Performance">Performance</option>
-              <option value="Referral">Referral</option>
-              <option value="Time-based">Time-based</option>
+              <option value="PERFORMANCE">Performance</option>
+              <option value="REFERRAL">Referral</option>
+              <option value="TIME-BASED">Time-based</option>
             </select>
           </div>
 
           {/* Dates Row */}
           <div className="grid grid-cols-2 gap-4">
-            {/* Start */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium ">Start Date</label>
+              <label className="text-sm font-medium">Start Date</label>
               <div className="relative">
                 <Input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-gray-100 py-5 focus:!ring-1 focus:!ring-[#FFCC00] focus:!border-[#FFCC00]"
+                  className="bg-gray-100 py-5"
                 />
                 <Calendar className="absolute right-3 top-3 h-4 w-4 text-gray-500" />
               </div>
             </div>
 
-            {/* End */}
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium">End Date</label>
               <div className="relative">
@@ -75,7 +123,7 @@ const CreateIncentiveDialog: React.FC<Props> = ({ open, onOpenChange }) => {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-gray-100 py-5 focus:!ring-1 focus:!ring-[#FFCC00] focus:!border-[#FFCC00]"
+                  className="bg-gray-100 py-5"
                 />
                 <Calendar className="absolute right-3 top-3 h-4 w-4 text-gray-500" />
               </div>
@@ -89,21 +137,33 @@ const CreateIncentiveDialog: React.FC<Props> = ({ open, onOpenChange }) => {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="30"
-              className="bg-gray-100 py-5 focus:!ring-1 focus:!ring-[#FFCC00] focus:!border-[#FFCC00]"
+              type="number"
+              className="bg-gray-100 py-5"
             />
           </div>
         </div>
 
         {/* Footer */}
         <DialogFooter className="flex justify-end gap-3 mt-6">
-          <Button variant="outline" className="cursor-pointer border border-black px-8" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            className="border border-black px-8"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
-          <Button className="bg-black text-white cursor-pointer hover:text-black">Save Incentive</Button>
+
+          <Button
+            disabled={isLoading}
+            onClick={handleCreate}
+            className="bg-black text-white px-8"
+          >
+            {isLoading ? "Saving..." : "Save Incentive"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default CreateIncentiveDialog
+export default CreateIncentiveDialog;

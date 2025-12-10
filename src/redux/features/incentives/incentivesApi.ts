@@ -5,7 +5,7 @@ export const incentivesApi = baseApi.injectEndpoints({
     // Create Incentive
     createIncentive: builder.mutation({
       query: (data) => ({
-        url: "/api/v1/incentive",
+        url: "/incentive",
         method: "POST",
         body: data,
       }),
@@ -14,20 +14,20 @@ export const incentivesApi = baseApi.injectEndpoints({
 
     // Get all incentives
     getAllIncentives: builder.query({
-      query: () => "/api/v1/incentive",
+      query: () => "/incentive",
       providesTags: ["Incentives"],
     }),
 
     // Get incentive by ID
     getIncentiveById: builder.query({
-      query: (id) => `/api/v1/incentive/${id}`,
+      query: (id) => `/incentive/${id}`,
       providesTags: ["Incentives"],
     }),
 
     // Update incentive
     updateIncentive: builder.mutation({
       query: ({ id, ...rest }) => ({
-        url: `/api/v1/incentive/${id}`,
+        url: `/incentive/${id}`,
         method: "PATCH",
         body: rest,
       }),
@@ -37,7 +37,7 @@ export const incentivesApi = baseApi.injectEndpoints({
     // Delete incentive
     deleteIncentive: builder.mutation({
       query: (id) => ({
-        url: `/api/v1/incentive/${id}`,
+        url: `/incentive/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Incentives"],
@@ -46,12 +46,14 @@ export const incentivesApi = baseApi.injectEndpoints({
     // Update incentive status
     updateIncentiveStatus: builder.mutation({
       query: ({ id, status }) => ({
-        url: `/api/v1/incentive/${id}/status`,
+        url: `/incentive/${id}/status`,
         method: "PATCH",
         body: { status },
       }),
       invalidatesTags: ["Incentives"],
     }),
+
+    
   }),
 });
 
