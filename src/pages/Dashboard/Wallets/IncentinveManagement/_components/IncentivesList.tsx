@@ -1,68 +1,66 @@
-import type React from "react"
-import { useState } from "react"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import Swal from 'sweetalert2';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { LuPencil } from "react-icons/lu";
+import { FiTrash } from "react-icons/fi";
+import { useGetAllIncentivesQuery, useDeleteIncentiveMutation } from "@/redux/features/incentives/incentivesApi";
+import UpdateIncentiveModal from './UpdateIncentiveModal';
 
-import { Button } from "@/components/ui/button"
-import { LuPencil } from "react-icons/lu"
-import { FiTrash } from "react-icons/fi"
+const IncentivesList: React.FC = () => {
+  const { data, isLoading } = useGetAllIncentivesQuery(undefined);
+  const [deleteIncentive] = useDeleteIncentiveMutation(); // Add delete mutation
+  const [selectedIncentive, setSelectedIncentive] = useState<any>(null);
 
-interface Incentive {
-  id: number
-  name: string
-  type: string
-  startDate: string
-  endDate: string
-  amount: string
-  status: "Completed" | "Ongoing" | "Ended"
-}
+  if (isLoading) return <p>Loading...</p>;
 
-interface IncentivesListProps {
-  onEdit: (id: number) => void
-  onDelete: (id: number) => void
-}
+  const incentives = data?.data || [];
 
-const IncentivesList: React.FC<IncentivesListProps> = () => {
-  const [incentives] = useState<Incentive[]>([
-    {
-      id: 1,
-      name: "Weekly Completion Bonus",
-      type: "Performance",
-      startDate: "Oct 1, 2025",
-      endDate: "Oct 1, 2025",
-      amount: "$90",
-      status: "Completed",
-    },
-    {
-      id: 2,
-      name: "Referral Reward",
-      type: "Referral",
-      startDate: "Oct 10, 2025",
-      endDate: "Oct 1, 2025",
-      amount: "$50",
-      status: "Ongoing",
-    },
-    {
-      id: 3,
-      name: "Early Bird Incentive",
-      type: "Time-based",
-      startDate: "Oct 15, 2025",
-      endDate: "Oct 1, 2025",
-      amount: "$15",
-      status: "Ended",
-    },
-  ])
-
-  const getStatusColor = (status: Incentive["status"]) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case "Completed":
-        return "bg-[#CAE2B6] text-[#32620B]"
-      case "Ongoing":
-    return "bg-[#FFFAE6] text-[#FFCC00] "
-      case "Ended":
-        return "bg-[#FF4D4F40] text-[#FF4D4F]"
+      case "COMPLETED":
+        return "bg-[#CAE2B6] text-[#32620B]";
+      case "ONGOING":
+        return "bg-[#FFFAE6] text-[#FFCC00]";
+      case "ENDED":
+        return "bg-[#FF4D4F40] text-[#FF4D4F]";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
+
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+
+  const handleEditIncentive = (item: any) => {
+    setSelectedIncentive(item);
+  };
+
+  const handleDeleteIncentive = async (id: string) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await deleteIncentive(id).unwrap(); // call delete mutation
+        Swal.fire('Deleted!', 'Your incentive has been deleted.', 'success');
+      } catch (error) {
+        Swal.fire('Error!', 'Failed to delete incentive.', 'error');
+      }
+    }
+  };
 
   return (
     <div className="mb-6">
@@ -70,54 +68,54 @@ const IncentivesList: React.FC<IncentivesListProps> = () => {
         <table className="w-full">
           <thead className="bg-[#FFD52B40] border border-[#FFD52B]">
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Incentive Name</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Type</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Start Date</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">End Date</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Amount</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
+              <th className="px-4 py-3">Incentive Name</th>
+              <th className="px-4 py-3">Type</th>
+              <th className="px-4 py-3">Start Date</th>
+              <th className="px-4 py-3">End Date</th>
+              <th className="px-4 py-3">Amount</th>
+              <th className="px-4 py-3">Actions</th>
+              <th className="px-4 py-3">Status</th>
             </tr>
           </thead>
 
           <tbody className="divide-y divide-[#FF7A0080]">
-            {incentives.map((incentive) => (
-              <tr key={incentive.id}>
-                <td className="px-4 py-3 text-sm text-gray-900">{incentive.name}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{incentive.type}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{incentive.startDate}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{incentive.endDate}</td>
-                <td className="px-4 py-3 text-sm font-semibold text-gray-900">{incentive.amount}</td>
+            {incentives.map((item: any) => (
+              <tr key={item.id}>
+                <td className="px-4 py-3">{item.incentive_name}</td>
+                <td className="px-4 py-3">{item.type}</td>
+                <td className="px-4 py-3">{formatDate(item.start_date)}</td>
+                <td className="px-4 py-3">{formatDate(item.end_date)}</td>
+                <td className="px-4 py-3 font-semibold">${item.incentive_amount}</td>
 
-                {/* Actions */}
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                       <Button
-                             variant="ghost"
-                            size="sm"
-                            className="p-2 h-auto border cursor-pointer border-[#00BFFF] hover:bg-blue-100"
-                          >
-                            <LuPencil size={16} className="text-[#00BFFF]" />
-                         </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="p-2 h-auto border cursor-pointer border-[#00BFFF] hover:bg-blue-100"
+                      onClick={() => handleEditIncentive(item)}
+                    >
+                      <LuPencil size={16} className="text-[#00BFFF]" />
+                    </Button>
 
-                         <Button
-                            variant="ghost"
-                            size="sm"
-                            className="p-2 h-auto cursor-pointer border border-[#FF4D4F] hover:bg-red-100"
-                             >
-                            <FiTrash size={16} className="text-[#FF4D4F]" />
-                        </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="p-2 h-auto cursor-pointer border border-[#FF4D4F] hover:bg-red-100"
+                      onClick={() => handleDeleteIncentive(item?.id)}
+                    >
+                      <FiTrash size={16} className="text-[#FF4D4F]" />
+                    </Button>
                   </div>
                 </td>
 
-                {/* Status badge with fixed width/height */}
                 <td className="px-4 py-3">
                   <span
                     className={`inline-flex items-center justify-center font-medium text-xs rounded-sm ${getStatusColor(
-                      incentive.status,
+                      item.status
                     )} h-7 w-24`}
                   >
-                    {incentive.status}
+                    {item.status}
                   </span>
                 </td>
               </tr>
@@ -125,8 +123,15 @@ const IncentivesList: React.FC<IncentivesListProps> = () => {
           </tbody>
         </table>
       </div>
-    </div>
-  )
-}
 
-export default IncentivesList
+      {selectedIncentive && (
+        <UpdateIncentiveModal
+          incentive={selectedIncentive}
+          onClose={() => setSelectedIncentive(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default IncentivesList;
