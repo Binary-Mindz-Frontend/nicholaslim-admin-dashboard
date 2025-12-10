@@ -1,7 +1,7 @@
-
 import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -13,28 +13,66 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { useDeleteRiderProfileMutation } from "@/redux/features/drivers/driversApi";
 
-import { TDriver } from "../../data/DriverData";
+interface Registration {
+  raider_name: string;
+}
+
+interface TDriver {
+  id: number;
+  userId: number;
+  is_online: boolean;
+  is_available: boolean;
+  raider_status: string;
+  LoginType: string;
+  raider_verificationFromAdmin: string;
+  isSuspended: boolean;
+  suspendedDuration: number | null;
+  suspensionReason: string | null;
+  created_at: string;
+  updated_at: string;
+  registrations: Registration[];
+}
 
 type Props = {
   row: TDriver;
+  onDeleteSuccess?: () => void; // Add callback prop
 };
 
-export default function DriverAction({ row }: Props) {
+export default function DriverAction({ row, onDeleteSuccess }: Props) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const [deleteRider, { isLoading }] =  useDeleteRiderProfileMutation();
 
-  const handleDelete = () => {
-    console.log("Delete Driver:", row.id);
-    setOpen(false);
+  const handleDelete = async () => {
+    try {
+      console.log("Deleting rider with userId:", row.userId);
+      
+      const result = await deleteRider(row.userId).unwrap();
+      
+      console.log("Delete API Response:", result);
+      toast.success(`Driver ${row.registrations?.[0]?.raider_name || 'Rider'} deleted successfully!`);
+      setOpen(false);
+      
+      // Trigger refetch after successful deletion
+      if (onDeleteSuccess) {
+        onDeleteSuccess();
+      }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error("Delete failed with error:", error);
+      toast.error(error?.data?.message || "Failed to delete driver");
+    }
   };
 
   return (
     <div className="flex items-center justify-center gap-3">
       {/* EDIT ICON */}
       <button className="p-2 rounded hover:bg-gray-200 transition">
-        <Pencil className="h-4 w-4 text-blue-600"
-        onClick={() => navigate(`/driver-list/${row.id}`)}
+        <Pencil
+          className="h-4 w-4 text-blue-600"
+          onClick={() => navigate(`/driver-list/${row.id}`)}
         />
       </button>
 
@@ -51,17 +89,18 @@ export default function DriverAction({ row }: Props) {
             <AlertDialogTitle>Delete Driver?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              driver <b>{row.name}</b> from the system.
+              driver <b>{row.registrations?.[0]?.raider_name || 'this rider'}</b> from the system.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-600 text-white hover:bg-red-700"
               onClick={handleDelete}
+              disabled={isLoading}
             >
-              Delete
+              {isLoading ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

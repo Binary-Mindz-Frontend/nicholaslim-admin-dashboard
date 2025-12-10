@@ -3,7 +3,7 @@ import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 import { useState } from "react";
 import { supportAndDisputesData } from "./data/SupportData";
 import { useSupportDisputeColumns } from "./SupportAndDisputesTable/SupportAndDisputesTable";
-import FilterSection from "@/components/Shared/FilterSection/FilterSection";
+import FilterSection from "@/components/Users/FilterSection/FilterSection";
 
 export default function SupportAndDisputes() {
   const { columns, rows } = useSupportDisputeColumns(supportAndDisputesData);

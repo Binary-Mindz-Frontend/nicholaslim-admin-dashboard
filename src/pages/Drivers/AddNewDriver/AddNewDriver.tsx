@@ -1,8 +1,8 @@
-
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +13,11 @@ import {
   userProfileSchema,
   UserProfileType,
 } from "../DriverList/EditDriverProfile/userProfile.schema";
+import { useAddRiderProfileMutation } from "@/redux/features/drivers/driversApi";
 
 import UploadBox from "./components/UploadBox";
 
 export default function AddNewDriver() {
-  const { id } = useParams();
-
   // ⭐ Profile Image State + Preview
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
@@ -37,63 +36,63 @@ export default function AddNewDriver() {
     vehiclePolicy: null as File | null,
   });
 
+  // ⭐ API Mutation
+  const [addRider, { isLoading }] = useAddRiderProfileMutation();
+
   // ⭐ Form Setup
   const form = useForm<UserProfileType>({
     resolver: zodResolver(userProfileSchema),
-    defaultValues: {} as UserProfileType,
+    defaultValues: {
+      raider_name: "",
+      contact_number: "",
+      email_address: "",
+      dob: "",
+      gender: "",
+      driver_photos: [],
+      emergency_contact_name: "",
+      emergency_contact_number: "",
+      identity_card_number: "",
+      nid_front_images: "",
+      nid_back_images: "",
+      driving_license_number: "",
+      driving_license_issue_date: "",
+      driving_license_expire_date: "",
+      driving_license_front_images: "",
+      driving_license_back_images: "",
+      vehicle_plate_number: "",
+      vehicle_type: "",
+      vehicle_brand: "",
+      registration_date: "",
+      vehicle_front_images: "",
+      vehicle_back_images: "",
+      vehicle_driver_side_images: "",
+      vehicle_passenger_side_images: "",
+      vehicle_log_number: "",
+      vehicle_log_issue_date: "",
+      vehicle_log_expire_date: "",
+      vehicle_log_images: "",
+      vehicle_policy_number: "",
+      vehicle_policy_issue_date: "",
+      vehicle_policy_expire_date: "",
+      vehicle_policy_images: "",
+      current_address: "",
+      current_apartment: "",
+      current_state_province: "",
+      current_city: "",
+      current_country: "",
+      current_zip_post_code: "",
+      permanent_address: "",
+      permanent_apartment: "",
+      permanent_state_province: "",
+      permanent_city: "",
+      permanent_country: "",
+      permanent_zip_post_code: "",
+      bank_name: "",
+      account_number: "",
+    },
   });
 
-  const { register, handleSubmit, reset, formState } = form;
-
-  // ⭐ Load Fake Example Data (for demo)
-  useEffect(() => {
-    if (!id) return;
-
-    const fakeUser: UserProfileType = {
-      id,
-      firstName: "Henry",
-      lastName: "Johnson",
-      email: "henry@gmail.com",
-      phone: "01700000000",
-      dob: "2000-07-26",
-      gender: "Male",
-      emergencyContact: "01987654321",
-      driverId: "DRV-001",
-
-      address: "House #10, Road #3",
-      city: "Dhaka",
-      state: "Dhaka",
-      postal: "1207",
-
-      rating: "4.8",
-      followers: "150",
-      deliveries: "250",
-      cancellations: "2",
-      incentives: "20000",
-
-      drivingLicense: "DL-123456789",
-      dlIssueDate: "2022-01-01",
-      dlExpiryDate: "2030-01-01",
-
-      vehiclePlate1: "DHAKA METRO",
-      vehicleType: "Bike",
-      vehiclePlate2: "22-12345",
-      model: "Yamaha FZS",
-      registrationDate: "2021-01-01",
-      vehicleLog: "LOG-54544",
-      vehicleIssueDate: "2021-02-01",
-      vehicleExpiryDate: "2030-02-01",
-
-      policyNumber: "POL-5542",
-      policyIssue: "2021-05-01",
-      policyExpiry: "2031-05-01",
-
-      bank: "DBBL",
-      accountNumber: "1234567890123",
-    };
-
-    reset(fakeUser);
-  }, [id, reset]);
+  const { register, handleSubmit, formState } = form;
 
   // ⭐ Profile Image Upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,64 +109,103 @@ export default function AddNewDriver() {
     setDocuments((prev) => ({ ...prev, [key]: file }));
   };
 
-  // ⭐ On Submit → Console everything
-  const onSubmit = (data: UserProfileType) => {
-    console.log("📌 FORM DATA:", data);
-    console.log("📌 PROFILE IMAGE:", profileImageFile);
-    console.log("📌 DOCUMENT FILES:", documents);
-    alert("Check console — all form/preview data logged!");
+  // ⭐ On Submit
+  const onSubmit = async (data: UserProfileType) => {
+    try {
+      console.log("📌 FORM DATA:", data);
+      console.log("📌 PROFILE IMAGE:", profileImageFile);
+      console.log("📌 DOCUMENT FILES:", documents);
+
+      // TODO: Upload images to server and get URLs
+      // For now, using placeholder strings
+      const riderData = {
+        ...data,
+        driver_photos: profileImageFile ? ["uploaded_profile.jpg"] : [],
+        nid_front_images: documents.nidFront ? "nid_front.jpg" : "",
+        nid_back_images: documents.nidBack ? "nid_back.jpg" : "",
+        driving_license_front_images: documents.licenseFront ? "dl_front.jpg" : "",
+        driving_license_back_images: documents.licenseBack ? "dl_back.jpg" : "",
+        vehicle_front_images: documents.vehicleFront ? "vehicle_front.jpg" : "",
+        vehicle_back_images: documents.vehicleBack ? "vehicle_back.jpg" : "",
+        vehicle_driver_side_images: documents.driverSide ? "driver_side.jpg" : "",
+        vehicle_passenger_side_images: documents.passengerSide ? "passenger_side.jpg" : "",
+        vehicle_log_images: documents.vehicleLog ? "log.jpg" : "",
+        vehicle_policy_images: documents.vehiclePolicy ? "policy.jpg" : "",
+      };
+
+      await addRider(riderData).unwrap();
+      toast.success("Driver added successfully!");
+    } catch (error: any) {
+      console.error("Failed to add driver:", error);
+      toast.error(error?.data?.message || "Failed to add driver");
+    }
   };
 
   // Dropdown Options
-  const genderOptions = ["Male", "Female", "Other"];
+  const genderOptions = ["MALE", "FEMALE", "OTHER"];
   const stateOptions = [
-    "Dhaka",
-    "Chattogram",
-    "Khulna",
-    "Sylhet",
-    "Rajshahi",
-    "Barishal",
-    "Rangpur",
-    "Mymensingh",
+    "Dhaka Division",
+    "Chattogram Division",
+    "Khulna Division",
+    "Sylhet Division",
+    "Rajshahi Division",
+    "Barishal Division",
+    "Rangpur Division",
+    "Mymensingh Division",
   ];
-  const vehicleTypes = ["Bike", "Car", "Pickup", "CNG", "Truck"];
-  const bankOptions = ["DBBL", "BRAC Bank", "Sonali Bank", "City Bank", "IBBL"];
+  const vehicleTypes = ["MOTORCYCLE", "CAR", "PICKUP", "CNG", "TRUCK"];
+  const bankOptions = ["Dutch-Bangla Bank", "BRAC Bank", "Sonali Bank", "City Bank", "IBBL"];
+  const countryOptions = ["Bangladesh", "India", "Pakistan"];
 
-  // All Fields
+  // All Fields with NEW schema keys
   const allFields: { key: keyof UserProfileType; label: string }[] = [
-    { key: "firstName", label: "First Name" },
-    { key: "lastName", label: "Last Name" },
-    { key: "email", label: "Email Address" },
-    { key: "phone", label: "Phone Number" },
+    { key: "raider_name", label: "Full Name" },
+    { key: "contact_number", label: "Phone Number" },
+    { key: "email_address", label: "Email Address" },
     { key: "dob", label: "Date of Birth" },
     { key: "gender", label: "Gender" },
-    { key: "emergencyContact", label: "Emergency Contact" },
-    { key: "driverId", label: "Driver ID" },
+    { key: "emergency_contact_name", label: "Emergency Contact Name" },
+    { key: "emergency_contact_number", label: "Emergency Contact Number" },
+    { key: "identity_card_number", label: "Identity Card Number" },
 
-    { key: "address", label: "Address" },
-    { key: "city", label: "City" },
-    { key: "state", label: "State" },
-    { key: "postal", label: "Postal Code" },
+    // Current Address
+    { key: "current_address", label: "Current Address" },
+    { key: "current_apartment", label: "Current Apartment" },
+    { key: "current_city", label: "Current City" },
+    { key: "current_state_province", label: "Current State/Province" },
+    { key: "current_country", label: "Current Country" },
+    { key: "current_zip_post_code", label: "Current Postal Code" },
 
-    { key: "drivingLicense", label: "Driving License Number" },
-    { key: "dlIssueDate", label: "License Issue Date" },
-    { key: "dlExpiryDate", label: "License Expiry Date" },
+    // Permanent Address
+    { key: "permanent_address", label: "Permanent Address" },
+    { key: "permanent_apartment", label: "Permanent Apartment" },
+    { key: "permanent_city", label: "Permanent City" },
+    { key: "permanent_state_province", label: "Permanent State/Province" },
+    { key: "permanent_country", label: "Permanent Country" },
+    { key: "permanent_zip_post_code", label: "Permanent Postal Code" },
 
-    { key: "vehiclePlate1", label: "Vehicle Number Plate 1" },
-    { key: "vehiclePlate2", label: "Vehicle Number Plate 2" },
-    { key: "vehicleType", label: "Vehicle Type" },
-    { key: "model", label: "Vehicle Model" },
-    { key: "registrationDate", label: "Registration Date" },
-    { key: "vehicleLog", label: "Vehicle Log Number" },
-    { key: "vehicleIssueDate", label: "Vehicle Issue Date" },
-    { key: "vehicleExpiryDate", label: "Vehicle Expiry Date" },
+    // Driving License
+    { key: "driving_license_number", label: "Driving License Number" },
+    { key: "driving_license_issue_date", label: "License Issue Date" },
+    { key: "driving_license_expire_date", label: "License Expiry Date" },
 
-    { key: "policyNumber", label: "Policy Number" },
-    { key: "policyIssue", label: "Policy Issue Date" },
-    { key: "policyExpiry", label: "Policy Expiry Date" },
+    // Vehicle Information
+    { key: "vehicle_plate_number", label: "Vehicle Plate Number" },
+    { key: "vehicle_type", label: "Vehicle Type" },
+    { key: "vehicle_brand", label: "Vehicle Brand" },
+    { key: "registration_date", label: "Registration Date" },
+    { key: "vehicle_log_number", label: "Vehicle Log Number" },
+    { key: "vehicle_log_issue_date", label: "Vehicle Log Issue Date" },
+    { key: "vehicle_log_expire_date", label: "Vehicle Log Expiry Date" },
 
-    { key: "bank", label: "Bank Name" },
-    { key: "accountNumber", label: "Account Number" },
+    // Vehicle Policy
+    { key: "vehicle_policy_number", label: "Policy Number" },
+    { key: "vehicle_policy_issue_date", label: "Policy Issue Date" },
+    { key: "vehicle_policy_expire_date", label: "Policy Expiry Date" },
+
+    // Bank Information
+    { key: "bank_name", label: "Bank Name" },
+    { key: "account_number", label: "Account Number" },
   ];
 
   const isDateField = (field: string) =>
@@ -178,7 +216,6 @@ export default function AddNewDriver() {
       <h1 className="text-2xl font-semibold text-gray-900 pt-2 sm:pt-0">Add New Driver</h1>
 
       <div className="border rounded-xl py-10 px-6 lg:px-32 bg-white shadow-sm relative">
-        
         {/* ⭐ Profile Image */}
         <div className="flex justify-center">
           <label className="cursor-pointer mt-8 sm:mt-0">
@@ -187,6 +224,7 @@ export default function AddNewDriver() {
                 <img
                   src={profilePreview}
                   className="w-full h-full object-cover"
+                  alt="Profile"
                 />
               ) : (
                 <Camera size={32} className="text-gray-500" />
@@ -212,42 +250,64 @@ export default function AddNewDriver() {
                 {/* Gender */}
                 {key === "gender" && (
                   <select {...register(key)} className="w-full border bg-secondary rounded p-2">
+                    <option value="">Select Gender</option>
                     {genderOptions.map((g) => (
-                      <option key={g}>{g}</option>
+                      <option key={g} value={g}>{g}</option>
                     ))}
                   </select>
                 )}
 
-                {/* State */}
-                {key === "state" && (
+                {/* State/Province */}
+                {(key === "current_state_province" || key === "permanent_state_province") && (
                   <select {...register(key)} className="w-full border bg-secondary rounded p-2">
+                    <option value="">Select State</option>
                     {stateOptions.map((s) => (
-                      <option key={s}>{s}</option>
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                )}
+
+                {/* Country */}
+                {(key === "current_country" || key === "permanent_country") && (
+                  <select {...register(key)} className="w-full border bg-secondary rounded p-2">
+                    <option value="">Select Country</option>
+                    {countryOptions.map((c) => (
+                      <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
                 )}
 
                 {/* Vehicle Type */}
-                {key === "vehicleType" && (
+                {key === "vehicle_type" && (
                   <select {...register(key)} className="w-full border bg-secondary rounded p-2">
+                    <option value="">Select Vehicle Type</option>
                     {vehicleTypes.map((v) => (
-                      <option key={v}>{v}</option>
+                      <option key={v} value={v}>{v}</option>
                     ))}
                   </select>
                 )}
 
                 {/* Bank */}
-                {key === "bank" && (
+                {key === "bank_name" && (
                   <select {...register(key)} className="w-full border bg-secondary rounded p-2">
+                    <option value="">Select Bank</option>
                     {bankOptions.map((b) => (
-                      <option key={b}>{b}</option>
+                      <option key={b} value={b}>{b}</option>
                     ))}
                   </select>
                 )}
 
                 {/* Date Fields */}
                 {isDateField(key) &&
-                  !["gender", "state", "vehicleType", "bank"].includes(key) && (
+                  ![
+                    "gender",
+                    "current_state_province",
+                    "permanent_state_province",
+                    "current_country",
+                    "permanent_country",
+                    "vehicle_type",
+                    "bank_name",
+                  ].includes(key) && (
                     <input
                       type="date"
                       {...register(key)}
@@ -256,7 +316,15 @@ export default function AddNewDriver() {
                   )}
 
                 {/* Normal Input */}
-                {!["gender", "state", "vehicleType", "bank"].includes(key) &&
+                {![
+                  "gender",
+                  "current_state_province",
+                  "permanent_state_province",
+                  "current_country",
+                  "permanent_country",
+                  "vehicle_type",
+                  "bank_name",
+                ].includes(key) &&
                   !isDateField(key) && (
                     <Input className="bg-secondary rounded" {...register(key)} />
                   )}
@@ -273,7 +341,6 @@ export default function AddNewDriver() {
 
         {/* ⭐ Document Upload Sections */}
         <div className="mt-10 space-y-10">
-
           {/* Identity Card */}
           <div>
             <h2 className="font-semibold text-lg">Personal Documents</h2>
@@ -358,8 +425,9 @@ export default function AddNewDriver() {
           <Button
             className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-10 py-5 text-lg rounded-lg"
             onClick={handleSubmit(onSubmit)}
+            disabled={isLoading}
           >
-            Add Now
+            {isLoading ? "Adding..." : "Add Now"}
           </Button>
         </div>
       </div>
