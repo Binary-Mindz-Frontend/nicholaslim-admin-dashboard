@@ -1,29 +1,43 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"// Update with correct Dialog import
-import { Input } from "@/components/ui/input"; // Adjust this import according to your setup
-import { Button } from "@/components/ui/button"; // Adjust this import according to your setup
-import { Calendar } from "lucide-react"; // Adjust if necessary
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "lucide-react";
+import { useGetUserProfileQuery } from "@/redux/features/usersTypes/usersTypesApi"
 
-const UpdateIncentiveModal = ({ incentive, onClose, onSave }: any) => {
+// Define proper props interface
+interface UpdateIncentiveModalProps {
+  incentive: any;
+  onClose: () => void;
+  onSave: (data: any) => void; // Add this prop
+}
+
+const UpdateIncentiveModal = ({ incentive, onClose, onSave }: UpdateIncentiveModalProps) => {
   const [name, setName] = useState(incentive.incentive_name);
   const [amount, setAmount] = useState(incentive.incentive_amount);
-  const [startDate, setStartDate] = useState(incentive.start_date);
-  const [endDate, setEndDate] = useState(incentive.end_date);
-  const [status] = useState(incentive.status);
+  const [startDate, setStartDate] = useState(new Date(incentive.start_date).toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState(new Date(incentive.end_date).toISOString().split("T")[0]);
+  const [status, setStatus] = useState(incentive.status); // Make this editable if needed
   const [type, setType] = useState(incentive.type);
 
+  const { data: userData } = useGetUserProfileQuery(undefined);
+  const adminId = userData?.data?.adminProfiles?.[0]?.id;
+
   const handleSave = () => {
-    onSave({
-      id: incentive.id,
+    // Prepare the data in the format expected by the API
+    const updatedData = {
+      adminId: adminId,
       incentive_name: name,
-      incentive_amount: amount,
-      start_date: startDate,
-      end_date: endDate,
+      incentive_amount: Number(amount), // Convert to number
+      start_date: `${startDate}T00:00:00Z`, // Format as ISO string
+      end_date: `${endDate}T23:59:59Z`, // Format as ISO string
       status: status,
       type: type,
-    });
-    onClose(); // Close the modal after saving
+    };
+    
+    // Call the onSave function passed from parent
+    onSave(updatedData);
   };
 
   return (
@@ -58,7 +72,21 @@ const UpdateIncentiveModal = ({ incentive, onClose, onSave }: any) => {
               <option value="">Select type</option>
               <option value="PERFORMANCE">Performance</option>
               <option value="REFERRAL">Referral</option>
-              <option value="TIME-BASED">Time-based</option>
+              <option value="TIME_BASED">Time-based</option>
+            </select>
+          </div>
+
+          {/* Status (optional - if you want it to be editable) */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium">Status</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-100 rounded-md border text-sm"
+            >
+              <option value="ONGOING">Ongoing</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="ENDED">Ended</option>
             </select>
           </div>
 
@@ -108,14 +136,14 @@ const UpdateIncentiveModal = ({ incentive, onClose, onSave }: any) => {
         <DialogFooter className="flex justify-end gap-3 mt-6">
           <Button
             variant="outline"
-            className="border border-black px-8"
-            onClick={onClose} // Close modal without saving
+            className="border border-black px-8 cursor-pointer "
+            onClick={onClose}
           >
             Cancel
           </Button>
           <Button
-            className="bg-black text-white px-8 hover:bg-gray-800"
-            onClick={handleSave} // Trigger save action
+            className="bg-black text-white px-8 cursor-pointer hover:bg-gray-800"
+            onClick={handleSave}
           >
             Save Incentive
           </Button>

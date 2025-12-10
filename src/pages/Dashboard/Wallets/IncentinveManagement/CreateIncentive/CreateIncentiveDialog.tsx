@@ -144,7 +144,7 @@ const CreateIncentiveDialog: React.FC<Props> = ({ open, onOpenChange, incentiveT
               <option value="">Select type</option>
               <option value="PERFORMANCE">Performance</option>
               <option value="REFERRAL">Referral</option>
-              <option value="TIME_BASED">Time_based</option>
+              <option value="TIMEBASED">Time_based</option>
             </select>
           </div>
 

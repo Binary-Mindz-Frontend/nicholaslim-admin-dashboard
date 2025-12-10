@@ -5,12 +5,17 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LuPencil } from "react-icons/lu";
 import { FiTrash } from "react-icons/fi";
-import { useGetAllIncentivesQuery, useDeleteIncentiveMutation } from "@/redux/features/incentives/incentivesApi";
+import { 
+  useGetAllIncentivesQuery, 
+  useDeleteIncentiveMutation,
+  useUpdateIncentiveMutation // Add this import
+} from "@/redux/features/incentives/incentivesApi";
 import UpdateIncentiveModal from './UpdateIncentiveModal';
 
 const IncentivesList: React.FC = () => {
-  const { data, isLoading } = useGetAllIncentivesQuery(undefined);
-  const [deleteIncentive] = useDeleteIncentiveMutation(); // Add delete mutation
+  const { data, isLoading, refetch } = useGetAllIncentivesQuery(undefined);
+  const [deleteIncentive] = useDeleteIncentiveMutation();
+  const [updateIncentive] = useUpdateIncentiveMutation(); // Add update mutation
   const [selectedIncentive, setSelectedIncentive] = useState<any>(null);
 
   if (isLoading) return <p>Loading...</p>;
@@ -54,11 +59,32 @@ const IncentivesList: React.FC = () => {
 
     if (result.isConfirmed) {
       try {
-        await deleteIncentive(id).unwrap(); // call delete mutation
+        await deleteIncentive(id).unwrap();
         Swal.fire('Deleted!', 'Your incentive has been deleted.', 'success');
       } catch (error) {
         Swal.fire('Error!', 'Failed to delete incentive.', 'error');
       }
+    }
+  };
+
+  // Add this function to handle save
+  const handleSaveIncentive = async (updatedData: any) => {
+    if (!selectedIncentive?.id) return;
+    
+    try {
+      // Prepare the data for API call
+      const payload = {
+        id: selectedIncentive.id,
+        ...updatedData
+      };
+      
+      await updateIncentive(payload).unwrap();
+      await refetch(); // Refresh the list
+      Swal.fire('Success!', 'Incentive updated successfully.', 'success');
+      setSelectedIncentive(null); // Close modal
+    } catch (error) {
+      console.error('Update error:', error);
+      Swal.fire('Error!', 'Failed to update incentive.', 'error');
     }
   };
 
@@ -128,6 +154,7 @@ const IncentivesList: React.FC = () => {
         <UpdateIncentiveModal
           incentive={selectedIncentive}
           onClose={() => setSelectedIncentive(null)}
+          onSave={handleSaveIncentive} // Pass the save handler
         />
       )}
     </div>
