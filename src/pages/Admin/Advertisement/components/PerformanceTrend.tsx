@@ -1,4 +1,5 @@
-// src/components/PerformanceTrend.tsx
+'use client';
+
 import {
   BarChart,
   Bar,
@@ -17,31 +18,27 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const data = [
-  {
-    name: "Week 1",
-    impressions: 12000,
-    clicks: 2000,
-  },
-  {
-    name: "Week 2",
-    impressions: 14000,
-    clicks: 4500,
-  },
-  {
-    name: "Week 3",
-    impressions: 11000,
-    clicks: 2500,
-  },
-  {
-    name: "Week 4",
-    impressions: 11500,
-    clicks: 3000,
-  },
-];
+import { useGetGlobalStatsQuery } from "@/redux/features/advertise/advertiseApi";
 
 export default function PerformanceTrendsChart() {
+  // Fetch global stats
+  const { data, isLoading } = useGetGlobalStatsQuery(undefined);
+
+  if (isLoading) return <p>Loading...</p>;
+
+  // Default to 0 if API returns nothing
+  const totalImpression = data?.data?.totalImpression || 0;
+  const totalClick = data?.data?.totalClick || 0;
+
+  // Convert into array for recharts
+  const chartData = [
+    {
+      name: "All Ads",
+      impressions: totalImpression,
+      clicks: totalClick,
+    },
+  ];
+
   return (
     <Card className="mt-10 shadow-lg border-0">
       <CardHeader className="pb-4">
@@ -65,7 +62,7 @@ export default function PerformanceTrendsChart() {
         <div className="h-96 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={data}
+              data={chartData}
               margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -79,8 +76,6 @@ export default function PerformanceTrendsChart() {
                 tick={{ fill: "#9ca3af", fontSize: 14 }}
                 axisLine={false}
                 tickLine={false}
-                ticks={[0, 4000, 8000, 12000, 16000]}
-                domain={[0, 16000]}
               />
               <Tooltip
                 contentStyle={{

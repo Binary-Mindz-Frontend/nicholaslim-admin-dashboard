@@ -1,63 +1,77 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+'use client';
+
 import { useState } from "react";
 import { Upload, Calendar } from "lucide-react";
 import { useUploadFileMutation } from "@/redux/features/fileUpload/fileuploadApi";
 import { useCreateAdvertisementMutation } from "@/redux/features/advertise/advertiseApi";
 import toast from "react-hot-toast";
 
-export default function CreateNewCampaign() {
+interface CreateNewCampaignProps {
+  activeTab: "USER" | "RAIDER";
+}
+
+export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps) {
   const [campaignTitle, setCampaignTitle] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [uploadFile] = useUploadFileMutation();
   const [createAdvertisement] = useCreateAdvertisementMutation();
 
-  // submit handler
   const handleCreateCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!campaignTitle || !startDate || !endDate || !uploadedFile) {
-      alert("Please fill in all fields and upload a file.");
+      toast.error("Please fill in all fields and upload a file.");
       return;
     }
 
-    try {
-      // 1️⃣ Upload file
-      const uploadRes: any = await uploadFile(uploadedFile);
+    setIsSubmitting(true);
 
+    try {
+      // 1️⃣ Upload the file
+      const uploadRes: any = await uploadFile(uploadedFile);
       const uploadedUrl = uploadRes?.data?.data?.[0];
+
       if (!uploadedUrl) {
-        alert("File upload failed!");
+        toast.error("File upload failed!");
+        setIsSubmitting(false);
         return;
       }
 
-      // 2️⃣ Prepare payload
+      // 2️⃣ Prepare payload with dynamic create_for
       const payload = {
-        create_for: "USER",
+        create_for: activeTab, // "USER" or "RAIDER"
         ad_title: campaignTitle,
         ad_image: uploadedUrl,
-        start_date: new Date(startDate)?.toISOString(),
-        end_date: new Date(endDate)?.toISOString(),
+        start_date: new Date(startDate).toISOString(),
+        end_date: new Date(endDate).toISOString(),
       };
 
       // 3️⃣ Create advertisement
       const result: any = await createAdvertisement(payload);
-      console.log(result?.data)
 
       if (result?.data?.success) {
-        toast.success(result?.data?.message);
+        toast.success(result.data.message);
+        // Reset form
+        setCampaignTitle("");
+        setStartDate("");
+        setEndDate("");
+        setUploadedFile(null);
       } else {
         toast.error(result?.error?.data?.message || "Failed to create campaign");
       }
     } catch (err) {
       console.error(err);
       toast.error("Something went wrong!");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // file input
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.length) {
       setUploadedFile(e.target.files[0]);
@@ -69,8 +83,8 @@ export default function CreateNewCampaign() {
   return (
     <div className="bg-white p-4 md:p-8 rounded-md">
       <div className="max-w-4xl mx-auto bg-white rounded-3xl p-6 md:p-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-10">
-          Create New Campaign
+        <h2 className="text-3xl text-center font-bold text-gray-900 mb-10">
+          Create New Campaign ({activeTab})
         </h2>
 
         <form onSubmit={handleCreateCampaign} className="space-y-8">
@@ -87,7 +101,7 @@ export default function CreateNewCampaign() {
               type="text"
               value={campaignTitle}
               onChange={(e) => setCampaignTitle(e.target.value)}
-              placeholder="Enter title for notification"
+              placeholder="Enter title for campaign"
               className="w-full px-5 py-4 border border-gray-300 rounded-xl text-lg focus:ring-yellow-500 focus:border-yellow-500"
               required
             />
@@ -106,7 +120,6 @@ export default function CreateNewCampaign() {
                 onChange={handleFileChange}
                 className="sr-only"
               />
-
               <div className="flex flex-col items-center">
                 <Upload className="w-8 h-8 text-blue-500 mb-3" />
                 <p className="text-blue-500 font-medium text-lg">
@@ -115,10 +128,9 @@ export default function CreateNewCampaign() {
                 <p className="text-gray-500 text-sm mt-1">
                   (Max. File size: 25 MB)
                 </p>
-
                 {uploadedFile && (
                   <p className="text-green-600 text-sm mt-2 font-semibold">
-                    File uploaded: {uploadedFile.name}
+                    File selected: {uploadedFile.name}
                   </p>
                 )}
               </div>
@@ -134,11 +146,8 @@ export default function CreateNewCampaign() {
               <div className="relative">
                 <input
                   type="datetime-local"
-                  onFocus={(e) => (e.target.type = "datetime-local")}
-                  onBlur={(e) => (e.target.type = "text")}
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  placeholder="Enter date & time"
                   className="w-full px-5 py-4 border border-gray-300 rounded-xl text-lg focus:ring-yellow-500 focus:border-yellow-500"
                   required
                 />
@@ -153,11 +162,8 @@ export default function CreateNewCampaign() {
               <div className="relative">
                 <input
                   type="datetime-local"
-                  onFocus={(e) => (e.target.type = "datetime-local")}
-                  onBlur={(e) => (e.target.type = "text")}
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  placeholder="Enter date & time"
                   className="w-full px-5 py-4 border border-gray-300 rounded-xl text-lg focus:ring-yellow-500 focus:border-yellow-500"
                   required
                 />
@@ -170,9 +176,12 @@ export default function CreateNewCampaign() {
           <div className="pt-6 flex justify-center">
             <button
               type="submit"
-              className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-12 rounded-xl text-xl shadow-lg transition-colors w-full md:w-auto cursor-pointer"
+              disabled={isSubmitting}
+              className={`bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-12 rounded-xl text-xl shadow-lg transition-colors w-full md:w-auto cursor-pointer ${
+                isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              Create new Campaign
+              {isSubmitting ? "Creating..." : "Create new Campaign"}
             </button>
           </div>
         </form>

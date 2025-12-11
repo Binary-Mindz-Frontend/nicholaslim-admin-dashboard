@@ -3,9 +3,9 @@ import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useGetAdvertisementsQuery, useUpdateStatusMutation } from "@/redux/features/advertise/advertiseApi";
-import { ChevronLeft, ChevronRight, Edit, Trash, View } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit, Trash } from "lucide-react";
 
-export default function AdvertisementsTable() {
+export default function AdvertisementsTable({ activeTab }: { activeTab: "USER" | "RAIDER" }) {
   const { data, isLoading } = useGetAdvertisementsQuery(undefined);
   const [updateStatus] = useUpdateStatusMutation(); // hook from RTK Query
   const [currentPage, setCurrentPage] = useState(1);
@@ -15,9 +15,12 @@ export default function AdvertisementsTable() {
 
   const ads = data?.data?.data || [];
 
+  // Filter the ads based on the activeTab (USER or RAIDER)
+  const filteredAds = ads.filter((ad: any) => ad.create_for === activeTab);
+
   // Pagination
-  const totalPages = Math.ceil(ads.length / itemsPerPage);
-  const paginatedAds = ads.slice(
+  const totalPages = Math.ceil(filteredAds.length / itemsPerPage);
+  const paginatedAds = filteredAds.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
