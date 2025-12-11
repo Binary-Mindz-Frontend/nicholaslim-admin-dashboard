@@ -45,7 +45,7 @@ const driversApi = baseApi.injectEndpoints({
                 url: `/raider-profile/${id}`,
                 method: "GET",
             }),
-            providesTags: (result, error, id) => [{ type: "RiderProfiles", id }],
+            providesTags: ( id) => [{ type: "RiderProfiles", id }],
         }),
 
         toggleRiderActiveStatus: builder.mutation({

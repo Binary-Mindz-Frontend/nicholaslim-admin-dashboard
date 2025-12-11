@@ -46,19 +46,14 @@ export default function DriverAction({ row, onDeleteSuccess }: Props) {
   const [deleteRider, { isLoading }] = useDeleteRiderProfileMutation();
 
   const handleEdit = () => {
-    // Use userId instead of id if that's what your API expects
-    // Or use row.id if that's the correct identifier
-    console.log("Editing driver with ID:", row.id, "UserID:", row.userId, row);
     navigate(`/driver-list/${row.id}`);
   };
 
   const handleDelete = async () => {
     try {
-      console.log("Deleting rider with userId:", row.userId);
       
-      const result = await deleteRider(row.userId).unwrap();
+       await deleteRider(row.userId).unwrap();
       
-      console.log("Delete API Response:", result);
       toast.success(`Driver ${row.registrations?.[0]?.raider_name || 'Rider'} deleted successfully!`);
       setOpen(false);
       
@@ -68,7 +63,6 @@ export default function DriverAction({ row, onDeleteSuccess }: Props) {
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error("Delete failed with error:", error);
       toast.error(error?.data?.message || "Failed to delete driver");
     }
   };
