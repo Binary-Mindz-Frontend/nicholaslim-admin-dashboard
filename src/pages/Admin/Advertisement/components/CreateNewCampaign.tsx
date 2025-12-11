@@ -1,33 +1,65 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Upload, Calendar } from "lucide-react";
+import { useUploadFileMutation } from "@/redux/features/fileUpload/fileuploadApi";
+import { useCreateAdvertisementMutation } from "@/redux/features/advertise/advertiseApi";
+import toast from "react-hot-toast";
 
 export default function CreateNewCampaign() {
-  // State for form fields
   const [campaignTitle, setCampaignTitle] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  // State to hold the uploaded file (or metadata)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
-  const handleCreateCampaign = (e: React.FormEvent) => {
+  const [uploadFile] = useUploadFileMutation();
+  const [createAdvertisement] = useCreateAdvertisementMutation();
+
+  // submit handler
+  const handleCreateCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder logic for form submission
+
     if (!campaignTitle || !startDate || !endDate || !uploadedFile) {
       alert("Please fill in all fields and upload a file.");
       return;
     }
-    console.log("Creating new campaign:", {
-      campaignTitle,
-      startDate,
-      endDate,
-      file: uploadedFile.name,
-    });
-    // In a real application, you would send this data to an API
-    alert("Campaign created successfully (placeholder action)!");
+
+    try {
+      // 1️⃣ Upload file
+      const uploadRes: any = await uploadFile(uploadedFile);
+
+      const uploadedUrl = uploadRes?.data?.data?.[0];
+      if (!uploadedUrl) {
+        alert("File upload failed!");
+        return;
+      }
+
+      // 2️⃣ Prepare payload
+      const payload = {
+        create_for: "USER",
+        ad_title: campaignTitle,
+        ad_image: uploadedUrl,
+        start_date: new Date(startDate)?.toISOString(),
+        end_date: new Date(endDate)?.toISOString(),
+      };
+
+      // 3️⃣ Create advertisement
+      const result: any = await createAdvertisement(payload);
+      console.log(result?.data)
+
+      if (result?.data?.success) {
+        toast.success(result?.data?.message);
+      } else {
+        toast.error(result?.error?.data?.message || "Failed to create campaign");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong!");
+    }
   };
 
+  // file input
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
+    if (e.target.files?.length) {
       setUploadedFile(e.target.files[0]);
     } else {
       setUploadedFile(null);
@@ -36,13 +68,13 @@ export default function CreateNewCampaign() {
 
   return (
     <div className="bg-white p-4 md:p-8 rounded-md">
-      <div className="max-w-4xl mx-auto bg-white rounded-3xl  p-6 md:p-8 ">
+      <div className="max-w-4xl mx-auto bg-white rounded-3xl p-6 md:p-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-10">
           Create New Campaign
         </h2>
 
         <form onSubmit={handleCreateCampaign} className="space-y-8">
-          {/* Campaign Title Input */}
+          {/* Campaign Title */}
           <div>
             <label
               htmlFor="campaign-title"
@@ -61,7 +93,7 @@ export default function CreateNewCampaign() {
             />
           </div>
 
-          {/* Photo/Video Upload Area (Dashed border box) */}
+          {/* Upload Box */}
           <div className="pt-4">
             <label
               htmlFor="file-upload"
@@ -74,6 +106,7 @@ export default function CreateNewCampaign() {
                 onChange={handleFileChange}
                 className="sr-only"
               />
+
               <div className="flex flex-col items-center">
                 <Upload className="w-8 h-8 text-blue-500 mb-3" />
                 <p className="text-blue-500 font-medium text-lg">
@@ -82,6 +115,7 @@ export default function CreateNewCampaign() {
                 <p className="text-gray-500 text-sm mt-1">
                   (Max. File size: 25 MB)
                 </p>
+
                 {uploadedFile && (
                   <p className="text-green-600 text-sm mt-2 font-semibold">
                     File uploaded: {uploadedFile.name}
@@ -91,20 +125,15 @@ export default function CreateNewCampaign() {
             </label>
           </div>
 
-          {/* Date and Time Inputs */}
+          {/* Date Inputs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Starting Date & Time */}
             <div>
-              <label
-                htmlFor="start-date"
-                className="block text-xl font-medium text-gray-800 mb-4"
-              >
+              <label className="block text-xl font-medium text-gray-800 mb-4">
                 Starting Date & Time
               </label>
               <div className="relative">
                 <input
-                  id="start-date"
-                  type="text" // Using text to display placeholder clearly, but could be 'datetime-local'
+                  type="datetime-local"
                   onFocus={(e) => (e.target.type = "datetime-local")}
                   onBlur={(e) => (e.target.type = "text")}
                   value={startDate}
@@ -117,18 +146,13 @@ export default function CreateNewCampaign() {
               </div>
             </div>
 
-            {/* Ending Date & Time */}
             <div>
-              <label
-                htmlFor="end-date"
-                className="block text-xl font-medium text-gray-800 mb-4"
-              >
+              <label className="block text-xl font-medium text-gray-800 mb-4">
                 Ending Date & Time
               </label>
               <div className="relative">
                 <input
-                  id="end-date"
-                  type="text" // Using text to display placeholder clearly, but could be 'datetime-local'
+                  type="datetime-local"
                   onFocus={(e) => (e.target.type = "datetime-local")}
                   onBlur={(e) => (e.target.type = "text")}
                   value={endDate}
@@ -142,7 +166,7 @@ export default function CreateNewCampaign() {
             </div>
           </div>
 
-          {/* Submission Button */}
+          {/* Submit Button */}
           <div className="pt-6 flex justify-center">
             <button
               type="submit"
