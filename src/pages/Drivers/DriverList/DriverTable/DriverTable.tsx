@@ -296,12 +296,12 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       cell: (row) => (
         <span
           className={`px-3 py-1 rounded-full text-xs font-medium ${
-            row.LoginType === "Admin"
+            row.LoginType === "ADMIN_SIGNIN"
               ? "bg-yellow-300 text-black"
               : "bg-gray-300 text-black"
           }`}
         >
-          {row.LoginType === "Admin" ? "Assigned by Admin" : "Self Registered"}
+          {row.LoginType === "ADMIN_SIGNIN" ? "Assigned by Admin" : "Self Registered"}
         </span>
       ),
     },
