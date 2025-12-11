@@ -4,13 +4,13 @@ const driversApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         // Image upload mutation
         uploadImage: builder.mutation({
-  query: (formData) => ({
-    url: "/auth/upload", // Your backend endpoint
-    method: "POST",
-    body: formData, // Send FormData object containing multiple files
-    // No need to set Content-Type header, the browser will do it automatically
-  }),
-}),
+            query: (formData) => ({
+                url: "/auth/upload", // Your backend endpoint
+                method: "POST",
+                body: formData, // Send FormData object containing multiple files
+                // No need to set Content-Type header, the browser will do it automatically
+            }),
+        }),
 
         getRiderProfiles: builder.mutation({
             query: ({
@@ -45,7 +45,7 @@ const driversApi = baseApi.injectEndpoints({
                 url: `/raider-profile/${id}`,
                 method: "GET",
             }),
-            providesTags: ( id) => [{ type: "RiderProfiles", id }],
+            providesTags: (id) => [{ type: "RiderProfiles", id }],
         }),
 
         toggleRiderActiveStatus: builder.mutation({
@@ -87,6 +87,23 @@ const driversApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["RiderProfiles"],
         }),
+
+        unsuspendRiderProfile: builder.mutation({
+            query: (id) => ({
+                url: `/raider-profile/unsuspend/${id}`,
+                method: "PATCH",
+            }),
+            invalidatesTags: ["RiderProfiles"],
+        }),
+
+        suspendRiderProfile: builder.mutation({
+            query: ({ id, data }) => ({
+                url: `/raider-profile/suspend/${id}`,
+                method: "PATCH",
+                body: data,
+            }),
+            invalidatesTags: ["RiderProfiles"],
+        }),
     }),
 });
 
@@ -98,4 +115,6 @@ export const {
     useDeleteRiderProfileMutation,
     useAddRiderProfileMutation,
     useUpdateRiderProfileMutation,
+    useSuspendRiderProfileMutation,
+    useUnsuspendRiderProfileMutation,
 } = driversApi;

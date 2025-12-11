@@ -10,7 +10,7 @@
 //   const [drivers] = useState<TDriver[]>(initialData); // No ESLint warning
 
 //   const driverColumns: Column<TDriver>[] = [
-   
+
 //     {
 //       header: "Driver ID",
 //       accessor: "id",
@@ -212,7 +212,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
 
   useEffect(() => {
     fetchDrivers(params);
-    
+
     return () => {
       fetchDrivers.cancel();
     };
@@ -234,15 +234,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
         </a>
       ),
     },
-    {
-      header: "Raider ID",
-      accessor: "userId",
-      cell: (row) => (
-        <span className="font-medium">
-          {row.userId}
-        </span>
-      ),
-    },
+
     {
       header: "Name",
       accessor: "registrations",
@@ -251,6 +243,39 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
           {row.registrations?.[0]?.raider_name || "N/A"}
         </a>
       ),
+    },
+    {
+      header: "Suspended Status",
+      accessor: "isSuspended",
+      cell: (row) => {
+        const isSuspended = row.isSuspended;
+        const suspendedDuration = row.suspendedDuration;
+        const suspensionReason = row.suspensionReason;
+
+        return (
+          <div>
+            {isSuspended ? (
+              <span className="bg-red-500 text-white px-3 py-1 rounded-full">
+                Suspended
+              </span>
+            ) : (
+              <span className="bg-green-500 text-white px-3 py-1 rounded-full">
+                No
+              </span>
+            )}
+            {isSuspended && (
+              <div className="mt-1">
+                <p className="text-xs text-gray-500">
+                  Suspended for: {suspendedDuration} days
+                </p>
+                <p className="text-xs text-gray-500">
+                  Reason: {suspensionReason || "N/A"}
+                </p>
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       header: "Contact",
@@ -278,13 +303,12 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       accessor: "raider_verificationFromAdmin",
       cell: (row) => (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            row.raider_verificationFromAdmin === "APPROVED"
+          className={`px-3 py-1 rounded-full text-xs font-medium ${row.raider_verificationFromAdmin === "APPROVED"
               ? "bg-green-100 text-green-800"
               : row.raider_verificationFromAdmin === "PENDING"
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-red-100 text-red-800"
-          }`}
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-red-100 text-red-800"
+            }`}
         >
           {row.raider_verificationFromAdmin}
         </span>
@@ -295,11 +319,10 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       accessor: "LoginType",
       cell: (row) => (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            row.LoginType === "ADMIN_SIGNIN"
+          className={`px-3 py-1 rounded-full text-xs font-medium ${row.LoginType === "ADMIN_SIGNIN"
               ? "bg-yellow-300 text-black"
               : "bg-gray-300 text-black"
-          }`}
+            }`}
         >
           {row.LoginType === "ADMIN_SIGNIN" ? "Assigned by Admin" : "Self Registered"}
         </span>
