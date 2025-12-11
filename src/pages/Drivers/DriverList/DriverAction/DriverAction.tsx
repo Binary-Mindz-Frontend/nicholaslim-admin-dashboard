@@ -37,13 +37,20 @@ interface TDriver {
 
 type Props = {
   row: TDriver;
-  onDeleteSuccess?: () => void; // Add callback prop
+  onDeleteSuccess?: () => void;
 };
 
 export default function DriverAction({ row, onDeleteSuccess }: Props) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const [deleteRider, { isLoading }] =  useDeleteRiderProfileMutation();
+  const [deleteRider, { isLoading }] = useDeleteRiderProfileMutation();
+
+  const handleEdit = () => {
+    // Use userId instead of id if that's what your API expects
+    // Or use row.id if that's the correct identifier
+    console.log("Editing driver with ID:", row.id, "UserID:", row.userId, row);
+    navigate(`/driver-list/${row.id}`);
+  };
 
   const handleDelete = async () => {
     try {
@@ -69,17 +76,18 @@ export default function DriverAction({ row, onDeleteSuccess }: Props) {
   return (
     <div className="flex items-center justify-center gap-3">
       {/* EDIT ICON */}
-      <button className="p-2 rounded hover:bg-gray-200 transition">
-        <Pencil
-          className="h-4 w-4 text-blue-600"
-          onClick={() => navigate(`/driver-list/${row.id}`)}
-        />
+      <button 
+        className="p-2 rounded hover:bg-gray-200 transition"
+        onClick={handleEdit}
+        type="button"
+      >
+        <Pencil className="h-4 w-4 text-blue-600" />
       </button>
 
       {/* DELETE ICON + ALERT DIALOG */}
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogTrigger asChild>
-          <button className="p-2 rounded hover:bg-red-100 transition">
+          <button className="p-2 rounded hover:bg-red-100 transition" type="button">
             <Trash2 className="h-4 w-4 text-red-600" />
           </button>
         </AlertDialogTrigger>

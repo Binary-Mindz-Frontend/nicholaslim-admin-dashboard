@@ -39,6 +39,15 @@ const driversApi = baseApi.injectEndpoints({
             invalidatesTags: ["RiderProfiles"],
         }),
 
+        // NEW: Get single rider profile by ID
+        getRiderProfileById: builder.query({
+            query: (id) => ({
+                url: `/raider-profile/${id}`,
+                method: "GET",
+            }),
+            providesTags: (result, error, id) => [{ type: "RiderProfiles", id }],
+        }),
+
         toggleRiderActiveStatus: builder.mutation({
             query: (id) => ({
                 url: `/raider-profile/active/${id}`,
@@ -83,6 +92,7 @@ const driversApi = baseApi.injectEndpoints({
 
 export const {
     useUploadImageMutation,
+    useGetRiderProfileByIdQuery,
     useGetRiderProfilesMutation,
     useToggleRiderActiveStatusMutation,
     useDeleteRiderProfileMutation,
