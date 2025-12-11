@@ -12,32 +12,36 @@ const driversApi = baseApi.injectEndpoints({
             }),
         }),
 
-        getRiderProfiles: builder.mutation({
-            query: ({
-                raiderVerificationFromAdmin,
-                raiderId,
-                raider_name,
-                page = 1,
-                limit = 10,
-                sortBy = "created_at",
-                sortOrder = "desc"
-            }) => {
-                return {
-                    url: `/raider-profile/rider-profiles`,
-                    method: "POST",
-                    body: {
-                        raider_verificationFromAdmin: raiderVerificationFromAdmin,
-                        raiderId: raiderId,
-                        raider_name: raider_name,
-                        page: page,
-                        limit: limit,
-                        sortBy: sortBy,
-                        sortOrder: sortOrder,
-                    },
-                };
-            },
-            invalidatesTags: ["RiderProfiles"],
-        }),
+   getRiderProfiles: builder.query({
+    query: ({
+        raiderId,
+        raider_name,
+        raiderVerificationFromAdmin,
+        page = 1,
+        limit = 10,
+    }) => {
+        // Construct the URL with query parameters
+        let url = `/raider-profile/rider-profiles?page=${page}&limit=${limit}`;
+
+        // Add additional query parameters if they exist
+        if (raider_name) {
+            url += `&raider_name=${encodeURIComponent(raider_name)}`;
+        }
+        if (raiderId) {
+            url += `&raiderId=${raiderId}`;
+        }
+        if (raiderVerificationFromAdmin) {
+            url += `&raider_verificationFromAdmin=${raiderVerificationFromAdmin}`;
+        }
+
+        return {
+            url,  // Use the constructed URL with query params
+            method: "GET",  // Use the GET method instead of POST
+        };
+    },
+    providesTags: ["RiderProfiles"],  // Ensure you provide appropriate tags
+}),
+
 
         // NEW: Get single rider profile by ID
         getRiderProfileById: builder.query({
@@ -110,7 +114,7 @@ const driversApi = baseApi.injectEndpoints({
 export const {
     useUploadImageMutation,
     useGetRiderProfileByIdQuery,
-    useGetRiderProfilesMutation,
+    useGetRiderProfilesQuery,
     useToggleRiderActiveStatusMutation,
     useDeleteRiderProfileMutation,
     useAddRiderProfileMutation,
