@@ -2,6 +2,7 @@ import { useState } from "react";
 import AdvertiseManagementTop from "./components/AddTop";
 import PerformanceTrendsChart from "./components/PerformanceTrend";
 import CreateNewCampaign from "./components/CreateNewCampaign";
+import AdvertisementsTable from "./components/AdvertismentList";
 
 export default function Advertisement() {
   const [activeTab, setActiveTab] = useState<"user" | "driver">("user");
@@ -42,6 +43,7 @@ export default function Advertisement() {
       <div className="py-4">
         <CreateNewCampaign />
       </div>
+      <AdvertisementsTable/>
     </div>
   );
 }
