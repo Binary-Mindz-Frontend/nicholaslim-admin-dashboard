@@ -1,15 +1,30 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { useGetAdvertisementsQuery, useUpdateStatusMutation } from "@/redux/features/advertise/advertiseApi";
+import {
+  useGetAdvertisementsQuery,
+  useUpdateAdvertisementMutation,
+  useUpdateStatusMutation,
+} from "@/redux/features/advertise/advertiseApi";
 import { ChevronLeft, ChevronRight, Edit, Trash } from "lucide-react";
+import Swal from "sweetalert2";
+import UpdateAdvertiseModal from "./updateAdvertiseModal";
 
-export default function AdvertisementsTable({ activeTab }: { activeTab: "USER" | "RAIDER" }) {
+export default function AdvertisementsTable({
+  activeTab,
+}: {
+  activeTab: "USER" | "RAIDER";
+}) {
   const { data, isLoading } = useGetAdvertisementsQuery(undefined);
   const [updateStatus] = useUpdateStatusMutation(); // hook from RTK Query
+  const [updateAdvertisement] = useUpdateAdvertisementMutation();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  const [showModal, setShowModal] = useState(false); // State for modal visibility
+  const [selectedAd, setSelectedAd] = useState<any>(null);
 
   if (isLoading) return <p>Loading...</p>;
 
@@ -32,6 +47,30 @@ export default function AdvertisementsTable({ activeTab }: { activeTab: "USER" |
       console.log(`Status updated for ad ${ad.id}`);
     } catch (error) {
       console.error("Failed to update status:", error);
+    }
+  };
+
+  const handleEdit = (ad: any) => {
+    setSelectedAd(ad);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedAd(null);
+  };
+
+  const handleUpdate = async (updatedAd: any) => {
+    try {
+      await updateAdvertisement(updatedAd).unwrap();
+      Swal.fire("Updated!", "Your advertisement has been updated.", "success");
+      setShowModal(false); // Close modal on successful update
+    } catch (error) {
+      Swal.fire(
+        "Error!",
+        "There was a problem updating the advertisement.",
+        "error"
+      );
     }
   };
 
@@ -67,11 +106,20 @@ export default function AdvertisementsTable({ activeTab }: { activeTab: "USER" |
                     ad.status ? "bg-green-500" : "bg-red-500"
                   } relative inline-flex h-6 w-11 items-center rounded-full`}
                 />
-                <span className="ml-2">{ad.status ? "Active" : "Deactive"}</span>
+                <span className="ml-2">
+                  {ad.status ? "Active" : "Deactive"}
+                </span>
               </td>
               <td className="px-4 py-2 border space-x-2">
-                <Button className="cursor-pointer"><Edit /></Button>
-                <Button variant="destructive" className="cursor-pointer"><Trash /></Button>
+                <Button
+                  className="cursor-pointer"
+                  onClick={() => handleEdit(ad)}
+                >
+                  <Edit />
+                </Button>
+                <Button variant="destructive" className="cursor-pointer">
+                  <Trash />
+                </Button>
               </td>
             </tr>
           ))}
@@ -100,6 +148,99 @@ export default function AdvertisementsTable({ activeTab }: { activeTab: "USER" |
           </button>
         </div>
       </div>
+      {showModal && selectedAd && (
+        <UpdateAdvertiseModal show={showModal} onClose={handleCloseModal}>
+          <h2>Edit Advertisement</h2>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleUpdate(selectedAd);
+            }}
+            className="space-y-4"
+          >
+            {/* Title Input */}
+            <div className="flex flex-col">
+              <label
+                htmlFor="title"
+                className="text-lg font-semibold text-gray-700 mb-1"
+              >
+                Title
+              </label>
+              <input
+                id="title"
+                type="text"
+                value={selectedAd.ad_title}
+                onChange={(e) =>
+                  setSelectedAd((prev: any) => ({
+                    ...prev,
+                    ad_title: e.target.value,
+                  }))
+                }
+                className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="Enter advertisement title"
+              />
+            </div>
+
+            {/* Start Date Input */}
+            <div className="flex flex-col">
+              <label
+                htmlFor="startDate"
+                className="text-lg font-semibold text-gray-700 mb-1"
+              >
+                Start Date
+              </label>
+              <input
+                id="startDate"
+                type="date"
+                value={new Date(selectedAd.start_date).toLocaleDateString(
+                  "en-CA"
+                )}
+                onChange={(e) =>
+                  setSelectedAd((prev: any) => ({
+                    ...prev,
+                    start_date: e.target.value,
+                  }))
+                }
+                className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* End Date Input */}
+            <div className="flex flex-col">
+              <label
+                htmlFor="endDate"
+                className="text-lg font-semibold text-gray-700 mb-1"
+              >
+                End Date
+              </label>
+              <input
+                id="endDate"
+                type="date"
+                value={new Date(selectedAd.end_date).toLocaleDateString(
+                  "en-CA"
+                )}
+                onChange={(e) =>
+                  setSelectedAd((prev: any) => ({
+                    ...prev,
+                    end_date: e.target.value,
+                  }))
+                }
+                className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                className="bg-blue-500 text-white rounded-lg py-2 px-4 hover:bg-blue-600 transition-all"
+              >
+                Save
+              </Button>
+            </div>
+          </form>
+        </UpdateAdvertiseModal>
+      )}
     </div>
   );
 }
