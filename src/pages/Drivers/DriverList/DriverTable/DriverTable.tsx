@@ -1,104 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
-
-// import { useState } from "react";
-// import { Column } from "@/components/Dashboard/DataTable/DataTable";
-// import { TDriver } from "../../data/DriverData";
-// import DriverAction from "../DriverAction/DriverAction";
-
-// export const useDriverColumns = (initialData: TDriver[]) => {
-//   const [drivers] = useState<TDriver[]>(initialData); // No ESLint warning
-
-//   const driverColumns: Column<TDriver>[] = [
-   
-//     {
-//       header: "Driver ID",
-//       accessor: "id",
-//       cell: (row) => (
-//         <a href="#" className="text-blue-600 underline">
-//           {row.id}
-//         </a>
-//       ),
-//     },
-
-//     {
-//       header: "Name",
-//       accessor: "name",
-//       cell: (row) => (
-//         <a href="#" className="text-blue-600 underline">
-//           {row.name}
-//         </a>
-//       ),
-//     },
-
-//     {
-//       header: "Contact",
-//       accessor: "contact",
-//       cell: (row) => (
-//         <span>{row.contact.slice(0, 2) + "******"}</span>
-//       ),
-//     },
-
-//     {
-//       header: "Zone",
-//       accessor: "zone",
-//     },
-
-//     {
-//       header: "Total Orders",
-//       accessor: "totalOrders",
-//     },
-
-//     {
-//       header: "Driver Onboarding Type",
-//       accessor: "onboardingType",
-//       cell: (row) => (
-//         <span
-//           className={`px-3 py-1 rounded-full text-xs font-medium
-//             ${
-//               row.onboardingType === "Assigned by Admin"
-//                 ? "bg-yellow-300 text-black"
-//                 : "bg-gray-300 text-black"
-//             }
-//           `}
-//         >
-//           {row.onboardingType}
-//         </span>
-//       ),
-//     },
-
-//     {
-//       header: "Availability Status",
-//       accessor: "availability",
-//       cell: (row) => (
-//         <div>
-//           <p className="font-semibold">
-//             {row.availability.status === "Assigned Order"
-//               ? `Assigned Order : ${row.availability.assignedOrderCount}`
-//               : "Currently Available"}
-//           </p>
-
-//           <p className="text-xs text-gray-500">
-//             Active Status : {row.availability.activeStatus}
-//           </p>
-//         </div>
-//       ),
-//     },
-
-//     {
-//       header: "Action",
-//       cell: (row) => <DriverAction row={row} />,
-//     },
-//   ];
-
-//   return { driverColumns, drivers };
-// };
-
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
+import { useGetRiderProfilesQuery } from "@/redux/features/drivers/driversApi";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import DriverAction from "../DriverAction/DriverAction";
-import { useGetRiderProfilesMutation } from "@/redux/features/drivers/driversApi";
-import { debounce } from "lodash";
 
 // Declare the TDriver and Registration interfaces directly here
 interface Registration {
@@ -173,8 +76,6 @@ interface TDriver {
 interface UseDriverColumnsParams {
   page?: number;
   limit?: number;
-  sortBy?: string;
-  sortOrder?: string;
   raiderId?: number;
   raider_name?: string;
   raiderVerificationFromAdmin?: string;
@@ -184,44 +85,33 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
   const [drivers, setDrivers] = useState<TDriver[]>([]);
   const [totalItems, setTotalItems] = useState(0);
 
-  const [getRiderProfiles, { isLoading, isError }] = useGetRiderProfilesMutation();
+  // Build query params - only include defined values
+  const queryParams: UseDriverColumnsParams = {
+    page: params.page || 1,
+    limit: params.limit || 10,
+  };
 
-  const fetchDrivers = useCallback(
-    debounce(async (fetchParams: UseDriverColumnsParams) => {
-      try {
-        const result = await getRiderProfiles({
-          page: fetchParams.page || 1,
-          limit: fetchParams.limit || 10,
-          sortBy: fetchParams.sortBy || "created_at",
-          sortOrder: fetchParams.sortOrder || "desc",
-          raiderId: fetchParams.raiderId,
-          raider_name: fetchParams.raider_name,
-          raiderVerificationFromAdmin: fetchParams.raiderVerificationFromAdmin,
-        }).unwrap();
+  // Only add filters if they have values
+  if (params.raiderId !== undefined) {
+    queryParams.raiderId = params.raiderId;
+  }
+  if (params.raider_name) {
+    queryParams.raider_name = params.raider_name;
+  }
+  if (params.raiderVerificationFromAdmin) {
+    queryParams.raiderVerificationFromAdmin = params.raiderVerificationFromAdmin;
+  }
 
-        if (result?.data) {
-          setDrivers(result.data);
-          setTotalItems(result?.meta?.total || 0);
-        }
-      } catch (error) {
-        console.error("Failed to fetch drivers:", error);
-      }
-    }, 500),
-    [getRiderProfiles]
-  );
-
+  // Fetch the data using useGetRiderProfilesQuery hook with filtered params
+  const { data, isLoading, isError } = useGetRiderProfilesQuery(queryParams);
+  // console.log("Fetched pagination data:", data?.data?.pagination?.total);
+  // Effect to update driver data when query result changes
   useEffect(() => {
-    fetchDrivers(params);
-    
-    return () => {
-      fetchDrivers.cancel();
-    };
-  }, [params.page, params.limit, params.sortBy, params.sortOrder, params.raiderId, params.raider_name, params.raiderVerificationFromAdmin, fetchDrivers]);
-
-  // Create a refetch function
-  const handleRefetch = useCallback(() => {
-    fetchDrivers(params);
-  }, [fetchDrivers, params]);
+    if (data?.data?.data) {
+      setDrivers(data?.data?.data);
+      setTotalItems(data?.data?.pagination?.total || 0);
+    }
+  }, [data]);
 
   // Define columns for the driver data
   const driverColumns: Column<TDriver>[] = [
@@ -230,17 +120,8 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       accessor: "id",
       cell: (row) => (
         <a href="#" className="text-blue-600 underline">
-          {row.id}
+          D{row.id}
         </a>
-      ),
-    },
-    {
-      header: "Raider ID",
-      accessor: "userId",
-      cell: (row) => (
-        <span className="font-medium">
-          {row.userId}
-        </span>
       ),
     },
     {
@@ -251,6 +132,39 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
           {row.registrations?.[0]?.raider_name || "N/A"}
         </a>
       ),
+    },
+    {
+      header: "Suspended Status",
+      accessor: "isSuspended",
+      cell: (row) => {
+        const isSuspended = row.isSuspended;
+        const suspendedDuration = row.suspendedDuration;
+        const suspensionReason = row.suspensionReason;
+
+        return (
+          <div>
+            {isSuspended ? (
+              <span className="bg-red-500 text-white px-3 py-1 rounded-full">
+                Suspended
+              </span>
+            ) : (
+              <span className="bg-green-500 text-white px-3 py-1 rounded-full">
+                No
+              </span>
+            )}
+            {isSuspended && (
+              <div className="mt-1">
+                <p className="text-xs text-gray-500">
+                  Suspended for: {suspendedDuration} days
+                </p>
+                <p className="text-xs text-gray-500">
+                  Reason: {suspensionReason || "N/A"}
+                </p>
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       header: "Contact",
@@ -296,12 +210,12 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       cell: (row) => (
         <span
           className={`px-3 py-1 rounded-full text-xs font-medium ${
-            row.LoginType === "Admin"
+            row.LoginType === "ADMIN_SIGNIN"
               ? "bg-yellow-300 text-black"
               : "bg-gray-300 text-black"
           }`}
         >
-          {row.LoginType === "Admin" ? "Assigned by Admin" : "Self Registered"}
+          {row.LoginType === "ADMIN_SIGNIN" ? "Assigned by Admin" : "Self Registered"}
         </span>
       ),
     },
@@ -328,7 +242,8 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
     },
     {
       header: "Action",
-      cell: (row) => <DriverAction row={row as any} onDeleteSuccess={handleRefetch} />,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      cell: (row) => <DriverAction row={row as any} onDeleteSuccess={() => {}} />,
     },
   ];
 

@@ -50,9 +50,9 @@ export default function FilterSection({
             <SelectContent>
               <SelectItem value="today">Today</SelectItem>
               <SelectItem value="yesterday">Yesterday</SelectItem>
-              <SelectItem value="last7days">Last 7 Days</SelectItem>
-              <SelectItem value="last30days">Last 30 Days</SelectItem>
-              <SelectItem value="thismonth">This Month</SelectItem>
+              <SelectItem value="last_7_days">Last 7 Days</SelectItem>
+              <SelectItem value="last_30_days">Last 30 Days</SelectItem>
+              <SelectItem value="last_month">This Month</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -69,7 +69,7 @@ export default function FilterSection({
             <SelectContent>
               <SelectItem value="all">All Users</SelectItem>
               <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="deleted">deleted</SelectItem>
               <SelectItem value="verified">Verified</SelectItem>
               <SelectItem value="unverified">Unverified</SelectItem>
             </SelectContent>
