@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -161,8 +161,7 @@ const UploadBox = ({ label, onChange, error, isUploading, currentPreviewUrl }: U
 
 export default function AddNewDriver() {
   const [uploadImage] = useUploadImageMutation();
-  // 1. Profile Image States
-  const [profileFile, setProfileFile] = useState<File | null>(null);
+  const [, setProfileFile] = useState<File | null>(null);
   const [profilePreview, setProfilePreview] = useState<string | null>(null); // For immediate local preview
   const [profileImageUrls, setProfileImageUrls] = useState<string[]>([]); // To store the uploaded URL(s)
   const [isProfileUploading, setIsProfileUploading] = useState(false);
@@ -184,7 +183,7 @@ export default function AddNewDriver() {
   // State to hold the File object before upload (used mostly for temporary local state)
   type DocumentFileState = Record<DocumentKey, File | null>;
 
-  const [documents, setDocuments] = useState<DocumentFileState>({
+  const [, setDocuments] = useState<DocumentFileState>({
     nidFront: null,
     nidBack: null,
     licenseFront: null,
@@ -654,13 +653,13 @@ export default function AddNewDriver() {
         <div className="mt-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {allFields.map(({ key, label }) => (
-              <div key={key}>
+              <div key={key as string}>
                 <Label className="text-sm font-semibold pb-2">{label}</Label>
 
                 {/* Dropdown Fields */}
                 {["gender", "currentstate", "permanentstate", "vehicleType", "bank"].includes(key) && (
                   <select
-                    {...register(key, { required: `${label} is required` })}
+                    {...register(key as any, { required: `${label} is required` })}
                     className="w-full border bg-secondary rounded p-2"
                   >
                     <option value="">Select {label.split(' ').slice(-1).join(' ')}</option>
