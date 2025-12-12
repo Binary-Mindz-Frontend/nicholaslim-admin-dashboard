@@ -1,249 +1,182 @@
-import React, { useState } from "react";
-import { ChevronDown, PlusCircle, Trash2 } from "lucide-react";
-
-// --- DATA STRUCTURES ---
+import React, { useState, useEffect } from "react";
+import { PlusCircle, Trash2, Pencil } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface FAQItem {
   id: number;
   question: string;
   answer: string;
+  isActive: boolean;
 }
 
-interface FAQCategory {
-  value: string;
-  label: string;
+interface FAQManagementProps {
+  onDelete: (id: number, type: "faq", data: any) => void;
+  onEdit: (faq: FAQItem, type: "faq") => void;
+  onPublish: (data: { question: string; answer: string }[]) => Promise<void>;
+  data: FAQItem[];
+  isLoading?: boolean;
 }
 
-// --- SHADCN/UI PRIMITIVES (MOCK IMPLEMENTATIONS) ---
+export default function FAQManagement({
+  onDelete,
+  onEdit,
+  onPublish,
+  data: faqData,
+  isLoading = false,
+}: FAQManagementProps) {
+  const [faqItems, setFaqItems] = useState<FAQItem[]>(faqData || []);
+  const [localFaqs, setLocalFaqs] = useState<Array<{ question: string; answer: string }>>([]);
 
-const Select = ({ children }: { children: React.ReactNode }) => (
-  <div className="relative inline-block w-48 text-left z-10">{children}</div>
-);
+  // Update local FAQ items when data prop changes
+  useEffect(() => {
+    if (faqData) {
+      setFaqItems(faqData);
+    }
+  }, [faqData]);
 
-const SelectTrigger = ({
-  children,
-  placeholder,
-  className,
-  onClick,
-  isOpen,
-}: {
-  children: React.ReactNode;
-  placeholder: string;
-  className?: string;
-  onClick: () => void;
-  isOpen: boolean;
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 disabled:cursor-not-allowed disabled:opacity-50 ${className} transition-colors shadow-sm`}
-    aria-haspopup="listbox"
-    aria-expanded={isOpen}
-  >
-    {children || <span className="text-gray-500">{placeholder}</span>}
-    <ChevronDown
-      className={`h-4 w-4 text-gray-400 transition-transform ${
-        isOpen ? "rotate-180" : "rotate-0"
-      }`}
-    />
-  </button>
-);
-
-const SelectContent = ({
-  children,
-  className,
-  isOpen,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  isOpen: boolean;
-}) => (
-  <div
-    className={`absolute z-50 mt-1 w-full overflow-hidden rounded-md border bg-white shadow-xl transition-all duration-300 
-      ${
-        isOpen
-          ? "opacity-100 max-h-60"
-          : "opacity-0 max-h-0 pointer-events-none"
-      }
-    `}
-    style={{ transformOrigin: "top" }}
-  >
-    <div className={`p-1 ${className}`}>{children}</div>
-  </div>
-);
-
-const SelectItem = ({
-  children,
-  value,
-  onClick,
-  isSelected,
-}: {
-  children: React.ReactNode;
-  value: string;
-  onClick: (value: string) => void;
-  isSelected: boolean;
-}) => (
-  <div
-    onClick={() => onClick(value)}
-    className={`relative flex w-full cursor-pointer select-none items-center rounded-sm py-2 pl-3 pr-8 text-sm transition-colors
-      ${
-        isSelected
-          ? "bg-yellow-50 font-medium text-yellow-800"
-          : "hover:bg-gray-50 text-gray-800"
-      }
-    `}
-  >
-    {children}
-  </div>
-);
-
-// --- MAIN COMPONENT ---
-
-const faqCategories: FAQCategory[] = [
-  { value: "payments", label: "Payments" },
-  { value: "cancellation", label: "Cancellations" },
-  { value: "technical", label: "Technical Issues" },
-  { value: "general", label: "General" },
-];
-
-export default function FAQManagement() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("payments");
-  const [isSelectOpen, setIsSelectOpen] = useState(false);
-
-  const [faqItems, setFaqItems] = useState<FAQItem[]>([
-    { id: 1, question: "Question no.1", answer: "Answer for question no.1" },
-    { id: 2, question: "Question no.2", answer: "Answer for question no.2" },
-    { id: 3, question: "Question no.3", answer: "Answer for question no.3" },
-  ]);
-
-  const activeLabel =
-    faqCategories.find((c) => c.value === selectedCategory)?.label ||
-    "Select Category";
-
-  const handleSelect = (value: string) => {
-    setSelectedCategory(value);
-    setIsSelectOpen(false);
-  };
-
-  const handleQuestionChange = (
-    id: number,
-    field: "question" | "answer",
-    value: string
-  ) => {
-    setFaqItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item
-      )
-    );
+  const handleQuestionChange = (index: number, field: "question" | "answer", value: string) => {
+    const updatedLocalFaqs = [...localFaqs];
+    updatedLocalFaqs[index] = { ...updatedLocalFaqs[index], [field]: value };
+    setLocalFaqs(updatedLocalFaqs);
   };
 
   const handleAddQuestion = () => {
-    const newId =
-      faqItems.length > 0 ? Math.max(...faqItems.map((i) => i.id)) + 1 : 1;
-    setFaqItems((prevItems) => [
-      ...prevItems,
-      { id: newId, question: "", answer: "" },
-    ]);
+    setLocalFaqs([...localFaqs, { question: "", answer: "" }]);
   };
 
-  const handleDeleteQuestion = (id: number) => {
-    setFaqItems((prev) => prev.filter((item) => item.id !== id));
+  const handleDeleteLocalQuestion = (index: number) => {
+    const updatedLocalFaqs = localFaqs.filter((_, i) => i !== index);
+    setLocalFaqs(updatedLocalFaqs);
   };
 
-  const handlePublish = (e: React.FormEvent) => {
+  const handleEditClick = (faq: FAQItem) => {
+    onEdit(faq, "faq");
+  };
+
+  const handleDeleteClick = (faq: FAQItem) => {
+    onDelete(faq.id, "faq", faq);
+  };
+
+  const handlePublishSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(`Publishing FAQs for category: ${selectedCategory}`, faqItems);
-    alert(
-      `Published ${faqItems.length} questions for "${activeLabel}" successfully!`
-    );
+    
+    // Filter out empty FAQs
+    const validFAQs = localFaqs.filter(faq => faq.question.trim() && faq.answer.trim());
+    
+    if (validFAQs.length === 0) {
+      toast.error("Please add at least one question and answer before publishing.");
+      return;
+    }
+
+    try {
+      await onPublish(validFAQs);
+      setLocalFaqs([]);
+    } catch (error) {
+      // Error is handled by parent component
+      console.error("Failed to publish FAQs:", error);
+    }
   };
 
   const inputClasses =
     "w-full p-3 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-base shadow-sm";
   const buttonPrimary =
-    "bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-8 rounded-xl transition-colors shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-yellow-300 cursor-pointer";
+    "bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-8 rounded-xl transition-colors shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-yellow-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
   const buttonSecondary =
     "bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-8 rounded-xl transition-colors shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-yellow-300 flex items-center justify-center gap-2 cursor-pointer";
 
   return (
-    <div className="bg-white rounded-xl  p-6 md:p-10">
+    <div className="bg-white rounded-xl p-6 md:p-10">
       <div className="max-w-4xl m-auto">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900">FAQ's</h2>
-
-          <Select>
-            <SelectTrigger
-              onClick={() => setIsSelectOpen(!isSelectOpen)}
-              isOpen={isSelectOpen}
-              placeholder="Select Category"
-              className="w-[180px]"
-            >
-              {activeLabel}
-            </SelectTrigger>
-
-            <SelectContent isOpen={isSelectOpen}>
-              {faqCategories.map((category) => (
-                <SelectItem
-                  key={category.value}
-                  value={category.value}
-                  onClick={handleSelect}
-                  isSelected={category.value === selectedCategory}
-                >
-                  {category.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
-        <form onSubmit={handlePublish} className="space-y-6">
+        <form onSubmit={handlePublishSubmit} className="space-y-6">
+          {/* Existing FAQs from API */}
           {faqItems.map((item, index) => (
             <div
               key={item.id}
               className="space-y-2 pb-4 border-b border-gray-100 last:border-b-0 relative"
             >
-              {/* DELETE BUTTON */}
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-lg font-semibold text-gray-800">
+                  Question no.{index + 1}
+                </label>
+                <div className="flex space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => handleEditClick(item)}
+                    className="text-blue-500 hover:text-blue-600 cursor-pointer"
+                  >
+                    <Pencil className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteClick(item)}
+                    className="text-red-500 hover:text-red-600 cursor-pointer"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              
+              <input
+                type="text"
+                value={item.question}
+                readOnly
+                className={`${inputClasses} bg-gray-50`}
+                placeholder="Question"
+              />
+
+              <label className="block text-md font-medium text-gray-700 pt-2">
+                Answer
+              </label>
+              <input
+                value={item.answer}
+                readOnly
+                className={`${inputClasses} bg-gray-50 resize-none`}
+                placeholder="Answer"
+              />
+            </div>
+          ))}
+
+          {/* Local FAQs being added */}
+          {localFaqs.map((faq, index) => (
+            <div
+              key={`local-${index}`}
+              className="space-y-2 pb-4 border-b border-gray-100 last:border-b-0 relative"
+            >
               <button
                 type="button"
-                onClick={() => handleDeleteQuestion(item.id)}
+                onClick={() => handleDeleteLocalQuestion(index)}
                 className="absolute right-0 top-0 text-red-500 hover:text-red-600 cursor-pointer"
               >
                 <Trash2 className="w-5 h-5" />
               </button>
 
-              <label
-                htmlFor={`q-${item.id}`}
-                className="block text-lg font-semibold text-gray-800"
-              >
-                Question no.{index + 1}
+              <label className="block text-lg font-semibold text-gray-800">
+                New Question no.{index + 1}
               </label>
               <input
-                id={`q-${item.id}`}
                 type="text"
-                value={item.question}
-                onChange={(e) =>
-                  handleQuestionChange(item.id, "question", e.target.value)
-                }
+                value={faq.question}
+                onChange={(e) => handleQuestionChange(index, "question", e.target.value)}
                 placeholder="Enter question"
                 className={inputClasses}
                 required
+                disabled={isLoading}
               />
 
-              <label
-                htmlFor={`a-${item.id}`}
-                className="block text-md font-medium text-gray-700 pt-2"
-              >
+              <label className="block text-md font-medium text-gray-700 pt-2">
                 Answer
               </label>
               <input
-                id={`a-${item.id}`}
-                value={item.answer}
-                onChange={(e) =>
-                  handleQuestionChange(item.id, "answer", e.target.value)
-                }
+                value={faq.answer}
+                onChange={(e) => handleQuestionChange(index, "answer", e.target.value)}
                 placeholder="Enter answer"
                 className={`${inputClasses} resize-none`}
                 required
+                disabled={isLoading}
               />
             </div>
           ))}
@@ -253,12 +186,25 @@ export default function FAQManagement() {
               type="button"
               onClick={handleAddQuestion}
               className={buttonSecondary}
+              disabled={isLoading}
             >
               <PlusCircle className="w-5 h-5" />
               Add New Question
             </button>
-            <button type="submit" className={buttonPrimary}>
-              Publish
+            <button 
+              type="submit" 
+              className={buttonPrimary}
+              disabled={isLoading || localFaqs.length === 0}
+            >
+              {isLoading ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Publishing...
+                </span>
+              ) : "Publish"}
             </button>
           </div>
         </form>
