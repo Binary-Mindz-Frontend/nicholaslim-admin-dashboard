@@ -1,103 +1,54 @@
-import React, { useState } from "react";
+import React from "react";
 import { Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
-
-// --- DATA STRUCTURES ---
 
 interface HistoryItem {
   id: number;
-  title: string;
-  publishedBy: string;
-  date: string; // Stored as a formatted string for dummy data simplicity
-  isActive: boolean;
+  contenttype: string;
+  description: string;
+  isPublished: boolean;
+  version?: string | null;
+  answer?: string; // For FAQ
+  content?: string; // For articles and about us
+  title?: string; // For articles and about us
+  question?: string; // For FAQ
+  published?: boolean; // For articles
+  isActive?: boolean; // For FAQ and About Us
 }
 
-// --- DUMMY DATA ---
-// Future implementation note: This data array should be replaced by a state variable
-// initialized from an API call (e.g., const [historyData, setHistoryData] = useState<HistoryItem[]>([]))
-const DUMMY_HISTORY_DATA: HistoryItem[] = [
-  {
-    id: 1,
-    title: "Company Overview",
-    publishedBy: "Admin",
-    date: "16 Oct 2025",
-    isActive: true,
-  },
-  {
-    id: 2,
-    title: "Our Mission",
-    publishedBy: "Admin",
-    date: "16 Oct 2025",
-    isActive: true,
-  },
-  {
-    id: 3,
-    title: "Our Vision",
-    publishedBy: "Admin",
-    date: "16 Oct 2025",
-    isActive: true,
-  },
-  {
-    id: 4,
-    title: "Our Values",
-    publishedBy: "Admin",
-    date: "16 Oct 2025",
-    isActive: true,
-  },
-  {
-    id: 5,
-    title: "Our Supports",
-    publishedBy: "Admin",
-    date: "16 Oct 2025",
-    isActive: true,
-  },
-  {
-    id: 6,
-    title: "For Drivers",
-    publishedBy: "Admin",
-    date: "16 Oct 2025",
-    isActive: true,
-  },
-  {
-    id: 7,
-    title: "Contact Information",
-    publishedBy: "Admin",
-    date: "16 Oct 2025",
-    isActive: true,
-  },
-  {
-    id: 8,
-    title: "Our Zones",
-    publishedBy: "Admin",
-    date: "16 Oct 2025",
-    isActive: true,
-  },
-  {
-    id: 9,
-    title: "Service Policy",
-    publishedBy: "Admin",
-    date: "16 Oct 2025",
-    isActive: false,
-  },
-];
+interface ContentHistoryTableProps {
+  data: HistoryItem[];
+  onEdit: (content: HistoryItem) => void;
+  onDelete: (id: number) => void;
+  onToggleStatus: (id: number, isPublished: boolean) => void;
+  activeTab: string;
+}
 
-const totalItems = 78; // Dummy total count
-const itemsPerPage = 9;
-
-// --- UTILITY COMPONENTS (Reusable Button/Toggle Styles) ---
+// Map API content types to display names
+const CONTENT_TYPE_DISPLAY: Record<string, string> = {
+  TERMSANDCONDITION: "Terms & Conditions",
+  PRIVACYPOLICY: "Privacy Policy",
+  CANCELLATIONANDWAITINGPOLICY: "Cancellation & Waiting Policy",
+  FAQ: "FAQ",
+  ARTICLE: "Article",
+  ABOUTUS: "About Us",
+};
 
 /**
- * Custom Toggle Switch Component
+ * Toggle Switch Component
  */
 const ToggleSwitch = ({
   isActive,
   onToggle,
+  disabled = false,
 }: {
   isActive: boolean;
   onToggle: () => void;
+  disabled?: boolean;
 }) => (
   <button
     onClick={onToggle}
-    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+    disabled={disabled}
+    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
       isActive ? "bg-green-500" : "bg-gray-300"
     }`}
     aria-checked={isActive}
@@ -112,66 +63,101 @@ const ToggleSwitch = ({
 );
 
 /**
- * Action Button Component (Edit/Delete icons)
+ * Action Button Component
  */
 const ActionButton = ({
   icon: Icon,
   onClick,
   className,
+  disabled = false,
 }: {
   icon: React.ElementType;
   onClick: () => void;
   className: string;
+  disabled?: boolean;
 }) => (
   <button
     onClick={onClick}
-    className={`p-2 rounded-lg hover:opacity-80 transition-opacity cursor-pointer ${className}`}
+    disabled={disabled}
+    className={`p-2 rounded-lg hover:opacity-80 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
   >
     <Icon className="w-5 h-5" />
   </button>
 );
 
-// --- MAIN COMPONENT ---
+export default function ContentHistoryTable({
+  data,
+  onEdit,
+  onDelete,
+  onToggleStatus,
+  activeTab,
+}: ContentHistoryTableProps) {
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 9;
 
-export default function ContentHistoryTable() {
-  const [data, setData] = useState<HistoryItem[]>(DUMMY_HISTORY_DATA);
-
-  // Future implementation note: currentPage should control API offset/limit
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // Handlers for future implementation
-  const handleToggle = (id: number) => {
-    setData((prevData) =>
-      prevData.map((item) =>
-        item.id === id ? { ...item, isActive: !item.isActive } : item
-      )
-    );
-    // Future implementation: Send API request to update active status
-    console.log(`Toggling status for ID: ${id}`);
-  };
-
-  const handleEdit = (id: number) => {
-    // Future implementation: Navigate to edit page for item ID
-    console.log(`Editing item ID: ${id}`);
-  };
-
-  const handleDelete = (id: number) => {
-    // Future implementation: Show confirmation modal, then send API request to delete
-    setData((prevData) => prevData.filter((item) => item.id !== id));
-    console.log(`Deleting item ID: ${id}`);
-  };
+  // Calculate pagination
+  const totalItems = data.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = data.slice(startIndex, endIndex);
 
   const handlePageChange = (direction: "next" | "prev") => {
-    // Future implementation: Calculate new page based on total pages/items
-    console.log(`Navigating to ${direction} page`);
-    setCurrentPage((prev) =>
-      direction === "next" ? prev + 1 : Math.max(1, prev - 1)
-    );
+    if (direction === "next" && currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    } else if (direction === "prev" && currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
   };
 
+  const getDisplayTitle = (item: HistoryItem) => {
+    return CONTENT_TYPE_DISPLAY[item.contenttype] || item.contenttype;
+  };
+
+  // const getDescriptionPreview = (item: HistoryItem) => {
+  //   // For FAQ, show the question
+  //   if (activeTab === "FAQ List" && item.question) {
+  //     return item.question;
+  //   }
+  //   // For articles and about us, show the title
+  //   if (item.title) {
+  //     return item.title;
+  //   }
+  //   // For regular content, show the description
+  //   return item.description || "No description";
+  // };
+
+  const getContentPreview = (item: HistoryItem) => {
+    // For FAQ, show answer
+    if (activeTab === "FAQ List" && item.answer) {
+      return item.answer;
+    }
+    // For articles and about us, show content
+    if (item.content) {
+      return item.content;
+    }
+    // For regular content, show description
+    return item.description || "No content";
+  };
+
+  if (data.length === 0) {
+    return (
+      <div className="p-8 text-center">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">History</h1>
+        <div className="bg-white rounded-xl p-12 border border-gray-100">
+          <p className="text-gray-500 text-lg">
+            No {activeTab.toLowerCase()} history available.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className=" ">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">History</h1>
+    <div>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">
+        {activeTab} History
+      </h1>
 
       <div className="bg-white rounded-xl overflow-x-auto border border-gray-100">
         <table className="min-w-full divide-y divide-gray-200">
@@ -181,51 +167,65 @@ export default function ContentHistoryTable() {
                 scope="col"
                 className="px-6 py-4 text-left text-xs font-bold text-gray-800 uppercase tracking-wider rounded-tl-xl"
               >
-                Title
+                {activeTab === "FAQ List"
+                  ? "Question"
+                  : activeTab === "Help Articles List"
+                  ? "Article Title"
+                  : activeTab === "About Us"
+                  ? "Title"
+                  : "Content Type"}
               </th>
               <th
                 scope="col"
                 className="px-6 py-4 text-left text-xs font-bold text-gray-800 uppercase tracking-wider"
               >
-                Published By
+                {activeTab === "FAQ List"
+                  ? "Answer Preview"
+                  : activeTab === "Help Articles List"
+                  ? "Content Preview"
+                  : "Description Preview"}
               </th>
               <th
                 scope="col"
                 className="px-6 py-4 text-left text-xs font-bold text-gray-800 uppercase tracking-wider"
               >
-                Date
+                Version
               </th>
               <th
                 scope="col"
                 className="px-6 py-4 text-center text-xs font-bold text-gray-800 uppercase tracking-wider"
               >
-                Active/Inactive
+                Status
               </th>
               <th
                 scope="col"
                 className="px-6 py-4 text-center text-xs font-bold text-gray-800 uppercase tracking-wider rounded-tr-xl"
               >
-                Action
+                Actions
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-orange-100/70">
-            {data.map((item) => (
+            {currentItems.map((item) => (
               <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {item.title}
+                  {getDisplayTitle(item)}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-600 max-w-xs">
+                  <div className="truncate" title={getContentPreview(item)}>
+                    {getContentPreview(item).substring(0, 60)}...
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                  {item.publishedBy}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                  {item.date}
+                  {item.version || "N/A"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-center">
                   <div className="flex justify-center">
                     <ToggleSwitch
-                      isActive={item.isActive}
-                      onToggle={() => handleToggle(item.id)}
+                      isActive={item.isPublished}
+                      onToggle={() =>
+                        onToggleStatus(item.id, !item.isPublished)
+                      }
                     />
                   </div>
                 </td>
@@ -233,12 +233,12 @@ export default function ContentHistoryTable() {
                   <div className="flex justify-center space-x-2">
                     <ActionButton
                       icon={Pencil}
-                      onClick={() => handleEdit(item.id)}
+                      onClick={() => onEdit(item)}
                       className="text-blue-500 bg-blue-50 hover:bg-blue-100 cursor-pointer"
                     />
                     <ActionButton
                       icon={Trash2}
-                      onClick={() => handleDelete(item.id)}
+                      onClick={() => onDelete(item.id)}
                       className="text-red-500 bg-red-50 hover:bg-red-100 cursor-pointer"
                     />
                   </div>
@@ -251,21 +251,24 @@ export default function ContentHistoryTable() {
         {/* Pagination Footer */}
         <div className="flex justify-between items-center p-4 border-t border-gray-200 bg-white rounded-b-xl">
           <span className="text-sm text-gray-600">
-            Showing 1-{Math.min(itemsPerPage, data.length)} of {totalItems}
+            Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of{" "}
+            {totalItems}
           </span>
           <div className="flex space-x-1">
             <button
               onClick={() => handlePageChange("prev")}
               disabled={currentPage === 1}
-              className="p-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors cursor-pointer"
+              className="p-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
+            <span className="px-4 py-2 text-sm text-gray-700">
+              Page {currentPage} of {totalPages}
+            </span>
             <button
               onClick={() => handlePageChange("next")}
-              // Simplified disabled logic for dummy data
-              disabled={data.length < itemsPerPage}
-              className="p-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors cursor-pointer"
+              disabled={currentPage === totalPages}
+              className="p-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
               <ChevronRight className="w-5 h-5" />
             </button>

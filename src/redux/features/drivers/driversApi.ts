@@ -2,34 +2,56 @@ import { baseApi } from "@/redux/api/baseApi";
 
 const driversApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
-        getRiderProfiles: builder.mutation({
-            query: ({
-                raiderVerificationFromAdmin,
-                raiderId,
-                raider_name,
-                page = 1,
-                limit = 10,
-                sortBy = "created_at",
-                sortOrder = "desc"
-            }) => {
-                return {
-                    url: `/raider-profile/rider-profiles`,
-                    method: "POST",
-                    body: {
-                        raider_verificationFromAdmin: raiderVerificationFromAdmin,
-                        raiderId: raiderId,
-                        raider_name: raider_name,
-                        page: page,
-                        limit: limit,
-                        sortBy: sortBy,
-                        sortOrder: sortOrder,
-                    },
-                };
-            },
-            invalidatesTags: ["RiderProfiles"],
+        // Image upload mutation
+        uploadImage: builder.mutation({
+            query: (formData) => ({
+                url: "/auth/upload", // Your backend endpoint
+                method: "POST",
+                body: formData, // Send FormData object containing multiple files
+                // No need to set Content-Type header, the browser will do it automatically
+            }),
         }),
 
-        // Mutation to toggle rider status (e.g., active/inactive)
+   getRiderProfiles: builder.query({
+    query: ({
+        raiderId,
+        raider_name,
+        raiderVerificationFromAdmin,
+        page = 1,
+        limit = 10,
+    }) => {
+        // Construct the URL with query parameters
+        let url = `/raider-profile/rider-profiles?page=${page}&limit=${limit}`;
+
+        // Add additional query parameters if they exist
+        if (raider_name) {
+            url += `&raider_name=${encodeURIComponent(raider_name)}`;
+        }
+        if (raiderId) {
+            url += `&raiderId=${raiderId}`;
+        }
+        if (raiderVerificationFromAdmin) {
+            url += `&raider_verificationFromAdmin=${raiderVerificationFromAdmin}`;
+        }
+
+        return {
+            url,  // Use the constructed URL with query params
+            method: "GET",  // Use the GET method instead of POST
+        };
+    },
+    providesTags: ["RiderProfiles"],  // Ensure you provide appropriate tags
+}),
+
+
+        // NEW: Get single rider profile by ID
+        getRiderProfileById: builder.query({
+            query: (id) => ({
+                url: `/raider-profile/${id}`,
+                method: "GET",
+            }),
+            providesTags: (id) => [{ type: "RiderProfiles", id }],
+        }),
+
         toggleRiderActiveStatus: builder.mutation({
             query: (id) => ({
                 url: `/raider-profile/active/${id}`,
@@ -38,7 +60,6 @@ const driversApi = baseApi.injectEndpoints({
             invalidatesTags: ["RiderProfiles"],
         }),
 
-        // Mutation to delete rider profile
         deleteRiderProfile: builder.mutation({
             query: (id) => {
                 const request = {
@@ -50,32 +71,54 @@ const driversApi = baseApi.injectEndpoints({
             invalidatesTags: ["RiderProfiles"],
         }),
 
-        // Mutation to add a new rider profile
         addRiderProfile: builder.mutation({
-            query: (newRider) => ({
+            query: (data) => ({
                 url: `/raider-profile/admin/create-rider`,
                 method: "POST",
-                body: newRider,
+                body: data,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             }),
             invalidatesTags: ["RiderProfiles"],
         }),
-// Mutation to update rider profile
-    updateRiderProfile: builder.mutation({
-      query: ({ id, data }) => ({
-        url: `/raider-profile/admin/update-rider/${id}`,
-        method: "PATCH",
-        body: data,
-      }),
-      invalidatesTags: ["RiderProfiles"],
-    }),
-        
+
+        updateRiderProfile: builder.mutation({
+            query: ({ id, data }) => ({
+                url: `/raider-profile/admin/update-rider/${id}`,
+                method: "PATCH",
+                body: data,
+            }),
+            invalidatesTags: ["RiderProfiles"],
+        }),
+
+        unsuspendRiderProfile: builder.mutation({
+            query: (id) => ({
+                url: `/raider-profile/unsuspend/${id}`,
+                method: "PATCH",
+            }),
+            invalidatesTags: ["RiderProfiles"],
+        }),
+
+        suspendRiderProfile: builder.mutation({
+            query: ({ id, data }) => ({
+                url: `/raider-profile/suspend/${id}`,
+                method: "PATCH",
+                body: data,
+            }),
+            invalidatesTags: ["RiderProfiles"],
+        }),
     }),
 });
 
 export const {
-    useGetRiderProfilesMutation,
+    useUploadImageMutation,
+    useGetRiderProfileByIdQuery,
+    useGetRiderProfilesQuery,
     useToggleRiderActiveStatusMutation,
     useDeleteRiderProfileMutation,
     useAddRiderProfileMutation,
     useUpdateRiderProfileMutation,
+    useSuspendRiderProfileMutation,
+    useUnsuspendRiderProfileMutation,
 } = driversApi;

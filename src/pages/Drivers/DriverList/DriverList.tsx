@@ -5,12 +5,7 @@ import DriverFilter from "@/components/Drivers/DriverFilter/DriverFilter";
 import TablePagination from "@/pages/Dashboard/_components/TablePagination";
 
 export default function DriverList() {
-  // Temporary filter states (for input fields)
-  const [tempRaiderId, setTempRaiderId] = useState<number | undefined>();
-  const [tempRaiderName, setTempRaiderName] = useState("");
-  const [tempVerificationStatus, setTempVerificationStatus] = useState<string | undefined>();
-
-  // Applied filter states (for API calls)
+  // Direct filter states (no temporary states needed)
   const [raiderId, setRaiderId] = useState<number | undefined>();
   const [raiderName, setRaiderName] = useState("");
   const [verificationStatus, setVerificationStatus] = useState<string | undefined>();
@@ -19,22 +14,27 @@ export default function DriverList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  // Apply filters function
-  const handleApplyFilters = () => {
-    setRaiderId(tempRaiderId);
-    setRaiderName(tempRaiderName);
-    setVerificationStatus(tempVerificationStatus);
-    setCurrentPage(1);
-  };
-
   // Filter reset function
   const handleResetFilter = () => {
-    setTempRaiderId(undefined);
-    setTempRaiderName("");
-    setTempVerificationStatus(undefined);
     setRaiderId(undefined);
     setRaiderName("");
     setVerificationStatus(undefined);
+    setCurrentPage(1); // Reset to page 1 when filters are reset
+  };
+
+  // Handler functions that also reset to page 1
+  const handleRaiderIdChange = (value: number | undefined) => {
+    setRaiderId(value);
+    setCurrentPage(1);
+  };
+
+  const handleRaiderNameChange = (value: string) => {
+    setRaiderName(value);
+    setCurrentPage(1);
+  };
+
+  const handleVerificationStatusChange = (value: string | undefined) => {
+    setVerificationStatus(value);
     setCurrentPage(1);
   };
 
@@ -42,7 +42,7 @@ export default function DriverList() {
   const { driverColumns, drivers, isLoading, isError, totalItems } = useDriverColumns({
     raiderId,
     raider_name: raiderName,
-    raiderVerificationFromAdmin: verificationStatus === "all" ? undefined : verificationStatus,
+    raiderVerificationFromAdmin: verificationStatus,
     page: currentPage,
     limit: itemsPerPage,
   });
@@ -74,21 +74,20 @@ export default function DriverList() {
           <div className="flex items-center gap-2">
             <span className="text-[#6B6B6B] text-xl font-semibold">Driver List</span>
             <span className="bg-secondary text-gray-700 px-3 py-1 rounded-full text-base font-medium border border-[#969696]">
-              {drivers.length}
+              {totalItems}
             </span>
           </div>
         </div>
 
         {/* Filter Section */}
         <DriverFilter
-          raiderId={tempRaiderId}
-          setRaiderId={setTempRaiderId}
-          raiderName={tempRaiderName}
-          setRaiderName={setTempRaiderName}
-          verificationStatus={tempVerificationStatus}
-          setVerificationStatus={setTempVerificationStatus}
+          raiderId={raiderId}
+          setRaiderId={handleRaiderIdChange}
+          raiderName={raiderName}
+          setRaiderName={handleRaiderNameChange}
+          verificationStatus={verificationStatus}
+          setVerificationStatus={handleVerificationStatusChange}
           handleResetFilter={handleResetFilter}
-          handleApplyFilters={handleApplyFilters}
         />
       </div>
 
@@ -98,12 +97,15 @@ export default function DriverList() {
           <CustomTable columns={driverColumns} data={drivers} />
           
           {/* Pagination Component */}
-          <TablePagination
-            currentPage={currentPage}
-            totalItems={totalItems}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-          />
+<TablePagination
+  currentPage={currentPage}
+  totalItems={totalItems}
+  itemsPerPage={itemsPerPage}
+  onPageChange={(page) => {
+    console.log("Page changed to:", page); // Add this
+    setCurrentPage(page);
+  }}
+/>
         </>
       ) : (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">

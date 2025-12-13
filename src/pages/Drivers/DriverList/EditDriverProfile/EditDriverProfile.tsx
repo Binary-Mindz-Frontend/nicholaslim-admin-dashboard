@@ -6,7 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 
 import { userProfileSchema, UserProfileType } from "./userProfile.schema";
-import { useGetRiderProfilesMutation, useUpdateRiderProfileMutation } from "@/redux/features/drivers/driversApi";
+import { 
+    useGetRiderProfileByIdQuery, 
+    useUpdateRiderProfileMutation 
+} from "@/redux/features/drivers/driversApi";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,11 +20,16 @@ import { Camera, Star, Files, Rss, ArrowLeft, Medal } from "lucide-react";
 export default function EditDriverProfile() {
     const navigate = useNavigate();
     const { id } = useParams();
+    // console.log("Editing driver with ID from params:", id);
 
     const [profileImage, setProfileImage] = useState<string | null>(null);
     
-    // RTK Query hooks
-    const [getRiderProfiles, { isLoading: isFetching }] = useGetRiderProfilesMutation();
+    // RTK Query hooks - NOW USING QUERY INSTEAD OF MUTATION
+    const { data: driverData, isLoading: isFetching, isError, error } = useGetRiderProfileByIdQuery(
+        Number(id),
+        { skip: !id } // Skip query if no ID
+    );
+    
     const [updateRider, { isLoading: isUpdating }] = useUpdateRiderProfileMutation();
 
     // React Hook Form setup
@@ -32,92 +40,113 @@ export default function EditDriverProfile() {
 
     const { register, handleSubmit, reset, formState } = form;
 
-    // Fetch Driver Data
+    // Populate form when data is fetched
     useEffect(() => {
-        if (!id) return;
+        if (!driverData) return;
 
-        const fetchDriverData = async () => {
-            try {
-                const result = await getRiderProfiles({
-                    raiderId: Number(id),
-                    page: 1,
-                    limit: 1,
-                }).unwrap();
+        // console.log("Fetched driver data:", driverData);
+        // console.log("Full data structure:", JSON.stringify(driverData, null, 2));
 
-                if (result?.data && result.data.length > 0) {
-                    const driver = result.data[0];
-                    const registration = driver.registrations?.[0];
-
-                    // Map API data to form schema
-                    const formData: UserProfileType = {
-                        raider_name: registration?.raider_name || "",
-                        contact_number: registration?.contact_number || "",
-                        email_address: registration?.email_address || "",
-                        dob: registration?.dob || "",
-                        gender: registration?.gender || "",
-                        driver_photos: registration?.driver_photos || [],
-                        emergency_contact_name: registration?.emergency_contact_name || "",
-                        emergency_contact_number: registration?.emergency_contact_number || "",
-                        identity_card_number: registration?.identity_card_number || "",
-                        nid_front_images: registration?.nid_front_images || "",
-                        nid_back_images: registration?.nid_back_images || "",
-                        driving_license_number: registration?.driving_license_number || "",
-                        driving_license_issue_date: registration?.driving_license_issue_date || "",
-                        driving_license_expire_date: registration?.driving_license_expire_date || "",
-                        driving_license_front_images: registration?.driving_license_front_images || "",
-                        driving_license_back_images: registration?.driving_license_back_images || "",
-                        vehicle_plate_number: registration?.vehicle_plate_number || "",
-                        vehicle_type: registration?.vehicle_type || "",
-                        vehicle_brand: registration?.vehicle_brand || "",
-                        registration_date: registration?.registration_date || "",
-                        vehicle_front_images: registration?.vehicle_front_images || "",
-                        vehicle_back_images: registration?.vehicle_back_images || "",
-                        vehicle_driver_side_images: registration?.vehicle_driver_side_images || "",
-                        vehicle_passenger_side_images: registration?.vehicle_passenger_side_images || "",
-                        vehicle_log_number: registration?.vehicle_log_number || "",
-                        vehicle_log_issue_date: registration?.vehicle_log_issue_date || "",
-                        vehicle_log_expire_date: registration?.vehicle_log_expire_date || "",
-                        vehicle_log_images: registration?.vehicle_log_images || "",
-                        vehicle_policy_number: registration?.vehicle_policy_number || "",
-                        vehicle_policy_issue_date: registration?.vehicle_policy_issue_date || "",
-                        vehicle_policy_expire_date: registration?.vehicle_policy_expire_date || "",
-                        vehicle_policy_images: registration?.vehicle_policy_images || "",
-                        current_address: registration?.current_address || "",
-                        current_apartment: registration?.current_apartment || "",
-                        current_state_province: registration?.current_state_province || "",
-                        current_city: registration?.current_city || "",
-                        current_country: registration?.current_country || "",
-                        current_zip_post_code: registration?.current_zip_post_code || "",
-                        permanent_address: registration?.permanent_address || "",
-                        permanent_apartment: registration?.permanent_apartment || "",
-                        permanent_state_province: registration?.permanent_state_province || "",
-                        permanent_city: registration?.permanent_city || "",
-                        permanent_country: registration?.permanent_country || "",
-                        permanent_zip_post_code: registration?.permanent_zip_post_code || "",
-                        bank_name: registration?.bank_name || "",
-                        account_number: registration?.account_number || "",
-                    };
-
-                    reset(formData);
-                    
-                    // Set profile image if available
-                    if (registration?.driver_photos?.[0]) {
-                        setProfileImage(registration.driver_photos[0]);
-                    }
-                } else {
-                    toast.error("Driver not found");
-                    navigate("/driver-list");
-                }
-            } catch (error) {
-                console.error("Failed to fetch driver:", error);
-                toast.error("Failed to load driver data");
+        try {
+            // Handle different possible response structures
+            let registration;
+            
+            // Case 1: Direct registration data
+            if (driverData.registrations && Array.isArray(driverData.registrations)) {
+                registration = driverData.registrations[0];
             }
-        };
+            // Case 2: Data is wrapped in a data property
+            else if (driverData.data?.registrations && Array.isArray(driverData.data.registrations)) {
+                registration = driverData.data.registrations[0];
+            }
+            // Case 3: Registration data is at root level
+            else if (driverData.raider_name || driverData.contact_number) {
+                registration = driverData;
+            }
+            // Case 4: Data wrapped and registration at root
+            else if (driverData.data && (driverData.data.raider_name || driverData.data.contact_number)) {
+                registration = driverData.data;
+            }
 
-        fetchDriverData();
-    }, [id, getRiderProfiles, reset, navigate]);
+            // console.log("Extracted registration:", registration);
 
-    // const formData = watch();
+            if (!registration) {
+                // console.error("No registration data found. Full response:", driverData);
+                toast.error("No registration data found for this driver");
+                navigate("/driver-list");
+                return;
+            }
+
+            // Map API data to form schema
+            const formData: UserProfileType = {
+                raider_name: registration.raider_name || "",
+                contact_number: registration.contact_number || "",
+                email_address: registration.email_address || "",
+                dob: registration.dob || "",
+                gender: registration.gender || "",
+                driver_photos: registration.driver_photos || [],
+                emergency_contact_name: registration.emergency_contact_name || "",
+                emergency_contact_number: registration.emergency_contact_number || "",
+                identity_card_number: registration.identity_card_number || "",
+                nid_front_images: registration.nid_front_images || "",
+                nid_back_images: registration.nid_back_images || "",
+                driving_license_number: registration.driving_license_number || "",
+                driving_license_issue_date: registration.driving_license_issue_date || "",
+                driving_license_expire_date: registration.driving_license_expire_date || "",
+                driving_license_front_images: registration.driving_license_front_images || "",
+                driving_license_back_images: registration.driving_license_back_images || "",
+                vehicle_plate_number: registration.vehicle_plate_number || "",
+                vehicle_type: registration.vehicle_type || "",
+                vehicle_brand: registration.vehicle_brand || "",
+                registration_date: registration.registration_date || "",
+                vehicle_front_images: registration.vehicle_front_images || "",
+                vehicle_back_images: registration.vehicle_back_images || "",
+                vehicle_driver_side_images: registration.vehicle_driver_side_images || "",
+                vehicle_passenger_side_images: registration.vehicle_passenger_side_images || "",
+                vehicle_log_number: registration.vehicle_log_number || "",
+                vehicle_log_issue_date: registration.vehicle_log_issue_date || "",
+                vehicle_log_expire_date: registration.vehicle_log_expire_date || "",
+                vehicle_log_images: registration.vehicle_log_images || "",
+                vehicle_policy_number: registration.vehicle_policy_number || "",
+                vehicle_policy_issue_date: registration.vehicle_policy_issue_date || "",
+                vehicle_policy_expire_date: registration.vehicle_policy_expire_date || "",
+                vehicle_policy_images: registration.vehicle_policy_images || "",
+                current_address: registration.current_address || "",
+                current_apartment: registration.current_apartment || "",
+                current_state_province: registration.current_state_province || "",
+                current_city: registration.current_city || "",
+                current_country: registration.current_country || "",
+                current_zip_post_code: registration.current_zip_post_code || "",
+                permanent_address: registration.permanent_address || "",
+                permanent_apartment: registration.permanent_apartment || "",
+                permanent_state_province: registration.permanent_state_province || "",
+                permanent_city: registration.permanent_city || "",
+                permanent_country: registration.permanent_country || "",
+                permanent_zip_post_code: registration.permanent_zip_post_code || "",
+                bank_name: registration.bank_name || "",
+                account_number: registration.account_number || "",
+            };
+
+            reset(formData);
+            
+            // Set profile image if available
+            if (registration.driver_photos?.[0]) {
+                setProfileImage(registration.driver_photos[0]);
+            }
+        } catch (error) {
+            console.error("Failed to process driver data:", error);
+            toast.error("Failed to load driver data");
+        }
+    }, [driverData, reset, navigate]);
+
+    // Handle error state
+    useEffect(() => {
+        if (isError) {
+            // console.error("Failed to fetch driver:", error);
+            toast.error("Driver not found");
+            navigate("/driver-list");
+        }
+    }, [isError, error, navigate]);
 
     // Image Upload
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -236,7 +265,7 @@ export default function EditDriverProfile() {
                     </label>
                 </div>
 
-                {/* Rating Section - You can add these fields to your schema if needed */}
+                {/* Rating Section */}
                 <div className="text-center mt-4">
                     <p className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 text-base sm:text-lg font-medium text-center">
                         <span className="flex items-center gap-1">

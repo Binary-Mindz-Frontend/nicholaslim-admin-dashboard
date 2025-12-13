@@ -15,12 +15,12 @@ const baseQuery = fetchBaseQuery({
   credentials: "include",
 });
 
-// const redirectToLogin = () => {
-//   if (typeof window !== 'undefined') {
-//     localStorage.removeItem('accessToken');
-//     window.location.href = '/login';
-//   }
-// };
+const redirectToLogin = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('accessToken');
+    window.location.href = '/login';
+  }
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
@@ -28,7 +28,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 
   if (result?.error?.status === 401 || result?.error?.status === 403) {
     api.dispatch(logout());
-    // redirectToLogin();
+    redirectToLogin();
   }
   return result;
 };
