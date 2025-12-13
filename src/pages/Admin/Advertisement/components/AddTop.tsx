@@ -11,7 +11,7 @@ interface AdData {
 }
 
 const adData: { [key: string]: AdData } = {
-  user: {
+  USER: {
     impressions: "1,53,000",
     impressionsChange: "+12%",
     clicks: "22,225",
@@ -19,7 +19,7 @@ const adData: { [key: string]: AdData } = {
     ctr: "6.12%",
     ctrChange: "+3.2%",
   },
-  driver: {
+  RAIDER: {
     impressions: "85,500",
     impressionsChange: "+5%",
     clicks: "11,800",
@@ -32,7 +32,7 @@ const adData: { [key: string]: AdData } = {
 export default function AdvertiseManagementTop({
   activeTab,
 }: {
-  activeTab: "user" | "driver";
+  activeTab: "USER" | "RAIDER";
 }) {
   const currentData = adData[activeTab];
 
@@ -41,24 +41,24 @@ export default function AdvertiseManagementTop({
       <div className="flex flex-wrap gap-6 max-w-4xl m-auto">
         <StatCard
           title="Total Impression"
-          value={currentData.impressions}
-          change={currentData.impressionsChange}
+          value={currentData?.impressions}
+          change={currentData?.impressionsChange}
           icon={<Eye className="w-5 h-5" />}
           color="text-yellow-600"
         />
 
         <StatCard
           title="Total Clicks"
-          value={currentData.clicks}
-          change={currentData.clicksChange}
+          value={currentData?.clicks}
+          change={currentData?.clicksChange}
           icon={<Zap className="w-5 h-5" />}
           color="text-yellow-600"
         />
 
         <StatCard
           title="Click Through Rate"
-          value={currentData.ctr}
-          change={currentData.ctrChange}
+          value={currentData?.ctr}
+          change={currentData?.ctrChange}
           icon={<TrendingUp className="w-5 h-5" />}
           color="text-yellow-600"
         />
