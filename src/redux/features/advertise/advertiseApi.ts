@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "@/redux/api/baseApi";
 
 export const advertiseApi = baseApi.injectEndpoints({
@@ -64,8 +65,27 @@ export const advertiseApi = baseApi.injectEndpoints({
     }),
 
     // Get Global Advertisement Stats
-    getGlobalStats: builder.query({
-      query: () => "/advertise/stats/global",
+    // advertiseApi.ts
+    getGlobalStats: builder.query<any, { role: "USER" | "RAIDER" }>({
+      query: ({ role }) => ({
+        url: "/advertise/stats/global",
+        method: "GET",
+        params: { role },
+      }),
+    }),
+
+    getPerformanceTrends: builder.query<
+      any,
+      { role: "USER" | "RAIDER"; months: number }
+    >({
+      query: ({ role, months }) => ({
+        url: "/advertise/stats/performance-trends",
+        method: "GET",
+        params: {
+          role,
+          months,
+        },
+      }),
       providesTags: ["Advertisements"],
     }),
 
@@ -81,9 +101,7 @@ export const advertiseApi = baseApi.injectEndpoints({
         url: `/advertise/${id}/impression`,
         method: "POST",
       }),
-      invalidatesTags: (result, error, id) => [
-        { type: "Advertisements", id },
-      ],
+      invalidatesTags: (result, error, id) => [{ type: "Advertisements", id }],
     }),
 
     // Record Click on Advertisement
@@ -92,9 +110,7 @@ export const advertiseApi = baseApi.injectEndpoints({
         url: `/advertise/${id}/click`,
         method: "POST",
       }),
-      invalidatesTags: (result, error, id) => [
-        { type: "Advertisements", id },
-      ],
+      invalidatesTags: (result, error, id) => [{ type: "Advertisements", id }],
     }),
   }),
 });
@@ -107,6 +123,7 @@ export const {
   useDeleteAdvertisementMutation,
   useUpdateStatusMutation,
   useGetGlobalStatsQuery,
+  useGetPerformanceTrendsQuery,
   useGetAdvertisementStatsQuery,
   useRecordImpressionMutation,
   useRecordClickMutation,

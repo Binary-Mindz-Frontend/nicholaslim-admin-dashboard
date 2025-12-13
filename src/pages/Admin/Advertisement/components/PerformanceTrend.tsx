@@ -1,4 +1,5 @@
-'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 
 import {
   BarChart,
@@ -18,26 +19,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useGetGlobalStatsQuery } from "@/redux/features/advertise/advertiseApi";
+import { useState } from "react";
+import { useGetPerformanceTrendsQuery } from "@/redux/features/advertise/advertiseApi";
 
-export default function PerformanceTrendsChart() {
-  // Fetch global stats
-  const { data, isLoading } = useGetGlobalStatsQuery(undefined);
+export default function PerformanceTrendsChart({
+  activeTab,
+}: {
+  activeTab: "USER" | "RAIDER";
+}) {
+  const [months, setMonths] = useState(1);
+   // or dynamically from props
+
+  // Fetch weekly stats using RTK Query
+  const { data, isLoading } = useGetPerformanceTrendsQuery({ role:activeTab, months });
+  console.log(data);
 
   if (isLoading) return <p>Loading...</p>;
 
-  // Default to 0 if API returns nothing
-  const totalImpression = data?.data?.totalImpression || 0;
-  const totalClick = data?.data?.totalClick || 0;
+  // Default to empty array if API returns nothing
+  const weeklyStats = data?.data?.weeklyStats || [];  
 
-  // Convert into array for recharts
-  const chartData = [
-    {
-      name: "All Ads",
-      impressions: totalImpression,
-      clicks: totalClick,
-    },
-  ];
+  // Map data for recharts
+  const chartData = weeklyStats.map((stat: any) => ({
+    week: stat.week,
+    impressions: stat.impression,
+    clicks: stat.click,
+  }));
 
   return (
     <Card className="mt-10 shadow-lg border-0">
@@ -46,18 +53,24 @@ export default function PerformanceTrendsChart() {
           <CardTitle className="text-2xl font-bold text-gray-900">
             Performance Trends
           </CardTitle>
-          <Select defaultValue="this-month">
+
+          {/* Month selector */}
+          <Select
+            defaultValue="1"
+            onValueChange={(value) => setMonths(Number(value))}
+          >
             <SelectTrigger className="w-40 border-gray-300">
-              <SelectValue>This Month</SelectValue>
+              <SelectValue>{months} Months</SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="this-month">This Month</SelectItem>
-              <SelectItem value="last-month">Last Month</SelectItem>
-              <SelectItem value="last-3-months">Last 3 Months</SelectItem>
+              <SelectItem value="1">1 Month</SelectItem>
+              <SelectItem value="2">2 Months</SelectItem>
+              <SelectItem value="3">3 Months</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </CardHeader>
+
       <CardContent>
         <div className="h-96 w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -67,7 +80,7 @@ export default function PerformanceTrendsChart() {
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis
-                dataKey="name"
+                dataKey="week"
                 tick={{ fill: "#6b7280", fontSize: 14 }}
                 axisLine={false}
                 tickLine={false}
@@ -95,19 +108,18 @@ export default function PerformanceTrendsChart() {
                 )}
               />
 
-              {/* Impressions - Teal Gradient */}
+              {/* Impressions */}
               <Bar
                 dataKey="impressions"
-                barSize={60}
-                radius={[20, 20, 0, 0]}
+                barSize={40}
+                radius={[10, 10, 0, 0]}
                 fill="url(#impressionsGradient)"
               />
-
-              {/* Clicks - Blue Gradient */}
+              {/* Clicks */}
               <Bar
                 dataKey="clicks"
-                barSize={60}
-                radius={[20, 20, 0, 0]}
+                barSize={40}
+                radius={[10, 10, 0, 0]}
                 fill="url(#clicksGradient)"
               />
 

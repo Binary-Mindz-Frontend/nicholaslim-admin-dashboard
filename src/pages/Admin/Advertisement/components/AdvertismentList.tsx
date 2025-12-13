@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import {
+  useDeleteAdvertisementMutation,
   useGetAdvertisementsQuery,
-  useUpdateAdvertisementMutation,
   useUpdateStatusMutation,
 } from "@/redux/features/advertise/advertiseApi";
 import { ChevronLeft, ChevronRight, Edit, Trash } from "lucide-react";
@@ -19,7 +19,7 @@ export default function AdvertisementsTable({
 }) {
   const { data, isLoading } = useGetAdvertisementsQuery(undefined);
   const [updateStatus] = useUpdateStatusMutation(); // hook from RTK Query
-  const [updateAdvertisement] = useUpdateAdvertisementMutation();
+  const [deleteAdvertisement] = useDeleteAdvertisementMutation();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -60,19 +60,35 @@ export default function AdvertisementsTable({
     setSelectedAd(null);
   };
 
-  const handleUpdate = async (updatedAd: any) => {
+  const handleDelete = async (id: number) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This advertisement will be permanently deleted!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
-      await updateAdvertisement(updatedAd).unwrap();
-      Swal.fire("Updated!", "Your advertisement has been updated.", "success");
-      setShowModal(false); // Close modal on successful update
+      const res: any = await deleteAdvertisement(id);
+
+      if (res?.data?.success) {
+        Swal.fire("Deleted!", "Advertisement has been deleted.", "success");
+      } else {
+        Swal.fire("Failed!", "Delete operation failed.", "error");
+      }
     } catch (error) {
-      Swal.fire(
-        "Error!",
-        "There was a problem updating the advertisement.",
-        "error"
-      );
+      console.error(error);
+      Swal.fire("Error!", "Something went wrong.", "error");
     }
   };
+
+
+  
 
   return (
     <div className="overflow-x-auto">
@@ -117,7 +133,11 @@ export default function AdvertisementsTable({
                 >
                   <Edit />
                 </Button>
-                <Button variant="destructive" className="cursor-pointer">
+                <Button
+                  variant="destructive"
+                  className="cursor-pointer"
+                  onClick={() => handleDelete(ad.id)}
+                >
                   <Trash />
                 </Button>
               </td>
