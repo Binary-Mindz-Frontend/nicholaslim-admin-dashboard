@@ -39,7 +39,7 @@ export default function Advertisement() {
       </div>
 
       <AdvertiseManagementTop activeTab={activeTab} />
-      <PerformanceTrendsChart />
+      <PerformanceTrendsChart  activeTab={activeTab} />
       <div className="py-4">
         <CreateNewCampaign activeTab={activeTab}/>
       </div>
