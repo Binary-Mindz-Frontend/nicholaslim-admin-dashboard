@@ -10,7 +10,7 @@ import {
 } from "@/redux/features/advertise/advertiseApi";
 import { ChevronLeft, ChevronRight, Edit, Trash } from "lucide-react";
 import Swal from "sweetalert2";
-import UpdateAdvertiseModal from "./updateAdvertiseModal";
+import UpdateAdvertiseModal from "./UpdateAdvertiseModal";
 
 export default function AdvertisementsTable({
   activeTab,
@@ -149,97 +149,11 @@ export default function AdvertisementsTable({
         </div>
       </div>
       {showModal && selectedAd && (
-        <UpdateAdvertiseModal show={showModal} onClose={handleCloseModal}>
-          <h2>Edit Advertisement</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleUpdate(selectedAd);
-            }}
-            className="space-y-4"
-          >
-            {/* Title Input */}
-            <div className="flex flex-col">
-              <label
-                htmlFor="title"
-                className="text-lg font-semibold text-gray-700 mb-1"
-              >
-                Title
-              </label>
-              <input
-                id="title"
-                type="text"
-                value={selectedAd.ad_title}
-                onChange={(e) =>
-                  setSelectedAd((prev: any) => ({
-                    ...prev,
-                    ad_title: e.target.value,
-                  }))
-                }
-                className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="Enter advertisement title"
-              />
-            </div>
-
-            {/* Start Date Input */}
-            <div className="flex flex-col">
-              <label
-                htmlFor="startDate"
-                className="text-lg font-semibold text-gray-700 mb-1"
-              >
-                Start Date
-              </label>
-              <input
-                id="startDate"
-                type="date"
-                value={new Date(selectedAd.start_date).toLocaleDateString(
-                  "en-CA"
-                )}
-                onChange={(e) =>
-                  setSelectedAd((prev: any) => ({
-                    ...prev,
-                    start_date: e.target.value,
-                  }))
-                }
-                className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              />
-            </div>
-
-            {/* End Date Input */}
-            <div className="flex flex-col">
-              <label
-                htmlFor="endDate"
-                className="text-lg font-semibold text-gray-700 mb-1"
-              >
-                End Date
-              </label>
-              <input
-                id="endDate"
-                type="date"
-                value={new Date(selectedAd.end_date).toLocaleDateString(
-                  "en-CA"
-                )}
-                onChange={(e) =>
-                  setSelectedAd((prev: any) => ({
-                    ...prev,
-                    end_date: e.target.value,
-                  }))
-                }
-                className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              />
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex justify-end">
-              <Button
-                type="submit"
-                className="bg-blue-500 text-white rounded-lg py-2 px-4 hover:bg-blue-600 transition-all"
-              >
-                Save
-              </Button>
-            </div>
-          </form>
-        </UpdateAdvertiseModal>
+        <UpdateAdvertiseModal
+          show={showModal}
+          onClose={handleCloseModal}
+          ad={selectedAd}
+        />
       )}
     </div>
   );
