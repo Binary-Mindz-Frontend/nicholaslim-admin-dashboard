@@ -151,7 +151,7 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
                   className="w-full px-5 py-4 border border-gray-300 cursor-pointer rounded-xl text-lg focus:ring-yellow-500 focus:border-yellow-500"
                   required
                 />
-                <Calendar className="absolute cursor-pointer right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 " />
+                <Calendar className="absolute cursor-pointer right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
               </div>
             </div>
 
@@ -167,7 +167,7 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
                   className="w-full px-5 py-4 border border-gray-300 cursor-pointer rounded-xl text-lg focus:ring-yellow-500 focus:border-yellow-500"
                   required
                 />
-                <Calendar className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer" />
+                <Calendar className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none cursor-pointer" />
               </div>
             </div>
           </div>
