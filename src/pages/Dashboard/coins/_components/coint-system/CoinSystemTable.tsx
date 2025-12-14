@@ -1,108 +1,124 @@
-
-
-
-import type React from "react"
-import { useState } from "react"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { FiTrash } from "react-icons/fi";
-import { LuPencil } from "react-icons/lu";
-import TablePagination from "@/pages/Dashboard/_components/TablePagination";
-import SCustomTable from "@/pages/Dashboard/_components/CutomTable";
-// import { useNavigate } from "react-router-dom";
+import { Pencil, Trash2, Loader2 } from "lucide-react"
 
-interface Coin {
+interface CoinData {
   id: number
-  eventTrigger: string
-  coinAmount: number
-  expiryDuration: number
+  event_triggered: string
+  coin_amount: string
+  expire_date: string
+  coin_value_in_cent: number
+  created_at: string
+  updated_at: string
 }
 
 interface CoinSystemTableProps {
-  onEdit: (row: Coin) => void
+  data: CoinData[]
+  onEdit: (row: CoinData) => void
+  onDelete: (id: number, eventTrigger: string) => void
+  isLoading?: boolean
 }
 
-const wallet : Coin[] = [
-  { id: 1, eventTrigger: "Ang Mo Kio", coinAmount: 15, expiryDuration: 100},
-  { id: 2, eventTrigger: "Punggol", coinAmount: 15, expiryDuration: 100,},
-  { id: 3, eventTrigger: "Bishan", coinAmount: 15, expiryDuration: 100,},
-  { id: 4, eventTrigger: "Yishun", coinAmount: 15, expiryDuration: 90,},
-  { id: 5, eventTrigger: "Serangoon", coinAmount: 15, expiryDuration: 100,  },
-  { id: 6, eventTrigger: "Ang Mo Kio", coinAmount: 15, expiryDuration: 100,  },
-  { id: 7, eventTrigger: "Punggol", coinAmount: 15, expiryDuration: 100, },
-  { id: 8, eventTrigger: "Punggol", coinAmount: 15, expiryDuration: 60,  },
-  { id: 9, eventTrigger: "Punggol", coinAmount: 15, expiryDuration: 85, },
-  { id: 10, eventTrigger: "Clementi", coinAmount: 15, expiryDuration: 95,  },
-]
+const CoinSystemTable: React.FC<CoinSystemTableProps> = ({ 
+  data, 
+  onEdit, 
+  onDelete, 
+  isLoading = false 
+}) => {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
 
-const CoinSystemTable: React.FC<CoinSystemTableProps> = ({ onEdit }) => {
-    // const navigate = useNavigate()
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
-  const totalItems = 21
+  const getEventTriggerLabel = (trigger: string) => {
+    const labels: Record<string, string> = {
+      FIRST_SIGNUP: "First Signup",
+      DAILY_LOGIN: "Daily Login",
+      SHARE_ON_SOCIAL: "Share on Social",
+      REFERRAL: "Referral",
+      COMPLETED20_ORDER: "Completed 20 Orders"
+    }
+    return labels[trigger] || trigger
+  }
 
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const displayData = wallet.slice(startIndex, endIndex)
+  const formatCurrency = (cents: number) => {
+    return `$${(cents / 100).toFixed(2)}`
+  }
 
-
-  const columns = [
-     
-    {
-      key: "eventTrigger" as const,
-      label: "EVENT TRIGGER",
-    },
-    {
-      key: "coinAmount" as const,
-      label: "COIN AMMOUNT",
-       render: (value: number) => `${value} Coins`,
-    },
-    {
-      key: "expiryDuration" as const,
-      label: "EXPIRY DURATION",
-      render: (value: number) => `${value} Days`,
-    },
-  {
-  label: "ACTION",
-  render: (_: any, row: Coin) => (
-    <div className="flex gap-2">
-
-      {/* EDIT */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onEdit(row)}
-        className="p-2 h-auto border cursor-pointer border-[#00BFFF] hover:bg-blue-100"
-      >
-        <LuPencil size={16} className="text-[#00BFFF]" />
-      </Button>
-
-      {/* DELETE */}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="p-2 h-auto cursor-pointer border border-[#FF4D4F] hover:bg-red-100"
-      >
-        <FiTrash size={16} className="text-[#FF4D4F]" />
-      </Button>
-    </div>
-  ),
-}
-
-
-    
-  ]
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-yellow-500" />
+      </div>
+    )
+  }
 
   return (
-       <div>
-         <SCustomTable data={displayData} columns={columns}
-          />
-        <TablePagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-        />
-       </div>
+    <div className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-yellow-50">
+            <TableHead className="font-semibold text-gray-900">Event Trigger</TableHead>
+            <TableHead className="font-semibold text-gray-900">Coin Amount</TableHead>
+            <TableHead className="font-semibold text-gray-900">Value (USD)</TableHead>
+            <TableHead className="font-semibold text-gray-900">Expiry Date</TableHead>
+            <TableHead className="font-semibold text-gray-900">Created At</TableHead>
+            <TableHead className="font-semibold text-gray-900 text-center">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                No coin data found. Click "Add Coin" to create one.
+              </TableCell>
+            </TableRow>
+          ) : (
+            data.map((row) => (
+              <TableRow key={row.id} className="hover:bg-gray-50">
+                <TableCell className="font-medium">
+                  {getEventTriggerLabel(row.event_triggered)}
+                </TableCell>
+                <TableCell>{row.coin_amount} coins</TableCell>
+                <TableCell>{formatCurrency(row.coin_value_in_cent)}</TableCell>
+                <TableCell>{formatDate(row.expire_date)}</TableCell>
+                <TableCell>{formatDate(row.created_at)}</TableCell>
+                <TableCell>
+                  <div className="flex justify-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEdit(row)}
+                      className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete(row.id, getEventTriggerLabel(row.event_triggered))}
+                      className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 

@@ -1,189 +1,36 @@
-import { useState, useEffect } from "react";
-import ContentEditorSection from "./components/ContentEditorSection";
-import FAQManagement from "./components/FAQSection";
-import ArticleManagement from "./components/HelpArticle";
-import AboutUsManagement from "./components/AboutUs";
-import ContentHistoryTable from "./components/History";
-import {
-  useAddContentMutation,
-  useDeleteContentMutation,
-  useGetContentQuery,
-  useUpdateContentMutation,
-} from "@/redux/features/contentManagement/contentManagementApi";
-import {
-  useGetFAQQuery,
-  useAddFAQMutation,
-  useUpdateFAQMutation,
-  useDeleteFAQMutation,
-  useUpdateFAQStatusMutation,
-} from "@/redux/features/faq/faqApi";
-import {
-  useGetArticlesQuery,
-  useAddArticleMutation,
-  useUpdateArticleMutation,
-  useDeleteArticleMutation,
-  useUpdateArticleStatusMutation,
-} from "@/redux/features/article/articleApi";
-import {
-  useGetAboutUsQuery,
-  useAddAboutUsMutation,
-  useUpdateAboutUsMutation,
-  useDeleteAboutUsMutation,
-  useUpdateAboutUsStatusMutation,
-} from "@/redux/features/aboutUs/aboutUsApi";
+import { useState } from "react";
 import toast from "react-hot-toast";
-import EditContentModal from "./components/EditContentModal";
-import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
-import EditFAQModal from "./components/EditFAQModal";
-import EditArticleModal from "./components/EditArticleModal";
-import EditAboutUsModal from "./components/EditAboutUsModal";
-
-// Define content types that match API enum values
-export type ContentType =
-  | "Terms & Conditions"
-  | "Privacy Policy"
-  | "Cancellation & Waiting Policy"
-  | "FAQ List"
-  | "Help Articles List"
-  | "About Us";
-
-// Map UI content types to API enum values
-const CONTENT_TYPE_MAP: Record<ContentType, string> = {
-  "Terms & Conditions": "TERMSANDCONDITION",
-  "Privacy Policy": "PRIVANCYPOLICY",
-  "Cancellation & Waiting Policy": "CANCELLATIONANDWAITINGPOLICY",
-  "FAQ List": "FAQ",
-  "Help Articles List": "HELPARTICLES",
-  "About Us": "ABOUTUS",
-};
-
-// Reverse mapping for API to UI
-const API_TO_UI_MAP: Record<string, ContentType> = {
-  TERMSANDCONDITION: "Terms & Conditions",
-  PRIVACYPOLICY: "Privacy Policy",
-  CANCELLATIONANDWAITINGPOLICY: "Cancellation & Waiting Policy",
-  FAQ: "FAQ List",
-  HELPARTICLES: "Help Articles List",
-  ABOUTUS: "About Us",
-};
-
-const tabItems: ContentType[] = [
-  "Terms & Conditions",
-  "Privacy Policy",
-  "Cancellation & Waiting Policy",
-  "FAQ List",
-  "Help Articles List",
-  "About Us",
-];
-
-const activeTabClass =
-  "bg-yellow-100 border-yellow-500 text-gray-900 shadow-md";
-const inactiveTabClass =
-  "bg-white border-gray-300 text-gray-700 hover:bg-gray-50";
+import ContentHistoryTable from "./components/History";
+import { CONTENT_TYPE_MAP, ContentEntityType, ContentType } from "@/types/contentManagementType";
+import { useContentApiHooks } from "./components/ContentApiHooks";
+import { useContentDataHandler } from "./components/ContentDataHandler";
+import ContentTabs from "./components/ContentTabs";
+import ContentSection from "./components/ContentSection";
+import ContentModals from "./components/ContentModals";
 
 export default function ContentManagementApp() {
   const [activeTab, setActiveTab] = useState<ContentType>("Terms & Conditions");
-  const [contentData, setContentData] = useState<Record<ContentType, string>>({
-    "Terms & Conditions": "",
-    "Privacy Policy": "",
-    "Cancellation & Waiting Policy": "",
-    "FAQ List": "",
-    "Help Articles List": "",
-    "About Us": "",
-  });
-
-  // Modal states
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editContentModalOpen, setEditContentModalOpen] = useState(false);
   const [editFAQModalOpen, setEditFAQModalOpen] = useState(false);
   const [editArticleModalOpen, setEditArticleModalOpen] = useState(false);
   const [editAboutUsModalOpen, setEditAboutUsModalOpen] = useState(false);
-
-  // Selected data states
-  const [selectedContentId, setSelectedContentId] = useState<number | null>(
-    null
-  );
+  const [selectedContentId, setSelectedContentId] = useState<number | null>(null);
   const [selectedContentData, setSelectedContentData] = useState<any>(null);
   const [selectedFAQData, setSelectedFAQData] = useState<any>(null);
   const [selectedArticleData, setSelectedArticleData] = useState<any>(null);
   const [selectedAboutUsData, setSelectedAboutUsData] = useState<any>(null);
-
-  const [selectedContentType, setSelectedContentType] = useState<
-    "content" | "faq" | "article" | "aboutus"
-  >("content");
-
-  // API hooks for Content Management
-  const [addContent, { isLoading: isAddingContent }] = useAddContentMutation();
-  const { data: contentResponse, refetch: refetchContent } =
-    useGetContentQuery("");
-  const [updateContent, { isLoading: isUpdatingContent }] =
-    useUpdateContentMutation();
-  const [deleteContent, { isLoading: isDeletingContent }] =
-    useDeleteContentMutation();
-
-  // API hooks for FAQ
-  const { data: faqResponse, refetch: refetchFAQ } = useGetFAQQuery("");
-  const [addFAQ, { isLoading: isAddingFAQ }] = useAddFAQMutation();
-  const [updateFAQ, { isLoading: isUpdatingFAQ }] = useUpdateFAQMutation();
-  const [updateFAQStatus] =
-    useUpdateFAQStatusMutation();
-  const [deleteFAQ, { isLoading: isDeletingFAQ }] = useDeleteFAQMutation();
-
-  // API hooks for Articles
-  const { data: articleResponse, refetch: refetchArticles } =
-    useGetArticlesQuery("");
-  const [addArticle, { isLoading: isAddingArticle }] = useAddArticleMutation();
-  const [updateArticle, { isLoading: isUpdatingArticle }] =
-    useUpdateArticleMutation();
-  const [updateArticleStatus] =
-    useUpdateArticleStatusMutation();
-  const [deleteArticle, { isLoading: isDeletingArticle }] =
-    useDeleteArticleMutation();
-
-  // API hooks for About Us
-  const { data: aboutUsResponse, refetch: refetchAboutUs } =
-    useGetAboutUsQuery("");
-  const [addAboutUs, { isLoading: isAddingAboutUs }] = useAddAboutUsMutation();
-  const [updateAboutUs, { isLoading: isUpdatingAboutUs }] =
-    useUpdateAboutUsMutation();
-  const [updateAboutUsStatus] =
-    useUpdateAboutUsStatusMutation();
-  const [deleteAboutUs, { isLoading: isDeletingAboutUs }] =
-    useDeleteAboutUsMutation();
-
-  // Load content data from API
-  useEffect(() => {
-    if (contentResponse?.data) {
-      const newContentData: Record<ContentType, string> = {
-        "Terms & Conditions": "",
-        "Privacy Policy": "",
-        "Cancellation & Waiting Policy": "",
-        "FAQ List": "",
-        "Help Articles List": "",
-        "About Us": "",
-      };
-
-      contentResponse.data.forEach((item: any) => {
-        const uiType = API_TO_UI_MAP[item.contenttype];
-        if (uiType) {
-          newContentData[uiType] = item.description;
-        }
-      });
-
-      setContentData(newContentData);
-    }
-  }, [contentResponse]);
-
-  // Handler for when the "Publish" button is clicked for regular content
+  const [selectedContentType, setSelectedContentType] = useState<ContentEntityType>("content");
+  const apiHooks = useContentApiHooks();
+  const { contentData, setContentData } = useContentDataHandler(apiHooks.contentResponse);
   const handlePublish = async (newContent: string) => {
+    toast.loading("Publishing content...");
     try {
-      // Check if content already exists for this type
-      const existingContent = contentResponse?.data?.find(
+      const existingContent = apiHooks.contentResponse?.data?.find(
         (item: any) => CONTENT_TYPE_MAP[activeTab] === item.contenttype
       );
 
       if (existingContent) {
-        // Update existing content
         const updateData = {
           id: existingContent.id,
           contenttype: CONTENT_TYPE_MAP[activeTab],
@@ -191,66 +38,63 @@ export default function ContentManagementApp() {
           isPublished: true,
         };
 
-        const response = await updateContent(updateData).unwrap();
+        const response = await apiHooks.updateContent(updateData).unwrap();
 
         if (response.success) {
           setContentData((prev) => ({
             ...prev,
             [activeTab]: newContent,
           }));
-          refetchContent();
+          apiHooks.refetchContent();
+          toast.dismiss();
           toast.success(response.message || "Content updated successfully!");
         } else {
+          toast.dismiss();
           toast.error(response.message || "Failed to update content.");
         }
       } else {
-        // Create new content
         const contentData = {
           contenttype: CONTENT_TYPE_MAP[activeTab],
           description: newContent,
           isPublished: true,
         };
 
-        const response = await addContent(contentData).unwrap();
+        const response = await apiHooks.addContent(contentData).unwrap();
 
         if (response.success) {
           setContentData((prev) => ({
             ...prev,
             [activeTab]: newContent,
           }));
-          refetchContent();
+          apiHooks.refetchContent();
+          toast.dismiss();
           toast.success(response.message || "Content published successfully!");
         } else {
+          toast.dismiss();
           toast.error(response.message || "Failed to publish content.");
         }
       }
     } catch (error: any) {
+      toast.dismiss();
       console.error("Failed to publish content:", error);
       toast.error(error?.data?.message || "Failed to publish content.");
     }
   };
-
-  // Handle delete action for all content types
   const handleDeleteClick = (
     id: number,
-    type: "content" | "faq" | "article" | "aboutus",
+    type: ContentEntityType,
     data?: any
   ) => {
     setSelectedContentId(id);
     setSelectedContentType(type);
-
-    // Set the appropriate data based on type
     if (type === "faq") setSelectedFAQData(data);
     else if (type === "article") setSelectedArticleData(data);
     else if (type === "aboutus") setSelectedAboutUsData(data);
     else setSelectedContentData(data);
-
     setDeleteModalOpen(true);
   };
-
   const handleDeleteConfirm = async () => {
     if (!selectedContentId) return;
-
     try {
       let response;
       let refetchFn;
@@ -258,23 +102,23 @@ export default function ContentManagementApp() {
 
       switch (selectedContentType) {
         case "content":
-          response = await deleteContent(selectedContentId).unwrap();
-          refetchFn = refetchContent;
+          response = await apiHooks.deleteContent(selectedContentId).unwrap();
+          refetchFn = apiHooks.refetchContent;
           successMessage = "Content deleted successfully!";
           break;
         case "faq":
-          response = await deleteFAQ(selectedContentId).unwrap();
-          refetchFn = refetchFAQ;
+          response = await apiHooks.deleteFAQ(selectedContentId).unwrap();
+          refetchFn = apiHooks.refetchFAQ;
           successMessage = "FAQ deleted successfully!";
           break;
         case "article":
-          response = await deleteArticle(selectedContentId).unwrap();
-          refetchFn = refetchArticles;
+          response = await apiHooks.deleteArticle(selectedContentId).unwrap();
+          refetchFn = apiHooks.refetchArticles;
           successMessage = "Article deleted successfully!";
           break;
         case "aboutus":
-          response = await deleteAboutUs(selectedContentId).unwrap();
-          refetchFn = refetchAboutUs;
+          response = await apiHooks.deleteAboutUs(selectedContentId).unwrap();
+          refetchFn = apiHooks.refetchAboutUs;
           successMessage = "About Us content deleted successfully!";
           break;
         default:
@@ -300,15 +144,11 @@ export default function ContentManagementApp() {
       setSelectedContentId(null);
     }
   };
-
-  // Handle edit action
   const handleEditClick = (
     content: any,
-    type: "content" | "faq" | "article" | "aboutus"
+    type: ContentEntityType
   ) => {
     setSelectedContentType(type);
-
-    // Open the appropriate modal
     switch (type) {
       case "content":
         setSelectedContentData(content);
@@ -328,10 +168,9 @@ export default function ContentManagementApp() {
         break;
     }
   };
-
   const handleEditSave = async (
     updatedData: any,
-    type: "content" | "faq" | "article" | "aboutus"
+    type: ContentEntityType
   ) => {
     try {
       let response;
@@ -340,35 +179,31 @@ export default function ContentManagementApp() {
 
       switch (type) {
         case "content":
-          response = await updateContent(updatedData).unwrap();
-          refetchFn = refetchContent;
+          response = await apiHooks.updateContent(updatedData).unwrap();
+          refetchFn = apiHooks.refetchContent;
           successMessage = "Content updated successfully!";
           break;
         case "faq":
-          response = await updateFAQ(updatedData).unwrap();
-          refetchFn = refetchFAQ;
+          response = await apiHooks.updateFAQ(updatedData).unwrap();
+          refetchFn = apiHooks.refetchFAQ;
           successMessage = "FAQ updated successfully!";
           break;
         case "article":
-          response = await updateArticle(updatedData).unwrap();
-          refetchFn = refetchArticles;
+          response = await apiHooks.updateArticle(updatedData).unwrap();
+          refetchFn = apiHooks.refetchArticles;
           successMessage = "Article updated successfully!";
           break;
         case "aboutus":
-          console.log(updatedData);
-          response = await updateAboutUs(updatedData).unwrap();
-          refetchFn = refetchAboutUs;
+          response = await apiHooks.updateAboutUs(updatedData).unwrap();
+          refetchFn = apiHooks.refetchAboutUs;
           successMessage = "About Us content updated successfully!";
           break;
         default:
           throw new Error("Unknown content type");
       }
-
       if (response?.success) {
         toast.success(successMessage);
         if (refetchFn) refetchFn();
-
-        // Close the appropriate modal
         switch (type) {
           case "content":
             setEditContentModalOpen(false);
@@ -395,8 +230,6 @@ export default function ContentManagementApp() {
       toast.error(error?.data?.message || "Failed to update content.");
     }
   };
-
-  // Get data for active tab
   const getActiveTabData = () => {
     switch (activeTab) {
       case "Terms & Conditions":
@@ -404,14 +237,14 @@ export default function ContentManagementApp() {
       case "Cancellation & Waiting Policy":
         const apiType = CONTENT_TYPE_MAP[activeTab];
         return (
-          contentResponse?.data?.filter(
+          apiHooks.contentResponse?.data?.filter(
             (item: any) => item.contenttype === apiType
           ) || []
         );
 
       case "FAQ List":
         return (
-          faqResponse?.data?.map((item: any) => ({
+          apiHooks.faqResponse?.data?.map((item: any) => ({
             id: item.id,
             contenttype: "FAQ",
             description: item.question,
@@ -422,10 +255,9 @@ export default function ContentManagementApp() {
             isActive: item.isActive,
           })) || []
         );
-
       case "Help Articles List":
         return (
-          articleResponse?.data?.map((item: any) => ({
+          apiHooks.articleResponse?.data?.map((item: any) => ({
             id: item.id,
             contenttype: "ARTICLE",
             description: item.title,
@@ -436,10 +268,9 @@ export default function ContentManagementApp() {
             published: item.published,
           })) || []
         );
-
       case "About Us":
         return (
-          aboutUsResponse?.data?.map((item: any) => ({
+          apiHooks.aboutUsResponse?.data?.map((item: any) => ({
             id: item.id,
             contenttype: "ABOUTUS",
             description: item.title,
@@ -455,15 +286,13 @@ export default function ContentManagementApp() {
         return [];
     }
   };
-
-  // Handle toggle status for all content types - FIXED VERSION
   const handleToggleStatus = async (id: number, isPublished: boolean) => {
     try {
       switch (activeTab) {
         case "Terms & Conditions":
         case "Privacy Policy":
         case "Cancellation & Waiting Policy":
-          const content = contentResponse?.data?.find(
+          const content = apiHooks.contentResponse?.data?.find(
             (item: any) => item.id === id
           );
           if (content) {
@@ -473,8 +302,8 @@ export default function ContentManagementApp() {
               description: content.description,
               isPublished,
             };
-            await updateContent(updateData).unwrap();
-            refetchContent();
+            await apiHooks.updateContent(updateData).unwrap();
+            apiHooks.refetchContent();
             toast.success(
               `Content ${
                 isPublished ? "activated" : "deactivated"
@@ -484,30 +313,21 @@ export default function ContentManagementApp() {
           break;
 
         case "FAQ List":
-          // Fixed: Pass only id, not { id, ...data }
-          await updateFAQStatus(id).unwrap();
-          refetchFAQ();
-          toast.success(
-            `FAQ status updated successfully!`
-          );
+          await apiHooks.updateFAQStatus(id).unwrap();
+          apiHooks.refetchFAQ();
+          toast.success(`FAQ status updated successfully!`);
           break;
 
         case "Help Articles List":
-          // Fixed: Pass only id, not { id, ...data }
-          await updateArticleStatus(id).unwrap();
-          refetchArticles();
-          toast.success(
-            `Article status updated successfully!`
-          );
+          await apiHooks.updateArticleStatus(id).unwrap();
+          apiHooks.refetchArticles();
+          toast.success(`Article status updated successfully!`);
           break;
 
         case "About Us":
-          // Fixed: Pass only id, not { id, ...data }
-          await updateAboutUsStatus(id).unwrap();
-          refetchAboutUs();
-          toast.success(
-            `About Us status updated successfully!`
-          );
+          await apiHooks.updateAboutUsStatus(id).unwrap();
+          apiHooks.refetchAboutUs();
+          toast.success(`About Us status updated successfully!`);
           break;
       }
     } catch (error: any) {
@@ -515,41 +335,40 @@ export default function ContentManagementApp() {
       toast.error(error?.data?.message || "Failed to update status.");
     }
   };
-
-  // Handle publish for FAQ
   const handlePublishFAQ = async (faqData: { question: string; answer: string }[]) => {
     try {
       const promises = faqData.map(async (faq) => {
         if (faq.question.trim() && faq.answer.trim()) {
-          return await addFAQ({
+          return await apiHooks.addFAQ({
             question: faq.question,
-            answer: faq.answer
+            answer: faq.answer,
           }).unwrap();
         }
         return null;
       });
 
       const results = await Promise.all(promises);
-      const successful = results.filter(r => r?.success);
-      
+      const successful = results.filter((r: any) => r?.success);
+
       if (successful.length > 0) {
         toast.success(`${successful.length} FAQ(s) published successfully!`);
-        refetchFAQ();
+        apiHooks.refetchFAQ();
       }
     } catch (error: any) {
       console.error("Failed to publish FAQs:", error);
       toast.error(error?.data?.message || "Failed to publish FAQs.");
     }
   };
-
-  // Handle publish for Article
-  const handlePublishArticle = async (articleData: { title: string; content: string }) => {
+  const handlePublishArticle = async (articleData: {
+    title: string;
+    content: string;
+  }) => {
     try {
-      const response = await addArticle(articleData).unwrap();
-      
+      const response = await apiHooks.addArticle(articleData).unwrap();
+
       if (response.success) {
         toast.success("Article published successfully!");
-        refetchArticles();
+        apiHooks.refetchArticles();
       } else {
         toast.error(response.message || "Failed to publish article.");
       }
@@ -558,79 +377,24 @@ export default function ContentManagementApp() {
       toast.error(error?.data?.message || "Failed to publish article.");
     }
   };
-
-  // Handle publish for About Us
-  const handlePublishAboutUs = async (aboutUsData: { title: string; content: string }) => {
+  const handlePublishAboutUs = async (aboutUsData: {
+    title: string;
+    content: string;
+  }) => {
     try {
-      const response = await addAboutUs(aboutUsData).unwrap();
-      
+      const response = await apiHooks.addAboutUs(aboutUsData).unwrap();
+
       if (response.success) {
         toast.success("About Us content published successfully!");
-        refetchAboutUs();
+        apiHooks.refetchAboutUs();
       } else {
         toast.error(response.message || "Failed to publish About Us content.");
       }
     } catch (error: any) {
       console.error("Failed to publish About Us content:", error);
-      toast.error(error?.data?.message || "Failed to publish About Us content.");
-    }
-  };
-
-  const Section = () => {
-    switch (activeTab) {
-      case "Terms & Conditions":
-      case "Privacy Policy":
-      case "Cancellation & Waiting Policy":
-        return (
-          <ContentEditorSection
-            title={activeTab}
-            initialContent={contentData[activeTab]}
-            onPublish={handlePublish}
-            isLoading={isAddingContent || isUpdatingContent}
-          />
-        );
-
-      case "About Us":
-        return (
-          <AboutUsManagement
-            onDelete={(id: number, type: "aboutus", data: any) =>
-              handleDeleteClick(id, type, data)
-            }
-            onEdit={(content, type) => handleEditClick(content, type)}
-            onPublish={handlePublishAboutUs}
-            data={aboutUsResponse?.data || []}
-            isLoading={isAddingAboutUs || isUpdatingAboutUs}
-          />
-        );
-
-      case "FAQ List":
-        return (
-          <FAQManagement
-            onDelete={(id: number, type: "faq", data: any) =>
-              handleDeleteClick(id, type, data)
-            }
-            onEdit={(content, type) => handleEditClick(content, type)}
-            onPublish={handlePublishFAQ}
-            data={faqResponse?.data || []}
-            isLoading={isAddingFAQ || isUpdatingFAQ}
-          />
-        );
-
-      case "Help Articles List":
-        return (
-          <ArticleManagement
-            onDelete={(id: number, type: "article", data: any) =>
-              handleDeleteClick(id, type, data)
-            }
-            onEdit={(content, type) => handleEditClick(content, type)}
-            onPublish={handlePublishArticle}
-            data={articleResponse?.data || []}
-            isLoading={isAddingArticle || isUpdatingArticle}
-          />
-        );
-
-      default:
-        return null;
+      toast.error(
+        error?.data?.message || "Failed to publish About Us content."
+      );
     }
   };
 
@@ -639,36 +403,39 @@ export default function ContentManagementApp() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">
         Content Management
       </h1>
-
-      {/* --- Tab Navigation Section --- */}
-      <div className="flex flex-wrap gap-3 mb-8">
-        {tabItems.map((item) => (
-          <button
-            key={item}
-            onClick={() => setActiveTab(item)}
-            className={`
-              px-6 py-3 rounded-full text-base font-medium border transition-all duration-200 cursor-pointer
-              ${activeTab === item ? activeTabClass : inactiveTabClass}
-            `}
-            disabled={isAddingContent || isUpdatingContent}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
-
-      {/* --- Content Editor Section --- */}
+      <ContentTabs
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        disabled={apiHooks.isAddingContent || apiHooks.isUpdatingContent}
+      />
       <div className="py-4">
-        <Section />
+        <ContentSection
+          activeTab={activeTab}
+          contentData={contentData}
+          onPublish={handlePublish}
+          onPublishFAQ={handlePublishFAQ}
+          onPublishArticle={handlePublishArticle}
+          onPublishAboutUs={handlePublishAboutUs}
+          onDelete={handleDeleteClick}
+          onEdit={handleEditClick}
+          faqResponse={apiHooks.faqResponse}
+          articleResponse={apiHooks.articleResponse}
+          aboutUsResponse={apiHooks.aboutUsResponse}
+          isAddingContent={apiHooks.isAddingContent}
+          isUpdatingContent={apiHooks.isUpdatingContent}
+          isAddingFAQ={apiHooks.isAddingFAQ}
+          isUpdatingFAQ={apiHooks.isUpdatingFAQ}
+          isAddingArticle={apiHooks.isAddingArticle}
+          isUpdatingArticle={apiHooks.isUpdatingArticle}
+          isAddingAboutUs={apiHooks.isAddingAboutUs}
+          isUpdatingAboutUs={apiHooks.isUpdatingAboutUs}
+        />
       </div>
-
-      {/* --- History Table --- */}
       <div className="pt-8">
         <ContentHistoryTable
           data={getActiveTabData()}
           onEdit={(content) => {
-            // Determine type based on active tab
-            let type: "content" | "faq" | "article" | "aboutus" = "content";
+            let type: ContentEntityType = "content";
             switch (activeTab) {
               case "FAQ List":
                 type = "faq";
@@ -685,8 +452,7 @@ export default function ContentManagementApp() {
             handleEditClick(content, type);
           }}
           onDelete={(id) => {
-            // Determine type based on active tab
-            let type: "content" | "faq" | "article" | "aboutus" = "content";
+            let type: ContentEntityType = "content";
             switch (activeTab) {
               case "FAQ List":
                 type = "faq";
@@ -700,8 +466,6 @@ export default function ContentManagementApp() {
               default:
                 type = "content";
             }
-
-            // Find the data to pass
             const data = getActiveTabData().find((item: any) => item.id === id);
             handleDeleteClick(id, type, data);
           }}
@@ -710,10 +474,28 @@ export default function ContentManagementApp() {
         />
       </div>
 
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal
-        isOpen={deleteModalOpen}
-        onClose={() => {
+      {/* All Modals */}
+      <ContentModals
+        deleteModalOpen={deleteModalOpen}
+        editContentModalOpen={editContentModalOpen}
+        editFAQModalOpen={editFAQModalOpen}
+        editArticleModalOpen={editArticleModalOpen}
+        editAboutUsModalOpen={editAboutUsModalOpen}
+        selectedContentId={selectedContentId}
+        selectedContentType={selectedContentType}
+        selectedContentData={selectedContentData}
+        selectedFAQData={selectedFAQData}
+        selectedArticleData={selectedArticleData}
+        selectedAboutUsData={selectedAboutUsData}
+        isDeletingContent={apiHooks.isDeletingContent}
+        isDeletingFAQ={apiHooks.isDeletingFAQ}
+        isDeletingArticle={apiHooks.isDeletingArticle}
+        isDeletingAboutUs={apiHooks.isDeletingAboutUs}
+        isUpdatingContent={apiHooks.isUpdatingContent}
+        isUpdatingFAQ={apiHooks.isUpdatingFAQ}
+        isUpdatingArticle={apiHooks.isUpdatingArticle}
+        isUpdatingAboutUs={apiHooks.isUpdatingAboutUs}
+        onCloseDeleteModal={() => {
           setDeleteModalOpen(false);
           setSelectedContentId(null);
           setSelectedContentType("content");
@@ -722,63 +504,24 @@ export default function ContentManagementApp() {
           setSelectedArticleData(null);
           setSelectedAboutUsData(null);
         }}
-        onConfirm={handleDeleteConfirm}
-        isLoading={
-          isDeletingContent ||
-          isDeletingFAQ ||
-          isDeletingArticle ||
-          isDeletingAboutUs
-        }
-        contentType={selectedContentType}
-      />
-
-      {/* Edit Content Modal */}
-      <EditContentModal
-        isOpen={editContentModalOpen}
-        onClose={() => {
+        onCloseEditContentModal={() => {
           setEditContentModalOpen(false);
           setSelectedContentData(null);
         }}
-        contentData={selectedContentData}
-        onSave={(data) => handleEditSave(data, "content")}
-        isLoading={isUpdatingContent}
-        contentType="content"
-      />
-
-      {/* Edit FAQ Modal */}
-      <EditFAQModal
-        isOpen={editFAQModalOpen}
-        onClose={() => {
+        onCloseEditFAQModal={() => {
           setEditFAQModalOpen(false);
           setSelectedFAQData(null);
         }}
-        faqData={selectedFAQData}
-        onSave={(data) => handleEditSave(data, "faq")}
-        isLoading={isUpdatingFAQ}
-      />
-
-      {/* Edit Article Modal */}
-      <EditArticleModal
-        isOpen={editArticleModalOpen}
-        onClose={() => {
+        onCloseEditArticleModal={() => {
           setEditArticleModalOpen(false);
           setSelectedArticleData(null);
         }}
-        articleData={selectedArticleData}
-        onSave={(data) => handleEditSave(data, "article")}
-        isLoading={isUpdatingArticle}
-      />
-
-      {/* Edit About Us Modal */}
-      <EditAboutUsModal
-        isOpen={editAboutUsModalOpen}
-        onClose={() => {
+        onCloseEditAboutUsModal={() => {
           setEditAboutUsModalOpen(false);
           setSelectedAboutUsData(null);
         }}
-        aboutUsData={selectedAboutUsData}
-        onSave={(data) => handleEditSave(data, "aboutus")}
-        isLoading={isUpdatingAboutUs}
+        onDeleteConfirm={handleDeleteConfirm}
+        onEditSave={handleEditSave}
       />
     </div>
   );

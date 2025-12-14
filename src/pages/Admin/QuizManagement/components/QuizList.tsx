@@ -1,3 +1,4 @@
+import { GoArrowLeft } from "react-icons/go";
 import QuizCard from "./QuizCard";
 import type { Question } from "@/types/questionsTypes";
 
@@ -17,6 +18,10 @@ export default function QuizList({
   return (
     <div className=" ">
       <div className="pt-6 md:pt-16 pb-8">
+        <button onClick={() => window.history.back()} className="flex items-center cursor-pointer gap-2 text-foreground hover:text-gray-700 transition-colors mb-6 bg-[#fdc700] px-4 py-2 rounded-sm">
+          <GoArrowLeft size={22} />
+          <span className="text-xl">Back</span>
+        </button>
         <div className="flex justify-between items-center mb-16 flex-col md:flex-row gap-4">
           <h1 className="text-2xl md:text-4xl font-bold text-gray-900">
             Quiz Management

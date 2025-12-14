@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PlusCircle, Trash2, Pencil } from "lucide-react";
+import { PlusCircle, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface FAQItem {
@@ -12,7 +12,7 @@ interface FAQItem {
 interface FAQManagementProps {
   onDelete: (id: number, type: "faq", data: any) => void;
   onEdit: (faq: FAQItem, type: "faq") => void;
-  onPublish: (data: { question: string; answer: string }[]) => Promise<void>;
+  onPublish: (data: { question: string; answer: string }[]) => void;
   data: FAQItem[];
   isLoading?: boolean;
 }
@@ -24,8 +24,13 @@ export default function FAQManagement({
   data: faqData,
   isLoading = false,
 }: FAQManagementProps) {
-  const [faqItems, setFaqItems] = useState<FAQItem[]>(faqData || []);
-  const [localFaqs, setLocalFaqs] = useState<Array<{ question: string; answer: string }>>([]);
+  const [, setFaqItems] = useState<FAQItem[]>(faqData || []);
+  const [localFaqs, setLocalFaqs] = useState<
+    Array<{ question: string; answer: string }>
+  >([]);
+  const [hasPublished, setHasPublished] = useState(false);
+  console.log(onDelete);
+  console.log(onEdit);
 
   // Update local FAQ items when data prop changes
   useEffect(() => {
@@ -34,7 +39,11 @@ export default function FAQManagement({
     }
   }, [faqData]);
 
-  const handleQuestionChange = (index: number, field: "question" | "answer", value: string) => {
+  const handleQuestionChange = (
+    index: number,
+    field: "question" | "answer",
+    value: string
+  ) => {
     const updatedLocalFaqs = [...localFaqs];
     updatedLocalFaqs[index] = { ...updatedLocalFaqs[index], [field]: value };
     setLocalFaqs(updatedLocalFaqs);
@@ -49,30 +58,29 @@ export default function FAQManagement({
     setLocalFaqs(updatedLocalFaqs);
   };
 
-  const handleEditClick = (faq: FAQItem) => {
-    onEdit(faq, "faq");
-  };
-
-  const handleDeleteClick = (faq: FAQItem) => {
-    onDelete(faq.id, "faq", faq);
-  };
-
   const handlePublishSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Filter out empty FAQs
-    const validFAQs = localFaqs.filter(faq => faq.question.trim() && faq.answer.trim());
-    
+    const validFAQs = localFaqs.filter(
+      (faq) => faq.question.trim() && faq.answer.trim()
+    );
+
     if (validFAQs.length === 0) {
-      toast.error("Please add at least one question and answer before publishing.");
+      toast.error(
+        "Please add at least one question and answer before publishing."
+      );
       return;
     }
 
     try {
       await onPublish(validFAQs);
       setLocalFaqs([]);
+      setHasPublished(true);
+
+      // Reset published state after a delay
+      setTimeout(() => setHasPublished(false), 3000);
     } catch (error) {
-      // Error is handled by parent component
       console.error("Failed to publish FAQs:", error);
     }
   };
@@ -92,54 +100,6 @@ export default function FAQManagement({
         </div>
 
         <form onSubmit={handlePublishSubmit} className="space-y-6">
-          {/* Existing FAQs from API */}
-          {faqItems.map((item, index) => (
-            <div
-              key={item.id}
-              className="space-y-2 pb-4 border-b border-gray-100 last:border-b-0 relative"
-            >
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-lg font-semibold text-gray-800">
-                  Question no.{index + 1}
-                </label>
-                <div className="flex space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => handleEditClick(item)}
-                    className="text-blue-500 hover:text-blue-600 cursor-pointer"
-                  >
-                    <Pencil className="w-5 h-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteClick(item)}
-                    className="text-red-500 hover:text-red-600 cursor-pointer"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-              
-              <input
-                type="text"
-                value={item.question}
-                readOnly
-                className={`${inputClasses} bg-gray-50`}
-                placeholder="Question"
-              />
-
-              <label className="block text-md font-medium text-gray-700 pt-2">
-                Answer
-              </label>
-              <input
-                value={item.answer}
-                readOnly
-                className={`${inputClasses} bg-gray-50 resize-none`}
-                placeholder="Answer"
-              />
-            </div>
-          ))}
-
           {/* Local FAQs being added */}
           {localFaqs.map((faq, index) => (
             <div
@@ -155,16 +115,18 @@ export default function FAQManagement({
               </button>
 
               <label className="block text-lg font-semibold text-gray-800">
-                New Question no.{index + 1}
+                Question no.{index + 1}
               </label>
               <input
                 type="text"
                 value={faq.question}
-                onChange={(e) => handleQuestionChange(index, "question", e.target.value)}
+                onChange={(e) =>
+                  handleQuestionChange(index, "question", e.target.value)
+                }
                 placeholder="Enter question"
                 className={inputClasses}
                 required
-                disabled={isLoading}
+                disabled={isLoading || hasPublished}
               />
 
               <label className="block text-md font-medium text-gray-700 pt-2">
@@ -172,11 +134,13 @@ export default function FAQManagement({
               </label>
               <input
                 value={faq.answer}
-                onChange={(e) => handleQuestionChange(index, "answer", e.target.value)}
+                onChange={(e) =>
+                  handleQuestionChange(index, "answer", e.target.value)
+                }
                 placeholder="Enter answer"
                 className={`${inputClasses} resize-none`}
                 required
-                disabled={isLoading}
+                disabled={isLoading || hasPublished}
               />
             </div>
           ))}
@@ -186,25 +150,63 @@ export default function FAQManagement({
               type="button"
               onClick={handleAddQuestion}
               className={buttonSecondary}
-              disabled={isLoading}
+              disabled={isLoading || hasPublished}
             >
               <PlusCircle className="w-5 h-5" />
               Add New Question
             </button>
-            <button 
-              type="submit" 
-              className={buttonPrimary}
-              disabled={isLoading || localFaqs.length === 0}
+            <button
+              type="submit"
+              className={
+                hasPublished
+                  ? "bg-green-500 text-white font-bold py-3 px-8 rounded-xl cursor-not-allowed"
+                  : buttonPrimary
+              }
+              disabled={isLoading || hasPublished || localFaqs.length === 0}
             >
-              {isLoading ? (
+              {hasPublished ? (
                 <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                  Published!
+                </span>
+              ) : isLoading ? (
+                <span className="flex items-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   Publishing...
                 </span>
-              ) : "Publish"}
+              ) : (
+                "Publish"
+              )}
             </button>
           </div>
         </form>

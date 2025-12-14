@@ -52,11 +52,16 @@ import PaymentOptions from "@/pages/OrderPlacement/PaymentOptions/PaymentOptions
 import OrderConfirmed from "@/pages/OrderConfirmed/OrderConfirmed";
 import Login from "@/pages/Login/Login";
 import Quiz from "@/pages/Admin/QuizManagement/Quiz";
+import AdminRoute from "./AdminRoute";
 
 const routes = createBrowserRouter([
   {
     path: "/",
-    element: <DashboardLayout />,
+    element: (
+      <AdminRoute>
+        <DashboardLayout />
+      </AdminRoute>
+    ),
     children: [
       {
         index: true,

@@ -1,4 +1,4 @@
-import { Bell, Mail, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import logo from "@/assets/images/logo.svg";
 
@@ -29,17 +29,17 @@ const Navbar = () => {
         {/* Right Section - 50% */}
         <div className="flex items-center justify-end gap-16 w-1/2">
           {/* Notification Bell */}
-          <button className="relative text-gray-600 hover:text-gray-900 transition">
+          {/* <button className="relative text-gray-600 hover:text-gray-900 transition">
             <Bell className="w-6 h-6" />
             <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
               2
             </span>
-          </button>
+          </button> */}
 
           {/* Mail */}
-          <button className="text-gray-600 hover:text-gray-900 transition">
+          {/* <button className="text-gray-600 hover:text-gray-900 transition">
             <Mail className="w-6 h-6" />
-          </button>
+          </button> */}
 
           {/* Profile */}
           <div className="flex items-center gap-3 px-4">
