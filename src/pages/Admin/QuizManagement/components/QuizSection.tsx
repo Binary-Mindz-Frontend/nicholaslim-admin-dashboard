@@ -136,7 +136,7 @@
 import { useState } from "react";
 import QuizList from "./QuizList";
 import QuestionForm from "./CreateEditForm";
-import QuizAttemptsTable from "./QuizTable";
+// import QuizAttemptsTable from "./QuizTable";
 import {
   useGetAllQuestionsByQuizIdQuery,
   useCreateQuestionMutation,
@@ -244,7 +244,7 @@ export default function QuizSection() {
         }}
         onDelete={handleDelete}
       />
-      <QuizAttemptsTable />
+      {/* <QuizAttemptsTable /> */}
     </div>
   ) : (
     <QuestionForm

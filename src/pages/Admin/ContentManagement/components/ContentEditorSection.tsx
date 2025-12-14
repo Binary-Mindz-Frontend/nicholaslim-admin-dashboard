@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface ContentEditorSectionProps {
   title: string;
@@ -23,16 +23,26 @@ const ContentEditorSection: React.FC<ContentEditorSectionProps> = ({
   isLoading = false,
 }) => {
   const [content, setContent] = useState(initialContent);
+  const [hasPublished, setHasPublished] = useState(false);
 
-  // Update internal state when external initialContent changes
-  React.useEffect(() => {
-    setContent(initialContent);
+  useEffect(() => {
+    if (initialContent !== undefined && initialContent !== null) {
+      setContent(initialContent);
+    }
   }, [initialContent]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoading && content.trim()) {
-      onPublish(content);
+      try {
+        await onPublish(content);
+        setContent("");
+        setHasPublished(true);
+        
+        setTimeout(() => setHasPublished(false), 3000);
+      } catch (error) {
+        console.error("Failed to publish content:", error);
+      }
     }
   };
 
@@ -42,7 +52,6 @@ const ContentEditorSection: React.FC<ContentEditorSectionProps> = ({
         <h3 className="text-xl font-semibold text-gray-800 mb-4">{title}</h3>
         <form onSubmit={handleSubmit} className="space-y-8">
           <textarea
-            value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder={`Enter your text for ${title} here...`}
             rows={15}
@@ -53,10 +62,17 @@ const ContentEditorSection: React.FC<ContentEditorSectionProps> = ({
           <div className="flex justify-center">
             <button
               type="submit"
-              className={isLoading ? buttonClassesDisabled : buttonClasses}
-              disabled={isLoading || !content.trim()}
+              className={isLoading || hasPublished ? buttonClassesDisabled : buttonClasses}
+              disabled={isLoading || hasPublished || !content.trim()}
             >
-              {isLoading ? (
+              {hasPublished ? (
+                <span className="flex items-center justify-center">
+                  <svg className="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Published!
+                </span>
+              ) : isLoading ? (
                 <span className="flex items-center justify-center">
                   <svg
                     className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-900"

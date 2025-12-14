@@ -16,9 +16,9 @@ const baseQuery = fetchBaseQuery({
 });
 
 const redirectToLogin = () => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('accessToken');
-    window.location.href = '/login';
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("accessToken");
+    window.location.href = "/login";
   }
 };
 
@@ -36,6 +36,30 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["VehicleType", "DeliveryType", "Quizzes", "Questions", "QuizResults", "UserTypes", "RiderProfiles", "StandardCommissionRate", "RaiderCompensationRole", "RaiderDeductionFee", "UserFeeStructure", "DynamicSurgePricing", "UserDynamicSurge","Incentives", "Advertisements", "fileUpload"],
+  tagTypes: [
+    "VehicleType",
+    "DeliveryType",
+    "Quizzes",
+    "Questions",
+    "QuizResults",
+    "UserTypes",
+    "RiderProfiles",
+    "StandardCommissionRate",
+    "RaiderCompensationRole",
+    "RaiderDeductionFee",
+    "UserFeeStructure",
+    "DynamicSurgePricing",
+    "UserDynamicSurge",
+    "Articles",
+    "AboutUs",
+    "FAQ",
+    "Policy",
+    "Content",
+    "Notification",
+    "Coins",
+    "Incentives",
+    "Advertisements",
+    "fileUpload",
+  ],
   endpoints: () => ({}),
 });

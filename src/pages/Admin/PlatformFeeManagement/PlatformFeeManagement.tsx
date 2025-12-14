@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   useAddStandardCommissionRateMutation,
   useDeleteStandardCommissionRateMutation,
@@ -17,17 +17,17 @@ import {
   useGetRaiderDeductionFeeQuery,
   useUpdateRaiderDeductionFeeMutation,
 } from "@/redux/features/raiderDeductionFee/raiderDeductionFeeApi";
-import { 
-  useAddUserFeeStructureMutation, 
-  useDeleteUserFeeStructureMutation, 
-  useGetUserFeeStructureQuery, 
-  useUpdateUserFeeStructureMutation 
+import {
+  useAddUserFeeStructureMutation,
+  useDeleteUserFeeStructureMutation,
+  useGetUserFeeStructureQuery,
+  useUpdateUserFeeStructureMutation,
 } from "@/redux/features/userFeeStructure/userFeeStructureApi";
-import { 
-  useAddUserDynamicSurgeMutation, 
-  useDeleteUserDynamicSurgeMutation, 
-  useGetUserDynamicSurgeQuery, 
-  useUpdateUserDynamicSurgeMutation 
+import {
+  useAddUserDynamicSurgeMutation,
+  useDeleteUserDynamicSurgeMutation,
+  useGetUserDynamicSurgeQuery,
+  useUpdateUserDynamicSurgeMutation,
 } from "@/redux/features/userDynamicSurge/userDynamicSurgeApi";
 import RaiderTabContent from "./components/RaiderTabContent";
 import UserTabContent from "./components/UserTabContent";
@@ -64,10 +64,10 @@ export default function PlatformFeeManagement() {
   const raiderCompensationRoleData = raiderCompensationRole?.data;
 
   // Deduction Fees APIs
-  const { 
-    data: raiderDeductionFee, 
+  const {
+    data: raiderDeductionFee,
     isLoading: isDeductionDataLoading,
-    refetch: deductionRefetch 
+    refetch: deductionRefetch,
   } = useGetRaiderDeductionFeeQuery("");
   const [addRaiderDeductionFee] = useAddRaiderDeductionFeeMutation();
   const [updateRaiderDeductionFee] = useUpdateRaiderDeductionFeeMutation();
@@ -76,10 +76,10 @@ export default function PlatformFeeManagement() {
   const raiderDeductionFeeData = raiderDeductionFee?.data;
 
   // User Fee Structure APIs
-  const { 
-    data: userFeeStructure, 
-    isLoading: isUserFeeStructureLoading, 
-    refetch: userFeeStructureRefetch 
+  const {
+    data: userFeeStructure,
+    isLoading: isUserFeeStructureLoading,
+    refetch: userFeeStructureRefetch,
   } = useGetUserFeeStructureQuery("");
   const [addUserFeeStructure] = useAddUserFeeStructureMutation();
   const [updateUserFeeStructure] = useUpdateUserFeeStructureMutation();
@@ -88,24 +88,16 @@ export default function PlatformFeeManagement() {
   const userFeeStructureData = userFeeStructure?.data;
 
   // Dynamic Surge Pricing APIs
-  const { 
-    data: dynamicSurge, 
-    isLoading: isDynamicSurgeLoading, 
-    refetch: dynamicSurgeRefetch 
+  const {
+    data: dynamicSurge,
+    isLoading: isDynamicSurgeLoading,
+    refetch: dynamicSurgeRefetch,
   } = useGetUserDynamicSurgeQuery("");
   const [addDynamicSurge] = useAddUserDynamicSurgeMutation();
   const [updateDynamicSurge] = useUpdateUserDynamicSurgeMutation();
   const [deleteDynamicSurge] = useDeleteUserDynamicSurgeMutation();
 
   const dynamicSurgeData = dynamicSurge?.data;
-
-  useEffect(() => {
-    standardRefetch();
-    raiderRefetch();
-    deductionRefetch();
-    userFeeStructureRefetch();
-    dynamicSurgeRefetch();
-  }, [activeTab, standardRefetch, raiderRefetch, deductionRefetch, userFeeStructureRefetch, dynamicSurgeRefetch]);
 
   const getTabClasses = (tab: "USER" | "RAIDER") =>
     `px-6 py-2 text-base font-medium rounded-full transition-colors cursor-pointer ${
@@ -127,7 +119,9 @@ export default function PlatformFeeManagement() {
             <button
               onClick={() => setActiveTab("RAIDER")}
               className={getTabClasses("RAIDER")}
-              disabled={isDataLoading || isRaiderDataLoading || isDeductionDataLoading}
+              disabled={
+                isDataLoading || isRaiderDataLoading || isDeductionDataLoading
+              }
             >
               Driver Commission & Deduction
             </button>
@@ -135,7 +129,13 @@ export default function PlatformFeeManagement() {
             <button
               onClick={() => setActiveTab("USER")}
               className={getTabClasses("USER")}
-              disabled={isDataLoading || isRaiderDataLoading || isDeductionDataLoading || isUserFeeStructureLoading || isDynamicSurgeLoading}
+              disabled={
+                isDataLoading ||
+                isRaiderDataLoading ||
+                isDeductionDataLoading ||
+                isUserFeeStructureLoading ||
+                isDynamicSurgeLoading
+              }
             >
               User Commission & Deduction
             </button>
@@ -182,7 +182,9 @@ export default function PlatformFeeManagement() {
               }}
               onDeleteCommissionRate={async (id: string | number) => {
                 try {
-                  const response = await deleteStandardCommissionRate(id).unwrap();
+                  const response = await deleteStandardCommissionRate(
+                    id
+                  ).unwrap();
                   if (response?.success) standardRefetch();
                   return response;
                 } catch (error: any) {
@@ -223,7 +225,9 @@ export default function PlatformFeeManagement() {
               }}
               onDeleteCompensationRule={async (id: string | number) => {
                 try {
-                  const response = await deleteRaiderCompensationRole(id).unwrap();
+                  const response = await deleteRaiderCompensationRole(
+                    id
+                  ).unwrap();
                   if (response?.success) raiderRefetch();
                   return response;
                 } catch (error: any) {

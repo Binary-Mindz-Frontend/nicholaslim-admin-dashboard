@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import { Plus, BookOpen } from "lucide-react";
 import AllQuizShowTable from "./components/AllQuizShowTable";
 import QuizModal from "./components/QuizModal";
+import QuizAttemptsTable from "./components/QuizTable";
 
 const Quiz: React.FC = () => {
   const navigate = useNavigate();
@@ -26,7 +27,6 @@ const Quiz: React.FC = () => {
 
   const handleCreateQuiz = async (quizData: any) => {
     toast.loading("Creating quiz...");
-    console.log(quizData)
     try {
       const result = await createQuiz(quizData).unwrap();
 
@@ -163,7 +163,7 @@ const Quiz: React.FC = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 mb-8">
         <AllQuizShowTable
           quizzes={quizzes}
           onEdit={openEditModal}
@@ -171,6 +171,13 @@ const Quiz: React.FC = () => {
           onToggleActive={handleToggleActive}
           onAddQuestions={handleAddQuestions}
         />
+      </div>
+
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+        <h2 className="md:text-xl font-bold text-gray-800 px-6 py-4 border-b border-gray-200">
+          Quiz Results & Attempts
+        </h2>
+        <QuizAttemptsTable />
       </div>
 
       <QuizModal

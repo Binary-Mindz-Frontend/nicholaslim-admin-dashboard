@@ -176,12 +176,16 @@ export const CancelledIcons = () => {
       <path
         d="M64.8062 30.7305L55.7266 39.8843M55.7266 30.7305L64.8062 39.8843"
         stroke="white"
-        stroke-width="4"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
         d="M64.8062 30.7305L55.7266 39.8843M55.7266 30.7305L64.8062 39.8843"
         stroke="white"
-        stroke-width="4"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
@@ -274,37 +278,37 @@ export const DropIcons = () => {
       <path
         d="M40 12.5H55"
         stroke="#0088FF"
-        stroke-width="4"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
         d="M47.4922 5V20"
         stroke="#0088FF"
-        stroke-width="4"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
         d="M52.5 28.75V47.5C52.5 48.8261 51.9732 50.0979 51.0355 51.0355C50.0979 51.9732 48.8261 52.5 47.5 52.5H12.5C11.1739 52.5 9.90215 51.9732 8.96447 51.0355C8.02678 50.0979 7.5 48.8261 7.5 47.5V12.5C7.5 11.1739 8.02678 9.90215 8.96447 8.96447C9.90215 8.02678 11.1739 7.5 12.5 7.5H31.25"
         stroke="#0088FF"
-        stroke-width="4"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
         d="M52.5 37.4992L44.785 29.7842C43.8474 28.8469 42.5758 28.3203 41.25 28.3203C39.9242 28.3203 38.6526 28.8469 37.715 29.7842L15 52.4992"
         stroke="#0088FF"
-        stroke-width="4"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
         d="M22.5 27.5C25.2614 27.5 27.5 25.2614 27.5 22.5C27.5 19.7386 25.2614 17.5 22.5 17.5C19.7386 17.5 17.5 19.7386 17.5 22.5C17.5 25.2614 19.7386 27.5 22.5 27.5Z"
         stroke="#0088FF"
-        stroke-width="4"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
