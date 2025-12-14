@@ -1,4 +1,6 @@
-// src/components/PerformanceTrend.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+
 import {
   BarChart,
   Bar,
@@ -17,31 +19,33 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { useGetPerformanceTrendsQuery } from "@/redux/features/advertise/advertiseApi";
 
-const data = [
-  {
-    name: "Week 1",
-    impressions: 12000,
-    clicks: 2000,
-  },
-  {
-    name: "Week 2",
-    impressions: 14000,
-    clicks: 4500,
-  },
-  {
-    name: "Week 3",
-    impressions: 11000,
-    clicks: 2500,
-  },
-  {
-    name: "Week 4",
-    impressions: 11500,
-    clicks: 3000,
-  },
-];
+export default function PerformanceTrendsChart({
+  activeTab,
+}: {
+  activeTab: "USER" | "RAIDER";
+}) {
+  const [months, setMonths] = useState(1);
+   // or dynamically from props
 
-export default function PerformanceTrendsChart() {
+  // Fetch weekly stats using RTK Query
+  const { data, isLoading } = useGetPerformanceTrendsQuery({ role:activeTab, months });
+  console.log(data);
+
+  if (isLoading) return <p>Loading...</p>;
+
+  // Default to empty array if API returns nothing
+  const weeklyStats = data?.data?.weeklyStats || [];  
+
+  // Map data for recharts
+  const chartData = weeklyStats.map((stat: any) => ({
+    week: stat.week,
+    impressions: stat.impression,
+    clicks: stat.click,
+  }));
+
   return (
     <Card className="mt-10 shadow-lg border-0">
       <CardHeader className="pb-4">
@@ -49,28 +53,34 @@ export default function PerformanceTrendsChart() {
           <CardTitle className="text-2xl font-bold text-gray-900">
             Performance Trends
           </CardTitle>
-          <Select defaultValue="this-month">
+
+          {/* Month selector */}
+          <Select
+            defaultValue="1"
+            onValueChange={(value) => setMonths(Number(value))}
+          >
             <SelectTrigger className="w-40 border-gray-300">
-              <SelectValue>This Month</SelectValue>
+              <SelectValue>{months} Months</SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="this-month">This Month</SelectItem>
-              <SelectItem value="last-month">Last Month</SelectItem>
-              <SelectItem value="last-3-months">Last 3 Months</SelectItem>
+              <SelectItem value="1">1 Month</SelectItem>
+              <SelectItem value="2">2 Months</SelectItem>
+              <SelectItem value="3">3 Months</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </CardHeader>
+
       <CardContent>
         <div className="h-96 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={data}
+              data={chartData}
               margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis
-                dataKey="name"
+                dataKey="week"
                 tick={{ fill: "#6b7280", fontSize: 14 }}
                 axisLine={false}
                 tickLine={false}
@@ -79,8 +89,6 @@ export default function PerformanceTrendsChart() {
                 tick={{ fill: "#9ca3af", fontSize: 14 }}
                 axisLine={false}
                 tickLine={false}
-                ticks={[0, 4000, 8000, 12000, 16000]}
-                domain={[0, 16000]}
               />
               <Tooltip
                 contentStyle={{
@@ -100,19 +108,18 @@ export default function PerformanceTrendsChart() {
                 )}
               />
 
-              {/* Impressions - Teal Gradient */}
+              {/* Impressions */}
               <Bar
                 dataKey="impressions"
-                barSize={60}
-                radius={[20, 20, 0, 0]}
+                barSize={40}
+                radius={[10, 10, 0, 0]}
                 fill="url(#impressionsGradient)"
               />
-
-              {/* Clicks - Blue Gradient */}
+              {/* Clicks */}
               <Bar
                 dataKey="clicks"
-                barSize={60}
-                radius={[20, 20, 0, 0]}
+                barSize={40}
+                radius={[10, 10, 0, 0]}
                 fill="url(#clicksGradient)"
               />
 

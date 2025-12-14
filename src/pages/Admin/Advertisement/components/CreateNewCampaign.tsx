@@ -1,33 +1,78 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useState } from "react";
 import { Upload, Calendar } from "lucide-react";
+import { useUploadFileMutation } from "@/redux/features/fileUpload/fileuploadApi";
+import { useCreateAdvertisementMutation } from "@/redux/features/advertise/advertiseApi";
+import toast from "react-hot-toast";
 
-export default function CreateNewCampaign() {
-  // State for form fields
+interface CreateNewCampaignProps {
+  activeTab: "USER" | "RAIDER";
+}
+
+export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps) {
   const [campaignTitle, setCampaignTitle] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  // State to hold the uploaded file (or metadata)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleCreateCampaign = (e: React.FormEvent) => {
+  const [uploadFile] = useUploadFileMutation();
+  const [createAdvertisement] = useCreateAdvertisementMutation();
+
+  const handleCreateCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder logic for form submission
+
     if (!campaignTitle || !startDate || !endDate || !uploadedFile) {
-      alert("Please fill in all fields and upload a file.");
+      toast.error("Please fill in all fields and upload a file.");
       return;
     }
-    console.log("Creating new campaign:", {
-      campaignTitle,
-      startDate,
-      endDate,
-      file: uploadedFile.name,
-    });
-    // In a real application, you would send this data to an API
-    alert("Campaign created successfully (placeholder action)!");
+
+    setIsSubmitting(true);
+
+    try {
+      // 1️⃣ Upload the file
+      const uploadRes: any = await uploadFile(uploadedFile);
+      const uploadedUrl = uploadRes?.data?.data?.[0];
+
+      if (!uploadedUrl) {
+        toast.error("File upload failed!");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 2️⃣ Prepare payload with dynamic create_for
+      const payload = {
+        create_for: activeTab, // "USER" or "RAIDER"
+        ad_title: campaignTitle,
+        ad_image: uploadedUrl,
+        start_date: new Date(startDate).toISOString(),
+        end_date: new Date(endDate).toISOString(),
+      };
+
+      // 3️⃣ Create advertisement
+      const result: any = await createAdvertisement(payload);
+
+      if (result?.data?.success) {
+        toast.success(result.data.message);
+        // Reset form
+        setCampaignTitle("");
+        setStartDate("");
+        setEndDate("");
+        setUploadedFile(null);
+      } else {
+        toast.error(result?.error?.data?.message || "Failed to create campaign");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong!");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
+    if (e.target.files?.length) {
       setUploadedFile(e.target.files[0]);
     } else {
       setUploadedFile(null);
@@ -36,13 +81,13 @@ export default function CreateNewCampaign() {
 
   return (
     <div className="bg-white p-4 md:p-8 rounded-md">
-      <div className="max-w-4xl mx-auto bg-white rounded-3xl  p-6 md:p-8 ">
-        <h2 className="text-3xl font-bold text-gray-900 mb-10">
-          Create New Campaign
+      <div className="max-w-4xl mx-auto bg-white rounded-3xl p-6 md:p-8">
+        <h2 className="text-3xl text-center font-bold text-gray-900 mb-10">
+          Create New Campaign ({activeTab})
         </h2>
 
         <form onSubmit={handleCreateCampaign} className="space-y-8">
-          {/* Campaign Title Input */}
+          {/* Campaign Title */}
           <div>
             <label
               htmlFor="campaign-title"
@@ -55,13 +100,13 @@ export default function CreateNewCampaign() {
               type="text"
               value={campaignTitle}
               onChange={(e) => setCampaignTitle(e.target.value)}
-              placeholder="Enter title for notification"
+              placeholder="Enter title for campaign"
               className="w-full px-5 py-4 border border-gray-300 rounded-xl text-lg focus:ring-yellow-500 focus:border-yellow-500"
               required
             />
           </div>
 
-          {/* Photo/Video Upload Area (Dashed border box) */}
+          {/* Upload Box */}
           <div className="pt-4">
             <label
               htmlFor="file-upload"
@@ -84,71 +129,58 @@ export default function CreateNewCampaign() {
                 </p>
                 {uploadedFile && (
                   <p className="text-green-600 text-sm mt-2 font-semibold">
-                    File uploaded: {uploadedFile.name}
+                    File selected: {uploadedFile.name}
                   </p>
                 )}
               </div>
             </label>
           </div>
 
-          {/* Date and Time Inputs */}
+          {/* Date Inputs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Starting Date & Time */}
             <div>
-              <label
-                htmlFor="start-date"
-                className="block text-xl font-medium text-gray-800 mb-4"
-              >
+              <label className="block text-xl font-medium text-gray-800 mb-4">
                 Starting Date & Time
               </label>
               <div className="relative">
                 <input
-                  id="start-date"
-                  type="text" // Using text to display placeholder clearly, but could be 'datetime-local'
-                  onFocus={(e) => (e.target.type = "datetime-local")}
-                  onBlur={(e) => (e.target.type = "text")}
+                  type="datetime-local"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  placeholder="Enter date & time"
-                  className="w-full px-5 py-4 border border-gray-300 rounded-xl text-lg focus:ring-yellow-500 focus:border-yellow-500"
+                  className="w-full px-5 py-4 border border-gray-300 cursor-pointer rounded-xl text-lg focus:ring-yellow-500 focus:border-yellow-500"
                   required
                 />
-                <Calendar className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                <Calendar className="absolute cursor-pointer right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
               </div>
             </div>
 
-            {/* Ending Date & Time */}
             <div>
-              <label
-                htmlFor="end-date"
-                className="block text-xl font-medium text-gray-800 mb-4"
-              >
+              <label className="block text-xl font-medium text-gray-800 mb-4">
                 Ending Date & Time
               </label>
               <div className="relative">
                 <input
-                  id="end-date"
-                  type="text" // Using text to display placeholder clearly, but could be 'datetime-local'
-                  onFocus={(e) => (e.target.type = "datetime-local")}
-                  onBlur={(e) => (e.target.type = "text")}
+                  type="datetime-local"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  placeholder="Enter date & time"
-                  className="w-full px-5 py-4 border border-gray-300 rounded-xl text-lg focus:ring-yellow-500 focus:border-yellow-500"
+                  className="w-full px-5 py-4 border border-gray-300 cursor-pointer rounded-xl text-lg focus:ring-yellow-500 focus:border-yellow-500"
                   required
                 />
-                <Calendar className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                <Calendar className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none cursor-pointer" />
               </div>
             </div>
           </div>
 
-          {/* Submission Button */}
+          {/* Submit Button */}
           <div className="pt-6 flex justify-center">
             <button
               type="submit"
-              className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-12 rounded-xl text-xl shadow-lg transition-colors w-full md:w-auto cursor-pointer"
+              disabled={isSubmitting}
+              className={`bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-12 rounded-xl text-xl shadow-lg transition-colors w-full md:w-auto cursor-pointer ${
+                isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              Create new Campaign
+              {isSubmitting ? "Creating..." : "Create new Campaign"}
             </button>
           </div>
         </form>

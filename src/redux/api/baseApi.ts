@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { logout } from "../features/auth/authSlice";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "http://10.10.20.45:3000/api/v1",
+  baseUrl: "http://10.10.20.130:3000/api/v1",
   prepareHeaders: (headers, { getState }) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const token = (getState() as any).auth.accessToken;
@@ -16,9 +16,9 @@ const baseQuery = fetchBaseQuery({
 });
 
 const redirectToLogin = () => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('accessToken');
-    window.location.href = '/login';
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("accessToken");
+    window.location.href = "/login";
   }
 };
 
@@ -56,7 +56,10 @@ export const baseApi = createApi({
     "Policy",
     "Content",
     "Notification",
-    "Coins"
+    "Coins",
+    "Incentives",
+    "Advertisements",
+    "fileUpload",
   ],
   endpoints: () => ({}),
 });

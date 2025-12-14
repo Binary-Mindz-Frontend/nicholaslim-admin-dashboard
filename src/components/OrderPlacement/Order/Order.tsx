@@ -50,7 +50,7 @@ export default function OrderPlacementPage() {
                 value="bulk"
                 className="px-6 py-3 text-center cursor-pointer shadow rounded-full font-medium transition-colors  data-[state=active]:bg-[#FFFAE6] data-[state=active]:border-[#FC0] data-[state=active]:text-gray-900
               data-[state=inactive]:bg-white data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-900             "
-              >
+              > 
                 Bulk Order
               </TabsTrigger>
             </TabsList>
