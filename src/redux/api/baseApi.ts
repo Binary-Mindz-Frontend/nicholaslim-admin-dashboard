@@ -23,15 +23,33 @@ const redirectToLogin = () => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
+//   const result = await baseQuery(args, api, extraOptions);
+
+//   if (result?.error?.status === 401 || result?.error?.status === 403) {
+//     api.dispatch(logout());
+//     redirectToLogin();
+//   }
+//   return result;
+// };
 const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   const result = await baseQuery(args, api, extraOptions);
 
-  if (result?.error?.status === 401 || result?.error?.status === 403) {
+  const url = typeof args === "string" ? args : args.url;
+
+  const isLoginApi = url === "/auth/login";
+
+  if (
+    !isLoginApi &&
+    (result?.error?.status === 401 || result?.error?.status === 403)
+  ) {
     api.dispatch(logout());
     redirectToLogin();
   }
+
   return result;
 };
+
 
 export const baseApi = createApi({
   reducerPath: "api",
