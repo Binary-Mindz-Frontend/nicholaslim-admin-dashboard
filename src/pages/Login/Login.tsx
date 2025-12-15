@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
 import { useLoginMutation } from "@/redux/features/auth/authApi";
 import { setCredentials } from "@/redux/features/auth/authSlice";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch } from "@/redux/hook";
 import toast from "react-hot-toast";
 
@@ -123,9 +123,9 @@ const Login: React.FC = () => {
               >
                 Password
               </label>
-              <a href="#" className="text-sm text-gray-500 hover:text-gray-700">
+              <Link to="/forgot-password" className="text-sm text-gray-500 hover:text-gray-700">
                 Forgot Password?
-              </a>
+              </Link>
             </div>
             <div className="relative">
               <input

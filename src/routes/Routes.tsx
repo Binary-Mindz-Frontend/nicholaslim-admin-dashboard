@@ -53,6 +53,9 @@ import OrderConfirmed from "@/pages/OrderConfirmed/OrderConfirmed";
 import Login from "@/pages/Login/Login";
 import Quiz from "@/pages/Admin/QuizManagement/Quiz";
 import AdminRoute from "./AdminRoute";
+import ForgotPassword from "@/pages/ForgotPassword/ForgotPassword";
+import VerifyOtp from "@/pages/VerifyOtp/VerifyOtp";
+import ResetPassword from "@/pages/ResetPassword/ResetPassword";
 
 const routes = createBrowserRouter([
   {
@@ -345,6 +348,18 @@ const routes = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+  },
+  {
+    path: "/verify-otp",
+    element: <VerifyOtp />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
   },
 ]);
 
