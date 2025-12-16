@@ -37,7 +37,7 @@ const IncentiveManagementPage: React.FC = () => {
 
         <IncentivesList/>
 
-        <CreateIncentiveDialog open={openCreate} onOpenChange={setOpenCreate} />
+        <CreateIncentiveDialog open={openCreate} onOpenChange={setOpenCreate} incentiveToEdit={null} />
       </div>
     </main>
   )

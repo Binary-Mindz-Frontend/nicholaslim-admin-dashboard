@@ -11,7 +11,7 @@ import { useCreateIncentiveMutation, useUpdateIncentiveMutation } from "@/redux/
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
-  incentiveToEdit: any | null // New prop for editing incentive
+  incentiveToEdit: any // New prop for editing incentive
 }
 
 const CreateIncentiveDialog: React.FC<Props> = ({ open, onOpenChange, incentiveToEdit }) => {
