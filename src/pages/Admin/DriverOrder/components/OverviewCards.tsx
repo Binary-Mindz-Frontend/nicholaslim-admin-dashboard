@@ -1,14 +1,19 @@
-import { Clock, Trophy, Star, Users } from "lucide-react";
+import { Clock, Trophy, Star, Users, UserPlus } from "lucide-react";
+import { CompetitionConfig } from "@/types/driverOrderCompetition";
 
-const metrics = [
-  { icon: Clock, label: "Timeout", value: "8 seconds" },
-  { icon: Trophy, label: "Ranking Weight", value: "80%" },
-  { icon: Star, label: "Rating Weight", value: "30%" },
-  { icon: Users, label: "Follower Weight", value: "70%" },
-  { icon: Users, label: "Maximum Drivers to Join", value: "5" },
-];
+interface OverviewCardsProps {
+  config?: CompetitionConfig;
+}
 
-export function OverviewCards() {
+export function OverviewCards({ config }: OverviewCardsProps) {
+  const metrics = [
+    { icon: Clock, label: "Timeout", value: `${config?.challenges_timeout || 8} seconds` },
+    { icon: Trophy, label: "Ranking Weight", value: `${config?.rank_weight || 0}%` },
+    { icon: Star, label: "Rating Weight", value: `${config?.rating_weight || 0}%` },
+    { icon: Users, label: "Follower Weight", value: `${config?.followers_weight || 0}%` },
+    { icon: UserPlus, label: "Maximum Drivers to Join", value: `${config?.max_users_to_join || 5}` },
+  ];
+
   return (
     <section className="mb-8">
       <h2 className="mb-4 text-xl font-semibold text-slate-900">Overview</h2>
