@@ -23,7 +23,7 @@ export const advertiseApi = baseApi.injectEndpoints({
     // Get Advertisement by ID
     getAdvertisementById: builder.query({
       query: (id) => `/advertise/${id}`,
-      providesTags: (result, error, id) => [{ type: "Advertisements", id }],
+      providesTags: ["Advertisements"],
     }),
 
     // Update Advertisement
@@ -33,10 +33,7 @@ export const advertiseApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: updatedAdvertisement,
       }),
-      invalidatesTags: (result, error, { id }) => [
-        "Advertisements",
-        { type: "Advertisements", id },
-      ],
+      invalidatesTags: ["Advertisements"],
     }),
 
     // Delete Advertisement
@@ -45,9 +42,8 @@ export const advertiseApi = baseApi.injectEndpoints({
         url: `/advertise/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: (result, error, id) => [
-        "Advertisements",
-        { type: "Advertisements", id },
+      invalidatesTags: [
+        "Advertisements"
       ],
     }),
 
@@ -58,9 +54,8 @@ export const advertiseApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: { status },
       }),
-      invalidatesTags: (result, error, { id }) => [
-        "Advertisements",
-        { type: "Advertisements", id },
+      invalidatesTags: [
+        "Advertisements"
       ],
     }),
 
@@ -92,7 +87,7 @@ export const advertiseApi = baseApi.injectEndpoints({
     // Get Stats for Single Advertisement
     getAdvertisementStats: builder.query({
       query: (id) => `/advertise/${id}/stats`,
-      providesTags: (result, error, id) => [{ type: "Advertisements", id }],
+      providesTags: ["Advertisements"],
     }),
 
     // Record Impression on Advertisement
@@ -101,7 +96,7 @@ export const advertiseApi = baseApi.injectEndpoints({
         url: `/advertise/${id}/impression`,
         method: "POST",
       }),
-      invalidatesTags: (result, error, id) => [{ type: "Advertisements", id }],
+      invalidatesTags: ["Advertisements"],
     }),
 
     // Record Click on Advertisement
@@ -110,7 +105,7 @@ export const advertiseApi = baseApi.injectEndpoints({
         url: `/advertise/${id}/click`,
         method: "POST",
       }),
-      invalidatesTags: (result, error, id) => [{ type: "Advertisements", id }],
+      invalidatesTags: ["Advertisements"],
     }),
   }),
 });
