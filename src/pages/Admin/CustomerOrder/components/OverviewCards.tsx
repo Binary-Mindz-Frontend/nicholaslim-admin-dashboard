@@ -1,45 +1,50 @@
 import { CheckCircle2, Clock, Star, Zap } from "lucide-react";
 
-interface OverviewMetric {
-  id: string;
-  label: string;
-  value: string | number;
-  icon: React.ReactNode;
+interface OverviewCardsProps {
+  metrics: {
+    is_new_customer_weight: number;
+    completedOrders: number;
+    followerWeight: number;
+    autoConfirmed: number;
+  };
 }
 
-const mockOverviewMetrics: OverviewMetric[] = [
-  {
-    id: "new-customers",
-    label: "New Customers",
-    value: "10%",
-    icon: <Clock className="h-6 w-6 text-slate-600" />,
-  },
-  {
-    id: "completed-orders",
-    label: "Completed Orders",
-    value: "5+ Orders (10%)",
-    icon: <CheckCircle2 className="h-6 w-6 text-slate-600" />,
-  },
-  {
-    id: "avg-rating",
-    label: "Avg Customer Rating",
-    value: "80%",
-    icon: <Star className="h-6 w-6 text-slate-600" />,
-  },
-  {
-    id: "auto-confirmed",
-    label: "Auto Confirmed Orders",
-    value: "530 Orders",
-    icon: <Zap className="h-6 w-6 text-slate-600" />,
-  },
-];
+export function OverviewCards({ metrics }: OverviewCardsProps) {
+  const overviewMetrics = [
+    {
+      id: "new-customers",
+      label: "New Customers",
+      value: `${metrics.is_new_customer_weight}%`,
+      icon: <Clock className="h-6 w-6 text-slate-600" />,
+    },
+    {
+      id: "completed-orders",
+      label: "Completed Orders",
+      value: `${metrics.completedOrders}+ Orders`,
+      icon: <CheckCircle2 className="h-6 w-6 text-slate-600" />,
+    },
+    {
+      id: "follower-weight",
+      label: "Follower Weight",
+      value: `${metrics.followerWeight}%`,
+      icon: <Star className="h-6 w-6 text-slate-600" />,
+    },
+    {
+      id: "auto-confirmed",
+      label: "Auto Confirmed Orders",
+      value: `${metrics.autoConfirmed} Orders`,
+      icon: <Zap className="h-6 w-6 text-slate-600" />,
+    },
+  ];
 
-export function OverviewCards() {
+  // Debug: Log metrics when they change
+  console.log('Current metrics in OverviewCards:', metrics);
+
   return (
     <div>
       <h2 className="mb-4 text-sm font-semibold text-slate-900">Overview</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {mockOverviewMetrics.map((metric) => (
+        {overviewMetrics.map((metric) => (
           <div
             key={metric.id}
             className="rounded-lg border border-slate-200 bg-white p-4"
