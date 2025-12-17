@@ -37,9 +37,6 @@ export function OverviewCards({ metrics }: OverviewCardsProps) {
     },
   ];
 
-  // Debug: Log metrics when they change
-  console.log('Current metrics in OverviewCards:', metrics);
-
   return (
     <div>
       <h2 className="mb-4 text-sm font-semibold text-slate-900">Overview</h2>

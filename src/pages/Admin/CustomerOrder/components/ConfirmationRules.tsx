@@ -43,7 +43,7 @@ export function ConfirmationRules({
               max="100"
               value={settings.newCustomer}
               onChange={(e) => handleInputChange("newCustomer", e.target.value)}
-              className="h-11 w-full border-slate-300 text-right text-base font-medium focus:border-slate-400"
+              className="h-11 w-full border-slate-300 text-base font-medium focus:border-slate-400"
               disabled={isLoading}
             />
             <span className="text-base font-medium text-slate-900">%</span>
@@ -61,7 +61,7 @@ export function ConfirmationRules({
               min="0"
               value={settings.completedOrders}
               onChange={(e) => handleInputChange("completedOrders", e.target.value)}
-              className="h-11 w-full border-slate-300 text-right text-base font-medium focus:border-slate-400"
+              className="h-11 w-full border-slate-300 text-base font-medium focus:border-slate-400"
               disabled={isLoading}
             />
             <Plus className="h-6 w-6 text-slate-400" />
@@ -98,7 +98,7 @@ export function ConfirmationRules({
         <Button
           onClick={onSave}
           disabled={isLoading}
-          className="bg-blue-600 px-8 py-2 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-blue-600 px-8 py-2 text-white hover:bg-blue-700 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <>
