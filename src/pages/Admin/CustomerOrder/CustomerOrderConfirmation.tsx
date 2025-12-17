@@ -6,16 +6,16 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 interface LocalSettings {
-  new_customer_percentage: number;
-  completed_order_required: number;
-  follower_weight: number;
+  is_new_customer_weight: number;
+  completed_orders_weight: number;
+  followers_weight: number;
 }
 
 export default function CustomerOrderConfirmation() {
   const [localSettings, setLocalSettings] = useState<LocalSettings>({
-    new_customer_percentage: 10,
-    completed_order_required: 5,
-    follower_weight: 80,
+    is_new_customer_weight: 0,
+    completed_orders_weight: 0,
+    followers_weight: 0,
   });
   
   const { 
@@ -34,24 +34,25 @@ export default function CustomerOrderConfirmation() {
   // Initialize local state when data loads
   useEffect(() => {
     if (configData?.data) {
-      const config = configData.data;
+      const config = configData.data[0];
       setLocalSettings({
-        new_customer_percentage: config.new_customer_percentage || 10,
-        completed_order_required: config.completed_order_required || 5,
-        follower_weight: config.follower_weight || 80,
+        is_new_customer_weight: config.is_new_customer_weight,
+        completed_orders_weight: config.completed_orders_weight,
+        followers_weight: config.followers_weight,
       });
     }
   }, [configData]);
 
   const handleSaveSettings = async () => {
-    if (!configData?.data?.id) {
-      toast.error("Configuration not found");
-      return;
-    }
+    // if (!configData?.data[0]?.id) {
+    //   toast.error("Configuration not found");
+    //   return;
+    // }
+    console.log(localSettings, "localSettings");
     
     try {
       await updateConfig({
-        id: configData.data.id,
+        id: configData.data[0].id,
         data: localSettings
       }).unwrap();
       
@@ -72,9 +73,9 @@ export default function CustomerOrderConfirmation() {
 
   // Convert keys for the ConfirmationRules component
   const getComponentSettings = () => ({
-    newCustomer: localSettings.new_customer_percentage,
-    completedOrders: localSettings.completed_order_required,
-    followerWeight: localSettings.follower_weight,
+    newCustomer: localSettings.is_new_customer_weight,
+    completedOrders: localSettings.completed_orders_weight,
+    followerWeight: localSettings.followers_weight,
   });
 
   // Handle setting changes from ConfirmationRules component
@@ -83,9 +84,9 @@ export default function CustomerOrderConfirmation() {
     value: number
   ) => {
     const keyMap = {
-      newCustomer: 'new_customer_percentage',
-      completedOrders: 'completed_order_required',
-      followerWeight: 'follower_weight',
+      newCustomer: 'is_new_customer_weight',
+      completedOrders: 'completed_orders_weight',
+      followerWeight: 'followers_weight',
     } as const;
     
     handleSettingChange(keyMap[key], value);
@@ -118,10 +119,10 @@ export default function CustomerOrderConfirmation() {
 
         <OverviewCards 
           metrics={{
-            is_new_customer_weight: localSettings.new_customer_percentage,
-            completedOrders: localSettings.completed_order_required,
-            followerWeight: localSettings.follower_weight,
-            autoConfirmed: statusData?.data?.auto_confirmed_orders || 0,
+            is_new_customer_weight: localSettings.is_new_customer_weight,
+            completedOrders: localSettings.completed_orders_weight,
+            followerWeight: localSettings.followers_weight,
+            autoConfirmed: statusData?.data?.auto_confirmation_count,
           }}
         />
         
@@ -132,8 +133,8 @@ export default function CustomerOrderConfirmation() {
           isLoading={updateLoading}
         />
         
-        {/* <ConfirmationRatioChart data={statusData?.data} /> */}
-        <ConfirmationRatioChart />
+        <ConfirmationRatioChart data={statusData?.data} />
+        {/* <ConfirmationRatioChart /> */}
       </div>
     </div>
   );

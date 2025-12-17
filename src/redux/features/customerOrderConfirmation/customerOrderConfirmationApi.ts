@@ -27,7 +27,7 @@ const customerOrderConfirmationApi = baseApi.injectEndpoints({
     }),
 
     updateCustomerOrderConfirmation: build.mutation({
-      query: ({ id, ...data }) => ({
+      query: ({ id, data }) => ({
         url: `/customer-order-confirmation/${id}`,
         method: "PATCH",
         body: data,
