@@ -10,7 +10,15 @@ const usersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Users"],
     }),
+
+    getOwnProfile: builder.query({
+      query: () => ({
+        url: "/users/me",
+        method: "GET",
+      }),
+      providesTags: ["Users"],
+    })
   }),
 });
 
-export const { useAddCustomRoleUserMutation } = usersApi;
+export const { useAddCustomRoleUserMutation, useGetOwnProfileQuery } = usersApi;
