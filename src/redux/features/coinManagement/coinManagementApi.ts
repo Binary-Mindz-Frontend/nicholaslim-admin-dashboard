@@ -1,3 +1,4 @@
+// coinManagementApi.ts
 import { baseApi } from "@/redux/api/baseApi";
 
 const coinManagementApi = baseApi.injectEndpoints({
@@ -5,6 +6,22 @@ const coinManagementApi = baseApi.injectEndpoints({
     getCoins: builder.query({
       query: () => ({
         url: "/coin-management",
+        method: "GET",
+      }),
+      providesTags: ["Coins"],
+    }),
+
+    getAllUsersCoinsHistory: builder.query({
+      query: () => ({
+        url: "/coin-management/reedom-coin-history-all-users",
+        method: "GET",
+      }),
+      providesTags: ["Coins"],
+    }),
+
+    getUserCoinHistoryById: builder.query({
+      query: (id) => ({
+        url: `/coin-management/user-wallet-history/${id}`,
         method: "GET",
       }),
       providesTags: ["Coins"],
@@ -38,9 +55,11 @@ const coinManagementApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { 
+export const {
   useGetCoinsQuery,
+  useGetAllUsersCoinsHistoryQuery,
+  useGetUserCoinHistoryByIdQuery,
   useAddCoinMutation,
   useUpdateCoinMutation,
-  useDeleteCoinMutation
- } = coinManagementApi;
+  useDeleteCoinMutation,
+} = coinManagementApi;
