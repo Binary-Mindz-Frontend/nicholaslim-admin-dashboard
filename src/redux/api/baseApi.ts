@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { logout } from "../features/auth/authSlice";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: "http://10.10.20.130:3000/api/v1",
   prepareHeaders: (headers, { getState }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
     const token = (getState() as any).auth.accessToken;
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
@@ -22,7 +23,7 @@ const redirectToLogin = () => {
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 // const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 //   const result = await baseQuery(args, api, extraOptions);
 
