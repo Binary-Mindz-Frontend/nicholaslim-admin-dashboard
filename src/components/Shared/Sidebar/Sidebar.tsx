@@ -4,6 +4,31 @@ import { menuItems } from "./MenuItems";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout } from "@/redux/features/auth/authSlice";
+import { useGetRoleUserPermissionsQuery } from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
+
+// Map menu IDs to backend modules
+const MENU_TO_MODULE_MAP: Record<string, string> = {
+  // Main menu items mapping
+  "users": "user",
+  "drivers": "raider",
+  "order": "order",
+  "live-map": "live_map",
+  "support": "support_dispute",
+  "payments": "payment_transaction",
+  "notifications": "notification",
+  "reports": "report_analytics",
+  "vehicle-management": "vechicle_pricing",
+  "wallet": "wallet",
+  "coin-system": "coin",
+  "quiz": "quiz",
+  "advertisement": "advertisement",
+  "platform-fee": "platform_fee",
+  "content-management": "content_management",
+  "driver-order-competition": "driver_order_competition",
+  "customer-order-confirmation": "customer_order_confirmation",
+  "order-placement": "order_placement",
+  "admin": "user", // Admin has user permissions
+};
 
 export function Sidebar() {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(
@@ -11,18 +36,18 @@ export function Sidebar() {
   );
   const [activeItem, setActiveItem] = useState<string>("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [filteredMenuItems, setFilteredMenuItems] = useState(menuItems);
+
+  const { data: roleBasedAccessControlData } = useGetRoleUserPermissionsQuery("");
   
-  // For navigation - if using React Router
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch(); // Initialize dispatch
+  const dispatch = useDispatch();
 
-  // Sync active item with current route
   useEffect(() => {
     const currentPath = location.pathname.replace('/', '');
     if (currentPath) {
       setActiveItem(currentPath);
-      // Expand parent if this is a child route
       const parentItem = findParentItem(currentPath);
       if (parentItem && parentItem !== currentPath) {
         setExpandedItems(prev => new Set(prev).add(parentItem));
@@ -30,7 +55,26 @@ export function Sidebar() {
     }
   }, [location.pathname]);
 
-  // Helper function to find parent item for a child
+  // Filter menu items based on permissions
+  useEffect(() => {
+    if (roleBasedAccessControlData?.permissions) {
+      const userPermissions = roleBasedAccessControlData.permissions;
+      
+      const filteredItems = menuItems.filter(item => {
+        // Always show dashboard and logout
+        if (item.id === "" || item.id === "login") return true;
+        
+        const moduleName = MENU_TO_MODULE_MAP[item.id];
+        if (!moduleName) return true; // Show items without module mapping
+        
+        // Check if user has any permission for this module
+        return userPermissions[moduleName] && userPermissions[moduleName].length > 0;
+      });
+      
+      setFilteredMenuItems(filteredItems);
+    }
+  }, [roleBasedAccessControlData]);
+
   const findParentItem = (childId: string): string | null => {
     for (const item of menuItems) {
       if (item.children) {
@@ -54,7 +98,6 @@ export function Sidebar() {
   const handleItemClick = (id: string, hasChildren: boolean, isChild: boolean = false) => {
     setActiveItem(id);
     
-    // Special handling for logout
     if (id === "login") {
       handleLogout();
       return;
@@ -63,34 +106,25 @@ export function Sidebar() {
     if (hasChildren && !isChild) {
       toggleExpand(id);
     } else {
-      // Navigate to the page - replace with your navigation method
       navigateToPage(id);
     }
     
-    // Close sidebar on mobile when item is clicked
     if (window.innerWidth < 1024) {
       setIsSidebarOpen(false);
     }
   };
 
   const handleLogout = () => {
-    // Dispatch logout action
     dispatch(logout());
-    
-    // Navigate to login page or home page
     navigate("/login");
     
-    // Close sidebar on mobile
     if (window.innerWidth < 1024) {
       setIsSidebarOpen(false);
     }
   };
 
   const navigateToPage = (pageId: string) => {
-    // Skip navigation for logout
     if (pageId === "login") return;
-    
-    // If using React Router
     navigate(`/${pageId}`);
   };
 
@@ -102,20 +136,16 @@ export function Sidebar() {
     setIsSidebarOpen(false);
   };
 
-  // Recursive function to render menu items (for potential nested children)
   const renderMenuItems = (items: typeof menuItems, level: number = 0) => {
     return items.map((item) => {
       const isExpanded = expandedItems.has(item.id);
       const hasChildren = !!(item.children && item.children.length > 0);
       const isItemActive = item.id === activeItem;
       const isChildActive = hasChildren && item.children?.some(child => child.id === activeItem);
-      
-      // Special styling for logout button
       const isLogoutButton = item.id === "login";
 
       return (
         <div key={item.id} className="">
-          {/* Parent Item */}
           <button
             onClick={() => handleItemClick(item.id, hasChildren, level > 0)}
             className={`w-full flex items-center cursor-pointer gap-3 px-4 py-2.5 rounded-lg font-medium transition-colors relative group ${
@@ -130,7 +160,6 @@ export function Sidebar() {
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-lg" />
             )}
             
-            {/* Red indicator for logout */}
             {isLogoutButton && level === 0 && (
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500 rounded-l-lg" />
             )}
@@ -151,7 +180,6 @@ export function Sidebar() {
             )}
           </button>
 
-          {/* Child Items - don't show for logout */}
           {hasChildren && isExpanded && !isLogoutButton && (
             <div className={`mt-1 space-y-1 ${level === 0 ? 'ml-4 border-l border-slate-200 pl-4' : 'ml-2 pl-2'}`}>
               {item.children?.map((child) => {
@@ -183,12 +211,9 @@ export function Sidebar() {
     });
   };
 
-  // Sidebar content component to avoid duplication
   const SidebarContent = () => (
     <>
-      {/* Header */}
       <div className="flex items-center justify-between lg:justify-start gap-2 mb-4">
-        {/* Close button for mobile */}
         <button
           onClick={closeSidebar}
           className="lg:hidden p-1 rounded-md hover:bg-slate-200 transition-colors"
@@ -197,16 +222,14 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Menu Items */}
       <nav className="space-y-1">
-        {renderMenuItems(menuItems)}
+        {renderMenuItems(filteredMenuItems)}
       </nav>
     </>
   );
 
   return (
     <>
-      {/* Mobile Header with Menu Button */}
       <div className="lg:hidden fixed top-0 left-0 right-0 border-b border-slate-200 p-4 z-50 shadow-sm bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -223,7 +246,6 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Overlay for mobile */}
       {isSidebarOpen && (
         <div 
           className="lg:hidden fixed inset-0 bg-black/90 bg-opacity-50 z-40"
@@ -231,7 +253,6 @@ export function Sidebar() {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`
           fixed lg:top-25 md:pb-32 left-0 h-full lg:min-h-screen overflow-y-auto no-scrollbar
@@ -243,7 +264,6 @@ export function Sidebar() {
         <SidebarContent />
       </aside>
 
-      {/* Add padding for mobile header */}
       <div className="lg:hidden h-16" />
     </>
   );

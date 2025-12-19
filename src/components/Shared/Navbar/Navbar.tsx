@@ -1,10 +1,16 @@
 import { Search } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import logo from "@/assets/images/logo.svg";
+import { useGetOwnProfileQuery } from "@/redux/features/users/usersApi";
 
 const Navbar = () => {
+  const { data: user } = useGetOwnProfileQuery("");
+
+  const userName = user?.data?.username;
+  const userRole = user?.data?.role.name;
+
   return (
-    <nav className="w-full hidden fixed left-0 top-0 lg:block bg-white border-b border-[#E6EFF5] z-999">
+    <nav className="w-full hidden fixed left-0 top-0 lg:block bg-white border-b border-[#E6EFF5] z-10">
       <div className="flex items-center px-4 gap-4">
         {/* Left Section - 50% */}
         <div className="flex  items-center gap-6 w-1/2">
@@ -44,8 +50,8 @@ const Navbar = () => {
           {/* Profile */}
           <div className="flex items-center gap-3 px-4">
             <div className="text-right">
-              <p className="text-sm font-medium text-gray-900">Nicholas</p>
-              <p className="text-xs text-gray-500">Admin</p>
+              <p className="text-sm font-medium text-gray-900">{userName}</p>
+              <p className="text-xs text-gray-500">{userRole}</p>
             </div>
 
             <Avatar className="w-10 h-10 ring ring-amber-500">
