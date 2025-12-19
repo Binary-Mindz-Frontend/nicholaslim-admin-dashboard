@@ -8,6 +8,7 @@ const Navbar = () => {
 
   const userName = user?.data?.username;
   const userRole = user?.data?.role.name;
+  const userImage = user?.data?.image;
 
   return (
     <nav className="w-full hidden fixed left-0 top-0 lg:block bg-white border-b border-[#E6EFF5] z-10">
@@ -56,8 +57,8 @@ const Navbar = () => {
 
             <Avatar className="w-10 h-10 ring ring-amber-500">
               <AvatarImage
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nicholas"
-                alt="Nicholas"
+                src={userImage}
+                alt={userName}
               />
               <AvatarFallback>NA</AvatarFallback>
             </Avatar>
