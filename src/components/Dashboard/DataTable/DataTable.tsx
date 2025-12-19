@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 
 export type Column<T> =
@@ -44,7 +42,7 @@ const CustomTable = <T extends object>({ columns, data }: ITableProps<T>) => {
               key={rowIndex}
               className={`${
                 rowIndex % 2 === 1 ? "bg-[#F7F9FA]" : "bg-white"
-              } pointer-events-auto`}   // ✅ Allow interactivity
+              } pointer-events-auto`}
             >
               {columns.map((column, colIndex) => {
                 const content = column.cell
@@ -62,9 +60,12 @@ const CustomTable = <T extends object>({ columns, data }: ITableProps<T>) => {
                     "                                
                   >
                     <div
-                      className="inline-block"
+                      className="inline-block max-w-[150px] overflow-hidden text-ellipsis"
                       onClick={(e) => e.stopPropagation()}    
                       onMouseDown={(e) => e.stopPropagation()}
+                      title={column.accessor && typeof row[column.accessor] === 'string' 
+                        ? String(row[column.accessor]) 
+                        : undefined}
                     >
                       {content}
                     </div>
