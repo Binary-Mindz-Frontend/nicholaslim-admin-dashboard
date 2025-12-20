@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
-import { useGetRiderProfilesQuery, useUpdateRiderProfileMutation } from "@/redux/features/drivers/driversApi";
-import { Eye, MoreVertical } from "lucide-react";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { useGetRiderProfilesQuery, useVerifyRiderProfileMutation } from "@/redux/features/drivers/driversApi";
+import { Eye, MoreVertical,  Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast"; // For showing toast messages
-import { PopoverArrow } from "@radix-ui/react-popover";
+
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 // Declare the TRequest and Registration interfaces directly here
 interface TRequest {
@@ -25,10 +30,13 @@ interface UseRequestColumnsParams {
   raider_name?: string;
 }
 
+type RiderVerificationStatus = "APPROVED" | "REJECTED";
+
 export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
   const [requests, setRequests] = useState<TRequest[]>([]);
   const [totalItems, setTotalItems] = useState(0);
-  const [updateRiderProfile] = useUpdateRiderProfileMutation(); // Hook to update rider profile
+  const [verifyRiderProfile] =
+  useVerifyRiderProfileMutation();
 
   // Build query params - only include defined values
   const queryParams: UseRequestColumnsParams = {
@@ -60,24 +68,25 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
     }
   }, [data]);
 
-  const handleUpdateStatus = async (id: number, newStatus: string) => {
-  try {
-    const updatedData = {
-      verificationFromAdmin: newStatus,  // Remove "raider_" prefix
-    };
+  const handleUpdateStatus = async (
+    id: string | number,
+    status: RiderVerificationStatus
+  ) => {
+    try {
+      // We pass the object keys exactly as expected by your API mutation:
+      // raiderId (the path param) and verify (the path param)
+      await verifyRiderProfile({
+        raiderId: id,
+        verify: status,
+      }).unwrap();
 
-    const response = await updateRiderProfile({ id, data: updatedData }).unwrap();
-
-    if (response.success) {
-      toast.success(`Status updated to ${newStatus}`);
-    } else {
-      toast.error("Failed to update status");
+      toast.success(`Rider has been ${status.toLowerCase()} successfully`);
+    } catch (error) {
+      console.error("Verification failed:", error);
+      toast.error("Failed to update status. Please try again.");
     }
-  } catch (error) {
-    console.error("Update error:", error);
-    toast.error("Failed to update status");
-  }
-};
+  };
+
 
   // Define columns for the request data
   const requestColumns: Column<TRequest>[] = [
@@ -131,44 +140,48 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
       ),
     },
     {
-      header: "Action",
-      cell: (row) => (
-        <div className="flex items-center space-x-2">
-          {/* Eye Icon */}
-          <button className="p-1 text-gray-600 hover:text-gray-800">
-            <Eye className="h-5 w-5" />
-          </button>
+  header: "Action",
+  cell: (row) => (
+    <div className="flex items-center gap-2">
+     
+      {/* 3 Dot Menu */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
 
-          {/* Three Dot Button for Actions */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" className="p-1 text-gray-600 hover:text-gray-800">
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-36">
-              <PopoverArrow />
-              <div className="flex flex-col space-y-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleUpdateStatus(row.id, "APPROVED")}
-                >
-                  Approve
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleUpdateStatus(row.id, "REJECTED")}
-                >
-                  Reject
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      ),
-    },
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem
+            onClick={() => console.log("View rider", row.id)}
+            className="flex items-center gap-2"
+          >
+            <Eye className="h-4 w-4" />
+            View
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={() => handleUpdateStatus(row.id, "APPROVED")}
+            className="flex items-center gap-2 text-green-600"
+          >
+            <Check className="h-4 w-4" />
+            Accept
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={() => handleUpdateStatus(row.id, "REJECTED")}
+            className="flex items-center gap-2 text-red-600"
+          >
+            <X className="h-4 w-4" />
+            Reject
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  ),
+}
+
   ];
 
   return { requestColumns, requests, isLoading, isError, totalItems };

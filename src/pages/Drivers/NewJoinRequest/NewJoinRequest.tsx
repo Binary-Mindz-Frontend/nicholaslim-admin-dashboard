@@ -66,14 +66,14 @@ export default function NewJoinRequest() {
           <CustomTable columns={requestColumns} data={requests} />
 
           <TablePagination
-  currentPage={currentPage}
-  totalItems={totalItems}
-  itemsPerPage={itemsPerPage}
-  onPageChange={(page: number) => {
-    console.log("Page changed to:", page);
-    setCurrentPage(page);
-  }}
-/>
+            currentPage={currentPage}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={(page: number) => {
+              console.log("Page changed to:", page);
+              setCurrentPage(page);
+            }}
+          />
         </>
       )}
     </div>

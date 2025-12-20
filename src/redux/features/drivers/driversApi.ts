@@ -8,39 +8,38 @@ const driversApi = baseApi.injectEndpoints({
                 url: "/auth/upload", // Your backend endpoint
                 method: "POST",
                 body: formData, // Send FormData object containing multiple files
-                // No need to set Content-Type header, the browser will do it automatically
             }),
         }),
 
-   getRiderProfiles: builder.query({
-    query: ({
-        raiderId,
-        raider_name,
-        raiderVerificationFromAdmin,
-        page = 1,
-        limit = 10,
-    }) => {
-        // Construct the URL with query parameters
-        let url = `/raider-profile/rider-profiles?page=${page}&limit=${limit}`;
+        getRiderProfiles: builder.query({
+            query: ({
+                raiderId,
+                raider_name,
+                raiderVerificationFromAdmin,
+                page = 1,
+                limit = 10,
+            }) => {
+                // Construct the URL with query parameters
+                let url = `/raider-profile/rider-profiles?page=${page}&limit=${limit}`;
 
-        // Add additional query parameters if they exist
-        if (raider_name) {
-            url += `&raider_name=${encodeURIComponent(raider_name)}`;
-        }
-        if (raiderId) {
-            url += `&raiderId=${raiderId}`;
-        }
-        if (raiderVerificationFromAdmin) {
-            url += `&raider_verificationFromAdmin=${raiderVerificationFromAdmin}`;
-        }
+                // Add additional query parameters if they exist
+                if (raider_name) {
+                    url += `&raider_name=${encodeURIComponent(raider_name)}`;
+                }
+                if (raiderId) {
+                    url += `&raiderId=${raiderId}`;
+                }
+                if (raiderVerificationFromAdmin) {
+                    url += `&raider_verificationFromAdmin=${raiderVerificationFromAdmin}`;
+                }
 
-        return {
-            url,  // Use the constructed URL with query params
-            method: "GET",  // Use the GET method instead of POST
-        };
-    },
-    providesTags: ["RiderProfiles"],  // Ensure you provide appropriate tags
-}),
+                return {
+                    url,  // Use the constructed URL with query params
+                    method: "GET",  // Use the GET method instead of POST
+                };
+            },
+            providesTags: ["RiderProfiles"],  // Ensure you provide appropriate tags
+        }),
 
 
         // NEW: Get single rider profile by ID
@@ -108,6 +107,24 @@ const driversApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["RiderProfiles"],
         }),
+
+      verifyRiderProfile: builder.mutation<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any, // Replace 'any' with your expected response type if preferred
+  { raiderId: string | number; verify: "APPROVED" | "REJECTED" | "PENDING" }
+>({
+  query: ({ raiderId, verify }) => ({
+    // Matches: /raider-profile/verify-rider/4/APPROVED
+    url: `/raider-profile/verify-rider/${raiderId}/${verify}`,
+    method: "PATCH",
+  }),
+  // This tells Redux to refetch getRiderProfiles and getRiderProfileById
+  invalidatesTags: (result, error, { raiderId }) => [
+    { type: "RiderProfiles", id: "LIST" },
+    { type: "RiderProfiles", id: raiderId },
+  ],
+}),
+
     }),
 });
 
@@ -121,4 +138,5 @@ export const {
     useUpdateRiderProfileMutation,
     useSuspendRiderProfileMutation,
     useUnsuspendRiderProfileMutation,
+    useVerifyRiderProfileMutation,
 } = driversApi;
