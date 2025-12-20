@@ -12,9 +12,10 @@ const coinManagementApi = baseApi.injectEndpoints({
     }),
 
     getAllUsersCoinsHistory: builder.query({
-      query: () => ({
-        url: "/coin-management/reedom-coin-history-all-users",
+      query: (params: { username?: string }) => ({
+        url: "/coin-management/coin-accounts",
         method: "GET",
+        params: params,
       }),
       providesTags: ["Coins"],
     }),
