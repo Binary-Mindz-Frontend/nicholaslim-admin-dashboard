@@ -4,21 +4,22 @@ import SCustomTable from "@/pages/Dashboard/_components/CutomTable";
 import TablePagination from "@/pages/Dashboard/_components/TablePagination";
 import { useGetWalletHistoryQuery } from "@/redux/features/wallet/walletApi";
 
-// import { useGetWalletHistoryQuery } from "@/redux/api/walletApi" // Assuming you have set up the API
+// Enums for transaction type and status
+enum WalletTransactionType {
+  PAYOUT = "PAYOUT",
+  PAYMENT = "PAYMENT",
+  REFUND = "REFUND",
+  DEDUCTION = "DEDUCTION",
+}
 
-// interface WalletHistory {
-//   id: number
-//   transactionId: string
-//   transactionType: string
-//   type: string
-//   amount: string
-//   status: string
-//   createdAt: string
-// }
+enum WalletTransactionStatus {
+  PENDING = "PENDING",
+  SUCCESS = "SUCCESS",
+  FAILED = "FAILED",
+}
 
 const SingleWalletTable: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // Get the ID from URL params
-  console.log(id);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
@@ -27,11 +28,10 @@ const SingleWalletTable: React.FC = () => {
     userId: id, // Pass the userId from URL
     page: currentPage,
     limit: itemsPerPage,
-    // type: "PAYMENT", // You can modify the type query based on requirement (optional)
+    type: WalletTransactionType.PAYMENT, // Example of using enum for dynamic type
   });
 
   const totalItems = data?.total || 0;
-
   const displayData = data?.data || [];
 
   const columns = [
@@ -42,6 +42,12 @@ const SingleWalletTable: React.FC = () => {
     {
       key: "transactionType" as const,
       label: "Transaction Type",
+      render: (value: string) => {
+        // Render transaction type dynamically based on the enum
+        return Object.values(WalletTransactionType).includes(value as WalletTransactionType)
+          ? value
+          : "Unknown Type";
+      },
     },
     {
       key: "createdAt" as const,
@@ -57,15 +63,21 @@ const SingleWalletTable: React.FC = () => {
       key: "status" as const,
       label: "Status",
       render: (status: string) => {
+        // Render status dynamically based on the enum
+        const statusEnum = WalletTransactionStatus[status as keyof typeof WalletTransactionStatus];
+
         const statusColors =
-          status === "SUCCESS"
+          statusEnum === WalletTransactionStatus.SUCCESS
             ? "bg-green-200 text-green-800"
-            : "bg-red-200 text-red-800";
+            : statusEnum === WalletTransactionStatus.FAILED
+            ? "bg-red-200 text-red-800"
+            : "bg-yellow-200 text-yellow-800";
+
         return (
           <span
             className={`inline-flex items-center justify-center ${statusColors} w-[90px] h-[32px] text-xs font-semibold rounded-sm`}
           >
-            {status}
+            {statusEnum || "Unknown Status"}
           </span>
         );
       },
@@ -76,9 +88,6 @@ const SingleWalletTable: React.FC = () => {
     <div>
       {isLoading && <div>Loading...</div>}
       {error && <div>Error loading wallet history</div>}
-
-
-      {/* <h2 className="text-2xl font-semibold mb-4">Wallet History for User</h2> */}
 
       <SCustomTable data={displayData} columns={columns} />
 
