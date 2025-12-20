@@ -24,7 +24,7 @@ import ContentManagementApp from "@/pages/Admin/ContentManagement/ContentManagem
 import PlatformFeeManagement from "@/pages/Admin/PlatformFeeManagement/PlatformFeeManagement";
 import DeliveryTypesPage from "@/pages/Dashboard/vehicleType-PricingModel/types-of-delivery/TypesOfDelivery";
 import UserWallet from "@/pages/Dashboard/Wallets/userWallet/UserWallet";
-import SingleUserWalletDetils from "@/pages/Dashboard/Wallets/userWallet/UserWalletDetails/SingleUserWalletDetils";
+import SingleUserWalletDetils from "@/pages/Dashboard/Wallets/userWallet/SingleUserWalletDetils";
 import DriverWallet from "@/pages/Dashboard/Wallets/driverWallet/DriverWallet";
 // import DriverWalletDetails from "@/pages/Dashboard/Wallets/driverWallet/DriverWalletDetails/DriverWalletDetails";
 import IncentiveManagementPage from "@/pages/Dashboard/Wallets/IncentinveManagement/IncentinveManagement";

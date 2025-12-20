@@ -8,6 +8,7 @@ import TablePagination from "@/pages/Dashboard/_components/TablePagination";
 import SCustomTable from "@/pages/Dashboard/_components/CutomTable";
 import { useNavigate } from "react-router-dom";
 import { useGetWalletQuery } from "@/redux/features/wallet/walletApi";
+import { FiSearch } from "react-icons/fi";
 // import { useGetWalletQuery } from "@/redux/api/walletApi" // Assuming you have set up the API
 
 interface Wallet {
@@ -99,13 +100,17 @@ const DriverWalletTable: React.FC = () => {
   return (
     <div>
       {/* Search Bar */}
-      <div className="mb-8">
+      <div className="mb-8 relative">
         <input
           type="text"
           placeholder="Search by Username or Email"
           value={searchQuery}
           onChange={handleSearchChange}
-          className="p-2.5 w-full max-w-md border-2 border-gray-300 rounded-lg  focus:outline-none focus:ring-2 focus:ring-yellow-500 transition duration-300 ease-in-out"
+          className="p-2.5 w-full max-w-md pl-10 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 transition duration-300 ease-in-out"
+        />
+        <FiSearch
+          size={20}
+          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
         />
       </div>
 

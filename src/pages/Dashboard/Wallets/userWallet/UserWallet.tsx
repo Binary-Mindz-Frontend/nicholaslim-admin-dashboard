@@ -1,7 +1,7 @@
 
 import { filterFields } from '../../_components/_data/filterData'
 import CustomFilterBar from '../../_components/FilterFieldCustom'
-import UserWalletTable from './_components/UserWalletTable'
+import UserWalletTable from './UserWalletTable'
 
 const UserWallet = () => {
 
