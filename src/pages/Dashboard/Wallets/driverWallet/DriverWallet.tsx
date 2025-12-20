@@ -1,34 +1,32 @@
-
-import { filterFields } from '../../_components/_data/filterData'
-import CustomFilterBar from '../../_components/FilterFieldCustom'
-import DriverWalletTable from './_components/DriverWalletTable'
+// import { filterFields } from "../../_components/_data/filterData";
+// import CustomFilterBar from "../../_components/FilterFieldCustom";
+import DriverWalletTable from "./DriverWalletTable";
 
 const DriverWallet = () => {
+  // const handleFilterChange = (filters: Record<string, string>) => {
+  //   console.log("Applied filters:", filters);
+  // };
 
-     const handleFilterChange = (filters: Record<string, string>) => {
-    console.log("Applied filters:", filters)
-  }
-
-  const handleResetFilter = () => {
-    console.log("Filters reset")
-  }
+  // const handleResetFilter = () => {
+  //   console.log("Filters reset");
+  // };
 
   return (
-    <div className='mx-6 sm:mx-12'>
-        <div>
-            <h1 className="text-3xl font-bold text-gray-900 my-6">Driver Wallet</h1>
-        </div>
-                    <section className="mb-8 ">
-                        <CustomFilterBar
-                        fields={filterFields}
-                        onFilterChange={handleFilterChange}
-                        onReset={handleResetFilter}
-                        showResetButton={true}
-                        />
-                    </section>
-            <DriverWalletTable />
+    <div className="mx-6 sm:mx-12">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 my-6">Driver Wallet</h1>
+      </div>
+      <section className="mb-8 ">
+        {/* <CustomFilterBar
+          fields={filterFields}
+          onFilterChange={handleFilterChange}
+          onReset={handleResetFilter}
+          showResetButton={true}
+        /> */}
+      </section>
+      <DriverWalletTable />
     </div>
-  )
-}
+  );
+};
 
-export default DriverWallet
+export default DriverWallet;

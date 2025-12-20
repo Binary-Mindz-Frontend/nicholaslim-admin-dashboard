@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { logout } from "../features/auth/authSlice";
 
@@ -83,6 +84,7 @@ export const baseApi = createApi({
     "RoleBasedAccessControl",
     "Transactions",
     "ServiceZones",
+    "Wallets",
   ],
   endpoints: () => ({}),
 });
