@@ -11,7 +11,16 @@ export const walletApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Wallets"],
     }),
+    getWalletHistory: builder.query({
+      query: ({ userId, page = 1, limit = 20, type }) => ({
+        url: `/wallet/user/walletHistory/${userId}`,
+        method: "GET",
+        params: { page, limit, type },
+      }),
+      providesTags: ["Wallets"],
+    }),
   }),
+
 });
 
-export const { useGetWalletQuery } = walletApi;
+export const { useGetWalletQuery ,useGetWalletHistoryQuery} = walletApi;

@@ -1,119 +1,101 @@
-
-
-
-
-import type React from "react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { FiTrash } from "react-icons/fi";
+import React, { useState } from "react";
+import { useParams } from "react-router-dom"; // For getting the ID from the URL
 import SCustomTable from "@/pages/Dashboard/_components/CutomTable";
 import TablePagination from "@/pages/Dashboard/_components/TablePagination";
+import { useGetWalletHistoryQuery } from "@/redux/features/wallet/walletApi";
+import { ArrowLeft } from "lucide-react";
+// import { useGetWalletHistoryQuery } from "@/redux/api/walletApi" // Assuming you have set up the API
 
-interface WalletDetails {
-  id: number
-  name: string
-  amount: number
-  type: string
-  transactionDate: string
+// interface WalletHistory {
+//   id: number
+//   transactionId: string
+//   transactionType: string
+//   type: string
+//   amount: string
+//   status: string
+//   createdAt: string
+// }
 
-}
+const DriverWalletHistoryTable: React.FC = () => {
+  const { id } = useParams<{ id: string }>(); // Get the ID from URL params
+  console.log(id);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
-const wallet : WalletDetails[] = [
-  { id: 1, name: "Ang Mo Kio", amount: 15, type: "Payout", transactionDate: "08 Oct 2025" },
-  { id: 2, name: "Punggol", amount: 15, type: "Payout", transactionDate: "08 Oct 2025" },
-  { id: 3, name: "Bishan", amount: 15, type: "Deduction", transactionDate: "08 Oct 2025" },
-  { id: 4, name: "Yishun", amount: 15, type: "Deduction", transactionDate: "08 Oct 2025" },
-  { id: 5, name: "Serangoon", amount: 15, type: "Payout", transactionDate: "08 Oct 2025" },
-  { id: 6, name: "Ang Mo Kio", amount: 15, type: "Deduction", transactionDate: "08 Oct 2025" },
-  { id: 7, name: "Punggol", amount: 15, type: "Payout", transactionDate: "08 Oct 2025" },
-  { id: 8, name: "Punggol", amount: 15, type: "Deduction", transactionDate: "08 Oct 2025" },
-  { id: 9, name: "Punggol", amount: 15, type: "Payout", transactionDate: "08 Oct 2025" },
-  { id: 10, name: "Clementi", amount: 15, type: "Payout", transactionDate: "08 Oct 2025" },
-]
+  // Query to fetch wallet history for a specific user
+  const { data, isLoading, error } = useGetWalletHistoryQuery({
+    userId: id, // Pass the userId from URL
+    page: currentPage,
+    limit: itemsPerPage,
+    // type: "PAYMENT", // You can modify the type query based on requirement (optional)
+  });
 
-const DriverWalletDetailsTable: React.FC = () => {
+  const totalItems = data?.total || 0;
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
-  const totalItems = 21
-
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const displayData = wallet.slice(startIndex, endIndex)
-
-
+  const displayData = data?.data || [];
 
   const columns = [
-      {
-      key: "id" as const,
+    {
+      key: "transactionId" as const,
       label: "Transaction ID",
     },
     {
-      key: "name" as const,
-      label: "NAME",
+      key: "transactionType" as const,
+      label: "Transaction Type",
     },
-     {
-      key: "transactionDate" as const,
-      label: "TRANSACTION DATE",
-      render: (value: number) => `$${value}`,
+    {
+      key: "createdAt" as const,
+      label: "Transaction Date",
+      render: (value: string) => new Date(value).toLocaleString(),
     },
     {
       key: "amount" as const,
-      label: "AMOUNT",
-       render: (value: number) => `$${value}`,
-    },   
-   {
-  label: "ACTION",
-  render: () => (
-    <div className="flex ">
-
-      <Button
-        variant="ghost"
-        size="sm"
-        className="p-2 h-auto cursor-pointer border border-[#FF4D4F] hover:bg-red-100"
-      >
-        <FiTrash size={16} className="text-[#FF4D4F]" />
-      </Button>
-    </div>
-  ),
-},
-{
-  key: "type" as const,
-  label: "TYPE",
-  render: (status: string) => {
-    const colors =
-      status === "Deduction"
-        ? "bg-[#FF4D4F33] text-[#FF4D4F]"
-        : "bg-[#CAE2B6] text-[#2F4F1F]"
-
-    return (
-      <span
-        className={`inline-flex items-center justify-center 
-          ${colors}
-          w-[90px] h-[32px]       
-          text-xs font-semibold rounded-sm`}
-      >
-        {status}
-      </span>
-    )
-  },
-}
-
-    
-  ]
+      label: "Amount",
+      render: (value: string) => `$${parseFloat(value).toFixed(2)}`,
+    },
+    {
+      key: "status" as const,
+      label: "Status",
+      render: (status: string) => {
+        const statusColors =
+          status === "SUCCESS"
+            ? "bg-green-200 text-green-800"
+            : "bg-red-200 text-red-800";
+        return (
+          <span
+            className={`inline-flex items-center justify-center ${statusColors} w-[90px] h-[32px] text-xs font-semibold rounded-sm`}
+          >
+            {status}
+          </span>
+        );
+      },
+    },
+  ];
 
   return (
-       <div>
-         <SCustomTable data={displayData} columns={columns}
-          />
-        <TablePagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-        />
-       </div>
-  )
-}
+    <div>
+      {isLoading && <div>Loading...</div>}
+      {error && <div>Error loading wallet history</div>}
 
-export default DriverWalletDetailsTable
+      <button
+        onClick={() => window.history.back()}
+        className="mb-4 px-6 py-2 bg-yellow-500 cursor-pointer text-white font-semibold rounded-lg flex items-center gap-2 hover:bg-yellow-600 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#00BFFF]"
+      >
+        <ArrowLeft className="w-5 h-5" /> Go Back
+      </button>
+
+      <h2 className="text-2xl font-semibold mb-4">Wallet History for Driver</h2>
+
+      <SCustomTable data={displayData} columns={columns} />
+
+      <TablePagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+      />
+    </div>
+  );
+};
+
+export default DriverWalletHistoryTable;
