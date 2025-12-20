@@ -4,6 +4,7 @@ import {useGetGoinReqestRiderProfilesQuery , useVerifyRiderProfileMutation } fro
 import { Eye, MoreVertical,  Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast"; // For showing toast messages
+import { useNavigate } from "react-router-dom";
 
 import {
   DropdownMenu,
@@ -44,6 +45,7 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
   const [totalItems, setTotalItems] = useState(0);
   const [verifyRiderProfile] =
   useVerifyRiderProfileMutation();
+  const navigate = useNavigate();
 
   // Build query params - only include defined values
   const queryParams = {
@@ -162,7 +164,7 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={() => console.log("View", row.id)}>
+              <DropdownMenuItem onClick={() => navigate(`/join-request/${row.id}`)}>
                 <Eye className="h-4 w-4 mr-2" /> View
               </DropdownMenuItem>
               <DropdownMenuItem 
