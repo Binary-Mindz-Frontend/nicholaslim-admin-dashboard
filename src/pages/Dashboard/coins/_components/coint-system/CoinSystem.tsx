@@ -36,44 +36,67 @@ const CoinSystem = () => {
   const openEdit = (row: any) => {
     setDialogMode("edit")
     setSelectedId(row.id)
+    
+    // Transform API response to form data
     setEditData({
       id: row.id,
-      eventTrigger: row.event_triggered,
-      coinAmount: row.coin_amount,
-      expiryDuration: new Date(row.expire_date).toISOString().split('T')[0],
-      coinValueInCent: row.coin_value_in_cent.toString()
+      key: row.key,
+      description: row.description,
+      coin_amount: row.coin_amount.toString(),
+      condition: row.condition || {},
+      expire_days: row.expire_days.toString(),
+      coin_value_in_cent: row.coin_value_in_cent.toString(),
+      is_active: row.is_active
     })
     setOpenDialog(true)
   }
 
-  const openDelete = (id: number, eventTrigger: string) => {
+  const openDelete = (id: number, key: string) => {
     setSelectedId(id)
-    setSelectedCoinName(eventTrigger)
+    
+    // Find the label for the key
+    const triggerLabels: Record<string, string> = {
+      "FIRST_SIGNUP": "First Signup",
+      "DAILY_LOGIN": "Daily Login",
+      "SHARE_ON_SOCIAL": "Share on Social",
+      "REFERRAL": "Referral",
+      "COMPLETED_ORDER": "Completed Orders"
+    }
+    
+    setSelectedCoinName(triggerLabels[key] || key)
     setOpenDeleteModal(true)
   }
 
   const handleSubmit = async (data: CoinFormData) => {
     try {
-      const payload = {
-        event_triggered: data.eventTrigger as 
-          | "FIRST_SIGNUP" 
-          | "DAILY_LOGIN" 
-          | "SHARE_ON_SOCIAL" 
-          | "REFERRAL" 
-          | "COMPLETED20_ORDER",
-        coin_amount: data.coinAmount,
-        expire_date: new Date(data.expiryDuration).toISOString(),
-        coin_value_in_cent: parseInt(data.coinValueInCent || "0")
+      // Prepare payload according to API schema
+      const payload: any = {
+        key: data.key,
+        description: data.description,
+        coin_amount: parseInt(data.coin_amount) || 0,
+        expire_days: parseInt(data.expire_days) || 0,
+        coin_value_in_cent: parseInt(data.coin_value_in_cent) || 0,
+        is_active: data.is_active
+      }
+
+      // Only include condition for COMPLETED_ORDER
+      if (data.key === "COMPLETED_ORDER" && data.condition) {
+        payload.condition = {}
+        
+        // Add maxPerDay if provided
+        if (data.condition.maxPerDay !== undefined) {
+          payload.condition.maxPerDay = parseInt(data.condition.maxPerDay.toString()) || 0
+        }
       }
 
       if (dialogMode === "add") {
         const result = await addCoin(payload).unwrap()
         if (result.success) {
-          toast.success("Coin added successfully!")
+          toast.success("Coin reward added successfully!")
           refetch()
           setOpenDialog(false)
         } else {
-          toast.error(result.message || "Failed to add coin")
+          toast.error(result.message || "Failed to add coin reward")
         }
       } else {
         if (!selectedId) return
@@ -82,16 +105,16 @@ const CoinSystem = () => {
           ...payload 
         }).unwrap()
         if (result.success) {
-          toast.success("Coin updated successfully!")
+          toast.success("Coin reward updated successfully!")
           refetch()
           setOpenDialog(false)
         } else {
-          toast.error(result.message || "Failed to update coin")
+          toast.error(result.message || "Failed to update coin reward")
         }
       }
     } catch (error: any) {
       console.error("Failed to submit coin:", error)
-      toast.error(error?.data?.message || `Failed to ${dialogMode === "add" ? "add" : "update"} coin`)
+      toast.error(error?.data?.message || `Failed to ${dialogMode === "add" ? "add" : "update"} coin reward`)
     }
   }
 
@@ -101,31 +124,31 @@ const CoinSystem = () => {
     try {
       const result = await deleteCoin(selectedId).unwrap()
       if (result.success) {
-        toast.success("Coin deleted successfully!")
+        toast.success("Coin reward deleted successfully!")
         refetch()
         setOpenDeleteModal(false)
         setSelectedId(null)
         setSelectedCoinName("")
       } else {
-        toast.error(result.message || "Failed to delete coin")
+        toast.error(result.message || "Failed to delete coin reward")
       }
     } catch (error: any) {
       console.error("Failed to delete coin:", error)
-      toast.error(error?.data?.message || "Failed to delete coin")
+      toast.error(error?.data?.message || "Failed to delete coin reward")
     }
   }
 
   return (
     <div className="mx-6 sm:mx-12">
       <div className="flex justify-between items-center my-6">
-        <h3 className="text-3xl font-bold text-gray-900">Coin System</h3>
+        <h3 className="text-3xl font-bold text-gray-900">Coin Reward System</h3>
 
         <Button
           onClick={openAdd}
           className="bg-[#FFCC00] cursor-pointer text-black text-lg px-6 py-3 font-semibold gap-2 hover:bg-yellow-500"
           disabled={isAdding || isUpdating || isDeleting}
         >
-          Add Coin
+          Add Coin Reward
         </Button>
       </div>
 
@@ -157,8 +180,8 @@ const CoinSystem = () => {
         }}
         onConfirm={handleDeleteConfirm}
         isLoading={isDeleting}
-        title="Delete Coin"
-        description={`Are you sure you want to delete the "${selectedCoinName}" coin? This action cannot be undone.`}
+        title="Delete Coin Reward"
+        description={`Are you sure you want to delete the "${selectedCoinName}" coin reward? This action cannot be undone.`}
       />
     </div>
   )
