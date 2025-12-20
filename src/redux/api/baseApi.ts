@@ -81,6 +81,8 @@ export const baseApi = createApi({
     "DriverOrderCompetition",
     "CustomerOrderConfirmation",
     "Users",
+    "RoleBasedAccessControl",
+    "Transactions",
   ],
   endpoints: () => ({}),
 });

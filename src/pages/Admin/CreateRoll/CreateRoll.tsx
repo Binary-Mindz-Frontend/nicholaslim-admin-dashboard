@@ -148,6 +148,8 @@ export default function CreateRollForm() {
       return;
     }
 
+    toast.loading('Creating user...');
+
     try {
       let imageUrl = '';
       
@@ -176,14 +178,16 @@ export default function CreateRollForm() {
       if (imageUrl) {
         userData.image = imageUrl;
       }
-
-      console.log('Sending user data:', userData);
-
-      toast.loading('Creating user...', { id: 'create' });
       
       const response = await addCustomRoleUser(userData).unwrap();
-      toast.dismiss('create');
-      
+
+      if (!response.success) {
+        toast.dismiss();
+        toast.error(response.message || 'Failed to create user. Please try again.');
+        return;
+      }
+
+      toast.dismiss();
       toast.success(response.message || 'User created successfully!');
 
       setFormData({
@@ -200,9 +204,7 @@ export default function CreateRollForm() {
       setShowPassword(false);
       
     } catch (error: any) {
-      toast.dismiss('upload');
-      toast.dismiss('create');
-      
+      toast.dismiss();
       console.error('API Error:', error);
       toast.error(error?.data?.message || 'Failed to create user. Please try again.');
     }
