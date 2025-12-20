@@ -19,8 +19,15 @@ export const walletApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Wallets"],
     }),
+    deleteTransaction: builder.mutation({
+      query: (id) => ({
+        url: `/wallet/remove/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Wallets"],
+    }),
   }),
 
 });
 
-export const { useGetWalletQuery ,useGetWalletHistoryQuery} = walletApi;
+export const { useGetWalletQuery ,useGetWalletHistoryQuery,useDeleteTransactionMutation} = walletApi;

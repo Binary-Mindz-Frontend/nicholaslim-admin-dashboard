@@ -1,9 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { useParams } from "react-router-dom"; // For getting the ID from the URL
 import SCustomTable from "@/pages/Dashboard/_components/CutomTable";
 import TablePagination from "@/pages/Dashboard/_components/TablePagination";
-import { useGetWalletHistoryQuery } from "@/redux/features/wallet/walletApi";
-import { ArrowLeft } from "lucide-react";
+import {
+  useGetWalletHistoryQuery,
+  useDeleteTransactionMutation,
+} from "@/redux/features/wallet/walletApi";
+import { ArrowLeft, Trash } from "lucide-react";
+import Swal from "sweetalert2";
 
 // Enums for transaction type and status
 enum WalletTransactionType {
@@ -35,6 +41,32 @@ const DriverWalletHistoryTable: React.FC = () => {
   const totalItems = data?.total || 0;
   const displayData = data?.data || [];
 
+  // Delete mutation
+  const [deleteTransaction] = useDeleteTransactionMutation();
+
+  const handleDelete = async (userId: string) => {
+    // Show SweetAlert2 confirmation dialog
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to delete this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, cancel!",
+      reverseButtons: true,
+    });
+
+    // If the user confirms, proceed with the delete operation
+    if (result.isConfirmed) {
+      try {
+        await deleteTransaction(userId).unwrap();
+        Swal.fire("Deleted!", "Transaction deleted successfully.", "success");
+      } catch (error) {
+        Swal.fire("Error!", "Failed to delete transaction.", "error");
+      }
+    }
+  };
+
   const columns = [
     {
       key: "transactionId" as const,
@@ -45,7 +77,9 @@ const DriverWalletHistoryTable: React.FC = () => {
       label: "Transaction Type",
       render: (value: string) => {
         // Dynamically render transaction type using the enum
-        return Object.values(WalletTransactionType).includes(value as WalletTransactionType)
+        return Object.values(WalletTransactionType).includes(
+          value as WalletTransactionType
+        )
           ? value
           : "Unknown Type";
       },
@@ -65,7 +99,10 @@ const DriverWalletHistoryTable: React.FC = () => {
       label: "Status",
       render: (status: string) => {
         // Dynamically render status using the enum
-        const statusEnum = WalletTransactionStatus[status as keyof typeof WalletTransactionStatus];
+        const statusEnum =
+          WalletTransactionStatus[
+            status as keyof typeof WalletTransactionStatus
+          ];
 
         const statusColors =
           statusEnum === WalletTransactionStatus.SUCCESS
@@ -82,6 +119,19 @@ const DriverWalletHistoryTable: React.FC = () => {
           </span>
         );
       },
+    },
+    {
+      label: "Action",
+      render: (_: any, row: any) => (
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleDelete(row.id)}
+            className="px-4 py-2 bg-red-500 cursor-pointer text-white rounded-lg hover:bg-red-600 transition duration-300 ease-in-out"
+          >
+            <Trash />
+          </button>
+        </div>
+      ),
     },
   ];
 
