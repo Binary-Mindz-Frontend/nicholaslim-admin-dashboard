@@ -160,7 +160,16 @@ const driversApi = baseApi.injectEndpoints({
                 method: "GET",
             }),
             // Use specific tags so it refreshes when the rider is updated
-            providesTags: ( id) => [{ type: "RiderProfiles", id }],
+            providesTags: (id) => [{ type: "RiderProfiles", id }],
+        }),
+
+        // Inside your ordersApi.ts
+        getUserOrderHistory: builder.query({
+            query: ({ id, page = 1, limit = 10 }) => ({
+                url: `/order/user-history/${id}?page=${page}&limit=${limit}`,
+                method: "GET",
+            }),
+            providesTags: ({ id }) => [{ type: "RiderProfiles", id }],
         }),
 
     }),
@@ -179,4 +188,5 @@ export const {
     useVerifyRiderProfileMutation,
     useGetGoinReqestRiderProfilesQuery,
     useGetRaiderAdminDataQuery,
+    useGetUserOrderHistoryQuery,
 } = driversApi;
