@@ -41,6 +41,35 @@ const driversApi = baseApi.injectEndpoints({
             providesTags: ["RiderProfiles"],  // Ensure you provide appropriate tags
         }),
 
+        getGoinReqestRiderProfiles: builder.query({
+    query: ({
+        raiderId,
+        raider_name,
+        raiderVerificationFromAdmin,
+        loginType, // New parameter
+        page = 1,
+        limit = 10,
+    }) => {
+        const params = new URLSearchParams();
+        
+        // Add basic pagination
+        params.append("page", page.toString());
+        params.append("limit", limit.toString());
+
+        // Add optional filters
+        if (raiderId) params.append("raiderId", raiderId.toString());
+        if (raider_name) params.append("raider_name", raider_name);
+        if (raiderVerificationFromAdmin) params.append("raider_verificationFromAdmin", raiderVerificationFromAdmin);
+        if (loginType) params.append("loginType", loginType); // Handle DIRECT_SIGNIN etc.
+
+        return {
+            url: `/raider-profile/rider-profiles?${params.toString()}`,
+            method: "GET",
+        };
+    },
+    providesTags: ["RiderProfiles"],
+}),
+
 
         // NEW: Get single rider profile by ID
         getRiderProfileById: builder.query({
@@ -119,7 +148,7 @@ const driversApi = baseApi.injectEndpoints({
     method: "PATCH",
   }),
   // This tells Redux to refetch getRiderProfiles and getRiderProfileById
-  invalidatesTags: (result, error, { raiderId }) => [
+  invalidatesTags: ( { raiderId }) => [
     { type: "RiderProfiles", id: "LIST" },
     { type: "RiderProfiles", id: raiderId },
   ],
@@ -139,4 +168,5 @@ export const {
     useSuspendRiderProfileMutation,
     useUnsuspendRiderProfileMutation,
     useVerifyRiderProfileMutation,
+    useGetGoinReqestRiderProfilesQuery,
 } = driversApi;

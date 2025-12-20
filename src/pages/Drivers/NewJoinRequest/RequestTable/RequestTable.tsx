@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
-import { useGetRiderProfilesQuery, useVerifyRiderProfileMutation } from "@/redux/features/drivers/driversApi";
+import {useGetGoinReqestRiderProfilesQuery , useVerifyRiderProfileMutation } from "@/redux/features/drivers/driversApi";
 import { Eye, MoreVertical,  Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast"; // For showing toast messages
@@ -12,15 +12,20 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 
+interface TRegistration {
+  raider_name: string;
+  contact_number: string;
+  vehicle_type: string;
+  created_at: string;
+  // ... add other fields as needed
+}
 // Declare the TRequest and Registration interfaces directly here
 interface TRequest {
   id: number;
-  raiderId: number;
-  raider_name: string;
-  contact_number: string;
-  requestedDate: string;
-  verificationStatus: string;
+  raider_status: string;
   raider_verificationFromAdmin: string;
+  created_at: string; // This is your "Requested Date"
+  registrations: TRegistration[]; // This is an array
 }
 
 interface UseRequestColumnsParams {
@@ -28,6 +33,8 @@ interface UseRequestColumnsParams {
   limit?: number;
   raiderId?: number;
   raider_name?: string;
+  loginType?: string;  
+  raiderVerificationFromAdmin?: string;  
 }
 
 type RiderVerificationStatus = "APPROVED" | "REJECTED";
@@ -39,9 +46,13 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
   useVerifyRiderProfileMutation();
 
   // Build query params - only include defined values
-  const queryParams: UseRequestColumnsParams = {
+  const queryParams = {
     page: params.page || 1,
     limit: params.limit || 10,
+    raiderId: params.raiderId,
+    raider_name: params.raider_name,
+    loginType: "DIRECT_SIGNIN",  
+    raiderVerificationFromAdmin: "PENDING",  
   };
 
   if (params.raiderId !== undefined) {
@@ -52,18 +63,13 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
   }
 
   // Fetch the data using useGetRiderProfilesQuery hook with filtered params
-  const { data, isLoading, isError } = useGetRiderProfilesQuery(queryParams);
-  console.log("Fetched pagination data:", data?.data?.data
+  const { data, isLoading, isError } = useGetGoinReqestRiderProfilesQuery(queryParams);
+  console.log("Fetched pagination data:", data?.data?.data);
+ 
 
-  );
-  // Effect to update requests data when query result changes
   useEffect(() => {
     if (data?.data?.data) {
-      // Filter the data to only show PENDING verification requests
-      const filteredRequests = data.data.data.filter((request: TRequest) =>
-        request.raider_verificationFromAdmin === "PENDING"
-      );
-      setRequests(filteredRequests); // Set filtered requests
+      setRequests(data.data.data); 
       setTotalItems(data.data.pagination?.total || 0);
     }
   }, [data]);
@@ -94,94 +100,88 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
       header: "Driver ID",
       accessor: "id",
       cell: (row) => (
-        <a href="#" className="text-blue-600 underline">
-          D{row.id}
-        </a>
+        <span className="font-medium text-blue-600">D{row.id}</span>
       ),
     },
     {
       header: "Name",
-      accessor: "raider_name",
-      cell: (row) => (
-        <a href="#" className="text-blue-600 underline">
-          {row.raider_name || "N/A"}
-        </a>
-      ),
-    },
-    {
-      header: "Contact",
-      accessor: "contact_number",
-      cell: (row) => (
-        <span>
-          {row.contact_number ? row.contact_number.slice(0, 2) + "******" + row.contact_number.slice(-2) : "N/A"}
-        </span>
-      ),
-    },
-    {
-      header: "Requested Date",
-      accessor: "requestedDate",
       cell: (row) => {
-        const date = new Date(row.requestedDate);
-        const formatted = date.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        });
-        return <span>{formatted}</span>;
+        // Safe access to the first registration object
+        const reg = row.registrations?.[0];
+        return <span>{reg?.raider_name || "N/A"}</span>;
       },
     },
     {
-      header: "Verification Status",
-      accessor: "verificationStatus",
-      cell: () => (
-        <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-          PENDING
+      header: "Contact",
+      cell: (row) => {
+        const contact = row.registrations?.[0]?.contact_number;
+        if (!contact) return <span>N/A</span>;
+        // Masking logic
+        return <span>{contact.slice(0, 3)}****{contact.slice(-3)}</span>;
+      },
+    },
+    {
+      header: "Requested Date",
+      cell: (row) => {
+        // Use outer created_at if inner one isn't available
+        const dateStr = row.registrations?.[0]?.created_at || row.created_at;
+        if (!dateStr) return <span>N/A</span>;
+        
+        const date = new Date(dateStr);
+        return <span>{date.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })}</span>;
+      },
+    },
+    {
+      header: "Vehicle Type",
+      cell: (row) => (
+        <span className="uppercase text-xs font-semibold">
+          {row.registrations?.[0]?.vehicle_type || "N/A"}
         </span>
       ),
     },
     {
-  header: "Action",
-  cell: (row) => (
-    <div className="flex items-center gap-2">
-     
-      {/* 3 Dot Menu */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem
-            onClick={() => console.log("View rider", row.id)}
-            className="flex items-center gap-2"
-          >
-            <Eye className="h-4 w-4" />
-            View
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onClick={() => handleUpdateStatus(row.id, "APPROVED")}
-            className="flex items-center gap-2 text-green-600"
-          >
-            <Check className="h-4 w-4" />
-            Accept
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onClick={() => handleUpdateStatus(row.id, "REJECTED")}
-            className="flex items-center gap-2 text-red-600"
-          >
-            <X className="h-4 w-4" />
-            Reject
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  ),
-}
-
+      header: "Verification Status",
+      cell: (row) => (
+        <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          {row.raider_verificationFromAdmin}
+        </span>
+      ),
+    },
+    {
+      header: "Action",
+      cell: (row) => (
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={() => console.log("View", row.id)}>
+                <Eye className="h-4 w-4 mr-2" /> View
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleUpdateStatus(row.id, "APPROVED")}
+                className="text-green-600"
+              >
+                <Check className="h-4 w-4 mr-2" /> Accept
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleUpdateStatus(row.id, "REJECTED")}
+                className="text-red-600"
+              >
+                <X className="h-4 w-4 mr-2" /> Reject
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ),
+    },
   ];
 
   return { requestColumns, requests, isLoading, isError, totalItems };
