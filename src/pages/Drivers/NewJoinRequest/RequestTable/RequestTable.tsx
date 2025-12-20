@@ -18,6 +18,7 @@ interface TRegistration {
   contact_number: string;
   vehicle_type: string;
   created_at: string;
+  email_address?: string;
   // ... add other fields as needed
 }
 // Declare the TRequest and Registration interfaces directly here
@@ -26,7 +27,9 @@ interface TRequest {
   raider_status: string;
   raider_verificationFromAdmin: string;
   created_at: string; // This is your "Requested Date"
-  registrations: TRegistration[]; // This is an array
+  registrations: TRegistration[]; 
+
+  
 }
 
 interface UseRequestColumnsParams {
@@ -76,13 +79,18 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
     }
   }, [data]);
 
-  const handleUpdateStatus = async (
+ const handleUpdateStatus = async (
     id: string | number,
-    status: RiderVerificationStatus
+    status: RiderVerificationStatus,
+    registrations: TRegistration[] // Add this parameter
   ) => {
+    // Check if user is NOT registered
+    if (!registrations || registrations.length === 0) {
+      toast.error("User not registered. Cannot approve/reject.");
+      return;
+    }
+
     try {
-      // We pass the object keys exactly as expected by your API mutation:
-      // raiderId (the path param) and verify (the path param)
       await verifyRiderProfile({
         raiderId: id,
         verify: status,
@@ -111,6 +119,15 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
         // Safe access to the first registration object
         const reg = row.registrations?.[0];
         return <span>{reg?.raider_name || "N/A"}</span>;
+      },
+    },
+    {
+      header: "Email",
+      cell: (row) => {
+        const email = row.registrations?.[0]?.email_address;
+        if (!email) return <span>N/A</span>;
+        // Masking logic
+        return <span>{email}</span>;
       },
     },
     {
@@ -168,13 +185,13 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
                 <Eye className="h-4 w-4 mr-2" /> View
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => handleUpdateStatus(row.id, "APPROVED")}
+                onClick={() => handleUpdateStatus(row.id, "APPROVED", row.registrations)}
                 className="text-green-600"
               >
                 <Check className="h-4 w-4 mr-2" /> Accept
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => handleUpdateStatus(row.id, "REJECTED")}
+                onClick={() => handleUpdateStatus(row.id, "REJECTED", row.registrations)}
                 className="text-red-600"
               >
                 <X className="h-4 w-4 mr-2" /> Reject
