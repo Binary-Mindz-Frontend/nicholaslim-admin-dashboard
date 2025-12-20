@@ -8,7 +8,6 @@ interface IncentivesManagementProps {
 
 const IncentivesManagement: React.FC<IncentivesManagementProps> = () => {
   const { data: incentiveStats } = useGetAllIncentiveStatsQuery(undefined);
-  console.log(incentiveStats?.data);
   const { countAll, countActiveRider, countOngoing, totalAmountGiven } =
     incentiveStats?.data || {};
 
@@ -24,7 +23,7 @@ const IncentivesManagement: React.FC<IncentivesManagementProps> = () => {
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard icon="package" label="Total Incentives" value={countAll} />
-        <MetricCard icon="gift" label="Total Amount Given" value={totalAmountGiven} />
+        <MetricCard icon="gift" label="Total Amount Given" value={totalAmountGiven?.toFixed(2)} />
         <MetricCard icon="users" label="Active Drivers" value={countActiveRider} />
         <MetricCard icon="calendar" label="Ongoing Incentives" value={countOngoing} />
       </div>

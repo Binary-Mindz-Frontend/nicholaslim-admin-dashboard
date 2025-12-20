@@ -26,7 +26,7 @@ import DeliveryTypesPage from "@/pages/Dashboard/vehicleType-PricingModel/types-
 import UserWallet from "@/pages/Dashboard/Wallets/userWallet/UserWallet";
 import SingleUserWalletDetils from "@/pages/Dashboard/Wallets/userWallet/UserWalletDetails/SingleUserWalletDetils";
 import DriverWallet from "@/pages/Dashboard/Wallets/driverWallet/DriverWallet";
-import DriverWalletDetails from "@/pages/Dashboard/Wallets/driverWallet/DriverWalletDetails/DriverWalletDetails";
+// import DriverWalletDetails from "@/pages/Dashboard/Wallets/driverWallet/DriverWalletDetails/DriverWalletDetails";
 import IncentiveManagementPage from "@/pages/Dashboard/Wallets/IncentinveManagement/IncentinveManagement";
 import CoinPage from "@/pages/Dashboard/coins/CoinPage";
 import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
@@ -56,6 +56,7 @@ import AdminRoute from "./AdminRoute";
 import ForgotPassword from "@/pages/ForgotPassword/ForgotPassword";
 import VerifyOtp from "@/pages/VerifyOtp/VerifyOtp";
 import ResetPassword from "@/pages/ResetPassword/ResetPassword";
+import DriverWalletDetailsTable from "@/pages/Dashboard/Wallets/driverWallet/DriverWalletHistoryTable";
 
 const routes = createBrowserRouter([
   {
@@ -274,7 +275,7 @@ const routes = createBrowserRouter([
       },
       {
         path: "wallet-driver/:id",
-        element: <DriverWalletDetails />,
+        element: <DriverWalletDetailsTable />,
       },
       {
         path: "incentive-management",
