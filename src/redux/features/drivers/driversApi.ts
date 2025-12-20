@@ -42,33 +42,33 @@ const driversApi = baseApi.injectEndpoints({
         }),
 
         getGoinReqestRiderProfiles: builder.query({
-    query: ({
-        raiderId,
-        raider_name,
-        raiderVerificationFromAdmin,
-        loginType, // New parameter
-        page = 1,
-        limit = 10,
-    }) => {
-        const params = new URLSearchParams();
-        
-        // Add basic pagination
-        params.append("page", page.toString());
-        params.append("limit", limit.toString());
+            query: ({
+                raiderId,
+                raider_name,
+                raiderVerificationFromAdmin,
+                loginType, // New parameter
+                page = 1,
+                limit = 10,
+            }) => {
+                const params = new URLSearchParams();
 
-        // Add optional filters
-        if (raiderId) params.append("raiderId", raiderId.toString());
-        if (raider_name) params.append("raider_name", raider_name);
-        if (raiderVerificationFromAdmin) params.append("raider_verificationFromAdmin", raiderVerificationFromAdmin);
-        if (loginType) params.append("loginType", loginType); // Handle DIRECT_SIGNIN etc.
+                // Add basic pagination
+                params.append("page", page.toString());
+                params.append("limit", limit.toString());
 
-        return {
-            url: `/raider-profile/rider-profiles?${params.toString()}`,
-            method: "GET",
-        };
-    },
-    providesTags: ["RiderProfiles"],
-}),
+                // Add optional filters
+                if (raiderId) params.append("raiderId", raiderId.toString());
+                if (raider_name) params.append("raider_name", raider_name);
+                if (raiderVerificationFromAdmin) params.append("raider_verificationFromAdmin", raiderVerificationFromAdmin);
+                if (loginType) params.append("loginType", loginType); // Handle DIRECT_SIGNIN etc.
+
+                return {
+                    url: `/raider-profile/rider-profiles?${params.toString()}`,
+                    method: "GET",
+                };
+            },
+            providesTags: ["RiderProfiles"],
+        }),
 
 
         // NEW: Get single rider profile by ID
@@ -137,22 +137,31 @@ const driversApi = baseApi.injectEndpoints({
             invalidatesTags: ["RiderProfiles"],
         }),
 
-      verifyRiderProfile: builder.mutation<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  any, // Replace 'any' with your expected response type if preferred
-  { raiderId: string | number; verify: "APPROVED" | "REJECTED" | "PENDING" }
->({
-  query: ({ raiderId, verify }) => ({
-    // Matches: /raider-profile/verify-rider/4/APPROVED
-    url: `/raider-profile/verify-rider/${raiderId}/${verify}`,
-    method: "PATCH",
-  }),
-  // This tells Redux to refetch getRiderProfiles and getRiderProfileById
-  invalidatesTags: ( { raiderId }) => [
-    { type: "RiderProfiles", id: "LIST" },
-    { type: "RiderProfiles", id: raiderId },
-  ],
-}),
+        verifyRiderProfile: builder.mutation<
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            any, // Replace 'any' with your expected response type if preferred
+            { raiderId: string | number; verify: "APPROVED" | "REJECTED" | "PENDING" }
+        >({
+            query: ({ raiderId, verify }) => ({
+                // Matches: /raider-profile/verify-rider/4/APPROVED
+                url: `/raider-profile/verify-rider/${raiderId}/${verify}`,
+                method: "PATCH",
+            }),
+            // This tells Redux to refetch getRiderProfiles and getRiderProfileById
+            invalidatesTags: ({ raiderId }) => [
+                { type: "RiderProfiles", id: "LIST" },
+                { type: "RiderProfiles", id: raiderId },
+            ],
+        }),
+
+        getRaiderAdminData: builder.query({
+            query: (id) => ({
+                url: `/my-raider/admin/${id}`,
+                method: "GET",
+            }),
+            // Use specific tags so it refreshes when the rider is updated
+            providesTags: ( id) => [{ type: "RiderProfiles", id }],
+        }),
 
     }),
 });
@@ -169,4 +178,5 @@ export const {
     useUnsuspendRiderProfileMutation,
     useVerifyRiderProfileMutation,
     useGetGoinReqestRiderProfilesQuery,
+    useGetRaiderAdminDataQuery,
 } = driversApi;

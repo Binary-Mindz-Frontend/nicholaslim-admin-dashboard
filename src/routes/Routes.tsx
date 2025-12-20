@@ -57,6 +57,8 @@ import ForgotPassword from "@/pages/ForgotPassword/ForgotPassword";
 import VerifyOtp from "@/pages/VerifyOtp/VerifyOtp";
 import ResetPassword from "@/pages/ResetPassword/ResetPassword";
 import ViewDriverProfile from "@/pages/Drivers/NewJoinRequest/ViewDriverProfile/ViewDriverProfile";
+import FavouriteDriversPage from "@/pages/Users/UsersApp/FavouriteDrivers/FavouriteDriversPage";
+import OrderHistoryPage from "@/pages/Users/UsersApp/OrderHistory/OrderHistoryPage";
 
 const routes = createBrowserRouter([
   {
@@ -156,7 +158,7 @@ const routes = createBrowserRouter([
         path: "driver-list/:id",
         element: <EditDriverProfile />,
       },
-     
+
       {
         path: "add-new-driver",
         element: <AddNewDriver />,
@@ -165,7 +167,7 @@ const routes = createBrowserRouter([
         path: "new-join-request",
         element: <NewJoinRequest />,
       },
-       {
+      {
         path: "join-request/:id",
         element: <ViewDriverProfile />,
       },
@@ -348,6 +350,14 @@ const routes = createBrowserRouter([
         path: "order-confirm",
         element: <OrderConfirmed />,
       },
+      {
+        path: "favourite-drivers/:id",
+        element: <FavouriteDriversPage />,
+      },
+      {
+        path: "order-history/:id",
+        element: <OrderHistoryPage />,
+      }
     ],
   },
 
