@@ -83,6 +83,7 @@ export const baseApi = createApi({
     "Users",
     "RoleBasedAccessControl",
     "Transactions",
+    "ServiceZones",
     "Wallets",
   ],
   endpoints: () => ({}),
