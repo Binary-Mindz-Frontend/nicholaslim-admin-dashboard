@@ -24,7 +24,7 @@ import ContentManagementApp from "@/pages/Admin/ContentManagement/ContentManagem
 import PlatformFeeManagement from "@/pages/Admin/PlatformFeeManagement/PlatformFeeManagement";
 import DeliveryTypesPage from "@/pages/Dashboard/vehicleType-PricingModel/types-of-delivery/TypesOfDelivery";
 import UserWallet from "@/pages/Dashboard/Wallets/userWallet/UserWallet";
-import SingleUserWalletDetils from "@/pages/Dashboard/Wallets/userWallet/SingleUserWalletDetils";
+import SingleUserWalletDetils from "@/pages/Dashboard/Wallets/userWalletHistory/SingleUserWalletHistory";
 import DriverWallet from "@/pages/Dashboard/Wallets/driverWallet/DriverWallet";
 // import DriverWalletDetails from "@/pages/Dashboard/Wallets/driverWallet/DriverWalletDetails/DriverWalletDetails";
 import IncentiveManagementPage from "@/pages/Dashboard/Wallets/IncentinveManagement/IncentinveManagement";
@@ -56,7 +56,7 @@ import AdminRoute from "./AdminRoute";
 import ForgotPassword from "@/pages/ForgotPassword/ForgotPassword";
 import VerifyOtp from "@/pages/VerifyOtp/VerifyOtp";
 import ResetPassword from "@/pages/ResetPassword/ResetPassword";
-import DriverWalletDetailsTable from "@/pages/Dashboard/Wallets/driverWallet/DriverWalletHistoryTable";
+import DriverWalletDetailsTable from "@/pages/Dashboard/Wallets/driverWalletHistory/DriverWalletHistoryTable";
 
 const routes = createBrowserRouter([
   {

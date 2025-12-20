@@ -1,112 +1,132 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type React from "react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { FiTrash } from "react-icons/fi";
+import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { LuScanEye } from "react-icons/lu";
 import TablePagination from "@/pages/Dashboard/_components/TablePagination";
 import SCustomTable from "@/pages/Dashboard/_components/CutomTable";
 import { useNavigate } from "react-router-dom";
+import { useGetWalletQuery } from "@/redux/features/wallet/walletApi";
+import { FiSearch } from "react-icons/fi";
+// import { useGetWalletQuery } from "@/redux/api/walletApi" // Assuming you have set up the API
 
 interface Wallet {
-  id: number
-  name: string
-  currentBalance: number
-  totalBalanceAdded: number
-  totalBalanceUsed: number
-
+  id: number;
+  username: string;
+  email: string;
+  totalWalletBalance: number;
+  currentWalletBalance: number;
 }
 
-const wallet : Wallet[] = [
-  { id: 1, name: "Ang Mo Kio", currentBalance: 15, totalBalanceAdded: 100, totalBalanceUsed: 50 },
-  { id: 2, name: "Punggol", currentBalance: 15, totalBalanceAdded: 100, totalBalanceUsed: 50 },
-  { id: 3, name: "Bishan", currentBalance: 15, totalBalanceAdded: 100, totalBalanceUsed: 50 },
-  { id: 4, name: "Yishun", currentBalance: 15, totalBalanceAdded: 90, totalBalanceUsed: 50 },
-  { id: 5, name: "Serangoon", currentBalance: 15, totalBalanceAdded: 100, totalBalanceUsed: 50 },
-  { id: 6, name: "Ang Mo Kio", currentBalance: 15, totalBalanceAdded: 100, totalBalanceUsed: 50 },
-  { id: 7, name: "Punggol", currentBalance: 15, totalBalanceAdded: 100, totalBalanceUsed: 50 },
-  { id: 8, name: "Punggol", currentBalance: 15, totalBalanceAdded: 60, totalBalanceUsed: 50 },
-  { id: 9, name: "Punggol", currentBalance: 15, totalBalanceAdded: 85, totalBalanceUsed: 50 },
-  { id: 10, name: "Clementi", currentBalance: 15, totalBalanceAdded: 95, totalBalanceUsed: 50 },
-]
-
 const UserWalletTable: React.FC = () => {
-    const navigate = useNavigate()
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
-  const totalItems = 21
+  const navigate = useNavigate();
 
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const displayData = wallet.slice(startIndex, endIndex)
+  // State for pagination and search query
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const itemsPerPage = 20;
 
+  // Query for fetching wallet data
+  const { data, isLoading, error } = useGetWalletQuery({
+    role: "USER", // Example role
+    search: searchQuery, // Passing the search query
+    page: currentPage,
+    limit: itemsPerPage,
+  });
 
+  // Handling total number of items dynamically from the API response
+  const totalItems = data?.total || 0;
 
+  // Calculate data to display based on pagination
+  const displayData = data?.data || [];
+
+  // Define table columns
   const columns = [
-      {
+    {
       key: "id" as const,
       label: "User Id",
     },
     {
-      key: "name" as const,
-      label: "NAME",
+      key: "username" as const,
+      label: "Username",
     },
     {
-      key: "currentBalance" as const,
-      label: "CURRENT BALANCE",
-       render: (value: number) => `$${value}`,
+      key: "email" as const,
+      label: "Email",
     },
     {
-      key: "totalBalanceAdded" as const,
-      label: "TOTAL BALANCE ADDED",
+      key: "currentWalletBalance" as const,
+      label: "Current Wallet Balance",
+      render: (value: number) => `$${value}`,
+    },
+    {
+      key: "totalWalletBalance" as const,
+      label: "Total Wallet Balance",
       render: (value: number) => `$${value}`,
     },
     {
       key: "totalBalanceUsed" as const,
-      label: "TOTAL BALANCE USED",
-      render: (value: number) => `$${value}`,
+      label: "Total Balance Used",
+      render: (_: any, row: Wallet) => {
+        const totalBalanceUsed =
+          row.totalWalletBalance - row.currentWalletBalance;
+        return `$${totalBalanceUsed}`;
+      },
     },
-   {
-  label: "ACTION",
-  render: (_: any, row: Wallet) => (
-    <div className="flex gap-2">
+    {
+      label: "Action",
+      render: (_: any, row: Wallet) => (
+        <div className="flex gap-2">
+          <Button
+            onClick={() => navigate(`/wallet-user/${row.id}`)}
+            variant="ghost"
+            size="sm"
+            className="p-2 h-auto border cursor-pointer border-[#00BFFF] hover:bg-blue-100"
+          >
+            <LuScanEye size={16} className="text-[#00BFFF]" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
-      <Button
-      onClick={()=> navigate(`/wallet-user/${row.id}`)}
-        variant="ghost"
-        size="sm"
-        className="p-2 h-auto border cursor-pointer border-[#00BFFF] hover:bg-blue-100"
-      >
-        <LuScanEye size={16} className="text-[#00BFFF]" />
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        className="p-2 h-auto cursor-pointer border border-[#FF4D4F] hover:bg-red-100"
-      >
-        <FiTrash size={16} className="text-[#FF4D4F]" />
-      </Button>
-    </div>
-  ),
-}
-
-    
-  ]
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to page 1 when search query changes
+  };
 
   return (
-       <div>
-         <SCustomTable data={displayData} columns={columns}
-          />
-        <TablePagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
+    <div>
+      {/* Search Bar */}
+      <div className="mb-8 relative">
+        <input
+          type="text"
+          placeholder="Search by Username or Email"
+          value={searchQuery}
+          onChange={handleSearchChange}
+          className="p-2.5 w-full max-w-md pl-10 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 transition duration-300 ease-in-out"
         />
-       </div>
-  )
-}
+        <FiSearch
+          size={20}
+          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+        />
+      </div>
 
-export default UserWalletTable
+      {isLoading && <div>Loading...</div>}
+      {error && <div>Error loading wallet data</div>}
+
+      <SCustomTable data={displayData} columns={columns} />
+
+      <TablePagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+      />
+    </div>
+  );
+};
+
+export default UserWalletTable;
