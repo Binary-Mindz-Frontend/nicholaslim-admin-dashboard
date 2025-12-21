@@ -19,10 +19,15 @@ import {
 
 export interface CoinFormData {
   id?: number
-  eventTrigger: string
-  coinAmount: string
-  expiryDuration: string
-  coinValueInCent?: string
+  key: string
+  description: string
+  coin_amount: string
+  condition?: {
+    maxPerDay?: number
+  }
+  expire_days: string
+  coin_value_in_cent: string
+  is_active: boolean
 }
 
 interface CoinDialogProps {
@@ -35,11 +40,11 @@ interface CoinDialogProps {
 }
 
 const EVENT_TRIGGERS = [
-  { value: "FIRST_SIGNUP", label: "First Signup" },
-  { value: "DAILY_LOGIN", label: "Daily Login" },
-  { value: "SHARE_ON_SOCIAL", label: "Share on Social" },
-  { value: "REFERRAL", label: "Referral" },
-  { value: "COMPLETED20_ORDER", label: "Completed 20 Orders" },
+  { value: "FIRST_SIGNUP", label: "First Signup", description: "Reward for first time signup" },
+  { value: "DAILY_LOGIN", label: "Daily Login", description: "Reward for daily login" },
+  { value: "SHARE_ON_SOCIAL", label: "Share on Social", description: "Reward for sharing on social media" },
+  { value: "REFERRAL", label: "Referral", description: "Reward for referring new users" },
+  { value: "COMPLETED_ORDER", label: "Completed Orders", description: "Reward for completing orders" },
 ]
 
 const CoinDialog: React.FC<CoinDialogProps> = ({
@@ -52,41 +57,116 @@ const CoinDialog: React.FC<CoinDialogProps> = ({
 }) => {
   const [form, setForm] = useState<CoinFormData>(
     defaultValues || {
-      eventTrigger: "",
-      coinAmount: "",
-      expiryDuration: "",
-      coinValueInCent: "",
+      key: "",
+      description: "",
+      coin_amount: "",
+      condition: {},
+      expire_days: "",
+      coin_value_in_cent: "",
+      is_active: true,
     }
   )
 
+  const [showConditionInput, setShowConditionInput] = useState(false)
+
   useEffect(() => {
     if (open) {
-      setForm(
-        defaultValues || {
-          eventTrigger: "",
-          coinAmount: "",
-          expiryDuration: "",
-          coinValueInCent: "",
-        }
-      )
+      const initialForm = defaultValues || {
+        key: "",
+        description: "",
+        coin_amount: "",
+        condition: {},
+        expire_days: "",
+        coin_value_in_cent: "",
+        is_active: true,
+      }
+      
+      setForm(initialForm)
+      
+      // Show condition input if COMPLETED_ORDER is selected
+      if (initialForm.key === "COMPLETED_ORDER") {
+        setShowConditionInput(true)
+      } else {
+        setShowConditionInput(false)
+      }
     }
   }, [defaultValues, open])
 
-  const handleChange = (key: keyof CoinFormData, value: string) => {
+  const handleChange = (key: keyof CoinFormData, value: any) => {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
+  const handleKeyChange = (value: string) => {
+    // Update key and auto-fill description
+    const selectedTrigger = EVENT_TRIGGERS.find(trigger => trigger.value === value)
+    
+    setForm((prev) => ({ 
+      ...prev, 
+      key: value,
+      description: selectedTrigger?.description || ""
+    }))
+
+    // Show condition input only for COMPLETED_ORDER
+    if (value === "COMPLETED_ORDER") {
+      setShowConditionInput(true)
+      // Initialize condition object for COMPLETED_ORDER
+      setForm((prev) => ({ 
+        ...prev, 
+        condition: { maxPerDay: 0 }
+      }))
+    } else {
+      setShowConditionInput(false)
+      // Clear condition for other triggers
+      setForm((prev) => ({ 
+        ...prev, 
+        condition: undefined 
+      }))
+    }
+  }
+
+  const handleConditionChange = (field: "maxPerDay" | "minOrderAmount", value: string) => {
+    const numValue = parseInt(value) || 0
+    setForm((prev) => ({ 
+      ...prev, 
+      condition: {
+        ...prev.condition,
+        [field]: numValue
+      }
+    }))
+  }
+
   const handleSave = () => {
-    onSubmit(form)
+    // Prepare final data
+    const finalData: CoinFormData = {
+      ...form,
+      coin_amount: form.coin_amount,
+      expire_days: form.expire_days,
+      coin_value_in_cent: form.coin_value_in_cent,
+      is_active: form.is_active
+    }
+
+    // Only include condition for COMPLETED_ORDER
+    if (form.key !== "COMPLETED_ORDER") {
+      delete finalData.condition
+    }
+
+    onSubmit(finalData)
   }
 
   const isFormValid = () => {
-    return (
-      form.eventTrigger.trim() !== "" &&
-      form.coinAmount.trim() !== "" &&
-      form.expiryDuration.trim() !== "" &&
-      form.coinValueInCent?.trim() !== ""
-    )
+    const basicValidation = 
+      form.key.trim() !== "" &&
+      form.description.trim() !== "" &&
+      form.coin_amount.trim() !== "" &&
+      form.expire_days.trim() !== "" &&
+      form.coin_value_in_cent.trim() !== ""
+
+    // For COMPLETED_ORDER, check condition
+    if (form.key === "COMPLETED_ORDER") {
+      return basicValidation && form.condition?.maxPerDay !== undefined
+    }
+
+    return basicValidation
   }
 
   return (
@@ -94,88 +174,151 @@ const CoinDialog: React.FC<CoinDialogProps> = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {mode === "add" ? "Add Coin" : "Edit Coin"}
+            {mode === "add" ? "Add Coin Reward" : "Edit Coin Reward"}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          {/* Event Trigger */}
+          {/* Event Key (Trigger) */}
           <div className="space-y-2">
-            <Label htmlFor="eventTrigger">Event Trigger *</Label>
+            <Label htmlFor="key">Event Trigger *</Label>
             <Select
-              value={form.eventTrigger}
-              onValueChange={(value) => handleChange("eventTrigger", value)}
+              value={form.key}
+              onValueChange={handleKeyChange}
               disabled={isLoading}
             >
-              <SelectTrigger id="eventTrigger" className="focus:ring-1 focus:ring-[#FFCC00] focus:border-[#FFCC00]">
+              <SelectTrigger id="key" className="focus:ring-1 focus:ring-[#FFCC00] focus:border-[#FFCC00]">
                 <SelectValue placeholder="Select event trigger" />
               </SelectTrigger>
               <SelectContent>
                 {EVENT_TRIGGERS.map((trigger) => (
                   <SelectItem key={trigger.value} value={trigger.value}>
-                    {trigger.label}
+                    <div>
+                      <div className="font-medium">{trigger.label}</div>
+                      {/* <div className="text-xs text-gray-500">{trigger.description}</div> */}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Coin Amount */}
+          {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="coinAmount">Coin Amount *</Label>
+            <Label htmlFor="description">Description *</Label>
             <Input
-              id="coinAmount"
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.coinAmount}
-              onChange={(e) => handleChange("coinAmount", e.target.value)}
-              placeholder="Enter coin amount (e.g., 50.00)"
+              id="description"
+              value={form.description}
+              onChange={(e) => handleChange("description", e.target.value)}
+              placeholder="Enter description"
               className="focus:ring-1 focus:ring-[#FFCC00] focus:border-[#FFCC00]"
               disabled={isLoading}
             />
+          </div>
+
+          {/* Coin Amount */}
+          <div className="space-y-2">
+            <Label htmlFor="coin_amount">Coin Amount *</Label>
+            <Input
+              id="coin_amount"
+              type="number"
+              min="1"
+              value={form.coin_amount}
+              onChange={(e) => handleChange("coin_amount", e.target.value)}
+              placeholder="Enter coin amount (e.g., 10)"
+              className="focus:ring-1 focus:ring-[#FFCC00] focus:border-[#FFCC00]"
+              disabled={isLoading}
+            />
+          </div>
+
+          {/* Condition - Only for COMPLETED_ORDER */}
+          {showConditionInput && (
+            <div className="space-y-4 p-4 border border-yellow-200 bg-yellow-50 rounded-lg">
+              <div className="space-y-2">
+                <Label htmlFor="maxPerDay" className="text-yellow-800">
+                  Maximum Rewards Per Day *
+                </Label>
+                <Input
+                  id="maxPerDay"
+                  type="number"
+                  min="0"
+                  value={form.condition?.maxPerDay || ""}
+                  onChange={(e) => handleConditionChange("maxPerDay", e.target.value)}
+                  placeholder="Enter maximum rewards per day"
+                  className="focus:ring-1 focus:ring-[#FFCC00] focus:border-[#FFCC00] bg-white"
+                  disabled={isLoading}
+                />
+                <p className="text-xs text-yellow-700">
+                  For COMPLETED_ORDER only: Maximum number of times this reward can be given per day
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Expiry Days */}
+          <div className="space-y-2">
+            <Label htmlFor="expire_days">Expiry Days *</Label>
+            <Input
+              id="expire_days"
+              type="number"
+              min="1"
+              value={form.expire_days}
+              onChange={(e) => handleChange("expire_days", e.target.value)}
+              placeholder="Enter number of days until expiry"
+              className="focus:ring-1 focus:ring-[#FFCC00] focus:border-[#FFCC00]"
+              disabled={isLoading}
+            />
+            <p className="text-xs text-gray-500">
+              Number of days until the earned coins expire
+            </p>
           </div>
 
           {/* Coin Value in Cents */}
           <div className="space-y-2">
-            <Label htmlFor="coinValueInCent">Coin Value in Cents *</Label>
+            <Label htmlFor="coin_value_in_cent">Coin Value in Cents *</Label>
             <Input
-              id="coinValueInCent"
+              id="coin_value_in_cent"
               type="number"
-              min="0"
-              value={form.coinValueInCent}
-              onChange={(e) => handleChange("coinValueInCent", e.target.value)}
-              placeholder="Enter value in cents (e.g., 5000)"
+              min="1"
+              value={form.coin_value_in_cent}
+              onChange={(e) => handleChange("coin_value_in_cent", e.target.value)}
+              placeholder="Enter value in cents (e.g., 100)"
               className="focus:ring-1 focus:ring-[#FFCC00] focus:border-[#FFCC00]"
               disabled={isLoading}
             />
-            <p className="text-xs text-gray-500">1 coin = 100 cents</p>
+            <p className="text-xs text-gray-500">1 coin = 100 cents = $1.00</p>
           </div>
 
-          {/* Expiry Date */}
+          {/* Active Status */}
           <div className="space-y-2">
-            <Label htmlFor="expiryDuration">Expiry Date *</Label>
-            <Input
-              id="expiryDuration"
-              type="date"
-              value={form.expiryDuration}
-              onChange={(e) => handleChange("expiryDuration", e.target.value)}
-              className="focus:ring-1 focus:ring-[#FFCC00] focus:border-[#FFCC00]"
+            <Label htmlFor="is_active">Status</Label>
+            <Select
+              value={form.is_active ? "true" : "false"}
+              onValueChange={(value) => handleChange("is_active", value === "true")}
               disabled={isLoading}
-            />
+            >
+              <SelectTrigger id="is_active" className="focus:ring-1 focus:ring-[#FFCC00] focus:border-[#FFCC00]">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="true">Active</SelectItem>
+                <SelectItem value="false">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button 
             variant="outline" 
             onClick={onClose}
             disabled={isLoading}
+            className="px-6"
           >
             Cancel
           </Button>
           <Button 
-            className="bg-[#FFCC00] text-black hover:bg-yellow-500"
+            className="bg-[#FFCC00] text-black hover:bg-yellow-500 px-6"
             onClick={handleSave}
             disabled={isLoading || !isFormValid()}
           >

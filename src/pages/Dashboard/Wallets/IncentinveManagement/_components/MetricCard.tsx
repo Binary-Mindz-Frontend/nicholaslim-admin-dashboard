@@ -1,6 +1,7 @@
 import type React from "react"
 import {DollarSign, Gift, Users, Calendar } from "lucide-react"
 
+
 interface MetricCardProps {
   icon: "package" | "gift" | "users" | "calendar"
   label: string
@@ -16,6 +17,8 @@ const iconMap = {
 
 const MetricCard: React.FC<MetricCardProps> = ({ icon, label, value }) => {
   const IconComponent = iconMap[icon]
+
+  
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm flex flex-col items- gap-3">
