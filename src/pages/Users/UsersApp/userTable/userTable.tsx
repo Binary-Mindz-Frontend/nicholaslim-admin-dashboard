@@ -27,7 +27,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
     sortBy: params.sortBy || "createdAt",
     sortOrder: params.sortOrder || "desc",
   });
-  
+  console.log("Fetched users data:", usersData?.data?.data);
 // Add the mutation hook
   const [toggleActiveStatus] = useToggleUserActiveStatusMutation();
 
@@ -90,23 +90,32 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
         </a>
       ),
     },
+    {
+      header: "Email",
+      accessor: "contactEmail",
+      cell: (row: TUser) => (
+        <a href="#" className="text-blue-600 underline">
+          {row.contactEmail}
+        </a>
+      ),
+    },
 
     {
       header: "Contact",
       cell: (row: TUser) => {
-        const contact = row.contact || "";
+        const contact = row.contactNum || "";
         return <span>{contact.slice(0, 2) + "******"}</span>;
       },
     },
 
     {
       header: "Total Order",
-      accessor: "totalOrder",
+      accessor: "totalOrders",
     },
 
     {
       header: "Total Order Amount",
-      accessor: "totalOrderAmount",
+      accessor: "totalCost",
     },
 
     {

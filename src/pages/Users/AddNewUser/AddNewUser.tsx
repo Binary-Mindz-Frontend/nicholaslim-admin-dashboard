@@ -133,7 +133,7 @@ export default function AddNewUser() {
               <input
                 {...register("fullName")}
                 placeholder="Enter full name"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 focus:ring-2 ${errors.fullName ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-white"
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.fullName ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-200"
                   }`}
               />
               {errors.fullName && (
@@ -147,7 +147,7 @@ export default function AddNewUser() {
                 {...register("email")}
                 type="email"
                 placeholder="Enter email"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 focus:ring-2 ${errors.email ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-white"
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.email ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-200"
                   }`}
               />
               {errors.email && (
@@ -163,7 +163,7 @@ export default function AddNewUser() {
               <input
                 {...register("phone")}
                 placeholder="Enter phone number"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 focus:ring-2 ${errors.phone ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-white"
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.phone ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-200"
                   }`}
               />
               {errors.phone && (
@@ -177,7 +177,7 @@ export default function AddNewUser() {
                 {...register("password")}
                 type="password"
                 placeholder="Enter Password"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 focus:ring-2 ${errors.password ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-white"
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.password ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-200"
                   }`}
               />
               {errors.password && (

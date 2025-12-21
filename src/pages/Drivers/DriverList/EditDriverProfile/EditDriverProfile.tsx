@@ -243,10 +243,7 @@ export default function EditDriverProfile() {
             <div className="border rounded-xl py-10 px-6 lg:px-32 bg-white shadow-sm relative">
                 {/* Upload/Download Buttons */}
                 <div className="absolute top-6 right-6 flex gap-3">
-                    <Button variant="outline" className="flex gap-2 border text-black">
-                        <Files size={16} /> Upload
-                    </Button>
-                    <Button variant="outline" className="flex gap-2 text-black border">
+                    <Button variant="outline" className="flex gap-2 text-black border border-blue-500">
                         <Files size={16} /> Download
                     </Button>
                 </div>
