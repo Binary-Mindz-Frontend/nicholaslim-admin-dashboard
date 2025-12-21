@@ -4,9 +4,10 @@ export type TUser = {
   activeStatus: boolean;
   id: string;
   name: string;
-  contact: string;
-  totalOrder: number;
-  totalOrderAmount: string;
+  contactEmail: string;
+  contactNum: string;
+  totalOrders: number;
+  totalCost: string;
   joiningDate: string;
   isActive: boolean;
 };

@@ -281,27 +281,26 @@
 //   );
 // }
 
-import toast from "react-hot-toast"; // Import toast
+import toast from "react-hot-toast";
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom"; // 👈 Added useNavigate
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Camera, Star, Files, Rss, ArrowLeft } from "lucide-react";
-// 👈 Import the update mutation
+// Import the update mutation
 import { useGetUserTypeByIdQuery, useUpdateUserTypeMutation } from "@/redux/features/usersTypes/usersTypesApi";
 
-// ------------------ API RESPONSE TYPE (Simplified for clarity) ------------------
+// ------------------ API RESPONSE TYPE ------------------
 interface ApiUserData {
     id: number;
     username: string;
     email: string;
     phone: string;
-    // ... other fields
 }
 
-// ------------------ COMPONENT STATE TYPE (Simplified) ------------------
+// ------------------ COMPONENT STATE TYPE ------------------
 export interface UserProfileType {
     id: string;
     username: string;
@@ -312,10 +311,14 @@ export interface UserProfileType {
 // ------------------ COMPONENT LOGIC ------------------
 export default function UserProfile() {
     const { id } = useParams();
-    const navigate = useNavigate(); // 👈 Initialize useNavigate hook
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    // Determine mode from URL (e.g., /users-app/1?mode=view)
+    const searchParams = new URLSearchParams(location.search);
+    const isEditMode = searchParams.get("mode") === "edit";
 
     const { data: userData, isLoading, isError } = useGetUserTypeByIdQuery(id);
-    // 👈 Initialize the update mutation hook
     const [updateUser, { isLoading: isUpdating }] = useUpdateUserTypeMutation();
     
     const [formData, setFormData] = useState<Partial<UserProfileType>>({});
@@ -326,22 +329,22 @@ export default function UserProfile() {
         if (userData && userData.data) {
             const apiData = userData.data as ApiUserData;
 
-            // 1. Set username directly from API response
             const initialFormData: UserProfileType = {
                 id: String(apiData.id), 
-                username: apiData.username, // Set the username directly
+                username: apiData.username,
                 email: apiData.email,
                 phone: apiData.phone,
             };
 
-            setFormData(initialFormData); // Update formData state with the username
+            setFormData(initialFormData);
         }
     }, [userData]);
 
-    if (isLoading) return <p>Loading user data...</p>;
-    if (isError || !formData.id) return <p>Error fetching user data or data is missing.</p>;
+    if (isLoading) return <p className="text-center p-10">Loading user data...</p>;
+    if (isError || !formData.id) return <p className="text-center p-10 text-red-500">Error fetching user data.</p>;
 
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!isEditMode) return;
         const file = event.target.files?.[0];
         if (!file) return;
 
@@ -349,150 +352,149 @@ export default function UserProfile() {
         setProfileImage(imageURL);
     };
 
-    // Form field change handler
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!isEditMode) return; // Prevent changes in view mode
         const name = e.target.name as keyof UserProfileType;
         const value = e.target.value;
 
-        setFormData((prev) => {
-            if (!prev) return prev;
-            const updated = { ...prev, [name]: value } as UserProfileType;
-            return updated;
-        });
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
     };
 
-    // ------------------ UPDATED: HANDLE UPDATE LOGIC WITH TOAST ------------------
     const handleEdit = async () => {
         if (!formData.id || !formData.username || !formData.email || !formData.phone) {
             toast.error("Please fill in all required fields.");
             return;
         }
 
-        // 1. Construct the API payload
         const updatePayload = {
             username: formData.username.trim(),
             email: formData.email,
             phone: formData.phone,
         };
 
-        console.log("Sending Payload:", updatePayload);
-
         try {
-            // 2. Call the mutation
             const response = await updateUser({ id: formData.id, updatedData: updatePayload }).unwrap();
-            
-            // 3. Show SUCCESS toast
             toast.success(response?.message || "User updated successfully! 🎉");
-            
-            // 4. Navigate back to the previous page on success
             navigate(-1); 
-            
         } catch (error) {
-            // Handle API error structure (assuming it returns an object with a data/error field)
             const apiError = error as { data?: { message?: string } };
             const errorMessage = apiError?.data?.message || "Failed to update user profile.";
-            
-            // 5. Show ERROR toast
             toast.error(errorMessage);
-            console.error("Failed to update user:", error);
         }
     };
 
     const getStringValue = (key: keyof UserProfileType): string =>
         String(formData[key] ?? "");
 
-    // ------------------ ONLY THE REQUIRED FIELDS ------------------
     const baseFields = [
         ["username", "Full Name"],
         ["email", "Email Address"],
         ["phone", "Phone Number"],
-    ] as Array<[keyof UserProfileType, string]>; // Removed firstName and lastName
-    // ----------------------------------------------------------------
+    ] as Array<[keyof UserProfileType, string]>;
 
     return (
         <div className="sm:p-6 mx-auto space-y-6 bg-[#F5F7FA]">
-            <h1 className="text-2xl font-semibold text-gray-900">User Profile</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">
+                {isEditMode ? "Edit User Profile" : "User Profile"}
+            </h1>
 
             <div className="border rounded-xl py-10 px-6 lg:px-32 bg-white shadow-sm relative">
                 <div className="absolute top-6 left-6">
-            {/* Button to navigate back */}
-            <Button 
-                className="bg-white cursor-pointer" 
-                onClick={() => navigate(-1)} // Trigger navigate on click
-            >
-                <ArrowLeft className="text-black" size={20} />
-            </Button>
-        </div>
-                {/*  DOWNLOAD */}
+                    <Button 
+                        variant="ghost"
+                        className="bg-white cursor-pointer rounded-full" 
+                        onClick={() => navigate(-1)}
+                    >
+                        <ArrowLeft className="text-black" size={20} />
+                    </Button>
+                </div>
+
                 <div className="absolute top-6 right-6 flex gap-3"> 
-                    <Button variant="outline" className="flex gap-2 text-black border border-blue-500">
+                    <Button variant="outline" className="flex gap-2 text-black border border-blue-500 hover:bg-blue-50">
                         <Files size={16} /> Download
                     </Button>
                 </div>
 
-                {/* PROFILE IMAGE */}
-                <div className="flex justify-center">
-                    <label className="cursor-pointer mt-8 sm:mt-0">
+                {/* PROFILE IMAGE SECTION */}
+                <div className="flex flex-col items-center justify-center">
+                    <label className={`${isEditMode ? "cursor-pointer" : "cursor-default"} mt-8 sm:mt-0`}>
                         <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border overflow-hidden">
                             {profileImage ? (
-                                <img
-                                    src={profileImage}
-                                    alt="Profile"
-                                    className="w-full h-full object-cover"
-                                />
+                                <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                             ) : (
                                 <Camera className="text-gray-500" size={32} />
                             )}
                         </div>
-
                         <input
                             type="file"
                             accept="image/*"
                             className="hidden"
                             onChange={handleImageUpload}
+                            disabled={!isEditMode}
                         />
                     </label>
+
                 </div>
 
-                {/* RATING */}
+                {/* RATING & STATS */}
                 <div className="text-center mt-4">
                     <p className="flex justify-center items-center gap-2 text-lg font-medium">
                         <Star className="text-yellow-500" size={20} />
                          /5 <Rss />
-                        <span className="text-gray-700">  Followers</span>
+                        <span className="text-gray-700"> Followers</span>
                     </p>
-                    <p className="mt-1 text-gray-800 font-medium">
-                        Total Deliveries :  
-                    </p>
-                    <p className="text-red-500 font-medium">
-                        Total Cancellations :  
-                    </p>
-                    <p className="text-gray-800 font-medium">
-                        Total Incentives :  
-                    </p>
+                    <div className="mt-2 space-y-1">
+                        <p className="text-gray-800 font-medium">Total Deliveries : </p>
+                        <p className="text-red-500 font-medium">Total Cancellations : </p>
+                        <p className="text-gray-800 font-medium">Total Incentives : </p>
+                    </div>
+                       {/* EXTRA BUTTONS (ONLY IN VIEW MODE) */}
+                    {!isEditMode && (
+                        <div className="flex justify-center gap-3 mt-6">
+                            <Button 
+                            onClick={() => navigate(`/favourite-drivers/${id}`)}
+                            variant="outline" className="flex gap-2 text-black bg-[#FFEA96] hover:bg-[#FFEA96] cursor-pointer">
+                                 Favourite Drivers
+                            </Button>
+                            <Button onClick={() => navigate(`/order-history/${id}`)}
+                             variant="outline" className="flex gap-2 text-black bg-[#FFEA96] hover:bg-[#FFEA96] cursor-pointer">
+                                 Orders History
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 {/* MAIN FORM */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-10">
-                    {/* Iterate over the required fields */}
                     {baseFields.map(([key, label]) => (
                         <div key={key}>
                             <Label className="text-sm font-semibold pb-2">{label}</Label>
-                            <Input name={key} value={getStringValue(key)} onChange={handleChange} />
+                            <Input 
+                                name={key} 
+                                value={getStringValue(key)} 
+                                onChange={handleChange}
+                                readOnly={!isEditMode}
+                                className={!isEditMode ? "bg-gray-50 border-gray-200 cursor-default focus:ring-0" : "focus:ring-orange-500 outline-none transition-all focus:ring-2"}
+                            />
                         </div>
                     ))}
                 </div>
 
-                {/* ACTION BUTTONS */}
-                <div className="flex flex-col justify-center gap-4 mt-10">
-                    <Button
-                        className="w-full cursor-pointer sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-10 py-5 text-lg rounded-lg self-center"
-                        onClick={handleEdit}
-                        disabled={isUpdating} 
-                    >
-                        {isUpdating ? 'Updating...' : 'Update Profile'} 
-                    </Button>
-                </div>
+                {/* ACTION BUTTONS (ONLY IN EDIT MODE) */}
+                {isEditMode && (
+                    <div className="flex flex-col justify-center gap-4 mt-10">
+                        <Button
+                            className="w-full cursor-pointer sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-8 py-3 text-lg rounded-lg self-center"
+                            onClick={handleEdit}
+                            disabled={isUpdating} 
+                        >
+                            {isUpdating ? 'Updating...' : 'Update Profile'} 
+                        </Button>
+                    </div>
+                )}
             </div>
         </div>
     );

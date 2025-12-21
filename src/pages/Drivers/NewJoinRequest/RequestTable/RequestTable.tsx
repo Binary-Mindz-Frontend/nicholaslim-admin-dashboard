@@ -1,21 +1,35 @@
 import { useState, useEffect } from "react";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
-import { useGetRiderProfilesQuery, useUpdateRiderProfileMutation } from "@/redux/features/drivers/driversApi";
-import { Eye, MoreVertical } from "lucide-react";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {useGetGoinReqestRiderProfilesQuery , useVerifyRiderProfileMutation } from "@/redux/features/drivers/driversApi";
+import { Eye, MoreVertical,  Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast"; // For showing toast messages
-import { PopoverArrow } from "@radix-ui/react-popover";
+import { useNavigate } from "react-router-dom";
 
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+
+interface TRegistration {
+  raider_name: string;
+  contact_number: string;
+  vehicle_type: string;
+  created_at: string;
+  email_address?: string;
+  // ... add other fields as needed
+}
 // Declare the TRequest and Registration interfaces directly here
 interface TRequest {
   id: number;
-  raiderId: number;
-  raider_name: string;
-  contact_number: string;
-  requestedDate: string;
-  verificationStatus: string;
+  raider_status: string;
   raider_verificationFromAdmin: string;
+  created_at: string; // This is your "Requested Date"
+  registrations: TRegistration[]; 
+
+  
 }
 
 interface UseRequestColumnsParams {
@@ -23,17 +37,27 @@ interface UseRequestColumnsParams {
   limit?: number;
   raiderId?: number;
   raider_name?: string;
+  loginType?: string;  
+  raiderVerificationFromAdmin?: string;  
 }
+
+type RiderVerificationStatus = "APPROVED" | "REJECTED";
 
 export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
   const [requests, setRequests] = useState<TRequest[]>([]);
   const [totalItems, setTotalItems] = useState(0);
-  const [updateRiderProfile] = useUpdateRiderProfileMutation(); // Hook to update rider profile
+  const [verifyRiderProfile] =
+  useVerifyRiderProfileMutation();
+  const navigate = useNavigate();
 
   // Build query params - only include defined values
-  const queryParams: UseRequestColumnsParams = {
+  const queryParams = {
     page: params.page || 1,
     limit: params.limit || 10,
+    raiderId: params.raiderId,
+    raider_name: params.raider_name,
+    loginType: "DIRECT_SIGNIN",  
+    raiderVerificationFromAdmin: "PENDING",  
   };
 
   if (params.raiderId !== undefined) {
@@ -44,40 +68,41 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
   }
 
   // Fetch the data using useGetRiderProfilesQuery hook with filtered params
-  const { data, isLoading, isError } = useGetRiderProfilesQuery(queryParams);
-  console.log("Fetched pagination data:", data?.data?.data
+  const { data, isLoading, isError } = useGetGoinReqestRiderProfilesQuery(queryParams);
+  console.log("Fetched pagination data:", data?.data?.data);
+ 
 
-  );
-  // Effect to update requests data when query result changes
   useEffect(() => {
     if (data?.data?.data) {
-      // Filter the data to only show PENDING verification requests
-      const filteredRequests = data.data.data.filter((request: TRequest) =>
-        request.raider_verificationFromAdmin === "PENDING"
-      );
-      setRequests(filteredRequests); // Set filtered requests
+      setRequests(data.data.data); 
       setTotalItems(data.data.pagination?.total || 0);
     }
   }, [data]);
 
-  const handleUpdateStatus = async (id: number, newStatus: string) => {
-  try {
-    const updatedData = {
-      verificationFromAdmin: newStatus,  // Remove "raider_" prefix
-    };
-
-    const response = await updateRiderProfile({ id, data: updatedData }).unwrap();
-
-    if (response.success) {
-      toast.success(`Status updated to ${newStatus}`);
-    } else {
-      toast.error("Failed to update status");
+ const handleUpdateStatus = async (
+    id: string | number,
+    status: RiderVerificationStatus,
+    registrations: TRegistration[] // Add this parameter
+  ) => {
+    // Check if user is NOT registered
+    if (!registrations || registrations.length === 0) {
+      toast.error("User not registered. Cannot approve/reject.");
+      return;
     }
-  } catch (error) {
-    console.error("Update error:", error);
-    toast.error("Failed to update status");
-  }
-};
+
+    try {
+      await verifyRiderProfile({
+        raiderId: id,
+        verify: status,
+      }).unwrap();
+
+      toast.success(`Rider has been ${status.toLowerCase()} successfully`);
+    } catch (error) {
+      console.error("Verification failed:", error);
+      toast.error("Failed to update status. Please try again.");
+    }
+  };
+
 
   // Define columns for the request data
   const requestColumns: Column<TRequest>[] = [
@@ -85,87 +110,94 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
       header: "Driver ID",
       accessor: "id",
       cell: (row) => (
-        <a href="#" className="text-blue-600 underline">
-          D{row.id}
-        </a>
+        <span className="font-medium text-blue-600">D{row.id}</span>
       ),
     },
     {
       header: "Name",
-      accessor: "raider_name",
-      cell: (row) => (
-        <a href="#" className="text-blue-600 underline">
-          {row.raider_name || "N/A"}
-        </a>
-      ),
+      cell: (row) => {
+        // Safe access to the first registration object
+        const reg = row.registrations?.[0];
+        return <span>{reg?.raider_name || "N/A"}</span>;
+      },
+    },
+    {
+      header: "Email",
+      cell: (row) => {
+        const email = row.registrations?.[0]?.email_address;
+        if (!email) return <span>N/A</span>;
+        // Masking logic
+        return <span>{email}</span>;
+      },
     },
     {
       header: "Contact",
-      accessor: "contact_number",
+      cell: (row) => {
+        const contact = row.registrations?.[0]?.contact_number;
+        if (!contact) return <span>N/A</span>;
+        // Masking logic
+        return <span>{contact.slice(0, 3)}****{contact.slice(-3)}</span>;
+      },
+    },
+    {
+      header: "Requested Date",
+      cell: (row) => {
+        // Use outer created_at if inner one isn't available
+        const dateStr = row.registrations?.[0]?.created_at || row.created_at;
+        if (!dateStr) return <span>N/A</span>;
+        
+        const date = new Date(dateStr);
+        return <span>{date.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })}</span>;
+      },
+    },
+    {
+      header: "Vehicle Type",
       cell: (row) => (
-        <span>
-          {row.contact_number ? row.contact_number.slice(0, 2) + "******" + row.contact_number.slice(-2) : "N/A"}
+        <span className="uppercase text-xs font-semibold">
+          {row.registrations?.[0]?.vehicle_type || "N/A"}
         </span>
       ),
     },
     {
-      header: "Requested Date",
-      accessor: "requestedDate",
-      cell: (row) => {
-        const date = new Date(row.requestedDate);
-        const formatted = date.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        });
-        return <span>{formatted}</span>;
-      },
-    },
-    {
       header: "Verification Status",
-      accessor: "verificationStatus",
-      cell: () => (
+      cell: (row) => (
         <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-          PENDING
+          {row.raider_verificationFromAdmin}
         </span>
       ),
     },
     {
       header: "Action",
       cell: (row) => (
-        <div className="flex items-center space-x-2">
-          {/* Eye Icon */}
-          <button className="p-1 text-gray-600 hover:text-gray-800">
-            <Eye className="h-5 w-5" />
-          </button>
-
-          {/* Three Dot Button for Actions */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" className="p-1 text-gray-600 hover:text-gray-800">
-                <MoreVertical className="h-5 w-5" />
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="h-4 w-4" />
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-36">
-              <PopoverArrow />
-              <div className="flex flex-col space-y-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleUpdateStatus(row.id, "APPROVED")}
-                >
-                  Approve
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleUpdateStatus(row.id, "REJECTED")}
-                >
-                  Reject
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={() => navigate(`/join-request/${row.id}`)}>
+                <Eye className="h-4 w-4 mr-2" /> View
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleUpdateStatus(row.id, "APPROVED", row.registrations)}
+                className="text-green-600"
+              >
+                <Check className="h-4 w-4 mr-2" /> Accept
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleUpdateStatus(row.id, "REJECTED", row.registrations)}
+                className="text-red-600"
+              >
+                <X className="h-4 w-4 mr-2" /> Reject
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ),
     },
