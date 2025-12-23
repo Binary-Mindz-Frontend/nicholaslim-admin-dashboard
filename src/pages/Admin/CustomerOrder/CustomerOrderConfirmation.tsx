@@ -133,7 +133,7 @@ export default function CustomerOrderConfirmation() {
           isLoading={updateLoading}
         />
         
-        <ConfirmationRatioChart data={statusData?.data} />
+        <ConfirmationRatioChart data={statusData?.data || { geniune_count: 0, manual_check_count: 0, suspicious_count: 0 }} />
         {/* <ConfirmationRatioChart /> */}
       </div>
     </div>
