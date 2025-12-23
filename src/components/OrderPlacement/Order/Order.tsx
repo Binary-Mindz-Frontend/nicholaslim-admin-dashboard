@@ -11,12 +11,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import BulkOrdersTable from "../BulkOrder/BulkOrderTable/BulkOrderTable";
 import OrderSummery from "../IndivisualOrder/OrderSummery/OrderSummery";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DropIcons } from "@/components/Icons/Icons";
-import { Download } from "lucide-react";
+
 
 export default function OrderPlacementPage() {
   const radioClassName = `
@@ -280,69 +278,7 @@ export default function OrderPlacementPage() {
 
           {/* Bulk Order Tab */}
           <TabsContent value="bulk" className="space-y-8">
-            <div className="bg-white rounded-lg p-8 border border-gray-200">
-              <div className="flex justify-between py-4">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                  Bulk Order Upload
-                </h2>
-                <Button className=" px-6 text-xl text-black cursor-pointer font-medium rounded-lg ransition-colors flex items-center justify-center gap-2">
-                  <Download />
-                  as CSV
-                </Button>
-              </div>
-              <div className="border-3 border-dashed border-gray-400 rounded-lg p-12 text-center cursor-pointer hover:bg-gray-50 transition-colors">
-                <input
-                  type="file"
-                  id="file-upload"
-                  accept=".csv,.xlsx,.xls"
-                  className="hidden"
-                />
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  <div className="mb-4 flex justify-center">
-                    <DropIcons />
-                  </div>
-                  <p className="text-[#2F6EED] font-semibold text-lg lg:text-3xl mb-1">
-                    Drop your spreadsheet here
-                  </p>
-                  <p className="text-gray-600 text-sm mb-1">
-                    or click to browse your CSV file
-                  </p>
-                  <p className="text-gray-500 text-sm">
-                    (Max. File size: 10 MB)
-                  </p>
-                </label>
-              </div>
-            </div>
-
-            {/* Bulk Order Summary */}
-            {/* <div className="bg-white rounded-lg p-8 border border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                Bulk Order Summary
-              </h2>
-
-              <div className="space-y-4">
-                <div className="flex justify-between text-gray-700">
-                  <span>Total Orders</span>
-                  <span>0</span>
-                </div>
-                <div className="flex justify-between text-gray-700">
-                  <span>Estimated Cost</span>
-                  <span>S$0.00</span>
-                </div>
-                <div className="border-t pt-4 flex justify-between text-lg font-semibold text-gray-900">
-                  <span>Total</span>
-                  <span>S$0.00</span>
-                </div>
-              </div>
-            </div> */}
-            <BulkOrdersTable />
-
-            <OrderSummery />
-            <Link to="/order-confirm">
-              <Button className="w-full cursor-pointer bg-gray-300 hover:bg-gray-400 text-gray-900 font-bold py-3">
-                Confirm order
-              </Button>
-            </Link>
+            This is Bulk Order Tab
           </TabsContent>
         </Tabs>
       </div>
