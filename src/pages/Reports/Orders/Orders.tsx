@@ -1,6 +1,6 @@
 // import FilterSection from "@/components/Users/FilterSection/FilterSection";
 // import { useState } from "react";
-import { useGetReportAndAnalyticsQuery } from "@/redux/features/reportAndAnalytics/reportAndAnalyticsApi";
+import { useGetReportAndAnalyticsStatsQuery } from "@/redux/features/reportAndAnalytics/reportAndAnalyticsApi";
 import OverviewSection from "./OverviewSection/OverViewSection";
 
 export default function Orders() {
@@ -14,7 +14,7 @@ export default function Orders() {
   //     setAllFilter("");
   // };
 
-  const { data: reportData } = useGetReportAndAnalyticsQuery("");
+  const { data: reportStatsData } = useGetReportAndAnalyticsStatsQuery("");
 
   return (
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
@@ -37,7 +37,7 @@ export default function Orders() {
                     handleResetFilter={handleResetFilter}
                 /> */}
 
-        <OverviewSection data={reportData} />
+        <OverviewSection data={reportStatsData} />
       </div>
     </div>
   );
