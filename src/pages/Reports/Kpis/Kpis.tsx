@@ -1,5 +1,5 @@
-import FilterSection from "@/components/Users/FilterSection/FilterSection";
-import { useState } from "react";
+// import FilterSection from "@/components/Users/FilterSection/FilterSection";
+// import { useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EarningsOverTime from "./KpiChart/EarningsOverTime";
@@ -7,15 +7,15 @@ import TopPerformingDrivers from "./KpiChart/TopPerformingDrivers";
 import KpiStats from "./KpiStats/KpiStats";
 
 export default function Kpis() {
-    const [dateFilter, setDateFilter] = useState("");
-    // const [activeFilter, setActiveFilter] = useState("");
-    const [allFilter, setAllFilter] = useState("");
+    // const [dateFilter, setDateFilter] = useState("");
+    // // const [activeFilter, setActiveFilter] = useState("");
+    // const [allFilter, setAllFilter] = useState("");
 
-    const handleResetFilter = () => {
-        setDateFilter("");
-        // setActiveFilter("");
-        setAllFilter("");
-    };
+    // const handleResetFilter = () => {
+    //     setDateFilter("");
+    //     // setActiveFilter("");
+    //     setAllFilter("");
+    // };
 
 
     return (
@@ -24,11 +24,11 @@ export default function Kpis() {
                 {/* Header Section */}
                 <div className="pt-2 sm:py-2">
                     <h1 className="text-black text-2xl font-bold">Reports & Analytics </h1>
-                    <p className="text-base text-[#6B6B6B]">Overview of daily performance, earnings, and user activity</p>
+                    {/* <p className="text-base text-[#6B6B6B]">Overview of daily performance, earnings, and user activity</p> */}
                 </div>
 
 
-                <FilterSection
+                {/* <FilterSection
                     dateFilter={dateFilter}
                     setDateFilter={setDateFilter}
                     // activeFilter={activeFilter}
@@ -36,7 +36,7 @@ export default function Kpis() {
                     allFilter={allFilter}
                     setAllFilter={setAllFilter}
                     handleResetFilter={handleResetFilter}
-                />
+                /> */}
             </div>
 
             {/* Revenue and kpis chart  */}
