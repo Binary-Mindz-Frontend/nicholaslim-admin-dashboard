@@ -95,17 +95,17 @@ export default function DriverList() {
       {drivers.length > 0 ? (
         <>
           <CustomTable columns={driverColumns} data={drivers} />
-          
+
           {/* Pagination Component */}
-<TablePagination
-  currentPage={currentPage}
-  totalItems={totalItems}
-  itemsPerPage={itemsPerPage}
-  onPageChange={(page) => {
-    console.log("Page changed to:", page); // Add this
-    setCurrentPage(page);
-  }}
-/>
+          <TablePagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={(page) => {
+              console.log("Page changed to:", page); // Add this
+              setCurrentPage(page);
+            }}
+          />
         </>
       ) : (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
