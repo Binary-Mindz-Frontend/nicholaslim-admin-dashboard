@@ -64,6 +64,7 @@ export default function OverviewSection({ data }: OverviewSectionProps) {
     cancelledOrder = 0,
     disputedOrder = 0,
     averageOrderRating = 0,
+    totalRevenue = 0,
   } = data.data;
 
   // Format the average rating to 1 decimal place
@@ -110,7 +111,7 @@ export default function OverviewSection({ data }: OverviewSectionProps) {
       icon: (
         <DollarSign className="h-8 w-8 text-emerald-500 bg-emerald-100 p-1.5 rounded-md" />
       ),
-      value: "$0",
+      value: totalRevenue.toLocaleString(),
       label: "Total Revenue",
     },
   ];
