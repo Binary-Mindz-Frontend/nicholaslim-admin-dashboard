@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useGetDriverOrdersQuery } from "@/redux/features/orders/ordersApi";
+import { useNavigate } from "react-router-dom";
 
 // 1. Define the Raw API Response Interface (Matching Backend Structure)
 interface TOrderRaw {
@@ -45,6 +46,7 @@ interface OrderFilters {
 export const useOrderColumns = (params: OrderFilters = {}) => {
   const [orders, setOrders] = useState<TOrder[]>([]);
   const [totalItems, setTotalItems] = useState(0);
+  const navigate = useNavigate();
 
   // 4. Build query params manually (Following Driver code structure)
   const queryParams: OrderFilters = {
@@ -85,7 +87,6 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
       setTotalItems(data?.data?.total || 0);
     }
   }, [data]);
-  console.log(data)
 
   // 7. Column Definitions
   const orderColumns: Column<TOrder>[] = [
@@ -135,9 +136,11 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
     },
     {
       header: "ACTION",
-      cell: () => (
+      cell: (row) => (
         <div className="flex items-center gap-2">
-          <button className="bg-blue-200 p-1.5 rounded hover:bg-blue-300 transition-colors">
+          <button
+          onClick={() => navigate(`/order/${row.orderId}`)}
+          className="bg-blue-200 p-1.5 rounded hover:bg-blue-300 transition-colors">
             <Eye size={16} className="text-blue-700" />
           </button>
           <button className="bg-green-200 p-1.5 rounded hover:bg-green-300 transition-colors">
