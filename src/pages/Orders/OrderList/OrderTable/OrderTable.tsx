@@ -134,6 +134,22 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
       },
     },
     {
+      header: "ACTION",
+      cell: () => (
+        <div className="flex items-center gap-2">
+          <button className="bg-blue-200 p-1.5 rounded hover:bg-blue-300 transition-colors">
+            <Eye size={16} className="text-blue-700" />
+          </button>
+          <button className="bg-green-200 p-1.5 rounded hover:bg-green-300 transition-colors">
+            <Pencil size={16} className="text-green-700" />
+          </button>
+          <button className="bg-red-200 p-1.5 rounded hover:bg-red-300 transition-colors">
+            <Trash2 size={16} className="text-red-700" />
+          </button>
+        </div>
+      ),
+    },
+    {
       header: "ORDER STATUS",
       accessor: "order_status",
       cell: (row) => {
@@ -156,22 +172,6 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
           </span>
         );
       },
-    },
-    {
-      header: "ACTION",
-      cell: () => (
-        <div className="flex items-center gap-2">
-          <button className="bg-blue-200 p-1.5 rounded hover:bg-blue-300 transition-colors">
-            <Eye size={16} className="text-blue-700" />
-          </button>
-          <button className="bg-green-200 p-1.5 rounded hover:bg-green-300 transition-colors">
-            <Pencil size={16} className="text-green-700" />
-          </button>
-          <button className="bg-red-200 p-1.5 rounded hover:bg-red-300 transition-colors">
-            <Trash2 size={16} className="text-red-700" />
-          </button>
-        </div>
-      ),
     },
   ];
 

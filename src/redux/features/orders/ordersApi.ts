@@ -40,9 +40,20 @@ const driverOrdersApi = baseApi.injectEndpoints({
             },
             providesTags: ["Orders"],
         }),
+
+        // Add this inside your injectEndpoints block in orderApi.ts
+        getOrderStats: builder.query({
+            query: () => ({
+                url: "/order/stats",
+                method: "GET",
+            }),
+            providesTags: ["Orders"], 
+        }),
+
     }),
 });
 
 export const {
     useGetDriverOrdersQuery,
+    useGetOrderStatsQuery
 } = driverOrdersApi;

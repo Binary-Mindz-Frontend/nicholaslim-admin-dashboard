@@ -38,6 +38,12 @@ export default function OrderList() {
     setCurrentPage(1);
   };
 
+  // Add this function here
+  const handleTrackOrder = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1); 
+  };
+
   // Get the order columns and data with pagination support
   const { orderColumns, orders, isLoading, isError, totalItems } = useOrderColumns({
     category,
@@ -72,7 +78,7 @@ export default function OrderList() {
         </div>
 
         {/* Track Order Section */}
-        <TrackOrderSection />
+        <TrackOrderSection onTrack={handleTrackOrder} />
 
         {/* Category List Section */}
         <div className="sm:py-3">
