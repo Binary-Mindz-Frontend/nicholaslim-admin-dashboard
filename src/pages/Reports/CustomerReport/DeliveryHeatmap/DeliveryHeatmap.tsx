@@ -146,7 +146,7 @@ const DeliveryHeatmap: React.FC = () => {
           <div ref={mapRef} className="w-full h-full" />
           
           {/* Legend */}
-          <div className="absolute bottom-6 right-6 bg-white rounded-lg shadow-lg p-4 z-1000">
+          <div className="absolute bottom-6 right-6 bg-white rounded-lg shadow-lg p-4 z-0">
             <h3 className="font-semibold text-gray-900 mb-3 text-sm">Order Intensity</h3>
             <div className="space-y-2">
               <div className="flex items-center gap-2">

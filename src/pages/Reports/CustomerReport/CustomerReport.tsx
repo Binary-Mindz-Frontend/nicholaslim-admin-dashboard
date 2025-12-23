@@ -1,5 +1,5 @@
-import FilterSection from "@/components/Users/FilterSection/FilterSection";
-import { useState } from "react";
+// import FilterSection from "@/components/Users/FilterSection/FilterSection";
+// import { useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import OrdersByTime from "./CustomerChart/OrdersByTime";
@@ -7,15 +7,15 @@ import OrdersByArea from "./CustomerChart/OrdersByArea";
 import DeliveryHeatmap from "./DeliveryHeatmap/DeliveryHeatmap";
 
 export default function CustomerReport() {
-    const [dateFilter, setDateFilter] = useState("");
-    // const [activeFilter, setActiveFilter] = useState("");
-    const [allFilter, setAllFilter] = useState("");
+    // const [dateFilter, setDateFilter] = useState("");
+    // // const [activeFilter, setActiveFilter] = useState("");
+    // const [allFilter, setAllFilter] = useState("");
 
-    const handleResetFilter = () => {
-        setDateFilter("");
-        // setActiveFilter("");
-        setAllFilter("");
-    };
+    // const handleResetFilter = () => {
+    //     setDateFilter("");
+    //     // setActiveFilter("");
+    //     setAllFilter("");
+    // };
 
     return (
         <div className="px-8 sm:p-6 bg-[#F5F7FA]">
@@ -23,11 +23,11 @@ export default function CustomerReport() {
                 {/* Header Section */}
                 <div className="pt-2 sm:py-2">
                     <h1 className="text-black text-2xl font-bold">Reports & Analytics </h1>
-                    <p className="text-base text-[#6B6B6B]">Overview of daily performance, earnings, and user activity</p>
+                    {/* <p className="text-base text-[#6B6B6B]">Overview of daily performance, earnings, and user activity</p> */}
                 </div>
 
 
-                <FilterSection
+                {/* <FilterSection
                     dateFilter={dateFilter}
                     setDateFilter={setDateFilter}
                     // activeFilter={activeFilter}
@@ -35,7 +35,7 @@ export default function CustomerReport() {
                     allFilter={allFilter}
                     setAllFilter={setAllFilter}
                     handleResetFilter={handleResetFilter}
-                />
+                /> */}
 
             </div>
             {/* Chart section  */}
