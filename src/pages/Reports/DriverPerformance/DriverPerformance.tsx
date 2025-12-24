@@ -1,5 +1,5 @@
-import FilterSection from "@/components/Users/FilterSection/FilterSection";
-import { useState } from "react";
+// import FilterSection from "@/components/Users/FilterSection/FilterSection";
+// import { useState } from "react";
 import DriverPerformanceChart from "./DriverChart/DriverChart";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
@@ -11,15 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 
 export default function DriverPerformance() {
-    const [dateFilter, setDateFilter] = useState("");
-    // const [activeFilter, setActiveFilter] = useState("");
-    const [allFilter, setAllFilter] = useState("");
+    // const [dateFilter, setDateFilter] = useState("");
+    // // const [activeFilter, setActiveFilter] = useState("");
+    // const [allFilter, setAllFilter] = useState("");
 
-    const handleResetFilter = () => {
-        setDateFilter("");
-        // setActiveFilter("");
-        setAllFilter("");
-    };
+    // const handleResetFilter = () => {
+    //     setDateFilter("");
+    //     // setActiveFilter("");
+    //     setAllFilter("");
+    // };
 
     const columns = useDriverColumns();
 
@@ -29,11 +29,11 @@ export default function DriverPerformance() {
                 {/* Header Section */}
                 <div className="pt-2 sm:py-2">
                     <h1 className="text-black text-2xl font-bold">Reports & Analytics </h1>
-                    <p className="text-base text-[#6B6B6B]">Overview of daily performance, earnings, and user activity</p>
+                    {/* <p className="text-base text-[#6B6B6B]">Overview of daily performance, earnings, and user activity</p> */}
                 </div>
 
 
-                <FilterSection
+                {/* <FilterSection
                     dateFilter={dateFilter}
                     setDateFilter={setDateFilter}
                     // activeFilter={activeFilter}
@@ -41,7 +41,7 @@ export default function DriverPerformance() {
                     allFilter={allFilter}
                     setAllFilter={setAllFilter}
                     handleResetFilter={handleResetFilter}
-                />
+                /> */}
                 {/* Header  */}
                 <div className="w-full my-10 sm:flex sm:justify-between sm:items-center">
 

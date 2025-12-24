@@ -189,13 +189,13 @@ const ServiceAreaModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50000 p-4">
       <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-2xl font-bold">
             {editData ? `Edit Service Area (ID: ${editData.id})` : "Create New Service Area"}
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700" disabled={isLoading}>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 cursor-pointer" disabled={isLoading}>
             <X size={24} />
           </button>
         </div>
@@ -369,10 +369,10 @@ const ServiceAreaModal = ({
         </div>
 
         <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
-          <Button variant="outline" onClick={onClose} disabled={isLoading} className="px-6">
+          <Button variant="outline" onClick={onClose} disabled={isLoading} className="px-6 cursor-pointer">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700 px-6" disabled={isLoading}>
+          <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700 px-6 cursor-pointer" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
