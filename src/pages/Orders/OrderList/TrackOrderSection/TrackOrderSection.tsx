@@ -2,38 +2,56 @@
 import { useState } from "react";
 import { Package, Clock, Calendar, Truck } from "lucide-react";
 import { JSX } from "react/jsx-runtime";
+import { useGetOrderStatsQuery } from "@/redux/features/orders/ordersApi";
 
 interface StatsCard {
   title: string;
   value: number;
   icon: JSX.Element;
 }
+interface TrackOrderSectionProps {
+  onTrack: (id: string) => void;
+}
 
-export default function TrackOrderSection() {
+export default function TrackOrderSection({onTrack} : TrackOrderSectionProps) {
   const [orderId, setOrderId] = useState("");
+
+  const { data } = useGetOrderStatsQuery(undefined);
+  const stats = data?.data || {};
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      onTrack(orderId);
+    }
+  };
+
+  const handleButtonClick = () => {
+    onTrack(orderId);
+  }
 
   const statsData: StatsCard[] = [
     {
       title: "Total Orders",
-      value: 1250,
+      value: stats.totalOrders || 0,
       icon: <Package className="h-6 w-6 text-gray-700" />,
     },
     {
       title: "Ongoing",
-      value: 550,
+      value: stats.ongoing || 0,
       icon: <Truck className="h-6 w-6 text-gray-700" />,
     },
     {
       title: "Pending",
-      value: 220,
+      value: stats.pending || 0,
       icon: <Clock className="h-6 w-6 text-gray-700" />,
     },
     {
       title: "Scheduled",
-      value: 110,
+      value: stats.scheduled || 1,
       icon: <Calendar className="h-6 w-6 text-gray-700" />,
     },
   ];
+
 
   return (
     <div className="w-full bg-[#F5F7FA]  space-y-6">
@@ -47,12 +65,14 @@ export default function TrackOrderSection() {
             placeholder="Enter Order Id"
             value={orderId}
             onChange={(e) => setOrderId(e.target.value)}
+            onKeyDown={handleKeyPress}
             className="w-full mt-1 bg-[#FFF7D6] border border-yellow-300 rounded-full 
                        px-4 py-1 sm:py-3 placeholder-gray-500 outline-none"
           />
         </div>
 
         <button
+          onClick={handleButtonClick}
           className="bg-yellow-400 hover:bg-yellow-500 transition text-black px-2 sm:px-6 py-1 sm:py-3 
                      mt-6 rounded-full font-medium whitespace-nowrap"
         >
