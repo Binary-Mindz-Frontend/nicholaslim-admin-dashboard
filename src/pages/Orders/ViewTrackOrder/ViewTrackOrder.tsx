@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useGetSingleOrderQuery, useUpdateOrderMutation } from "@/redux/features/orders/ordersApi";
-import OrderForm from "./components/orderForm";
+
 import RiderDetails from "./components/RiderDetails";
 import OrderPending from "./components/OrderPending";
 import OrderTrackingTimeline from "./components/OrderTrackingTimeline";
@@ -10,6 +10,7 @@ import FinancialDetails from "./components/FinancialDetails";
 import CancelOrderModal from "./components/CancelOrderModal";
 import { ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
+import OrderForm from "./components/OrderForm";
 
 
 export interface OrderData {
