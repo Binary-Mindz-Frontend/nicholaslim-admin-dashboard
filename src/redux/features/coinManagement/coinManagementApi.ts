@@ -11,6 +11,14 @@ const coinManagementApi = baseApi.injectEndpoints({
       providesTags: ["Coins"],
     }),
 
+    getCoinsBasePrice: builder.query({
+      query: () => ({
+        url: "/coin-management/base-price",
+        method: "GET",
+      }),
+      providesTags: ["Coins"],
+    }),
+
     getAllUsersCoinsHistory: builder.query({
       query: (params: { username?: string }) => ({
         url: "/coin-management/coin-accounts",
@@ -58,6 +66,7 @@ const coinManagementApi = baseApi.injectEndpoints({
 
 export const {
   useGetCoinsQuery,
+  useGetCoinsBasePriceQuery,
   useGetAllUsersCoinsHistoryQuery,
   useGetUserCoinHistoryByIdQuery,
   useAddCoinMutation,
