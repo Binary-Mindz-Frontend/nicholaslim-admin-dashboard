@@ -61,6 +61,8 @@ import FavouriteDriversPage from "@/pages/Users/UsersApp/FavouriteDrivers/Favour
 import OrderHistoryPage from "@/pages/Users/UsersApp/OrderHistory/OrderHistoryPage";
 import DriverWalletDetailsTable from "@/pages/Dashboard/Wallets/driverWalletHistory/DriverWalletHistoryTable";
 import ViewTrackOrder from "@/pages/Orders/ViewTrackOrder/ViewTrackOrder";
+import DriverListTrack from "@/pages/Orders/ViewTrackOrder/components/Driver/DriverList";
+
 
 const routes = createBrowserRouter([
   {
@@ -363,6 +365,10 @@ const routes = createBrowserRouter([
       {
         path: "order/:id",
         element: <ViewTrackOrder />,
+      },
+      {
+        path: "assign-driver/:id",
+        element: <DriverListTrack />,
       }
     ],
   },
