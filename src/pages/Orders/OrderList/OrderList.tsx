@@ -45,7 +45,7 @@ export default function OrderList() {
   };
 
   // Get the order columns and data with pagination support
-  const { orderColumns, orders, isLoading, isError, totalItems } = useOrderColumns({
+  const { orderColumns, orders, isLoading, isError, totalItems, DeleteConfirmDialog } = useOrderColumns({
     category,
     status,
     startDate,
@@ -104,7 +104,7 @@ export default function OrderList() {
       {orders.length > 0 ? (
         <>
           <CustomTable columns={orderColumns} data={orders} />
-
+            
           {/* Pagination Component */}
           <TablePagination
             currentPage={currentPage}
@@ -120,6 +120,7 @@ export default function OrderList() {
           <p className="text-lg text-gray-500">No orders found</p>
         </div>
       )}
+      <DeleteConfirmDialog />
     </div>
   );
 }

@@ -64,11 +64,18 @@ const driverOrdersApi = baseApi.injectEndpoints({
                 method: "PATCH",
                 body: data,
             }),
-            // This forces "Orders" queries to refresh so the UI updates automatically
             invalidatesTags: ({ id }) => [
                 { type: "Orders", id }, 
                 "Orders"
             ],
+        }),
+
+        deleteOrder: builder.mutation({
+            query: (id) => ({
+                url: `/order/${id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: ["Orders"],
         }),
 
     }),
@@ -79,4 +86,5 @@ export const {
     useGetOrderStatsQuery,
     useGetSingleOrderQuery,
     useUpdateOrderMutation,
+    useDeleteOrderMutation,
 } = driverOrdersApi;
