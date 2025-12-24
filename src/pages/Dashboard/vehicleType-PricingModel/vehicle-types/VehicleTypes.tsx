@@ -2,7 +2,10 @@ import { useState } from "react";
 import CustomButton from "../../_components/CustomButton";
 import VTtablesData from "./_components/VTtablesData";
 import AddVehicleModal from "./_components/AddVehicleModal";
-import { useAddVehicleTypeMutation, useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
+import {
+  useAddVehicleTypeMutation,
+  useGetVehicleTypesQuery,
+} from "@/redux/features/vehicleType/vehicleTypeApi";
 import toast from "react-hot-toast";
 
 interface VehicleTypeData {
@@ -19,24 +22,28 @@ const VehicleTypes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [addVehicleType, { isLoading: isAdding }] = useAddVehicleTypeMutation();
-    const { data: apiResponse, isLoading, refetch } = useGetVehicleTypesQuery("");
+  const { data: apiResponse, isLoading, refetch } = useGetVehicleTypesQuery("");
 
   const handleAddVehicle = async (data: VehicleTypeData) => {
-    const toastId = toast.loading("Adding vehicle type...");
+    toast.loading("Adding vehicle type...");
 
     try {
       const result = await addVehicleType(data).unwrap();
 
       if (!result.success) {
-        toast.error(result.message, { id: toastId });
+        toast.dismiss();
+        toast.error(result.message);
         return;
       }
 
-      toast.success("Vehicle type added successfully!", { id: toastId });
+      toast.dismiss();
+      toast.success("Vehicle type added successfully!");
 
       setIsModalOpen(false);
     } catch (error: any) {
-      toast.error("Failed to add vehicle type", { id: toastId });
+      toast.dismiss();
+      console.error("Add failed:", error);
+      toast.error("Failed to add vehicle type");
     }
   };
 
@@ -83,7 +90,11 @@ const VehicleTypes = () => {
         </div>
       </div>
       <div className="my-12">
-        <VTtablesData apiResponse={apiResponse} isLoading={isLoading} refetch={refetch} />
+        <VTtablesData
+          apiResponse={apiResponse}
+          isLoading={isLoading}
+          refetch={refetch}
+        />
       </div>
       <div className="flex justify-center">
         <button
