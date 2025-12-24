@@ -27,7 +27,7 @@ const MENU_TO_MODULE_MAP: Record<string, string> = {
   "driver-order-competition": "driver_order_competition",
   "customer-order-confirmation": "customer_order_confirmation",
   "order-placement": "order_placement",
-  "admin": "user", // Admin has user permissions
+  "admin": "rbac",
 };
 
 export function Sidebar() {

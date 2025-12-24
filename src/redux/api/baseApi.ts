@@ -86,7 +86,7 @@ export const baseApi = createApi({
     "ServiceZones",
     "Wallets",
     "Orders",
-
+    "Transactions",
   ],
   endpoints: () => ({}),
 });

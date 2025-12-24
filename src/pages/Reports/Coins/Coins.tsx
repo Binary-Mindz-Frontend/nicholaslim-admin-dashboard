@@ -3,7 +3,7 @@
 import CoinSummaryChart from "./CoinsChart/CoinSummaryChart";
 import CoinsByActivityChart from "./CoinsChart/CoinsByActivityChart";
 import CoinsAnalytics from "./CoinsAnalytics/CoinsAnalytics";
-import FilterSection from "./FilterSection/FilterSection";
+import FilterSection from "../FilterSection/FilterSection";
 import { useState, useEffect } from "react";
 import { useGetCoinStatsQuery } from "@/redux/features/reportAndAnalytics/reportAndAnalyticsApi";
 
