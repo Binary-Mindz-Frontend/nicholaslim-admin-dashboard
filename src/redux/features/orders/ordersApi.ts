@@ -56,7 +56,20 @@ const driverOrdersApi = baseApi.injectEndpoints({
                 method:"GET",
             }),
             providesTags:( id) => [{type:"Orders", id}]
-        })
+        }),
+
+        updateOrder: builder.mutation({
+            query: ({ id, data }) => ({
+                url: `/order/${id}`,
+                method: "PATCH",
+                body: data,
+            }),
+            // This forces "Orders" queries to refresh so the UI updates automatically
+            invalidatesTags: ({ id }) => [
+                { type: "Orders", id }, 
+                "Orders"
+            ],
+        }),
 
     }),
 });
@@ -65,4 +78,5 @@ export const {
     useGetDriverOrdersQuery,
     useGetOrderStatsQuery,
     useGetSingleOrderQuery,
+    useUpdateOrderMutation,
 } = driverOrdersApi;

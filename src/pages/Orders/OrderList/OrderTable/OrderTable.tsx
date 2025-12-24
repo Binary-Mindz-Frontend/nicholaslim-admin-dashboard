@@ -143,7 +143,9 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
           className="bg-blue-200 p-1.5 rounded hover:bg-blue-300 transition-colors">
             <Eye size={16} className="text-blue-700" />
           </button>
-          <button className="bg-green-200 p-1.5 rounded hover:bg-green-300 transition-colors">
+          <button
+          onClick={() => navigate(`/order/${row.orderId}?edit=true`)}
+          className="bg-green-200 p-1.5 rounded hover:bg-green-300 transition-colors">
             <Pencil size={16} className="text-green-700" />
           </button>
           <button className="bg-red-200 p-1.5 rounded hover:bg-red-300 transition-colors">
