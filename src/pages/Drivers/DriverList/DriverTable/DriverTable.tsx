@@ -104,8 +104,6 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
 
   // Fetch the data using useGetRiderProfilesQuery hook with filtered params
   const { data, isLoading, isError } = useGetRiderProfilesQuery(queryParams);
-  // console.log("Fetched pagination data:", data?.data?.pagination?.total);
-  // Effect to update driver data when query result changes
   useEffect(() => {
     if (data?.data?.data) {
       setDrivers(data?.data?.data);
