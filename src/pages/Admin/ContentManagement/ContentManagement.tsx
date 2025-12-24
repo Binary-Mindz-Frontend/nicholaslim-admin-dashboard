@@ -43,7 +43,7 @@ export default function ContentManagementApp() {
         if (response.success) {
           setContentData((prev) => ({
             ...prev,
-            [activeTab]: newContent,
+            [activeTab]: "",
           }));
           apiHooks.refetchContent();
           toast.dismiss();
@@ -64,11 +64,12 @@ export default function ContentManagementApp() {
         if (response.success) {
           setContentData((prev) => ({
             ...prev,
-            [activeTab]: newContent,
+            [activeTab]: "",
           }));
           apiHooks.refetchContent();
           toast.dismiss();
           toast.success(response.message || "Content published successfully!");
+          
         } else {
           toast.dismiss();
           toast.error(response.message || "Failed to publish content.");
