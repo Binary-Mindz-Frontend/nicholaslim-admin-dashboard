@@ -42,8 +42,6 @@ export default function OrderForm({ initialData, isEditMode }: OrderFormProps) {
     // 4. Submit logic
   const handleSave = async () => {
     try {
-        // ONLY send fields that the Order API accepts
-        // Based on the error, we remove the 'user' object entirely
         await updateOrder({
             id: initialData.id,
             data: {
@@ -53,6 +51,7 @@ export default function OrderForm({ initialData, isEditMode }: OrderFormProps) {
         }).unwrap();
         
         toast.success("Order updated successfully!");
+        
     } catch (error: any) {
         toast.error(error?.data?.message || "Failed to update order");
     }
