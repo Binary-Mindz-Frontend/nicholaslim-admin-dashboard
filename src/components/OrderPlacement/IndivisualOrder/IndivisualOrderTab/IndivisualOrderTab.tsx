@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useRef, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   Select,
   SelectContent,
@@ -18,7 +20,44 @@ import { useGetUserFeeStructureQuery } from "@/redux/features/userFeeStructure/u
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateOrderMutation } from "@/redux/features/orderPlacement/orderPlacementApi";
 
-const IndivisualOrderTab = ({ data }: { data: any }) => {
+interface Destination {
+  address: string;
+  floor_unit: string;
+  contact_name: string;
+  contact_number: string;
+  note_to_driver: string;
+  type: "SENDER" | "RECEIVER";
+}
+
+interface OrderFormData {
+  route_type: "ONE_WAY" | "ROUND";
+  isFixed: boolean;
+  delivery_type: string;
+  vehicle_type_id: number;
+  collect_time: "ASAP" | "SCHEDULED";
+  scheduled_time?: string;
+  total_cost: number;
+  has_additional_services: boolean;
+  is_promo_used: boolean;
+  notify_favorite_raider: boolean;
+  pay_type: string;
+  destinations: Destination[];
+}
+
+interface SenderReceiverData {
+  contact_name: string;
+  contact_number: string;
+  address: string;
+  floor_unit: string;
+  note_to_driver: string;
+}
+
+interface IndivisualOrderTabProps {
+  data?: Partial<OrderFormData>;
+}
+
+const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
+  const navigate = useNavigate();
   const { data: deliveryType } = useGetDeliveryTypesQuery(undefined);
   const { data: vehicleTypes } = useGetVehicleTypesQuery(undefined);
   const { data: userFeeStructure } = useGetUserFeeStructureQuery(undefined);
@@ -29,13 +68,12 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
   const dateInputRef = useRef<HTMLInputElement>(null);
   
   // State for form data
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<OrderFormData>({
     route_type: "ONE_WAY",
     isFixed: false,
     delivery_type: "EXPRESS",
     vehicle_type_id: 3,
     collect_time: "ASAP",
-    scheduled_time: "",
     total_cost: 0,
     has_additional_services: false,
     is_promo_used: false,
@@ -61,7 +99,7 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
     ]
   });
 
-  const [sender, setSender] = useState({
+  const [sender, setSender] = useState<SenderReceiverData>({
     contact_name: "",
     contact_number: "",
     address: "",
@@ -69,7 +107,7 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
     note_to_driver: "",
   });
 
-  const [receiver, setReceiver] = useState({
+  const [receiver, setReceiver] = useState<SenderReceiverData>({
     contact_name: "",
     contact_number: "",
     address: "",
@@ -79,18 +117,17 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
 
   const [collectTimeOption, setCollectTimeOption] = useState<"now" | "schedule">("now");
   const [scheduledDate, setScheduledDate] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [createOrder] = useCreateOrderMutation();
 
-  // Initialize form with provided data if available
+  // Initialize form with provided data if available - FIXED: removed formData from dependencies
   useEffect(() => {
-    if (data) {
-      setFormData(prev => ({
-        ...prev,
+    if (data && Object.keys(data).length > 0) {
+      const updatedFormData: Partial<OrderFormData> = {
         ...data,
-        scheduled_time: data.scheduled_time || "",
-        collect_time: data.collect_time || "ASAP",
-      }));
+        collect_time: (data.collect_time as "ASAP" | "SCHEDULED") || "ASAP",
+      };
 
       // Set collect time option based on data
       if (data.scheduled_time) {
@@ -99,14 +136,16 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
         const date = new Date(data.scheduled_time);
         const localDateTime = date.toISOString().slice(0, 16);
         setScheduledDate(localDateTime);
+        updatedFormData.scheduled_time = data.scheduled_time;
       } else {
         setCollectTimeOption("now");
+        updatedFormData.scheduled_time = undefined;
       }
 
-      // Set pay_type from data
-      if (data.pay_type) {
-        setFormData(prev => ({ ...prev, pay_type: data.pay_type }));
-      }
+      setFormData(prev => ({
+        ...prev,
+        ...updatedFormData,
+      } as OrderFormData));
 
       // Extract sender and receiver from destinations
       if (data.destinations && data.destinations.length > 0) {
@@ -135,7 +174,7 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
         }
       }
     }
-  }, [data]);
+  }, [data]); // Only depend on 'data' prop
 
   // Update selected vehicle when vehicle_type_id changes or vehicleTypes loads
   useEffect(() => {
@@ -182,7 +221,7 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
 
   const totalCost = deliveryPrice + platformFee;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: string, type: "sender" | "receiver") => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: keyof SenderReceiverData, type: "sender" | "receiver") => {
     const { value } = e.target;
     
     if (type === "sender") {
@@ -199,7 +238,7 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
       setFormData(prev => ({ 
         ...prev, 
         collect_time: "ASAP",
-        scheduled_time: "" 
+        scheduled_time: undefined 
       }));
       setScheduledDate("");
     } else if (value === "schedule") {
@@ -224,16 +263,70 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
     }
   };
 
+  const validateForm = (): boolean => {
+    // Validate sender fields
+    if (!sender.contact_name.trim()) {
+      toast.error("Sender name is required");
+      return false;
+    }
+    if (!sender.contact_number.trim()) {
+      toast.error("Sender number is required");
+      return false;
+    }
+    if (!sender.address.trim()) {
+      toast.error("Sender address is required");
+      return false;
+    }
+    
+    // Validate receiver fields
+    if (!receiver.contact_name.trim()) {
+      toast.error("Recipient name is required");
+      return false;
+    }
+    if (!receiver.contact_number.trim()) {
+      toast.error("Recipient number is required");
+      return false;
+    }
+    if (!receiver.address.trim()) {
+      toast.error("Recipient address is required");
+      return false;
+    }
+    
+    // Validate delivery type
+    if (!selectedDeliveryType) {
+      toast.error("Please select a delivery type");
+      return false;
+    }
+    
+    // Validate vehicle type
+    if (!selectedVehicle) {
+      toast.error("Please select a vehicle");
+      return false;
+    }
+    
+    // Validate scheduled time if selected
+    if (collectTimeOption === "schedule" && !scheduledDate) {
+      toast.error("Please select a scheduled time");
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleConfirmOrder = async () => {
-    const orderData = {
+    // Validate form
+    if (!validateForm()) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    const orderData: any = {
       ...formData,
       total_cost: totalCost,
       vehicle_type_id: selectedVehicle?.id || formData.vehicle_type_id,
       delivery_type: selectedDeliveryType?.name || formData.delivery_type,
       collect_time: collectTimeOption === "now" ? "ASAP" : "SCHEDULED",
-      scheduled_time: collectTimeOption === "schedule" && scheduledDate 
-        ? new Date(scheduledDate).toISOString() 
-        : null,
       destinations: [
         {
           ...sender,
@@ -246,23 +339,35 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
       ],
     };
 
-    // Remove null scheduled_time if not scheduled
-    if (collectTimeOption === "now") {
-      delete orderData.scheduled_time;
+    // Only include scheduled_time if it's a scheduled order
+    if (collectTimeOption === "schedule" && scheduledDate) {
+      orderData.scheduled_time = new Date(scheduledDate).toISOString();
     }
 
     console.log("Submitting order data:", orderData);
 
     try {
       const response = await createOrder(orderData);
+      
       if (response?.data) {
         console.log("Order created successfully", response.data);
-      }
+        toast.success("Order created successfully!");
+        navigate("/order-confirm", { 
+          state: { 
+            orderId: response.data.id,
+            orderData: response.data 
+          } 
+        });
+      } 
       if (response?.error) {
         console.error("Order creation error:", response.error);
+        toast.error("Failed to create order. Please try again.");
       }
     } catch (error) {
       console.error("Error creating order:", error);
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -438,6 +543,7 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
               value={sender.contact_name}
               onChange={(e) => handleInputChange(e, "contact_name", "sender")}
               placeholder="Sender Name"
+              required
             />
           </div>
           <div>
@@ -446,6 +552,7 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
               value={sender.contact_number}
               onChange={(e) => handleInputChange(e, "contact_number", "sender")}
               placeholder="Sender Number"
+              required
             />
           </div>
         </div>
@@ -457,6 +564,7 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
               value={sender.address}
               onChange={(e) => handleInputChange(e, "address", "sender")}
               placeholder="Sender Address"
+              required
             />
           </div>
           <div>
@@ -490,6 +598,7 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
               value={receiver.contact_name}
               onChange={(e) => handleInputChange(e, "contact_name", "receiver")}
               placeholder="Recipient 1"
+              required
             />
           </div>
           <div>
@@ -498,6 +607,7 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
               value={receiver.contact_number}
               onChange={(e) => handleInputChange(e, "contact_number", "receiver")}
               placeholder="Recipient 1 Number"
+              required
             />
           </div>
         </div>
@@ -509,6 +619,7 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
               value={receiver.address}
               onChange={(e) => handleInputChange(e, "address", "receiver")}
               placeholder="Recipient 1 Address"
+              required
             />
           </div>
           <div>
@@ -556,17 +667,18 @@ const IndivisualOrderTab = ({ data }: { data: any }) => {
             <SelectContent>
               <SelectItem value="cash">COD</SelectItem>
               <SelectItem value="stripe">Stripe</SelectItem>
-              <SelectItem value="card">Card</SelectItem>
+              {/* <SelectItem value="card">Card</SelectItem> */}
             </SelectContent>
           </Select>
         </div>
       </div>
 
       <Button
-        className="w-full bg-yellow-400 cursor-pointer mt-5 hover:bg-yellow-500 text-gray-900 font-bold py-3"
+        className="w-full bg-yellow-400 cursor-pointer mt-4 hover:bg-yellow-500 text-gray-900 font-bold py-3"
         onClick={handleConfirmOrder}
+        disabled={isSubmitting}
       >
-        Confirm order
+        {isSubmitting ? "Creating Order..." : "Confirm order"}
       </Button>
     </div>
   );

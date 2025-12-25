@@ -1,6 +1,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import IndivisualOrderTab from "../IndivisualOrder/IndivisualOrderTab/IndivisualOrderTab";
+import BulkOrderTab from "../BulkOrder/BulkOrderTab/BulkOrderTab";
 export default function OrderPlacementPage() {
  
   return (
@@ -41,7 +42,7 @@ export default function OrderPlacementPage() {
 
           {/* Bulk Order Tab */}
           <TabsContent value="bulk" className="space-y-8">
-            This is Bulk Order Tab
+            <BulkOrderTab />
           </TabsContent>
         </Tabs>
       </div>
