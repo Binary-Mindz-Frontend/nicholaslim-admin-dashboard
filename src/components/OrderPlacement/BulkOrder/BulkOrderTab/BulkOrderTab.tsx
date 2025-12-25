@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DropIcons } from "@/components/Icons/Icons";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 import {
   useLazyExportOrdersCsvQuery,
   useUploadBulkOrderFileMutation,
   useBulkOrderMutation,
+  useGetBulkOrdersTabQuery,
+  useBulkOrderStatusPendingMutation,
 } from "@/redux/features/orderPlacement/orderPlacementApi";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -26,7 +28,25 @@ const BulkOrderTab = () => {
     useLazyExportOrdersCsvQuery();
   const [uploadFile, { isLoading: isUploading }] =
     useUploadBulkOrderFileMutation();
-  const [bulkOrder, { isLoading: isCreatingBulkOrder }] = useBulkOrderMutation();
+  const [bulkOrder, { isLoading: isCreatingBulkOrder }] =
+    useBulkOrderMutation();
+  const [updateBulkOrderStatus, { isLoading: isUpdatingStatus }] = 
+    useBulkOrderStatusPendingMutation(); // Add this mutation
+
+  const { data: bulkOrdersData, refetch } = useGetBulkOrdersTabQuery(undefined);
+
+  //  const navigate = useNavigate();
+
+  // Extract bulk order IDs from the response
+  const bulkOrderIds = bulkOrdersData?.data?.data?.map((order: any) => order.id) || [];
+
+  console.log(bulkOrderIds, 'bulkOrderIds')
+
+  // I got the the id from here
+  console.log(bulkOrdersData?.data?.data[0]?.id, "bulkOrdersId");
+
+  const totalBulkOrdersCost =
+    bulkOrdersData?.data.totalCost._sum.total_cost || 0;
 
   // State for sender information
   const [senderName, setSenderName] = useState("");
@@ -58,7 +78,7 @@ const BulkOrderTab = () => {
       link.remove();
 
       window.URL.revokeObjectURL(url);
-      
+
       Swal.fire({
         title: "Success!",
         text: "CSV template downloaded successfully!",
@@ -113,12 +133,12 @@ const BulkOrderTab = () => {
 
       // Trigger the bulk order API to create the orders
       const response = await bulkOrder(requestData).unwrap();
-      
+
       // Close loading dialog
       Swal.close();
-      
+
       console.log("Bulk order API response:", response);
-      
+
       // Show success message
       Swal.fire({
         title: "Success!",
@@ -127,23 +147,23 @@ const BulkOrderTab = () => {
         confirmButtonText: "OK",
         confirmButtonColor: "#3B82F6",
       });
-      
+
       // Clear the uploaded file state
       setUploadedFileUrl(null);
       setUploadedFileName(null);
-      
+
       return response;
     } catch (error: any) {
       console.error("Failed to create bulk order", error);
       Swal.close();
-      
+
       Swal.fire({
         title: "Error!",
         text: error?.data?.message || "Failed to create bulk orders.",
         icon: "error",
         confirmButtonText: "OK",
       });
-      
+
       throw error;
     }
   };
@@ -165,7 +185,7 @@ const BulkOrderTab = () => {
     if (!file) return;
 
     // Validate file type
-    if (!file.name.toLowerCase().endsWith('.csv')) {
+    if (!file.name.toLowerCase().endsWith(".csv")) {
       Swal.fire({
         title: "Error!",
         text: "Please upload a CSV file.",
@@ -204,11 +224,11 @@ const BulkOrderTab = () => {
 
       const uploadResponse = await uploadFile(formData).unwrap();
       Swal.close();
-      
+
       console.log("CSV upload API response:", uploadResponse);
-      
+
       const fileUrl = uploadResponse?.data[0] || uploadResponse?.fileUrl;
-      
+
       if (!fileUrl) {
         throw new Error("No file URL returned from upload");
       }
@@ -216,28 +236,27 @@ const BulkOrderTab = () => {
       // Store the file URL and name
       setUploadedFileUrl(fileUrl);
       setUploadedFileName(file.name);
-      
+
       console.log("File uploaded successfully:", fileUrl);
-      
+
       // Automatically trigger bulk order creation
       await processBulkOrder(fileUrl);
-      
     } catch (error: any) {
       Swal.close();
       console.error("CSV upload failed", error);
-      
+
       Swal.fire({
         title: "Error!",
         text: error?.data?.message || "Failed to upload CSV file.",
         icon: "error",
         confirmButtonText: "OK",
       });
-      
+
       // Reset states
       setUploadedFileUrl(null);
       setUploadedFileName(null);
     }
-    
+
     // Reset file input
     e.target.value = "";
   };
@@ -271,6 +290,61 @@ const BulkOrderTab = () => {
     }
   };
 
+  const handleConfirmOrder = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default link navigation
+
+    try {
+      // Show loading state
+      Swal.fire({
+        title: "Updating Order Status...",
+        text: "Please wait while we update your order status to pending.",
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
+      // Update bulk order status to pending
+      const response = await updateBulkOrderStatus(bulkOrderIds).unwrap();
+
+      // Close loading dialog
+      Swal.close();
+
+      console.log("Bulk order status update response:", response);
+
+      // Show success message
+      Swal.fire({
+        title: "Success!",
+        text: response?.message || "Order status updated to pending successfully!",
+        icon: "success",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#3B82F6",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Navigate to order confirmation page
+          // navigate("/order-confirm");
+        }
+      });
+
+    } catch (error: any) {
+      console.error("Failed to update bulk order status", error);
+      Swal.close();
+
+      Swal.fire({
+        title: "Error!",
+        text: error?.data?.message || "Failed to update order status.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
+
+
+  
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
   return (
     <>
       <div className="bg-white rounded-lg p-8 border border-gray-200">
@@ -285,11 +359,13 @@ const BulkOrderTab = () => {
           </Button>
         </div>
 
-        <div className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-          isUploading || isCreatingBulkOrder 
-            ? 'border-gray-300 bg-gray-50' 
-            : 'border-gray-400 hover:bg-gray-50 hover:border-blue-400'
-        }`}>
+        <div
+          className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
+            isUploading || isCreatingBulkOrder
+              ? "border-gray-300 bg-gray-50"
+              : "border-gray-400 hover:bg-gray-50 hover:border-blue-400"
+          }`}
+        >
           <input
             type="file"
             id="file-upload"
@@ -299,18 +375,24 @@ const BulkOrderTab = () => {
             disabled={isUploading || isCreatingBulkOrder}
           />
 
-          <label 
-            htmlFor="file-upload" 
-            className={`cursor-pointer ${(isUploading || isCreatingBulkOrder) ? 'opacity-50 cursor-not-allowed' : ''}`}
+          <label
+            htmlFor="file-upload"
+            className={`cursor-pointer ${
+              isUploading || isCreatingBulkOrder
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+            }`}
           >
             <div className="mb-4 flex justify-center">
               <DropIcons />
             </div>
 
             <p className="text-[#2F6EED] font-semibold text-lg lg:text-3xl mb-1">
-              {isUploading ? "Uploading CSV..." : 
-               isCreatingBulkOrder ? "Creating Orders..." :
-               "Drop your spreadsheet here"}
+              {isUploading
+                ? "Uploading CSV..."
+                : isCreatingBulkOrder
+                ? "Creating Orders..."
+                : "Drop your spreadsheet here"}
             </p>
 
             <p className="text-gray-600 text-sm mb-1">
@@ -325,9 +407,7 @@ const BulkOrderTab = () => {
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-700 font-medium">
-                  📁 {uploadedFileName}
-                </p>
+                <p className="text-blue-700 font-medium">{uploadedFileName}</p>
                 <p className="text-blue-600 text-sm">
                   CSV file uploaded successfully
                 </p>
@@ -393,13 +473,14 @@ const BulkOrderTab = () => {
         {!isSenderInfoComplete() && (
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-yellow-700 text-sm">
-              ⚠️ Please complete all sender information (marked with *) to upload CSV and create bulk orders.
+              ⚠️ Please complete all sender information (marked with *) to
+              upload CSV and create bulk orders.
             </p>
           </div>
         )}
       </div>
 
-      <BulkOrdersTable/>
+      <BulkOrdersTable />
 
       {/* Order Summary */}
       <div className="bg-white rounded-lg p-8 border border-gray-200">
@@ -410,17 +491,20 @@ const BulkOrderTab = () => {
         <div className="space-y-4 mb-8">
           <div className="flex justify-between text-gray-700">
             <span>Delivery</span>
-            <span>+S$15.00</span>
+            <span>+${totalBulkOrdersCost}</span>
           </div>
           <div className="border-t pt-4 flex justify-between text-lg font-semibold text-gray-900">
             <span>Total</span>
-            <span>+S$30.00</span>
+            <span>+${totalBulkOrdersCost}</span>
           </div>
         </div>
 
         <div className="mb-6 flex items-center justify-between">
           <Label className="mb-0">Payment method</Label>
-          <Select defaultValue="stripe" disabled={isUploading || isCreatingBulkOrder}>
+          <Select
+            defaultValue="stripe"
+            disabled={isUploading || isCreatingBulkOrder}
+          >
             <SelectTrigger className="w-[20%]">
               <SelectValue placeholder="Select payment method" />
             </SelectTrigger>
@@ -432,14 +516,13 @@ const BulkOrderTab = () => {
         </div>
       </div>
 
-      <Link to="/order-confirm">
-        <Button 
-          className="w-full bg-gray-300 cursor-pointer hover:bg-gray-400 text-gray-900 font-bold py-3"
-          disabled={isUploading || isCreatingBulkOrder}
-        >
-          {isCreatingBulkOrder ? "Processing Orders..." : "Confirm Order"}
-        </Button>
-      </Link>
+      <Button
+        onClick={handleConfirmOrder}
+        className="w-full bg-gray-300 hover:bg-gray-400 text-gray-900 font-bold py-3"
+        // disabled={isConfirmButtonDisabled}
+      >
+        {isUpdatingStatus ? "Updating Status..." : "Confirm Order"}
+      </Button>
     </>
   );
 };
