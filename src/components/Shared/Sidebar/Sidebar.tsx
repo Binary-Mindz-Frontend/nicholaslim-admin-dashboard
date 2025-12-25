@@ -9,6 +9,7 @@ import { useGetRoleUserPermissionsQuery } from "@/redux/features/roleBasedAccess
 // Map menu IDs to backend modules
 const MENU_TO_MODULE_MAP: Record<string, string> = {
   // Main menu items mapping
+  "dashboard": "dashboard",
   "users": "user",
   "drivers": "raider",
   "order": "order",

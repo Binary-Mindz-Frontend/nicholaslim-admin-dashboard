@@ -60,7 +60,7 @@ import ViewDriverProfile from "@/pages/Drivers/NewJoinRequest/ViewDriverProfile/
 import FavouriteDriversPage from "@/pages/Users/UsersApp/FavouriteDrivers/FavouriteDriversPage";
 import OrderHistoryPage from "@/pages/Users/UsersApp/OrderHistory/OrderHistoryPage";
 import DriverWalletDetailsTable from "@/pages/Dashboard/Wallets/driverWalletHistory/DriverWalletHistoryTable";
-import ViewTrackOrder from "@/pages/Orders/ViewTrackOrder/ViewTrackOrder";
+
 
 const routes = createBrowserRouter([
   {
@@ -359,10 +359,6 @@ const routes = createBrowserRouter([
       {
         path: "order-history/:id",
         element: <OrderHistoryPage />,
-      },
-      {
-        path: "order/:id",
-        element: <ViewTrackOrder />,
       }
     ],
   },
