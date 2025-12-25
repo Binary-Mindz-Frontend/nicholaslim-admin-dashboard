@@ -31,8 +31,6 @@ import IncentiveManagementPage from "@/pages/Dashboard/Wallets/IncentinveManagem
 import CoinPage from "@/pages/Dashboard/coins/CoinPage";
 import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
 import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
-import OrderTracking from "@/pages/Orders/OrderTracking/OrderTracking";
-import OrderHistory from "@/pages/Orders/OrderHistory/OrderHistory";
 import PaymentOptionsPage from "@/pages/Orders/PaymentOptions/PaymentOptionsPage";
 import DriverOrderCompetition from "@/pages/Admin/DriverOrder/DriverOrder";
 import CustomerOrderConfirmation from "@/pages/Admin/CustomerOrder/CustomerOrderConfirmation";
@@ -60,6 +58,10 @@ import ViewDriverProfile from "@/pages/Drivers/NewJoinRequest/ViewDriverProfile/
 import FavouriteDriversPage from "@/pages/Users/UsersApp/FavouriteDrivers/FavouriteDriversPage";
 import OrderHistoryPage from "@/pages/Users/UsersApp/OrderHistory/OrderHistoryPage";
 import DriverWalletDetailsTable from "@/pages/Dashboard/Wallets/driverWalletHistory/DriverWalletHistoryTable";
+import ViewTrackOrder from "@/pages/Orders/ViewTrackOrder/ViewTrackOrder";
+import DriverListTrack from "@/pages/Orders/ViewTrackOrder/components/Driver/DriverList";
+import ViewLiveTrackOrder from "@/pages/OrderPlacement/LiveOrderTracking/ViewLiveTrackOrder/ViewLiveTrackOrder";
+import OrderHistory from "@/pages/OrderPlacement/OrderHistory/OrderHistory";
 
 
 const routes = createBrowserRouter([
@@ -252,7 +254,7 @@ const routes = createBrowserRouter([
       },
       {
         path: "live-order-tracking",
-        element: <OrderTracking />,
+        element: <LiveOrderTracking />,
       },
       {
         path: "order-history",
@@ -359,6 +361,18 @@ const routes = createBrowserRouter([
       {
         path: "order-history/:id",
         element: <OrderHistoryPage />,
+      },
+      {
+        path: "order/:id",
+        element: <ViewTrackOrder />,
+      },
+      {
+        path: "assign-driver/:id",
+        element: <DriverListTrack />,
+      },
+      {
+        path: "live-order-tracking/:id",
+        element: <ViewLiveTrackOrder />,
       }
     ],
   },

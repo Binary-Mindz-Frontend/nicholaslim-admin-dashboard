@@ -47,15 +47,15 @@ const driverOrdersApi = baseApi.injectEndpoints({
                 url: "/order/stats",
                 method: "GET",
             }),
-            providesTags: ["Orders"], 
+            providesTags: ["Orders"],
         }),
 
         getSingleOrder: builder.query({
-            query:(id) =>({
-                url:`/order/${id}`,
-                method:"GET",
+            query: (id) => ({
+                url: `/order/${id}`,
+                method: "GET",
             }),
-            providesTags:( id) => [{type:"Orders", id}]
+            providesTags: (id) => [{ type: "Orders", id }]
         }),
 
         updateOrder: builder.mutation({
@@ -65,7 +65,7 @@ const driverOrdersApi = baseApi.injectEndpoints({
                 body: data,
             }),
             invalidatesTags: ({ id }) => [
-                { type: "Orders", id }, 
+                { type: "Orders", id },
                 "Orders"
             ],
         }),
@@ -78,6 +78,16 @@ const driverOrdersApi = baseApi.injectEndpoints({
             invalidatesTags: ["Orders"],
         }),
 
+        // Inside your ordersApi.ts builder
+        assignDriver: builder.mutation({
+            query: ({ orderId, riderId }) => ({
+                url: `/order/assign/driver/${orderId}?riderId=${riderId}`,
+                method: 'PATCH',
+            }),
+            // This ensures the "View Order" page refreshes automatically
+            invalidatesTags: ({ orderId }) => [{ type: 'Orders', id: orderId }],
+        }),
+
     }),
 });
 
@@ -87,4 +97,5 @@ export const {
     useGetSingleOrderQuery,
     useUpdateOrderMutation,
     useDeleteOrderMutation,
+    useAssignDriverMutation,
 } = driverOrdersApi;
