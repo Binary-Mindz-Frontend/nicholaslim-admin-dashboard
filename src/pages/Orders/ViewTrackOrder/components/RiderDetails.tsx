@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MessageSquareMore, Phone, Star } from "lucide-react"
-import ridersDefault from '@/assets/images/riders/riders.svg'
+import { Star } from "lucide-react"
+import placeholderImg from '@/assets/placeholder.png'
 
 interface RiderDetailsProps {
   userData?: any;
@@ -10,7 +10,7 @@ interface RiderDetailsProps {
 export default function RiderDetails({ userData, vehicleData }: RiderDetailsProps) {
   // Map data from the API response
   const riderName = userData?.username || "Not Assigned";
-  const riderImage = userData?.image || ridersDefault;
+  const riderImage = userData?.image || placeholderImg;
   const vehicleType = vehicleData?.vehicle_type || "N/A";
   const vehicleName = vehicleData?.dimension ? `SUV (${vehicleData.dimension})` : "Standard";
   const riderPhone = userData?.phone || "";
@@ -46,7 +46,7 @@ export default function RiderDetails({ userData, vehicleData }: RiderDetailsProp
           </div>
 
           {/* Stats - Note: Using fallback numbers as these aren't in the provided API snippet yet */}
-          <div className="flex items-center justify-center gap-6 text-sm text-gray-700 mb-6">
+          <div className="flex items-center justify-center gap-6 text-sm text-gray-700">
             <div className="flex items-center gap-1">
               <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
               <span className="font-semibold">4.8/5</span>
@@ -54,16 +54,16 @@ export default function RiderDetails({ userData, vehicleData }: RiderDetailsProp
             </div>
             <span>ID: #{userData?.id || "N/A"}</span>
           </div>
+          <span className="text-sm text-gray-700 my-3">Phone: {riderPhone}</span>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-between gap-4">
+        {/* <div className="flex justify-between gap-4">
           <button className="flex-1 max-w-sm flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-400 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
             <MessageSquareMore className="w-5 h-5" />
             <span>Message</span>
           </button>
           
-          {/* Call button linking to real phone number */}
           <a 
             href={`tel:${riderPhone}`}
             className="flex-1 max-w-sm flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-400 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
@@ -71,7 +71,7 @@ export default function RiderDetails({ userData, vehicleData }: RiderDetailsProp
             <Phone className="w-5 h-5" />
             <span>Call</span>
           </a>
-        </div>
+        </div> */}
       </div>
     </div>
   )
