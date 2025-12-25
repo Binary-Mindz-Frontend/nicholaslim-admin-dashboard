@@ -83,7 +83,7 @@ const authSlice = createSlice({
           localStorage.removeItem('accessToken');
         //   localStorage.removeItem('refreshToken');
         //   localStorage.removeItem('expiresIn');
-        window.location.href = '/login';
+        // window.location.href = '/login';
         } catch (error) {
           // Silent fail for localStorage errors
         }

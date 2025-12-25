@@ -31,6 +31,14 @@ const reportAndAnalyticsApi = baseApi.injectEndpoints({
         params: { from, to },
       }),
     }),
+
+    getIncentiveStats: builder.query({
+      query: ({ from, to }) => ({
+        url: "/report-and-analytics/incentive/analytics",
+        method: "GET",
+        params: { from, to },
+      }),
+    }),
   }),
 });
 
@@ -39,4 +47,5 @@ export const {
   useGetReportAndAnalyticsQuery,
   useGetKpiStatsQuery,
   useGetCoinStatsQuery,
+  useGetIncentiveStatsQuery
 } = reportAndAnalyticsApi;

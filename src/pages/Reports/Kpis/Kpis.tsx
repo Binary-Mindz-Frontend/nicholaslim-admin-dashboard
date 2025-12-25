@@ -3,7 +3,7 @@ import EarningsOverTime from "./KpiChart/EarningsOverTime";
 import TopPerformingDrivers from "./KpiChart/TopPerformingDrivers";
 import KpiStats from "./KpiStats/KpiStats";
 import { useGetKpiStatsQuery } from "@/redux/features/reportAndAnalytics/reportAndAnalyticsApi";
-import FilterSection from "./FilterSection/FilterSection";
+import FilterSection from "../FilterSection/FilterSection";
 
 export default function Kpis() {
   const [dateFilter, setDateFilter] = useState("last_30_days");
