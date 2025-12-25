@@ -254,7 +254,7 @@ export default function FleetMapHeader() {
         <div ref={mapRef} className="w-full h-full"></div>
 
         {/* Zoom Controls */}
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-1000">
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-0">
           <button
             className="w-10 h-10 bg-white rounded shadow-lg flex items-center justify-center text-xl font-bold hover:bg-gray-50"
             onClick={() => mapInstanceRef.current?.zoomIn()}
@@ -270,7 +270,7 @@ export default function FleetMapHeader() {
         </div>
 
         {/* Last Updated */}
-        <div className="absolute bottom-4 right-4 bg-white px-4 py-2 rounded-lg shadow-md z-1000">
+        <div className="absolute bottom-4 right-4 bg-white px-4 py-2 rounded-lg shadow-md z-0">
           <span className="text-sm text-gray-500">
             Last updated {lastUpdated}
           </span>

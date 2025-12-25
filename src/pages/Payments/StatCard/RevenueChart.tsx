@@ -1,5 +1,3 @@
-"use client";
-
 import {
   LineChart,
   Line,
@@ -130,14 +128,14 @@ export default function RevenueChart({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mt-8 p-4 md:p-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="h-5 w-5 text-yellow-600" />
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-              Revenue Overview
+              Total Revenue
             </h1>
           </div>
           <p className="text-gray-500 text-sm">
