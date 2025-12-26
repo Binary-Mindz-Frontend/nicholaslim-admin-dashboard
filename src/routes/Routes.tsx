@@ -50,7 +50,7 @@ import PaymentOptions from "@/pages/OrderPlacement/PaymentOptions/PaymentOptions
 import OrderConfirmed from "@/pages/OrderConfirmed/OrderConfirmed";
 import Login from "@/pages/Login/Login";
 import Quiz from "@/pages/Admin/QuizManagement/Quiz";
-import AdminRoute from "./AdminRoute";
+// import AdminRoute from "./AdminRoute";
 import ForgotPassword from "@/pages/ForgotPassword/ForgotPassword";
 import VerifyOtp from "@/pages/VerifyOtp/VerifyOtp";
 import ResetPassword from "@/pages/ResetPassword/ResetPassword";
@@ -68,9 +68,9 @@ const routes = createBrowserRouter([
   {
     path: "/",
     element: (
-      <AdminRoute>
+      // <AdminRoute>
         <DashboardLayout />
-      </AdminRoute>
+      // </AdminRoute>
     ),
     children: [
       {
