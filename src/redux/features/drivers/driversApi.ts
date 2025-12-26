@@ -5,9 +5,9 @@ const driversApi = baseApi.injectEndpoints({
         // Image upload mutation
         uploadImage: builder.mutation({
             query: (formData) => ({
-                url: "/auth/upload", // Your backend endpoint
+                url: "/auth/upload",  
                 method: "POST",
-                body: formData, // Send FormData object containing multiple files
+                body: formData, 
             }),
         }),
 
@@ -34,11 +34,11 @@ const driversApi = baseApi.injectEndpoints({
                 }
 
                 return {
-                    url,  // Use the constructed URL with query params
-                    method: "GET",  // Use the GET method instead of POST
+                    url,   
+                    method: "GET",  
                 };
             },
-            providesTags: ["RiderProfiles"],  // Ensure you provide appropriate tags
+            providesTags: ["RiderProfiles"], 
         }),
 
         getGoinReqestRiderProfiles: builder.query({
@@ -46,7 +46,7 @@ const driversApi = baseApi.injectEndpoints({
                 raiderId,
                 raider_name,
                 raiderVerificationFromAdmin,
-                loginType, // New parameter
+                loginType,  
                 page = 1,
                 limit = 10,
             }) => {
@@ -60,7 +60,7 @@ const driversApi = baseApi.injectEndpoints({
                 if (raiderId) params.append("raiderId", raiderId.toString());
                 if (raider_name) params.append("raider_name", raider_name);
                 if (raiderVerificationFromAdmin) params.append("raider_verificationFromAdmin", raiderVerificationFromAdmin);
-                if (loginType) params.append("loginType", loginType); // Handle DIRECT_SIGNIN etc.
+                if (loginType) params.append("loginType", loginType); 
 
                 return {
                     url: `/raider-profile/rider-profiles?${params.toString()}`,
@@ -71,7 +71,7 @@ const driversApi = baseApi.injectEndpoints({
         }),
 
 
-        // NEW: Get single rider profile by ID
+        // Get single rider profile by ID
         getRiderProfileById: builder.query({
             query: (id) => ({
                 url: `/raider-profile/${id}`,
@@ -139,15 +139,15 @@ const driversApi = baseApi.injectEndpoints({
 
         verifyRiderProfile: builder.mutation<
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            any, // Replace 'any' with your expected response type if preferred
+            any, 
             { raiderId: string | number; verify: "APPROVED" | "REJECTED" | "PENDING" }
         >({
             query: ({ raiderId, verify }) => ({
-                // Matches: /raider-profile/verify-rider/4/APPROVED
+                
                 url: `/raider-profile/verify-rider/${raiderId}/${verify}`,
                 method: "PATCH",
             }),
-            // This tells Redux to refetch getRiderProfiles and getRiderProfileById
+             
             invalidatesTags: ({ raiderId }) => [
                 { type: "RiderProfiles", id: "LIST" },
                 { type: "RiderProfiles", id: raiderId },
@@ -159,11 +159,10 @@ const driversApi = baseApi.injectEndpoints({
                 url: `/my-raider/admin/${id}`,
                 method: "GET",
             }),
-            // Use specific tags so it refreshes when the rider is updated
+             
             providesTags: (id) => [{ type: "RiderProfiles", id }],
         }),
 
-        // Inside your ordersApi.ts
         getUserOrderHistory: builder.query({
             query: ({ id, page = 1, limit = 10 }) => ({
                 url: `/order/user-history/${id}?page=${page}&limit=${limit}`,
