@@ -180,29 +180,38 @@ function AddFundsFormContent() {
     );
   }
 
-  const getCardBrandImage = (brand: string) => {
-    if (!brand) return null;
-    const brandLower = brand.toLowerCase();
-    const baseUrl = "https://js.stripe.com/v3/fingerprinted/img";
+const getCardBrandImage = (brand: string) => {
+  if (!brand) return null;
 
-    switch (brandLower) {
-      case "visa":
-        return `${baseUrl}/visa-729c05c240c4bdb47b03ac81d9945bfe.svg`;
-      case "mastercard":
-        return `${baseUrl}/mastercard-729c05c240c4bdb47b03ac81d9945bfe.svg`;
-      case "american express":
-        return `${baseUrl}/amex-a719155989104199320e192776c594d2.svg`;
-      case "discover":
-        return `${baseUrl}/discover-ff1ca479532506a77d13f99e82110c73.svg`;
-      case "diners club":
-        return `${baseUrl}/diners-fbcbd30a0f6e7099c405cb6763777583.svg`;
-      case "jcb":
-        return `${baseUrl}/jcb-729c05c240c4bdb47b03ac81d9945bfe.svg`; // example
-      default:
-        return null;
-    }
-  };
+  const brandLower = brand.toLowerCase();
 
+  switch (brandLower) {
+    case "visa":
+      return "https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png";
+
+    case "mastercard":
+      return "https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg";
+
+    case "american express":
+      return "https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo.svg";
+
+    case "discover":
+      return "https://upload.wikimedia.org/wikipedia/commons/5/5a/Discover_Card_logo.svg";
+
+    case "diners club":
+      return "https://upload.wikimedia.org/wikipedia/commons/6/69/Diners_Club_Logo.svg";
+
+    case "jcb":
+      return "https://upload.wikimedia.org/wikipedia/commons/4/40/JCB_logo.svg";
+
+    case "unionpay":
+    case "union pay": // safety fallback
+      return "https://upload.wikimedia.org/wikipedia/commons/1/1b/UnionPay_logo.svg";
+
+    default:
+      return null;
+  }
+};
 
   const handleAmountClick = (amount: number) => {
     setSelectedAmount(amount);
