@@ -6,10 +6,13 @@ import {
   useGetUserCoinHistoryByIdQuery,
 } from "@/redux/features/coinManagement/coinManagementApi";
 import UserAuditTable from "./UserAuditTable";
+import UserCoinHistoryModal from "./UserCoinHistoryModal";
 
 const UserCoinAudit = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchParams, setSearchParams] = useState<{ username?: string }>({});
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Use debounced search to avoid too many API calls
   const debouncedSearch = useCallback(
@@ -39,11 +42,20 @@ const UserCoinAudit = () => {
   const { data: usersCoinHistory, isLoading: isUserCoinHistoryLoading } =
     useGetAllUsersCoinsHistoryQuery(searchParams);
 
-  const { data: userCoinHistoryById } = useGetUserCoinHistoryByIdQuery("");
-  const handleViewClick = async (id: number) => {
-    console.log(id);
-    const response = await userCoinHistoryById(id);
-    console.log(response);
+  // Fetch user coin history when a user is selected
+  const { data: userCoinHistoryData, isLoading: isUserHistoryLoading } = 
+    useGetUserCoinHistoryByIdQuery(selectedUserId!, {
+      skip: !selectedUserId
+    });
+
+  const handleViewClick = (id: number) => {
+    setSelectedUserId(id);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedUserId(null);
   };
 
   const allUsersCoinHistory = usersCoinHistory?.data || [];
@@ -65,8 +77,6 @@ const UserCoinAudit = () => {
     setSearchQuery("");
     setSearchParams({});
   };
-
-  
 
   return (
     <div className="mx-6 sm:mx-12 mt-12">
@@ -188,6 +198,15 @@ const UserCoinAudit = () => {
           </div>
         </div>
       )}
+
+      {/* User Coin History Modal */}
+      <UserCoinHistoryModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        userId={selectedUserId}
+        userCoinHistory={userCoinHistoryData?.data || []}
+        isLoading={isUserHistoryLoading}
+      />
     </div>
   );
 };
