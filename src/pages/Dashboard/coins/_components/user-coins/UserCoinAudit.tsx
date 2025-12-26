@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { debounce } from "lodash";
 import { FiSearch } from "react-icons/fi";
-import { useGetAllUsersCoinsHistoryQuery } from "@/redux/features/coinManagement/coinManagementApi";
+import {
+  useGetAllUsersCoinsHistoryQuery,
+  useGetUserCoinHistoryByIdQuery,
+} from "@/redux/features/coinManagement/coinManagementApi";
 import UserAuditTable from "./UserAuditTable";
 
 const UserCoinAudit = () => {
@@ -12,12 +15,9 @@ const UserCoinAudit = () => {
   const debouncedSearch = useCallback(
     debounce((query: string) => {
       if (query.trim()) {
-        // Check if query is numeric (user ID) or string (username)
         const isNumeric = /^\d+$/.test(query);
 
         if (isNumeric) {
-          // For numeric queries, we might want to search by userId
-          // But API only supports username search, so we'll use username
           setSearchParams({ username: query });
         } else {
           setSearchParams({ username: query });
@@ -31,8 +31,6 @@ const UserCoinAudit = () => {
 
   useEffect(() => {
     debouncedSearch(searchQuery);
-
-    // Cleanup
     return () => {
       debouncedSearch.cancel();
     };
@@ -40,6 +38,13 @@ const UserCoinAudit = () => {
 
   const { data: usersCoinHistory, isLoading: isUserCoinHistoryLoading } =
     useGetAllUsersCoinsHistoryQuery(searchParams);
+
+  const { data: userCoinHistoryById } = useGetUserCoinHistoryByIdQuery("");
+  const handleViewClick = async (id: number) => {
+    console.log(id);
+    const response = await userCoinHistoryById(id);
+    console.log(response);
+  };
 
   const allUsersCoinHistory = usersCoinHistory?.data || [];
 
@@ -60,6 +65,8 @@ const UserCoinAudit = () => {
     setSearchQuery("");
     setSearchParams({});
   };
+
+  
 
   return (
     <div className="mx-6 sm:mx-12 mt-12">
@@ -141,6 +148,7 @@ const UserCoinAudit = () => {
             data={tableData}
             isLoading={isUserCoinHistoryLoading}
             searchQuery={searchQuery}
+            handleViewClick={handleViewClick}
           />
         )}
       </div>

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useGetRoleUserPermissionsQuery } from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
-import { hasPermissionForMenu, childRouteToParentMapping } from "@/utils/permissionMapping";
-import { menuItems } from "@/components/Shared/Sidebar/MenuItems";
+import { hasPermissionForMenu, extractBaseRoute, childRouteToParentMapping } from "@/utils/permissionMapping";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -17,42 +16,20 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   useEffect(() => {
     if (!isLoading && permissionsData) {
       const path = location.pathname.substring(1);
-      const pathParts = path.split('/');
-      let routeId = pathParts[0];
       
       // Handle root path
-      if (!routeId) {
+      if (!path) {
         const hasDashboardAccess = permissionsData?.permissions?.dashboard?.includes("read");
         setHasAccess(!!hasDashboardAccess);
         return;
       }
       
-      // Handle dynamic routes (like :id routes)
-      const isDynamicRoute = routeId.includes('-') && routeId.split('-').some(part => 
-        menuItems.some(item => 
-          item.children?.some(child => child.id === part) || item.id === part
-        )
-      );
+      // Extract base route (remove parameters)
+      const baseRoute = extractBaseRoute(path);
       
-      if (isDynamicRoute) {
-        // Extract the actual route from dynamic path
-        const routeParts = routeId.split('-');
-        for (let i = 0; i < routeParts.length; i++) {
-          const possibleRoute = routeParts.slice(i).join('-');
-          const menuItem = menuItems.find(item => 
-            item.id === possibleRoute || 
-            item.children?.some(child => child.id === possibleRoute)
-          );
-          if (menuItem) {
-            routeId = possibleRoute;
-            break;
-          }
-        }
-      }
-      
-      // Check if this is a child route
-      const parentRoute = childRouteToParentMapping[routeId];
-      const menuIdToCheck = parentRoute || routeId;
+      // Find parent menu for the base route
+      const parentRoute = childRouteToParentMapping[baseRoute] || childRouteToParentMapping[path];
+      const menuIdToCheck = parentRoute || baseRoute;
       
       const access = hasPermissionForMenu(menuIdToCheck, permissionsData);
       setHasAccess(access);

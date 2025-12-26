@@ -33,7 +33,6 @@ import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
 import PaymentOptionsPage from "@/pages/Orders/PaymentOptions/PaymentOptionsPage";
 import DriverOrderCompetition from "@/pages/Admin/DriverOrder/DriverOrder";
 import CustomerOrderConfirmation from "@/pages/Admin/CustomerOrder/CustomerOrderConfirmation";
-import UserCoinDetails from "@/pages/Dashboard/coins/_components/UserCoinDetails/UserCoinDetails";
 import OrderList from "@/pages/Orders/OrderList/OrderList";
 import Orders from "@/pages/Reports/Orders/Orders";
 import DriverPerformance from "@/pages/Reports/DriverPerformance/DriverPerformance";
@@ -291,10 +290,6 @@ const routes = createBrowserRouter([
       {
         path: "coin-system",
         element: <CoinPage />,
-      },
-      {
-        path: "coin-system/:id",
-        element: <UserCoinDetails />,
       },
       {
         path: "report-orders",

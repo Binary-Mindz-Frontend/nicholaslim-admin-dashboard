@@ -55,7 +55,78 @@ export const childRouteToParentMapping: Record<string, string> = {
   "live-order-tracking": "order-placement",
   "order-history": "order-placement",
   "payment-options": "order-placement",
-  "order-list": "orders"
+  "order-list": "orders",
+  "quiz-create-edit": "quiz", 
+  "support/view": "support",
+  "users-app/:id": "users",
+  "driver-list/:id": "drivers",
+  "join-request/:id": "drivers",
+  "wallet-user/:id": "wallet",
+  "wallet-driver/:id": "wallet",
+  "favourite-drivers/:id": "users",
+  "order-history/:id": "users",
+  "order/:id": "orders",
+  "assign-driver/:id": "orders",
+  "live-order-tracking/:id": "order-placement"
+};
+
+// Extract base route from dynamic route
+export const extractBaseRoute = (route: string): string => {
+  // Remove query parameters if any
+  const cleanRoute = route.split('?')[0];
+  
+  // Handle dynamic routes with parameters
+  if (cleanRoute.includes('/:')) {
+    const parts = cleanRoute.split('/:');
+    return parts[0];
+  }
+  
+  // Handle specific known dynamic patterns
+  const dynamicPatterns = [
+    /^users-app\/\d+$/,
+    /^driver-list\/\d+$/,
+    /^wallet-user\/\d+$/,
+    /^wallet-driver\/\d+$/,
+    /^favourite-drivers\/\d+$/,
+    /^order-history\/\d+$/,
+    /^order\/\d+$/,
+    /^assign-driver\/\d+$/,
+    /^live-order-tracking\/\d+$/,
+    /^quiz-create-edit\/\d+$/,
+    /^join-request\/\d+$/,
+    /^support\/view\/\d+$/
+  ];
+  
+  for (const pattern of dynamicPatterns) {
+    if (pattern.test(cleanRoute)) {
+      return cleanRoute.split('/')[0];
+    }
+  }
+  
+  return cleanRoute;
+};
+
+// Helper to check if a route is dynamic
+export const isDynamicRoute = (route: string): boolean => {
+  const dynamicRoutes = [
+    "quiz-create-edit/:id",
+    "support/view/:id",
+    "users-app/:id",
+    "driver-list/:id",
+    "join-request/:id",
+    "wallet-user/:id",
+    "wallet-driver/:id",
+    "favourite-drivers/:id",
+    "order-history/:id",
+    "order/:id",
+    "assign-driver/:id",
+    "live-order-tracking/:id"
+  ];
+  
+  return dynamicRoutes.some(dynamicRoute => {
+    const dynamicPattern = dynamicRoute.replace(':id', '\\d+').replace(/\//g, '\\/');
+    return new RegExp(`^${dynamicPattern}$`).test(route);
+  });
 };
 
 export const hasPermissionForMenu = (
@@ -64,9 +135,10 @@ export const hasPermissionForMenu = (
 ): boolean => {
   if (menuId === "login") return true;
   
-  // Check if it's a child route
-  const parentMenuId = childRouteToParentMapping[menuId];
-  const finalMenuId = parentMenuId || menuId;
+  const baseMenuId = extractBaseRoute(menuId);
+  
+  const parentMenuId = childRouteToParentMapping[baseMenuId] || childRouteToParentMapping[menuId];
+  const finalMenuId = parentMenuId || baseMenuId;
   
   const permissionModules = menuToPermissionMapping[finalMenuId];
   
