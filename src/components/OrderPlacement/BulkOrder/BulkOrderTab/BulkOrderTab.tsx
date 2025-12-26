@@ -38,12 +38,12 @@ const BulkOrderTab = () => {
   //  const navigate = useNavigate();
 
   // Extract bulk order IDs from the response
-  const bulkOrderIds = bulkOrdersData?.data?.data?.map((order: any) => order.id) || [];
+  const bulkOrderIds = bulkOrdersData?.data?.totalOrderIds?.map((order: any) => order.id) || [];
 
-  console.log(bulkOrderIds, 'bulkOrderIds')
+  // console.log(bulkOrderIds, 'bulkOrderIds')
 
   // I got the the id from here
-  console.log(bulkOrdersData?.data?.data[0]?.id, "bulkOrdersId");
+  console.log(bulkOrdersData?.data, "bulkOrdersId");
 
   const totalBulkOrdersCost =
     bulkOrdersData?.data.totalCost._sum.total_cost || 0;
@@ -518,7 +518,7 @@ const BulkOrderTab = () => {
 
       <Button
         onClick={handleConfirmOrder}
-        className="w-full bg-gray-300 hover:bg-gray-400 text-gray-900 font-bold py-3"
+        className="w-full bg-gray-300 hover:bg-gray-400 cursor-pointer text-gray-900 font-bold py-3"
         // disabled={isConfirmButtonDisabled}
       >
         {isUpdatingStatus ? "Updating Status..." : "Confirm Order"}
