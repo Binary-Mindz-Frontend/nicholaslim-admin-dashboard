@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch } from "@/redux/hook";
 import toast from "react-hot-toast";
 import { useGetRoleUserPermissionsQuery } from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
+import { getAllAvailableRoutes } from "@/utils/permissionMapping";
 
 const Login: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -20,10 +21,9 @@ const Login: React.FC = () => {
 
   const [login, { isLoading }] = useLoginMutation();
 
-  // Fetch permissions only when shouldFetchPermissions is true
   const { data: permissionsData, isLoading: isLoadingPermissions } =
     useGetRoleUserPermissionsQuery(undefined, {
-      skip: !shouldFetchPermissions, // Don't fetch until login is successful
+      skip: !shouldFetchPermissions,
     });
 
   useEffect(() => {
@@ -32,7 +32,6 @@ const Login: React.FC = () => {
     }
   }, [email, password]);
 
-  // Handle navigation after permissions are loaded
   useEffect(() => {
     if (permissionsData && !isLoadingPermissions) {
       handleNavigation(permissionsData);
@@ -40,32 +39,17 @@ const Login: React.FC = () => {
   }, [permissionsData, isLoadingPermissions]);
 
   const handleNavigation = (permissionsData: any) => {
-    // Check if user has dashboard permission
-    const hasDashboardAccess =
-      permissionsData?.permissions?.dashboard?.includes("read") ||
-      permissionsData?.detailedPermissions?.some(
-        (permission: any) =>
-          permission.module === "dashboard" && permission.action === "read"
-      );
-
-    // Navigate based on permissions
-    if (hasDashboardAccess) {
+    if (permissionsData?.permissions?.dashboard?.includes("read")) {
       navigate("/");
+      return;
+    }
+    
+    const availableRoutes = getAllAvailableRoutes(permissionsData);
+    
+    if (availableRoutes.length > 0) {
+      navigate(`/${availableRoutes[0]}`);
     } else {
-      // Find first available module with read permission
-      const availableModules = Object.keys(permissionsData?.permissions || {});
-      const firstModuleWithRead = availableModules.find((module) =>
-        permissionsData?.permissions[module]?.includes("read")
-      );
-
-      console.log(firstModuleWithRead, "firstModuleWithRead");
-
-      if (firstModuleWithRead) {
-        // Navigate to the first available module
-        navigate(`/${firstModuleWithRead}`);
-      } else {
-        navigate("/profile");
-      }
+      navigate("/profile");
     }
   };
 
@@ -81,10 +65,7 @@ const Login: React.FC = () => {
         password: password,
       };
 
-      // Step 1: Login
       const result = await login(credentials).unwrap();
-
-      console.log(result, "First result");
 
       if (result.access_token) {
         dispatch(
@@ -94,8 +75,6 @@ const Login: React.FC = () => {
         );
 
         toast.success("Login successful!", { id: loginToast });
-
-        // Step 2: Trigger permissions fetch
         setShouldFetchPermissions(true);
       } else {
         toast.error("Login response missing required token", {
@@ -220,14 +199,12 @@ const Login: React.FC = () => {
             </label>
           </div>
 
-          {/* Error Message */}
           {errorMessage && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-600 text-sm">{errorMessage}</p>
             </div>
           )}
 
-          {/* Loading indicator for permissions */}
           {isLoadingPermissions && (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-blue-600 text-sm flex items-center">
