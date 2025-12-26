@@ -92,6 +92,12 @@ export const baseApi = createApi({
     "Coin",
     "Incentive",
     "DriverPerformance",
+    "BulkOrdersTab",
+    "ReportAndAnalytics",
+    "Kpi",
+    "Coin",
+    "Incentive",
+    "DriverPerformance",
   ],
   endpoints: () => ({}),
 });
