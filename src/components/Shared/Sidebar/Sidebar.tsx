@@ -43,7 +43,7 @@ export function Sidebar() {
         
         if (item.children && item.children.length > 0) {
           item.children = item.children.filter(child => {
-            console.log(child)
+            child
             return hasPermissionForMenu(item.id, roleBasedAccessControlData);
           });
           

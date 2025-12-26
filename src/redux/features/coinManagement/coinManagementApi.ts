@@ -30,7 +30,7 @@ const coinManagementApi = baseApi.injectEndpoints({
 
     getUserCoinHistoryById: builder.query({
       query: (id) => ({
-        url: `/coin-management/user-wallet-history/${id}`,
+        url: `/coin-management/coin-acc-history/${id}`,
         method: "GET",
       }),
       providesTags: ["Coins"],
