@@ -16,7 +16,7 @@ const usersApi = baseApi.injectEndpoints({
         url: "/users/me",
         method: "GET",
       }),
-      providesTags: ["Users"],
+      providesTags: ["Users", "Stripe"],
     })
   }),
 });

@@ -84,7 +84,6 @@ const driverOrdersApi = baseApi.injectEndpoints({
                 url: `/order/assign/driver/${orderId}?riderId=${riderId}`,
                 method: 'PATCH',
             }),
-            // This ensures the "View Order" page refreshes automatically
             invalidatesTags: ({ orderId }) => [{ type: 'Orders', id: orderId }],
         }),
 

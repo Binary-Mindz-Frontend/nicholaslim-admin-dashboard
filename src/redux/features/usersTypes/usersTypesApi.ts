@@ -11,13 +11,11 @@ const userTypesApi = baseApi.injectEndpoints({
         sortBy = "createdAt",
         sortOrder = "asc",
       }) => {
-        // Construct the URL with the provided query parameters
+         
         let url = `/users?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
 
-        // Add status filter (active, inactive, etc.)
         if (status) url += `&status=${status}`;
 
-        // Add date filter (yesterday, last7days, etc.)
         if (dateFilter) {
           url += `&dateFilter=${dateFilter}`;
         }
@@ -42,9 +40,9 @@ const userTypesApi = baseApi.injectEndpoints({
     // Mutation to permanently delete user(s) by ID(s)
     deleteUserType: builder.mutation({
       query: (ids) => ({
-        url: `/users/permanent`, // Updated URL for permanent deletion
+        url: `/users/permanent`, 
         method: "DELETE",
-        body: { ids }, // Send the "ids" array in the request body
+        body: { ids }, 
       }),
       invalidatesTags: ["UserTypes"],
     }),
@@ -53,9 +51,9 @@ const userTypesApi = baseApi.injectEndpoints({
     toggleUserActiveStatus: builder.mutation({
       query: (id) => ({
         url: `/users/active/${id}`,
-        method: "PATCH", // or "PUT" depending on your backend
+        method: "PATCH", 
       }),
-      invalidatesTags: ["UserTypes"], // Refetch users after toggle
+      invalidatesTags: ["UserTypes"],
     }),
 
     // Mutation to update a user by ID using PATCH
@@ -63,24 +61,23 @@ const userTypesApi = baseApi.injectEndpoints({
       query: ({ id, updatedData }) => ({
         url: `/users/${id}`,
         method: "PATCH",
-        body: updatedData, // Send the fields to be updated in the request body
+        body: updatedData, 
       }),
-      // Invalidate the 'UserTypes' tag to refetch the list and the specific user's details
+     
       invalidatesTags: (_, __, { id }) => [
         "UserTypes",
         { type: "UserTypes", id },
       ],
     }),
 
-    // 🚀 UPDATED Mutation to add a user (Admin Create User)
+    //UPDATED Mutation to add a user (Admin Create User)
     addUserType: builder.mutation({
       query: (newUser) => ({
-        // 👈 Changed URL from /auth/signup to /users/admin/create-user
         url: `/users/admin/create-user`,
         method: "POST",
-        body: newUser, // Expects { username, email, phone, password, role }
+        body: newUser, 
       }),
-      // Invalidate the 'UserTypes' tag to refetch the main list of users
+      
       invalidatesTags: ["UserTypes"],
     }),
 
@@ -89,7 +86,7 @@ const userTypesApi = baseApi.injectEndpoints({
         url: `users/me`, 
         method: "GET",
       }),
-      providesTags: ["UserTypes"],
+      providesTags: ["UserTypes", "Stripe"],
     }),
   }),
 });

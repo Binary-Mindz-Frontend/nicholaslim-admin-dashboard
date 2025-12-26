@@ -45,7 +45,7 @@ interface AddStripeFundsResponse {
     message: string;
     data?: any;
 }
-// New interface for the Card data
+
 export interface WalletCard {
     id: number;
     brand: string;
@@ -57,10 +57,28 @@ export interface WalletCard {
 
 }
 
-// --- API Definition ---
+export interface WalletTransaction {
+    id: number;
+    transactionId: string;
+    transactionType: string;
+    userId: number;
+    type: "credit" | "debit";
+    amount: string;
+    status: "SUCCESS" | "FAILED" | "PENDING";
+    createdAt: string;
+}
+
+export interface WalletTransactionHistoryResponse {
+    total: number;
+    page: number;
+    limit: number;
+    data: WalletTransaction[];
+}
+
+
 const paymentApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
-        // 1. Get Setup Intent Client Secret
+        // Get Setup Intent Client Secret
         createSetupIntent: builder.mutation<SetupIntentResponse, void>({
             query: () => ({
                 url: "/wallet/create-setup-intent",
@@ -68,12 +86,12 @@ const paymentApi = baseApi.injectEndpoints({
             }),
         }),
 
-        // 2. Save the Payment Method ID to Backend
+        // Save the Payment Method ID to Backend
         saveCard: builder.mutation<any, { paymentMethodId: string }>({
             query: (payload) => ({
                 url: "/wallet/save-card",
                 method: "POST",
-                body: payload, // This will send { paymentMethodId: "pm_..." }
+                body: payload,  
             }),
             invalidatesTags: ["Stripe"],
         }),
@@ -118,34 +136,37 @@ const paymentApi = baseApi.injectEndpoints({
             providesTags: ["Stripe"],
         }),
 
-        getTransactionHistory: builder.query<any, { page?: number; limit?: number }>({
-            query: ({ page = 1, limit = 20 }) => {
-                const url = `/wallet/transactions?page=${page}&limit=${limit}`;
-                return {
-                    url,
-                    method: "GET",
-                };
-            },
+        getTransactionHistory: builder.query<
+            WalletTransactionHistoryResponse,
+            { userId: number; page?: number; limit?: number }
+        >({
+            query: ({ userId, page = 1, limit = 20 }) => ({
+                url: `/wallet/user/walletHistory/${userId}`,
+                method: "GET",
+                params: {
+                    page,
+                    limit,
+                },
+            }),
             providesTags: ["Stripe"],
         }),
-
         getWalletCards: builder.query<WalletCard[], void>({
             query: () => ({
                 url: "/wallet/wallet/cards",
                 method: "GET",
             }),
-            // This ensures that when saveCard is called, this list refreshes
-            providesTags: ["Stripe"], 
+             
+            providesTags: ["Stripe"],
         }),
 
-        // 3. Delete a saved card by ID
-deleteCard: builder.mutation<{ success: boolean; message: string }, number>({
-  query: (cardId) => ({
-    url: `/wallet/wallet/cards/${cardId}`,
-    method: "DELETE",
-  }),
-  invalidatesTags: ["Stripe"], // This will refresh wallet cards list
-}),
+        //Delete a saved card by ID
+        deleteCard: builder.mutation<{ success: boolean; message: string }, number>({
+            query: (cardId) => ({
+                url: `/wallet/wallet/cards/${cardId}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: ["Stripe"],  
+        }),
 
 
     }),

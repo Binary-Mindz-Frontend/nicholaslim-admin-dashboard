@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
-import { useGetRiderProfilesQuery } from "@/redux/features/drivers/driversApi";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useAssignDriverMutation } from "@/redux/features/orders/ordersApi"; // Import your new mutation
+import { useAssignDriverMutation } from "@/redux/features/orders/ordersApi";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
+import { useGetApprovedRiderProfilesQuery } from "@/redux/features/drivers/driversApi";
 
 // Declare the TDriver and Registration interfaces directly here
 interface Registration {
@@ -89,52 +89,62 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
   const [drivers, setDrivers] = useState<TDriver[]>([]);
   const [totalItems, setTotalItems] = useState(0);
   
-  const { id: orderId } = useParams(); // Get orderId from /assign-driver/133
+  const { id: orderId } = useParams(); 
   const [assignDriver, { isLoading: isAssigning }] = useAssignDriverMutation();
-  
 
-  // Build query params - only include defined values
   const queryParams: UseDriverColumnsParams = {
     page: params.page || 1,
     limit: params.limit || 10,
   };
 
-  // Only add filters if they have values
   if (params.raiderId !== undefined) {
     queryParams.raiderId = params.raiderId;
   }
   if (params.raider_name) {
     queryParams.raider_name = params.raider_name;
   }
-  if (params.raiderVerificationFromAdmin) {
-    queryParams.raiderVerificationFromAdmin = params.raiderVerificationFromAdmin;
-  }
 
   // Fetch the data using useGetRiderProfilesQuery hook with filtered params
-  const { data, isLoading, isError } = useGetRiderProfilesQuery(queryParams);
- useEffect(() => {
+  const { data, isLoading, isError } = useGetApprovedRiderProfilesQuery(queryParams);
+
+  // console.log(data?.data?.pagination?.total)
+  useEffect(() => {
     if (data?.data?.data) {
       const approvedOnly = data.data.data.filter(
         (d: TDriver) => d.raider_verificationFromAdmin === "APPROVED"
       );
       
       setDrivers(approvedOnly);
-      setTotalItems(approvedOnly.length);
+      setTotalItems(data?.data?.pagination?.total);
     }
   }, [data]);
 
   // console.log(data?.data?.data);
 
-  const handleAssignClick = async (riderId: number) => {
-    if (!orderId) return toast.error("Order ID not found");
+const handleAssignClick = async (riderId: number) => {
+  if (!orderId) return toast.error("Order ID not found");
 
-    try {
-      await assignDriver({ orderId, riderId }).unwrap();
+  try {
+    const response = await assignDriver({ orderId, riderId }).unwrap();
+
+    if (response.success) {
       toast.success("Driver assigned successfully!");
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to assign driver");
+    } else {
+      // Show API error message
+      toast.error(response?.message || "This rider is already assigned to another active order");
     }
-  };
+  } catch (error: any) {
+    // For real network errors / rejected requests
+    const errorMessage =
+      error?.data?.message ||
+      error?.error?.response?.message ||
+      error?.error?.message ||
+      "This rider is already assigned to another active order";
+
+    toast.error(errorMessage);
+  }
+};
+
 
   // Define columns for the driver data
   const driverColumns: Column<TDriver>[] = [
