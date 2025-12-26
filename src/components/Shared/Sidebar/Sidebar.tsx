@@ -5,31 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout } from "@/redux/features/auth/authSlice";
 import { useGetRoleUserPermissionsQuery } from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
-
-// Map menu IDs to backend modules
-const MENU_TO_MODULE_MAP: Record<string, string> = {
-  // Main menu items mapping
-  "dashboard": "dashboard",
-  "users": "user",
-  "drivers": "raider",
-  "order": "order",
-  "live-map": "live_map",
-  "support": "support_dispute",
-  "payments": "payment_transaction",
-  "notifications": "notification",
-  "reports": "report_analytics",
-  "vehicle-management": "vechicle_pricing",
-  "wallet": "wallet",
-  "coin-system": "coin",
-  "quiz": "quiz",
-  "advertisement": "advertisement",
-  "platform-fee": "platform_fee",
-  "content-management": "content_management",
-  "driver-order-competition": "driver_order_competition",
-  "customer-order-confirmation": "customer_order_confirmation",
-  "order-placement": "order_placement",
-  "admin": "rbac",
-};
+import { hasPermissionForMenu } from "@/utils/permissionMapping";
 
 export function Sidebar() {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(
@@ -39,14 +15,14 @@ export function Sidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [filteredMenuItems, setFilteredMenuItems] = useState(menuItems);
 
-  const { data: roleBasedAccessControlData } = useGetRoleUserPermissionsQuery("");
+  const { data: roleBasedAccessControlData } = useGetRoleUserPermissionsQuery(undefined);
   
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const currentPath = location.pathname.replace('/', '');
+    const currentPath = location.pathname.substring(1);
     if (currentPath) {
       setActiveItem(currentPath);
       const parentItem = findParentItem(currentPath);
@@ -56,20 +32,25 @@ export function Sidebar() {
     }
   }, [location.pathname]);
 
-  // Filter menu items based on permissions
   useEffect(() => {
     if (roleBasedAccessControlData?.permissions) {
-      const userPermissions = roleBasedAccessControlData.permissions;
-      
       const filteredItems = menuItems.filter(item => {
-        // Always show dashboard and logout
-        if (item.id === "" || item.id === "login") return true;
+        if (item.id === "login") return true;
         
-        const moduleName = MENU_TO_MODULE_MAP[item.id];
-        if (!moduleName) return true; // Show items without module mapping
+        const hasPermission = hasPermissionForMenu(item.id, roleBasedAccessControlData);
         
-        // Check if user has any permission for this module
-        return userPermissions[moduleName] && userPermissions[moduleName].length > 0;
+        if (!hasPermission) return false;
+        
+        if (item.children && item.children.length > 0) {
+          item.children = item.children.filter(child => {
+            child
+            return hasPermissionForMenu(item.id, roleBasedAccessControlData);
+          });
+          
+          return item.children.length > 0;
+        }
+        
+        return true;
       });
       
       setFilteredMenuItems(filteredItems);
@@ -126,7 +107,15 @@ export function Sidebar() {
 
   const navigateToPage = (pageId: string) => {
     if (pageId === "login") return;
-    navigate(`/${pageId}`);
+    
+    // Check if this is a parent menu without children navigation
+    const menuItem = menuItems.find(item => item.id === pageId);
+    if (menuItem?.children && menuItem.children.length > 0) {
+      // Navigate to first child
+      navigate(`/${menuItem.children[0].id}`);
+    } else {
+      navigate(`/${pageId}`);
+    }
   };
 
   const toggleSidebar = () => {

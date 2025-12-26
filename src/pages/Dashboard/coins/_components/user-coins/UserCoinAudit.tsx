@@ -1,23 +1,26 @@
 import { useState, useEffect, useCallback } from "react";
 import { debounce } from "lodash";
 import { FiSearch } from "react-icons/fi";
-import { useGetAllUsersCoinsHistoryQuery } from "@/redux/features/coinManagement/coinManagementApi";
+import {
+  useGetAllUsersCoinsHistoryQuery,
+  useGetUserCoinHistoryByIdQuery,
+} from "@/redux/features/coinManagement/coinManagementApi";
 import UserAuditTable from "./UserAuditTable";
+import UserCoinHistoryModal from "./UserCoinHistoryModal";
 
 const UserCoinAudit = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchParams, setSearchParams] = useState<{ username?: string }>({});
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Use debounced search to avoid too many API calls
   const debouncedSearch = useCallback(
     debounce((query: string) => {
       if (query.trim()) {
-        // Check if query is numeric (user ID) or string (username)
         const isNumeric = /^\d+$/.test(query);
 
         if (isNumeric) {
-          // For numeric queries, we might want to search by userId
-          // But API only supports username search, so we'll use username
           setSearchParams({ username: query });
         } else {
           setSearchParams({ username: query });
@@ -31,8 +34,6 @@ const UserCoinAudit = () => {
 
   useEffect(() => {
     debouncedSearch(searchQuery);
-
-    // Cleanup
     return () => {
       debouncedSearch.cancel();
     };
@@ -40,6 +41,22 @@ const UserCoinAudit = () => {
 
   const { data: usersCoinHistory, isLoading: isUserCoinHistoryLoading } =
     useGetAllUsersCoinsHistoryQuery(searchParams);
+
+  // Fetch user coin history when a user is selected
+  const { data: userCoinHistoryData, isLoading: isUserHistoryLoading } = 
+    useGetUserCoinHistoryByIdQuery(selectedUserId!, {
+      skip: !selectedUserId
+    });
+
+  const handleViewClick = (id: number) => {
+    setSelectedUserId(id);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedUserId(null);
+  };
 
   const allUsersCoinHistory = usersCoinHistory?.data || [];
 
@@ -141,6 +158,7 @@ const UserCoinAudit = () => {
             data={tableData}
             isLoading={isUserCoinHistoryLoading}
             searchQuery={searchQuery}
+            handleViewClick={handleViewClick}
           />
         )}
       </div>
@@ -180,6 +198,15 @@ const UserCoinAudit = () => {
           </div>
         </div>
       )}
+
+      {/* User Coin History Modal */}
+      <UserCoinHistoryModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        userId={selectedUserId}
+        userCoinHistory={userCoinHistoryData?.data || []}
+        isLoading={isUserHistoryLoading}
+      />
     </div>
   );
 };

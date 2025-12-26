@@ -1,5 +1,4 @@
 import { createBrowserRouter } from "react-router-dom";
-import DashboardLayout from "@/Layouts/DashboardLayout";
 import Dashboard from "@/pages/Dashboard/Dashboard";
 import CreateRoll from "@/pages/Admin/CreateRoll/CreateRoll";
 import AddRemovePermission from "@/pages/Admin/AddRemovePermission/AddRemovePermission";
@@ -34,7 +33,6 @@ import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
 import PaymentOptionsPage from "@/pages/Orders/PaymentOptions/PaymentOptionsPage";
 import DriverOrderCompetition from "@/pages/Admin/DriverOrder/DriverOrder";
 import CustomerOrderConfirmation from "@/pages/Admin/CustomerOrder/CustomerOrderConfirmation";
-import UserCoinDetails from "@/pages/Dashboard/coins/_components/UserCoinDetails/UserCoinDetails";
 import OrderList from "@/pages/Orders/OrderList/OrderList";
 import Orders from "@/pages/Reports/Orders/Orders";
 import DriverPerformance from "@/pages/Reports/DriverPerformance/DriverPerformance";
@@ -63,16 +61,12 @@ import DriverListTrack from "@/pages/Orders/ViewTrackOrder/components/Driver/Dri
 import ViewLiveTrackOrder from "@/pages/OrderPlacement/LiveOrderTracking/ViewLiveTrackOrder/ViewLiveTrackOrder";
 import OrderHistory from "@/pages/OrderPlacement/OrderHistory/OrderHistory";
 import StripeWrapper from "@/pages/Orders/PaymentOptions/StripeWrapper";
-
+import DashboardLayoutWrapper from "@/Layouts/DashboardLayoutWrapper";
 
 const routes = createBrowserRouter([
   {
     path: "/",
-    element: (
-      // <AdminRoute>
-        <DashboardLayout />
-      // </AdminRoute>
-    ),
+    element: <DashboardLayoutWrapper />,
     children: [
       {
         index: true,
@@ -298,10 +292,6 @@ const routes = createBrowserRouter([
         element: <CoinPage />,
       },
       {
-        path: "coin-system/:id",
-        element: <UserCoinDetails />,
-      },
-      {
         path: "report-orders",
         element: <Orders />,
       },
@@ -378,7 +368,7 @@ const routes = createBrowserRouter([
       {
         path: "add-funds",
         element: <StripeWrapper />,
-      }
+      },
     ],
   },
 

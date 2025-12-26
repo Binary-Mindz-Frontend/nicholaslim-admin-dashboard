@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2 } from "lucide-react";
+import { Eye, Loader2 } from "lucide-react";
 
 interface UserCoinData {
   id: number;
@@ -22,12 +22,14 @@ interface UserAuditTableProps {
   data: UserCoinData[];
   isLoading?: boolean;
   searchQuery?: string;
+  handleViewClick: (id: number) => void;
 }
 
 const UserAuditTable: React.FC<UserAuditTableProps> = ({
   data,
   isLoading = false,
   searchQuery = "",
+  handleViewClick
 }) => {
   const highlightText = (text: string, searchTerm: string) => {
     if (!searchTerm || !text) return text;
@@ -108,13 +110,12 @@ const UserAuditTable: React.FC<UserAuditTableProps> = ({
                   </TableCell>
                   <TableCell>
                     <button
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer p-1 rounded-lg bg-amber-100"
                       onClick={() => {
-                        // Navigate to user detail page or open modal
-                        console.log("View user details:", row.id);
+                        handleViewClick(row.id);
                       }}
                     >
-                      View Details
+                      <Eye className="w-4 h-4" />
                     </button>
                   </TableCell>
                 </TableRow>

@@ -21,13 +21,14 @@ import {
   LogOut,
 } from "lucide-react";
 
-interface MenuItem {
+export interface MenuItem {
   id: string;
   label: string;
   icon: React.ReactNode;
   children?: MenuItem[];
   isExpanded?: boolean;
 }
+
 export const menuItems: MenuItem[] = [
   {
     id: "",
@@ -96,7 +97,7 @@ export const menuItems: MenuItem[] = [
     ],
   },
   {
-    id: "order",
+    id: "orders",
     label: "Order",
     icon: <Package className="w-5 h-5" />,
     children: [
@@ -122,13 +123,11 @@ export const menuItems: MenuItem[] = [
     label: "Live Map / Fleet Tracking",
     icon: <Map className="w-5 h-5" />,
   },
-
   {
     id: "notifications",
     label: "Notifications & Communication",
     icon: <Bell className="w-5 h-5" />,
   },
-
   {
     id: "reports",
     label: "Reports & Analytics",
@@ -151,7 +150,7 @@ export const menuItems: MenuItem[] = [
       },
       {
         id: "kpi",
-        label: "KPI’s",
+        label: "KPI's",
         icon: null,
       },
       {
@@ -166,7 +165,6 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
-
   {
     id: "vehicle-management",
     label: "Vehicle Type & Pricing Model Management",
@@ -178,7 +176,6 @@ export const menuItems: MenuItem[] = [
       { id: "types-of-delivery", label: "Types of Delivery", icon: null },
     ],
   },
-
   {
     id: "wallet",
     label: "Wallet",
@@ -193,53 +190,41 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
-
   {
     id: "coin-system",
     label: "Coin System",
     icon: <CircleDollarSign className="w-5 h-5" />,
   },
-
   {
     id: "quiz",
     label: "Quiz",
     icon: <HelpCircle className="w-5 h-5" />,
-    // children: [
-    //   { id: "quiz-create-edit", label: "Create/Edit", icon: null },
-    //   { id: "quiz-track-drivers", label: "Track Drivers", icon: null },
-    // ],
   },
-
   {
     id: "advertisement",
     label: "Advertisement",
     icon: <Tv className="w-5 h-5" />,
   },
-
   {
     id: "platform-fee",
     label: "Platform fee",
     icon: <Tag className="w-5 h-5" />,
   },
-
   {
     id: "content-management",
     label: "Content Management",
     icon: <FileText className="w-5 h-5" />,
   },
-
   {
     id: "driver-order-competition",
     label: "Driver Order Competition",
     icon: <Users className="w-5 h-5" />,
   },
-
   {
     id: "customer-order-confirmation",
     label: "Customer Order Confirmation",
     icon: <CheckCircle className="w-5 h-5" />,
   },
-
   {
     id: "order-placement",
     label: "Order Placement",
