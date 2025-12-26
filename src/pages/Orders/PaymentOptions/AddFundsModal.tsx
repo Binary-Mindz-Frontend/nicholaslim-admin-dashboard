@@ -18,8 +18,21 @@ import {
   useSaveCardMutation,
   useGetWalletCardsQuery,
   useDeleteCardMutation,
-  
+
 } from "@/redux/features/payment/paymentApi";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+
+import toast from "react-hot-toast";
+
 
 /* Stripe instance */
 const stripePromise = loadStripe(
@@ -44,6 +57,7 @@ function AddFundsFormContent() {
   const [selectedSavedCardId, setSelectedSavedCardId] = useState<string>(""); // Track specific card ID
   const [cardholderName, setCardholderName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [cardToDelete, setCardToDelete] = useState<number | null>(null);
 
   const [deleteCard] = useDeleteCardMutation();
 
@@ -99,7 +113,8 @@ function AddFundsFormContent() {
       if (setupIntent?.status === "succeeded") {
         const payload = { paymentMethodId: setupIntent.payment_method as string };
         await saveCard(payload).unwrap();
-        alert("Card saved successfully!");
+        toast.success("Card saved successfully!");
+
 
         setPaymentMethod("saved");
         setCardholderName("");
@@ -113,30 +128,31 @@ function AddFundsFormContent() {
     }
   };
 
-  const handleRemoveCard = async (cardId: number) => {
-    if (!confirm("Are you sure you want to remove this card?")) return;
+  const handleRemoveCard = async () => {
+  if (!cardToDelete) return;
 
-    try {
-      const response = await deleteCard(cardId).unwrap();
-      if (response.success) {
-        alert("Card removed successfully!");
-        // If the removed card was selected, reset selection
-        if (selectedSavedCardId === walletCards?.find(c => c.id === cardId)?.stripeMethodId) {
-          setSelectedSavedCardId("");
-          setPaymentMethod("");
-        }
-      } else {
-        alert("Failed to remove card: " + response.message);
-      }
-    } catch (err: any) {
-      alert("Error removing card: " + (err?.data?.message || err.message));
+  try {
+    await deleteCard(cardToDelete).unwrap();
+
+    toast.success("Card removed successfully!");
+
+    const deletedCardStripeId =
+      walletCards?.find(c => c.id === cardToDelete)?.stripeMethodId;
+
+    if (selectedSavedCardId === deletedCardStripeId) {
+      setSelectedSavedCardId("");
+      setPaymentMethod("");
     }
-  };
-
+  } catch (err: any) {
+    toast.error(err?.data?.message || "Failed to remove card");
+  } finally {
+    setCardToDelete(null);
+  }
+};
 
   useEffect(() => {
     if (isSuccess) {
-      alert("Funds added successfully!");
+      toast.success("Funds added successfully!");
       setCardholderName("");
       setCustomAmount("");
       setSelectedAmount(20);
@@ -320,76 +336,79 @@ function AddFundsFormContent() {
 
             {/* Dynamic Saved Cards */}
             {isCardsLoading ? (
-  <div className="text-center p-4 text-gray-500">Loading cards...</div>
-) : (
-  walletCards?.map((card: any) => {
-    const brandImgUrl = getCardBrandImage(card.brand);
-
-    return (
-      <label
-        key={card.id}
-        className="flex items-center justify-between p-4 border-y border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
-      >
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-8 flex items-center justify-center overflow-hidden">
-            {brandImgUrl ? (
-              <img
-                src={brandImgUrl}
-                className="w-full h-full object-contain"
-                alt={card.brand}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                  (e.target as HTMLImageElement).parentElement!.appendChild(
-                    document.createElement("span")
-                  ); // optional fallback
-                }}
-              />
+              <div className="text-center p-4 text-gray-500">Loading cards...</div>
             ) : (
-              <CreditCard className="w-6 h-6 text-gray-400" />
+              walletCards?.map((card: any) => {
+                const brandImgUrl = getCardBrandImage(card.brand);
+
+                return (
+                  <label
+                    key={card.id}
+                    className="flex items-center justify-between p-4 border-y border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-8 flex items-center justify-center overflow-hidden">
+                        {brandImgUrl ? (
+                          <img
+                            src={brandImgUrl}
+                            className="w-full h-full object-contain"
+                            alt={card.brand}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none";
+                              (e.target as HTMLImageElement).parentElement!.appendChild(
+                                document.createElement("span")
+                              ); // optional fallback
+                            }}
+                          />
+                        ) : (
+                          <CreditCard className="w-6 h-6 text-gray-400" />
+                        )}
+                      </div>
+
+                      <div>
+                        <p className="font-medium capitalize">
+                          {card.brand} ****{card.last4}
+                        </p>
+                        {card.isDefault && (
+                          <span className="text-[10px] font-bold text-blue-600 uppercase">
+                            Default
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        checked={
+                          paymentMethod === "saved" &&
+                          selectedSavedCardId === card.stripeMethodId
+                        }
+                        onChange={() => {
+                          setPaymentMethod("saved");
+                          setSelectedSavedCardId(card.stripeMethodId);
+                          setErrorMessage("");
+                        }}
+                        className="w-5 h-5 accent-yellow-400"
+                      />
+
+                      {/* Remove Button */}
+                      <button
+                        type="button"
+                        onClick={() => setCardToDelete(card.id)} // ✅ store id
+                        className="text-red-600 text-sm font-bold px-1 py-1 border border-red-600 rounded-full hover:bg-red-50"
+                      >
+                        <Minus size={12} />
+                      </button>
+
+
+
+                    </div>
+                  </label>
+                );
+              })
             )}
-          </div>
-
-          <div>
-            <p className="font-medium capitalize">
-              {card.brand} ****{card.last4}
-            </p>
-            {card.isDefault && (
-              <span className="text-[10px] font-bold text-blue-600 uppercase">
-                Default
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <input
-            type="radio"
-            name="paymentMethod"
-            checked={
-              paymentMethod === "saved" &&
-              selectedSavedCardId === card.stripeMethodId
-            }
-            onChange={() => {
-              setPaymentMethod("saved");
-              setSelectedSavedCardId(card.stripeMethodId);
-              setErrorMessage("");
-            }}
-            className="w-5 h-5 accent-yellow-400"
-          />
-
-          {/* Remove Button */}
-          <button
-            type="button"
-            onClick={() => handleRemoveCard(card.id)}
-            className="text-red-600 text-sm font-bold px-1 py-1 border border-red-600 rounded-full hover:bg-red-50"
-          >
-            <Minus size={12} />
-          </button>
-        </div>
-      </label>
-    );
-  })
-)}
 
             <label className="flex items-center justify-between p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50">
               <div className="flex items-center gap-4">
@@ -457,6 +476,28 @@ function AddFundsFormContent() {
           </button>
         </div>
       </div>
+      <AlertDialog open={!!cardToDelete} onOpenChange={() => setCardToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Card</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this card? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={handleRemoveCard}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }
