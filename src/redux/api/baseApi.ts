@@ -87,7 +87,7 @@ export const baseApi = createApi({
     "Wallets",
     "Orders",
     "Transactions",
-    "ReportAndAnalytics",
+    "Stripe",
     "Kpi",
     "Coin",
     "Incentive",

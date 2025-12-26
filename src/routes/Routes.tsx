@@ -62,6 +62,7 @@ import ViewTrackOrder from "@/pages/Orders/ViewTrackOrder/ViewTrackOrder";
 import DriverListTrack from "@/pages/Orders/ViewTrackOrder/components/Driver/DriverList";
 import ViewLiveTrackOrder from "@/pages/OrderPlacement/LiveOrderTracking/ViewLiveTrackOrder/ViewLiveTrackOrder";
 import OrderHistory from "@/pages/OrderPlacement/OrderHistory/OrderHistory";
+import StripeWrapper from "@/pages/Orders/PaymentOptions/StripeWrapper";
 
 
 const routes = createBrowserRouter([
@@ -373,6 +374,10 @@ const routes = createBrowserRouter([
       {
         path: "live-order-tracking/:id",
         element: <ViewLiveTrackOrder />,
+      },
+      {
+        path: "add-funds",
+        element: <StripeWrapper />,
       }
     ],
   },
