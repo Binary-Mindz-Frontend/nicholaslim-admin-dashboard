@@ -5,6 +5,7 @@ import { setCredentials } from "@/redux/features/auth/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch } from "@/redux/hook";
 import toast from "react-hot-toast";
+import { useGetRoleUserPermissionsQuery } from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
 
 const Login: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -15,14 +16,58 @@ const Login: React.FC = () => {
   const [rememberPassword, setRememberPassword] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [shouldFetchPermissions, setShouldFetchPermissions] = useState(false);
 
   const [login, { isLoading }] = useLoginMutation();
+
+  // Fetch permissions only when shouldFetchPermissions is true
+  const { data: permissionsData, isLoading: isLoadingPermissions } =
+    useGetRoleUserPermissionsQuery(undefined, {
+      skip: !shouldFetchPermissions, // Don't fetch until login is successful
+    });
 
   useEffect(() => {
     if (errorMessage) {
       setErrorMessage("");
     }
   }, [email, password]);
+
+  // Handle navigation after permissions are loaded
+  useEffect(() => {
+    if (permissionsData && !isLoadingPermissions) {
+      handleNavigation(permissionsData);
+    }
+  }, [permissionsData, isLoadingPermissions]);
+
+  const handleNavigation = (permissionsData: any) => {
+    // Check if user has dashboard permission
+    const hasDashboardAccess =
+      permissionsData?.permissions?.dashboard?.includes("read") ||
+      permissionsData?.detailedPermissions?.some(
+        (permission: any) =>
+          permission.module === "dashboard" && permission.action === "read"
+      );
+
+    // Navigate based on permissions
+    if (hasDashboardAccess) {
+      navigate("/");
+    } else {
+      // Find first available module with read permission
+      const availableModules = Object.keys(permissionsData?.permissions || {});
+      const firstModuleWithRead = availableModules.find((module) =>
+        permissionsData?.permissions[module]?.includes("read")
+      );
+
+      console.log(firstModuleWithRead, "firstModuleWithRead");
+
+      if (firstModuleWithRead) {
+        // Navigate to the first available module
+        navigate(`/${firstModuleWithRead}`);
+      } else {
+        navigate("/profile");
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +81,10 @@ const Login: React.FC = () => {
         password: password,
       };
 
+      // Step 1: Login
       const result = await login(credentials).unwrap();
+
+      console.log(result, "First result");
 
       if (result.access_token) {
         dispatch(
@@ -47,7 +95,8 @@ const Login: React.FC = () => {
 
         toast.success("Login successful!", { id: loginToast });
 
-        navigate("/");
+        // Step 2: Trigger permissions fetch
+        setShouldFetchPermissions(true);
       } else {
         toast.error("Login response missing required token", {
           id: loginToast,
@@ -123,7 +172,10 @@ const Login: React.FC = () => {
               >
                 Password
               </label>
-              <Link to="/forgot-password" className="text-sm text-gray-500 hover:text-gray-700">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
                 Forgot Password?
               </Link>
             </div>
@@ -175,9 +227,38 @@ const Login: React.FC = () => {
             </div>
           )}
 
+          {/* Loading indicator for permissions */}
+          {isLoadingPermissions && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-blue-600 text-sm flex items-center">
+                <svg
+                  className="animate-spin mr-2 h-4 w-4 text-blue-600"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Loading permissions...
+              </p>
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || isLoadingPermissions}
             className="w-full bg-[#FFCC00] hover:bg-[#f5c609] text-gray-800 font-semibold py-3 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer"
           >
             {isLoading ? (
