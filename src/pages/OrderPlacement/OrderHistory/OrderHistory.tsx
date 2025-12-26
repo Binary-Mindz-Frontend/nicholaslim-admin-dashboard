@@ -3,10 +3,11 @@ import { useState } from "react";
 import TablePagination from "@/pages/Dashboard/_components/TablePagination";
 import { useOrderColumns } from "./OrderHistoryTable/OrderHistoryTable";
 import StatusTabFilter from "@/components/OrderPlacement/OrderPlacementFilter/OrderPlacementFilter";
+import { useLocation } from "react-router-dom";
 
 export default function OrderHistory() {
   const [status, setStatus] = useState<string | undefined>();
-
+  const location = useLocation();
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -18,25 +19,36 @@ export default function OrderHistory() {
   };
 
   // Get the order columns and data with pagination support
-  const { orderColumns, orders, isLoading, isError, totalItems, DeleteConfirmDialog } = useOrderColumns({
+  const {
+    orderColumns,
+    orders,
+    isLoading,
+    isError,
+    totalItems,
+    DeleteConfirmDialog,
+  } = useOrderColumns({
     status,
     page: currentPage,
     limit: itemsPerPage,
   });
 
   // Handle loading state
-  if (isLoading) return (
-    <div className="flex justify-center items-center h-64">
-      <p className="text-lg">Loading orders...</p>
-    </div>
-  );
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-lg">Loading orders...</p>
+      </div>
+    );
 
   // Handle error state
-  if (isError) return (
-    <div className="flex justify-center items-center h-64">
-      <p className="text-lg text-red-600">Error loading orders. Please try again.</p>
-    </div>
-  );
+  if (isError)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-lg text-red-600">
+          Error loading orders. Please try again.
+        </p>
+      </div>
+    );
 
   return (
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
@@ -46,16 +58,19 @@ export default function OrderHistory() {
           <h1 className="text-black text-2xl font-bold">Order History</h1>
         </div>
 
-
         {/* Category List Section */}
-        <div className="sm:py-3">
-          <div className="flex items-center gap-2">
-            <span className="text-[#6B6B6B] text-xl font-semibold">Total Order</span>
-            <span className="bg-secondary text-gray-700 px-3 py-1 rounded-full text-base font-medium border border-[#969696]">
-              {totalItems}
-            </span>
+        {location.pathname === "/order-history" && (
+          <div className="sm:py-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[#6B6B6B] text-xl font-semibold">
+                Total Order
+              </span>
+              <span className="bg-secondary text-gray-700 px-3 py-1 rounded-full text-base font-medium border border-[#969696]">
+                {totalItems}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Filter Section */}
         {/* <OrderFilter
@@ -66,17 +81,19 @@ export default function OrderHistory() {
           handleResetFilter={handleResetFilter}
         /> */}
 
-         <StatusTabFilter
-        activeStatus={status || ""} 
-        onStatusChange={handleStatusChange} 
-      />
+        {location.pathname === "/order-history" && (
+          <StatusTabFilter
+            activeStatus={status || ""}
+            onStatusChange={handleStatusChange}
+          />
+        )}
       </div>
 
       {/* Custom Table Section */}
       {orders.length > 0 ? (
         <>
           <CustomTable columns={orderColumns} data={orders} />
-            
+
           {/* Pagination Component */}
           <TablePagination
             currentPage={currentPage}

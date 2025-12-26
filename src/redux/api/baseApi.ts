@@ -87,7 +87,17 @@ export const baseApi = createApi({
     "Wallets",
     "Orders",
     "Transactions",
-    "Stripe"
+    "Stripe",
+    "Kpi",
+    "Coin",
+    "Incentive",
+    "DriverPerformance",
+    "BulkOrdersTab",
+    "ReportAndAnalytics",
+    "Kpi",
+    "Coin",
+    "Incentive",
+    "DriverPerformance",
   ],
   endpoints: () => ({}),
 });
