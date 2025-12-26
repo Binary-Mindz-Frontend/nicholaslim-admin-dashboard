@@ -7,6 +7,7 @@ const reportAndAnalyticsApi = baseApi.injectEndpoints({
         url: "/report-and-analytics/stats",
         method: "GET",
       }),
+      providesTags: ["ReportAndAnalytics"],
     }),
 
     getReportAndAnalytics: builder.query({
@@ -14,6 +15,7 @@ const reportAndAnalyticsApi = baseApi.injectEndpoints({
         url: "/report-and-analytics/analytics",
         method: "GET",
       }),
+      providesTags: ["ReportAndAnalytics"],
     }),
 
     getKpiStats: builder.query({
@@ -22,6 +24,7 @@ const reportAndAnalyticsApi = baseApi.injectEndpoints({
         method: "GET",
         params: { from, to },
       }),
+      providesTags: ["Kpi"],
     }),
 
     getCoinStats: builder.query({
@@ -30,6 +33,7 @@ const reportAndAnalyticsApi = baseApi.injectEndpoints({
         method: "GET",
         params: { from, to },
       }),
+      providesTags: ["Coin"],
     }),
 
     getIncentiveStats: builder.query({
@@ -38,6 +42,25 @@ const reportAndAnalyticsApi = baseApi.injectEndpoints({
         method: "GET",
         params: { from, to },
       }),
+      providesTags: ["Incentive"],
+    }),
+
+    getDriverPerformanceGraph: builder.query({
+      query: (month) => ({
+        url: "/report-and-analytics/performance",
+        method: "GET",
+        params: { month },
+      }),
+      providesTags: ["DriverPerformance"],
+    }),
+
+    getDriverPerformanceTop: builder.query({
+      query: (limit) => ({
+        url: "/report-and-analytics/top",
+        method: "GET",
+        params: { limit },
+      }),
+      providesTags: ["DriverPerformance"],
     }),
   }),
 });
@@ -47,5 +70,7 @@ export const {
   useGetReportAndAnalyticsQuery,
   useGetKpiStatsQuery,
   useGetCoinStatsQuery,
-  useGetIncentiveStatsQuery
+  useGetIncentiveStatsQuery,
+  useGetDriverPerformanceGraphQuery,
+  useGetDriverPerformanceTopQuery,
 } = reportAndAnalyticsApi;
