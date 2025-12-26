@@ -1,11 +1,35 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
 import TransactionHistory from "./TransactionHistory";
-import { useGetOwnProfileQuery } from "@/redux/features/users/usersApi";
+import { useGetUserProfileQuery } from "@/redux/features/usersTypes/usersTypesApi";
+import { toast } from "react-hot-toast";
+import { useRedeemCoinMutation } from "@/redux/features/coinManagement/coinManagementApi";
+
 
 export default function WalletSection() {
-  const { data } = useGetOwnProfileQuery(undefined);
+  const { data } = useGetUserProfileQuery(undefined);
+  const [redeemCoin, {isLoading}] = useRedeemCoinMutation();
+
+  const handleRedeem = async () => {
+    if (!data?.data) return;
+
+    if (data?.data?.current_coin_balance <= 0) {
+      toast.error("You have no coins to redeem!");
+      return;
+    }
+
+    try {
+      await redeemCoin({ coin: String(data.data.current_coin_balance) }).unwrap();
+      toast.success("Coins redeemed successfully!");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to redeem coins");
+    }
+  };
+
+  // Check role (only USER role can redeem)
+  const isUserRole = data?.data?.role?.name === "USER";
 
   return (
     <div className="py-6 space-y-6">
@@ -34,7 +58,11 @@ export default function WalletSection() {
             </Button>
 
             <div className="relative">
-              <Button className="px-10 py-5 font-bold bg-white hover:bg-gray-50 text-gray-700 rounded-md border border-gray-300 transition">
+               <Button
+                onClick={handleRedeem}
+                disabled={!isUserRole || (data?.data?.current_coin_balance ?? 0) <= 0 || isLoading}
+                className="px-10 py-5 font-bold bg-white hover:bg-gray-50 text-gray-700 rounded-md border border-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 Redeem Points
               </Button>
 
@@ -45,7 +73,6 @@ export default function WalletSection() {
           </div>
         </div>
       </div>
-
       <TransactionHistory />
     </div>
   );
