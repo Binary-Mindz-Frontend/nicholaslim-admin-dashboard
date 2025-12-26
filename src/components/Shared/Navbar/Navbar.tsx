@@ -11,7 +11,7 @@ const Navbar = () => {
   const userImage = user?.data?.image;
 
   return (
-    <nav className="w-full hidden fixed left-0 top-0 lg:block bg-white border-b border-[#E6EFF5] z-10000">
+    <nav className="w-full hidden fixed left-0 top-0 lg:block bg-white border-b border-[#E6EFF5] z-1000">
       <div className="flex items-center px-4 gap-4">
         {/* Left Section - 50% */}
         <div className="flex  items-center gap-6 w-1/2">
