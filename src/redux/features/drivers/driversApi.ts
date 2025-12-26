@@ -5,9 +5,9 @@ const driversApi = baseApi.injectEndpoints({
         // Image upload mutation
         uploadImage: builder.mutation({
             query: (formData) => ({
-                url: "/auth/upload",  
+                url: "/auth/upload",
                 method: "POST",
-                body: formData, 
+                body: formData,
             }),
         }),
 
@@ -34,11 +34,38 @@ const driversApi = baseApi.injectEndpoints({
                 }
 
                 return {
-                    url,   
-                    method: "GET",  
+                    url,
+                    method: "GET",
                 };
             },
-            providesTags: ["RiderProfiles"], 
+            providesTags: ["RiderProfiles"],
+        }),
+
+        getApprovedRiderProfiles: builder.query({
+            query: ({
+                raiderId,
+                raider_name,
+                page = 1,
+                limit = 10,
+            }) => {
+
+                let url = `/raider-profile/rider-profiles?page=${page}&limit=${limit}`;
+
+                if (raider_name) {
+                    url += `&raider_name=${encodeURIComponent(raider_name)}`;
+                }
+                if (raiderId) {
+                    url += `&raiderId=${raiderId}`;
+                }
+
+                url += `&raider_verificationFromAdmin=APPROVED`;
+
+                return {
+                    url,
+                    method: "GET",
+                };
+            },
+            providesTags: ["RiderProfiles"],
         }),
 
         getGoinReqestRiderProfiles: builder.query({
@@ -46,7 +73,7 @@ const driversApi = baseApi.injectEndpoints({
                 raiderId,
                 raider_name,
                 raiderVerificationFromAdmin,
-                loginType,  
+                loginType,
                 page = 1,
                 limit = 10,
             }) => {
@@ -60,7 +87,7 @@ const driversApi = baseApi.injectEndpoints({
                 if (raiderId) params.append("raiderId", raiderId.toString());
                 if (raider_name) params.append("raider_name", raider_name);
                 if (raiderVerificationFromAdmin) params.append("raider_verificationFromAdmin", raiderVerificationFromAdmin);
-                if (loginType) params.append("loginType", loginType); 
+                if (loginType) params.append("loginType", loginType);
 
                 return {
                     url: `/raider-profile/rider-profiles?${params.toString()}`,
@@ -139,15 +166,15 @@ const driversApi = baseApi.injectEndpoints({
 
         verifyRiderProfile: builder.mutation<
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            any, 
+            any,
             { raiderId: string | number; verify: "APPROVED" | "REJECTED" | "PENDING" }
         >({
             query: ({ raiderId, verify }) => ({
-                
+
                 url: `/raider-profile/verify-rider/${raiderId}/${verify}`,
                 method: "PATCH",
             }),
-             
+
             invalidatesTags: ({ raiderId }) => [
                 { type: "RiderProfiles", id: "LIST" },
                 { type: "RiderProfiles", id: raiderId },
@@ -159,7 +186,7 @@ const driversApi = baseApi.injectEndpoints({
                 url: `/my-raider/admin/${id}`,
                 method: "GET",
             }),
-             
+
             providesTags: (id) => [{ type: "RiderProfiles", id }],
         }),
 
@@ -188,4 +215,5 @@ export const {
     useGetGoinReqestRiderProfilesQuery,
     useGetRaiderAdminDataQuery,
     useGetUserOrderHistoryQuery,
+    useGetApprovedRiderProfilesQuery,
 } = driversApi;

@@ -267,7 +267,7 @@ const ViewTrackOrder = () => {
             <div className="flex items-center justify-center mt-6">
                 {order.assign_rider_id === null ? (
                     <Button
-
+                        className="text-black py-3 px-8 text-base cursor-pointer"
                         // onClick={() => navigate(`/assign-driver/${order.id}`)}
                        onClick={() => navigate(`/assign-driver/${order.id}`)}
                     >
