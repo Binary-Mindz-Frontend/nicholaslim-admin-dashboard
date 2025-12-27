@@ -19,6 +19,24 @@ export const walletApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Wallets"],
     }),
+
+    //  Get Wallet Cards
+    getWalletCards: builder.query({
+      query: () => ({
+        url: `/wallet/wallet/cards`,
+        method: "GET",
+      }),
+      providesTags: ["Wallets"],
+    }),
+    //  Wallet Pay API (POST)
+    walletPay: builder.mutation({
+      query: (payload) => ({
+        url: `/wallet/wallet/pay`,
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: ["Wallets"],
+    }),
     deleteTransaction: builder.mutation({
       query: (id) => ({
         url: `/wallet/remove/${id}`,
@@ -27,7 +45,12 @@ export const walletApi = baseApi.injectEndpoints({
       invalidatesTags: ["Wallets"],
     }),
   }),
-
 });
 
-export const { useGetWalletQuery ,useGetWalletHistoryQuery,useDeleteTransactionMutation} = walletApi;
+export const {
+  useGetWalletQuery,
+  useGetWalletHistoryQuery,
+  useGetWalletCardsQuery,
+  useWalletPayMutation,
+  useDeleteTransactionMutation,
+} = walletApi;
