@@ -89,6 +89,8 @@ function AddFundsFormContent() {
       const response = await createSetupIntent().unwrap();
       const clientSecret = (response as any).clientSecret || response.data?.clientSecret;
 
+      console.log(clientSecret, 'clientSecret')
+
       if (!clientSecret) {
         setErrorMessage("Secure session could not be initialized.");
         return;

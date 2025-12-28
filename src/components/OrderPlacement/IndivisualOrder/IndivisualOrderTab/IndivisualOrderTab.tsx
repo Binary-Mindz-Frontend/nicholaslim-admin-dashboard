@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useRef, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
 import {
   Select,
   SelectContent,
@@ -20,28 +22,36 @@ import { useGetUserFeeStructureQuery } from "@/redux/features/userFeeStructure/u
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateOrderMutation } from "@/redux/features/orderPlacement/orderPlacementApi";
 import {validateForm, SenderReceiverData, OrderFormData } from '@/types/orderValidation';
+import StripeCheckoutModal from "@/components/Stripe/StripeCheckoutModal";
+
+// Initialize Stripe with your publishable key
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 interface IndivisualOrderTabProps {
   data?: Partial<OrderFormData>;
 }
 
 const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const { data: deliveryType } = useGetDeliveryTypesQuery(undefined);
   const { data: vehicleTypes } = useGetVehicleTypesQuery(undefined);
   const { data: userFeeStructure } = useGetUserFeeStructureQuery(undefined);
 
-  const platformFee = userFeeStructure?.data[0].amount || 0;
+  const platformFee = userFeeStructure?.data[0]?.amount || 0;
   const [selectedDeliveryType, setSelectedDeliveryType] = useState<any>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+  
   const dateInputRef = useRef<HTMLInputElement>(null);
+  
+  // State for Stripe Modal
+  const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
   
   // State for form data
   const [formData, setFormData] = useState<OrderFormData>({
     route_type: "ONE_WAY",
     isFixed: false,
     delivery_type: "EXPRESS",
-    vehicle_type_id: 3,
+    vehicle_type_id: 1,
     collect_time: "ASAP",
     total_cost: 0,
     has_additional_services: false,
@@ -90,7 +100,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
 
   const [createOrder] = useCreateOrderMutation();
 
-  // Initialize form with provided data if available - FIXED: removed formData from dependencies
+  // Initialize form with provided data if available
   useEffect(() => {
     if (data && Object.keys(data).length > 0) {
       const updatedFormData: Partial<OrderFormData> = {
@@ -98,10 +108,8 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         collect_time: (data.collect_time as "ASAP" | "SCHEDULED") || "ASAP",
       };
 
-      // Set collect time option based on data
       if (data.scheduled_time) {
         setCollectTimeOption("schedule");
-        // Convert ISO string to datetime-local format (YYYY-MM-DDTHH:mm)
         const date = new Date(data.scheduled_time);
         const localDateTime = date.toISOString().slice(0, 16);
         setScheduledDate(localDateTime);
@@ -116,9 +124,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         ...updatedFormData,
       } as OrderFormData));
 
-      // Extract sender and receiver from destinations
       if (data.destinations && data.destinations.length > 0) {
-        // Find sender destination
         const senderData = data.destinations.find((dest: any) => dest.type === "SENDER");
         if (senderData) {
           setSender({
@@ -130,7 +136,6 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
           });
         }
         
-        // Find receiver destination
         const receiverData = data.destinations.find((dest: any) => dest.type === "RECEIVER");
         if (receiverData) {
           setReceiver({
@@ -143,9 +148,8 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         }
       }
     }
-  }, [data]); // Only depend on 'data' prop
+  }, [data]);
 
-  // Update selected vehicle when vehicle_type_id changes or vehicleTypes loads
   useEffect(() => {
     if (vehicleTypes?.data) {
       const vehicleId = formData.vehicle_type_id;
@@ -158,7 +162,6 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     }
   }, [vehicleTypes, formData.vehicle_type_id]);
 
-  // Update selected delivery type when delivery_type changes or deliveryType loads
   useEffect(() => {
     if (deliveryType?.data) {
       const deliveryName = formData.delivery_type;
@@ -168,7 +171,6 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
       if (delivery) {
         setSelectedDeliveryType(delivery);
       } else if (deliveryType.data.length > 0) {
-        // Set first delivery type as default if not found
         setSelectedDeliveryType(deliveryType.data[0]);
         setFormData(prev => ({ 
           ...prev, 
@@ -223,7 +225,6 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     setScheduledDate(dateValue);
     
     if (dateValue) {
-      // Convert to ISO string
       const isoDate = new Date(dateValue).toISOString();
       setFormData(prev => ({ 
         ...prev, 
@@ -232,13 +233,23 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     }
   };
 
-
   const handleConfirmOrder = async () => {
     // Validate form
     if (!validateForm(sender, receiver, selectedDeliveryType, selectedVehicle, collectTimeOption, scheduledDate)) {
       return;
     }
-    
+
+    // If Stripe payment is selected, open the modal instead of submitting
+    if (formData.pay_type === "ONLINE_PAY") {
+      setIsStripeModalOpen(true);
+      return;
+    }
+
+    // For COD payments, proceed directly
+    await processOrder();
+  };
+
+  const processOrder = async () => {
     setIsSubmitting(true);
     
     const orderData: any = {
@@ -259,7 +270,6 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
       ],
     };
 
-    // Only include scheduled_time if it's a scheduled order
     if (collectTimeOption === "schedule" && scheduledDate) {
       orderData.scheduled_time = new Date(scheduledDate).toISOString();
     }
@@ -271,17 +281,11 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
       
       if (response?.data) {
         console.log("Order created successfully", response.data);
-        toast.success("Order created successfully!");
-        navigate("/order-confirm", { 
-          state: { 
-            orderId: response.data.id,
-            orderData: response.data 
-          } 
-        });
+        toast.success(response?.data?.message);
       } 
-      if (response?.error) {
+      if (response.data?.error) {
         console.error("Order creation error:", response.error);
-        toast.error("Failed to create order. Please try again.");
+        toast.error(response.data.error);
       }
     } catch (error) {
       console.error("Error creating order:", error);
@@ -289,6 +293,12 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    toast.success("Payment processed successfully!");
+    setIsStripeModalOpen(false);
+    processOrder();
   };
 
   return (
@@ -336,7 +346,6 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
             <Select
               value={formData.route_type === "ONE_WAY" ? "oneway" : "round"}
               onValueChange={(value) => {
-                // Map UI value to API expected value
                 const routeType = value === "oneway" ? "ONE_WAY" : "ROUND";
                 setFormData(prev => ({ ...prev, route_type: routeType }));
               }}
@@ -453,9 +462,8 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         </RadioGroup>
       </div>
 
-      {/* Sender and Receiver Information */}
+      {/* Sender Information */}
       <div className="bg-white rounded-lg p-8 border border-gray-200 mb-6">
-        {/* Sender Information */}
         <div className="grid grid-cols-2 gap-6 mb-6">
           <div>
             <Label className="mb-2">Sender Name</Label>
@@ -510,23 +518,22 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
 
       {/* Receiver Information */}
       <div className="bg-white rounded-lg p-8 border border-gray-200 mb-6">
-        {/* Receiver Information */}
         <div className="grid grid-cols-2 gap-6 mb-6">
           <div>
-            <Label className="mb-2">Recipient 1</Label>
+            <Label className="mb-2">Recipient</Label>
             <Input
               value={receiver.contact_name}
               onChange={(e) => handleInputChange(e, "contact_name", "receiver")}
-              placeholder="Recipient 1"
+              placeholder="Recipient"
               required
             />
           </div>
           <div>
-            <Label className="mb-2">Recipient 1 Number</Label>
+            <Label className="mb-2">Recipient Number</Label>
             <Input
               value={receiver.contact_number}
               onChange={(e) => handleInputChange(e, "contact_number", "receiver")}
-              placeholder="Recipient 1 Number"
+              placeholder="Recipient Number"
               required
             />
           </div>
@@ -534,11 +541,11 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
 
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <Label className="mb-2">Recipient 1 Address</Label>
+            <Label className="mb-2">Recipient Address</Label>
             <Input
               value={receiver.address}
               onChange={(e) => handleInputChange(e, "address", "receiver")}
-              placeholder="Recipient 1 Address"
+              placeholder="Recipient Address"
               required
             />
           </div>
@@ -573,15 +580,15 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         <div className="mb-6 flex items-center justify-between">
           <Label className="mb-0">Payment method</Label>
           <Select 
-            value={formData.pay_type === "COD" ? "cash" : formData.pay_type.toLowerCase()}
+            value={formData.pay_type === "COD" ? "cash" : formData.pay_type === "ONLINE_PAY" ? "stripe" : formData.pay_type.toLowerCase()}
             onValueChange={(value) => {
-              const payType = value === "cash" ? "COD" : value.toUpperCase();
+              const payType = value === "cash" ? "COD" : value === "stripe" ? "ONLINE_PAY" : value.toUpperCase();
               setFormData(prev => ({ ...prev, pay_type: payType }));
             }}
           >
             <SelectTrigger className="w-[20%]">
               <SelectValue placeholder="Select payment method">
-                {formData.pay_type === "COD" ? "COD" : formData.pay_type}
+                {formData.pay_type === "COD" ? "COD" : formData.pay_type === "ONLINE_PAY" ? "Stripe" : formData.pay_type}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -597,8 +604,20 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         onClick={handleConfirmOrder}
         disabled={isSubmitting}
       >
-        {isSubmitting ? "Creating Order..." : "Confirm order"}
+        {isSubmitting ? "Creating Order..." : formData.pay_type === "ONLINE_PAY" ? "Proceed to Payment" : "Confirm order"}
       </Button>
+
+      {/* Stripe Checkout Modal wrapped with Elements provider */}
+      {isStripeModalOpen && (
+        <Elements stripe={stripePromise}>
+          <StripeCheckoutModal
+            isOpen={isStripeModalOpen}
+            onClose={() => setIsStripeModalOpen(false)}
+            totalAmount={totalCost}
+            onPaymentSuccess={handlePaymentSuccess}
+          />
+        </Elements>
+      )}
     </div>
   );
 };
