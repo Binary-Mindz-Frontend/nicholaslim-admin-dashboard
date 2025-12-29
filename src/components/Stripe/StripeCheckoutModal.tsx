@@ -15,13 +15,16 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-// import toast from "react-hot-toast";
-import { 
-  useCreateSetupIntentMutation,
-  useSaveCardMutation,
-  // useWalletPayMutation
-} from "@/redux/features/payment/paymentApi";
-import { CheckCircle } from "lucide-react";
+import {
+  CheckCircle,
+  CreditCard,
+  Lock,
+  Shield,
+  User,
+  Loader2,
+} from "lucide-react";
+import { useCreateSetupIntentMutation } from "@/redux/features/payment/paymentApi";
+import { useSaveCardMutation } from "@/redux/features/payment/paymentApi";
 import { useWalletPayMutation } from "@/redux/features/wallet/walletApi";
 
 interface StripeCheckoutModalProps {
@@ -39,11 +42,13 @@ const StripeCheckoutModal = ({
 }: StripeCheckoutModalProps) => {
   const stripe = useStripe();
   const elements = useElements();
-  
-  const [createSetupIntent, { isLoading: isCreatingIntent }] = useCreateSetupIntentMutation();
+
+  const [createSetupIntent, { isLoading: isCreatingIntent }] =
+    useCreateSetupIntentMutation();
   const [saveCard, { isLoading: isSavingCard }] = useSaveCardMutation();
-  const [walletPay, { isLoading: isProcessingPayment }] = useWalletPayMutation();
-  
+  const [walletPay, { isLoading: isProcessingPayment }] =
+    useWalletPayMutation();
+
   const [cardholderName, setCardholderName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -54,19 +59,24 @@ const StripeCheckoutModal = ({
     style: {
       base: {
         fontSize: "16px",
-        color: "#374151",
-        "::placeholder": { color: "#9CA3AF" },
+        color: "#1f2937",
+        fontFamily: '"Inter", -apple-system, sans-serif',
+        "::placeholder": {
+          color: "#9ca3af",
+        },
+      },
+      invalid: {
+        color: "#ef4444",
+        iconColor: "#ef4444",
       },
     },
   };
 
-  // Fetch client secret when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchClientSecret();
       setShowSuccessModal(false);
     } else {
-      // Reset states when modal closes
       setClientSecret("");
       setCardholderName("");
       setErrorMessage("");
@@ -77,8 +87,9 @@ const StripeCheckoutModal = ({
   const fetchClientSecret = async () => {
     try {
       const response = await createSetupIntent().unwrap();
-      const secret = (response as any).clientSecret || response.data?.clientSecret;
-      
+      const secret =
+        (response as any).clientSecret || response.data?.clientSecret;
+
       if (secret) {
         setClientSecret(secret);
       } else {
@@ -94,7 +105,7 @@ const StripeCheckoutModal = ({
 
   const handlePaymentConfirm = async () => {
     setErrorMessage("");
-    
+
     if (!stripe || !elements) {
       setErrorMessage("Payment system not ready. Please try again.");
       return;
@@ -114,7 +125,6 @@ const StripeCheckoutModal = ({
     setIsProcessing(true);
 
     try {
-      // Step 1: Confirm card setup with Stripe
       const { setupIntent, error: stripeError } = await stripe.confirmCardSetup(
         clientSecret,
         {
@@ -135,48 +145,43 @@ const StripeCheckoutModal = ({
 
       if (setupIntent && setupIntent.status === "succeeded") {
         const stripePaymentMethodId = setupIntent.payment_method as string;
-        
-        // Step 2: Save card to backend and get integer payment_method_id
+        console.log(stripePaymentMethodId, "stripePaymentMethodId");
+
         try {
-          const saveResponse = await saveCard({ 
-            paymentMethodId: stripePaymentMethodId 
+          const saveResponse = await saveCard({
+            paymentMethodId: stripePaymentMethodId,
           }).unwrap();
-          
-          // Extract the payment method ID from response
-          const numericPaymentMethodId = (saveResponse as any)?.data?.id || 
-                                         (saveResponse as any)?.id ||
-                                         (saveResponse as any)?.payment_method_id;
-          
+          console.log(saveResponse, "paymentId");
+
+          const numericPaymentMethodId =
+            (saveResponse as any)?.data?.id ||
+            (saveResponse as any)?.id ||
+            (saveResponse as any)?.payment_method_id;
+
           if (!numericPaymentMethodId) {
             setErrorMessage("Failed to save payment method. Please try again.");
             setIsProcessing(false);
             return;
           }
 
-          // Step 3: Process wallet payment
           try {
             await walletPay({
               paymentMethodId: String(numericPaymentMethodId),
               amount: totalAmount,
-              payType: "PAYMENT"
+              payType: "PAYMENT",
             }).unwrap();
 
-            // Show success modal
             setShowSuccessModal(true);
-            
-            // Clear form
             setCardholderName("");
             elements.getElement(CardNumberElement)?.clear();
             elements.getElement(CardExpiryElement)?.clear();
             elements.getElement(CardCvcElement)?.clear();
-            
-            // Wait 2 seconds then proceed with order
+
             setTimeout(() => {
               setShowSuccessModal(false);
               onPaymentSuccess();
               onClose();
             }, 2000);
-            
           } catch (paymentError: any) {
             const msg = paymentError?.data?.message;
             setErrorMessage(
@@ -184,7 +189,6 @@ const StripeCheckoutModal = ({
             );
             setIsProcessing(false);
           }
-          
         } catch (saveError: any) {
           const msg = saveError?.data?.message;
           setErrorMessage(
@@ -193,11 +197,12 @@ const StripeCheckoutModal = ({
           setIsProcessing(false);
         }
       } else {
-        setErrorMessage("Card verification was not successful. Please try again.");
+        setErrorMessage(
+          "Card verification was not successful. Please try again."
+        );
         setIsProcessing(false);
       }
     } catch (err: any) {
-      console.error("Payment error:", err);
       const msg = err?.data?.message || err?.message;
       setErrorMessage(
         Array.isArray(msg) ? msg[0] : msg || "An unexpected error occurred"
@@ -214,22 +219,33 @@ const StripeCheckoutModal = ({
     }
   };
 
-  // Success Modal Content
   if (showSuccessModal) {
     return (
       <Dialog open={isOpen} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-[400px]">
-          <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <div className="rounded-full bg-green-100 p-4">
-              <CheckCircle className="w-16 h-16 text-green-600" />
+        <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-linear-to-br from-emerald-50 to-green-50 border-0 shadow-2xl">
+          <div className="flex flex-col items-center justify-center px-8 py-12 space-y-6">
+            <div className="relative">
+              <div className="absolute inset-0 animate-ping rounded-full bg-emerald-200 opacity-75"></div>
+              <div className="relative rounded-full bg-linear-to-br from-emerald-500 to-green-600 p-5 shadow-lg">
+                <CheckCircle className="w-16 h-16 text-white" strokeWidth={2} />
+              </div>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900">Payment Successful!</h3>
-            <p className="text-gray-600 text-center">
-              Your payment of ${totalAmount.toFixed(2)} has been processed successfully.
-              <br />
-              Creating your order...
-            </p>
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mt-4"></div>
+            <div className="text-center space-y-3">
+              <h3 className="text-3xl font-bold text-emerald-800">
+                Payment Successful!
+              </h3>
+              <p className="text-emerald-700 text-lg">
+                ${totalAmount.toFixed(2)} has been processed
+              </p>
+              <div className="pt-4">
+                <div className="inline-flex items-center space-x-3 px-4 py-2 bg-emerald-100 rounded-full">
+                  <Loader2 className="w-5 h-5 text-emerald-600 animate-spin" />
+                  <span className="text-emerald-700 font-medium">
+                    Creating your order...
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -238,81 +254,150 @@ const StripeCheckoutModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-gray-900">
-            Complete Payment
-          </DialogTitle>
-          <DialogDescription className="text-lg font-semibold text-gray-700">
-            Total Amount: ${totalAmount.toFixed(2)}
-          </DialogDescription>
-        </DialogHeader>
-
-        {!clientSecret && isCreatingIntent ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
-            <span className="ml-3 text-gray-600">Loading payment...</span>
+      <DialogContent className="sm:max-w-[520px] p-0 z-9999 overflow-hidden  to-gray-50 border border-gray-200 shadow-2xl">
+        <div className="relative">
+          {/* Header with gradient */}
+          <div className="bg-linear-to-r from-amber-500 to-yellow-400 px-6 py-3">
+            <DialogHeader className="space-y-2">
+              <div className="flex items-center justify-between">
+                <DialogTitle className="text-2xl font-bold text-white">
+                  Secure Payment
+                </DialogTitle>
+                {/* <div className="flex items-center space-x-2 text-white/90">
+                  <Shield className="w-5 h-5" />
+                  <span className="text-sm font-medium">SSL Secured</span>
+                </div> */}
+              </div>
+              <DialogDescription className="text-white/95 text-lg font-semibold">
+                Total Amount:{" "}
+                <span className="text-2xl">${totalAmount.toFixed(2)}</span>
+              </DialogDescription>
+            </DialogHeader>
           </div>
-        ) : (
-          <div className="bg-white rounded-lg space-y-6 py-4">
-            <h3 className="text-xl text-center font-bold text-gray-800">
-              Enter Card Details
-            </h3>
 
-            {/* Card Number */}
-            <div className="pl-2 py-3 border border-gray-300 rounded-md">
-              <CardNumberElement options={cardElementOptions} />
-            </div>
-
-            {/* Expiry and CVC */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 border border-gray-300 rounded-md">
-                <CardExpiryElement options={cardElementOptions} />
+          <div className="px-6 py-7 space-y-7">
+            {!clientSecret && isCreatingIntent ? (
+              <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-3 border-t-amber-400 border-r-amber-400 border-b-transparent border-l-transparent"></div>
+                <div className="text-center space-y-2">
+                  <p className="text-gray-700 font-medium">
+                    Initializing secure payment
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    Please wait a moment...
+                  </p>
+                </div>
               </div>
-              <div className="p-3 border border-gray-300 rounded-md">
-                <CardCvcElement options={cardElementOptions} />
-              </div>
-            </div>
+            ) : (
+              <>
+                {/* Payment Security Info */}
+                <div className="space-y-6">
+                  <div className="text-center space-y-2">
+                    <h3 className="text-xl font-bold text-gray-800">
+                      Enter Card Information
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      Your payment details are encrypted and secure
+                    </p>
+                  </div>
 
-            {/* Cardholder Name */}
-            <input
-              type="text"
-              placeholder="Cardholder Name"
-              value={cardholderName}
-              onChange={(e) => setCardholderName(e.target.value)}
-              disabled={isProcessing}
-              className="w-full pl-2 pr-5 py-3 outline-none border border-gray-300 rounded-md focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 disabled:opacity-50"
-            />
+                  {/* Card Number */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 flex items-center">
+                      <CreditCard className="w-4 h-4 mr-2 text-gray-500" />
+                      Card Number
+                    </label>
+                    <div className="p-3 border-2 border-gray-300 rounded-xl bg-white hover:border-amber-400 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-200 transition-all duration-200">
+                      <CardNumberElement options={cardElementOptions} />
+                    </div>
+                  </div>
 
-            {/* Error Message */}
-            {errorMessage && (
-              <div className="text-red-600 text-center font-medium bg-red-50 p-3 rounded-md">
-                {errorMessage}
-              </div>
+                  {/* Expiry and CVC */}
+                  <div className="grid grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Expiry Date
+                      </label>
+                      <div className="p-3 border-2 border-gray-300 rounded-xl bg-white hover:border-amber-400 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-200 transition-all duration-200">
+                        <CardExpiryElement options={cardElementOptions} />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        CVC / CVV
+                      </label>
+                      <div className="p-3 border-2 border-gray-300 rounded-xl bg-white hover:border-amber-400 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-200 transition-all duration-200">
+                        <CardCvcElement options={cardElementOptions} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cardholder Name */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 flex items-center">
+                      Cardholder Name
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Cardholder Name"
+                        value={cardholderName}
+                        onChange={(e) => setCardholderName(e.target.value)}
+                        disabled={isProcessing}
+                        className="w-full pl-12 pr-5 py-2.5 outline-none border-2 border-gray-300 rounded-xl bg-white hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 disabled:opacity-50 transition-all duration-200"
+                      />
+                      <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    </div>
+                  </div>
+
+                  {/* Error Message */}
+                  {errorMessage && (
+                    <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+                      <p className="text-red-700 font-medium flex items-center">
+                        <Shield className="w-5 h-5 mr-2" />
+                        {errorMessage}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-4 pt-4">
+                    <Button
+                      type="button"
+                      onClick={handlePaymentConfirm}
+                      disabled={
+                        !stripe ||
+                        isProcessing ||
+                        !clientSecret ||
+                        isSavingCard ||
+                        isProcessingPayment
+                      }
+                      className="flex-1 py-3 cursor-pointer bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-gray-900 font-bold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    >
+                      {isProcessing || isSavingCard || isProcessingPayment ? (
+                        <span className="flex items-center justify-center">
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Processing...
+                        </span>
+                      ) : (
+                        `Pay $${totalAmount.toFixed(2)}`
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Security Footer */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <p className="text-center text-gray-500 text-xs flex items-center justify-center">
+                      <Lock className="w-4 h-4 mr-2" />
+                      Your payment is secure and encrypted. We never store your
+                      card details.
+                    </p>
+                  </div>
+                </div>
+              </>
             )}
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-                disabled={isProcessing || isSavingCard || isProcessingPayment}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={handlePaymentConfirm}
-                disabled={!stripe || isProcessing || !clientSecret || isSavingCard || isProcessingPayment}
-                className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold disabled:opacity-50"
-              >
-                {isProcessing || isSavingCard || isProcessingPayment ? "Processing..." : `Pay $${totalAmount.toFixed(2)}`}
-              </Button>
-            </div>
           </div>
-        )}
+        </div>
       </DialogContent>
     </Dialog>
   );

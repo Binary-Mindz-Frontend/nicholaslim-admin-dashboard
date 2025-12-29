@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { loadStripe } from "@stripe/stripe-js";
@@ -18,11 +18,37 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import { useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
 import { useGetDeliveryTypesQuery } from "@/redux/features/deliveryTypes/deliveryTypesApi";
-import { useGetUserFeeStructureQuery } from "@/redux/features/userFeeStructure/userFeeStructureApi";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateOrderMutation } from "@/redux/features/orderPlacement/orderPlacementApi";
-import {validateForm, SenderReceiverData, OrderFormData } from '@/types/orderValidation';
+import { 
+  useCreateOrderMutation,
+  useOrderStatusMutation 
+} from "@/redux/features/orderPlacement/orderPlacementApi";
+import {
+  validateForm,
+  SenderReceiverData,
+  OrderFormData,
+} from "@/types/orderValidation";
 import StripeCheckoutModal from "@/components/Stripe/StripeCheckoutModal";
+
+// PayType Enum
+enum PayType {
+  COD = "COD",
+  WALLET = "WALLET",
+  ONLINE_PAY = "ONLINE_PAY",
+}
+
+// Mapping for display values
+const PAY_TYPE_DISPLAY: Record<PayType, string> = {
+  [PayType.COD]: "cash",
+  [PayType.ONLINE_PAY]: "stripe",
+  [PayType.WALLET]: "wallet",
+};
+
+const DISPLAY_TO_PAY_TYPE: Record<string, PayType> = {
+  cash: PayType.COD,
+  stripe: PayType.ONLINE_PAY,
+  wallet: PayType.WALLET,
+};
 
 // Initialize Stripe with your publishable key
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -35,17 +61,19 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
   // const navigate = useNavigate();
   const { data: deliveryType } = useGetDeliveryTypesQuery(undefined);
   const { data: vehicleTypes } = useGetVehicleTypesQuery(undefined);
-  const { data: userFeeStructure } = useGetUserFeeStructureQuery(undefined);
 
-  const platformFee = userFeeStructure?.data[0]?.amount || 0;
   const [selectedDeliveryType, setSelectedDeliveryType] = useState<any>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
-  
+
   const dateInputRef = useRef<HTMLInputElement>(null);
-  
+
   // State for Stripe Modal
   const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
-  
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  const [createdUserId, setCreatedUserId] = useState<string | null>(null);
+  const [orderTotalCost, setOrderTotalCost] = useState<number | null>(null);
+  const [orderCreated, setOrderCreated] = useState<boolean>(false);
+
   // State for form data
   const [formData, setFormData] = useState<OrderFormData>({
     route_type: "ONE_WAY",
@@ -57,7 +85,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     has_additional_services: false,
     is_promo_used: false,
     notify_favorite_raider: false,
-    pay_type: "COD",
+    pay_type: PayType.COD,
     destinations: [
       {
         address: "",
@@ -75,7 +103,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         note_to_driver: "",
         type: "RECEIVER",
       },
-    ]
+    ],
   });
 
   const [sender, setSender] = useState<SenderReceiverData>({
@@ -94,11 +122,23 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     note_to_driver: "",
   });
 
-  const [collectTimeOption, setCollectTimeOption] = useState<"now" | "schedule">("now");
+  const [collectTimeOption, setCollectTimeOption] = useState<
+    "now" | "schedule"
+  >("now");
   const [scheduledDate, setScheduledDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [createOrder] = useCreateOrderMutation();
+  const [updateOrderStatus] = useOrderStatusMutation();
+
+  // Debug effect to track pay_type changes
+  useEffect(() => {
+    console.log("Current pay_type:", formData.pay_type);
+    console.log(
+      "Mapped display value:",
+      PAY_TYPE_DISPLAY[formData.pay_type as PayType]
+    );
+  }, [formData.pay_type]);
 
   // Initialize form with provided data if available
   useEffect(() => {
@@ -119,13 +159,23 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         updatedFormData.scheduled_time = undefined;
       }
 
-      setFormData(prev => ({
-        ...prev,
-        ...updatedFormData,
-      } as OrderFormData));
+      // Handle pay_type specifically
+      if (data.pay_type) {
+        updatedFormData.pay_type = data.pay_type as PayType;
+      }
+
+      setFormData(
+        (prev) =>
+          ({
+            ...prev,
+            ...updatedFormData,
+          } as OrderFormData)
+      );
 
       if (data.destinations && data.destinations.length > 0) {
-        const senderData = data.destinations.find((dest: any) => dest.type === "SENDER");
+        const senderData = data.destinations.find(
+          (dest: any) => dest.type === "SENDER"
+        );
         if (senderData) {
           setSender({
             contact_name: senderData.contact_name || "",
@@ -135,8 +185,10 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
             note_to_driver: senderData.note_to_driver || "",
           });
         }
-        
-        const receiverData = data.destinations.find((dest: any) => dest.type === "RECEIVER");
+
+        const receiverData = data.destinations.find(
+          (dest: any) => dest.type === "RECEIVER"
+        );
         if (receiverData) {
           setReceiver({
             contact_name: receiverData.contact_name || "",
@@ -172,133 +224,250 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         setSelectedDeliveryType(delivery);
       } else if (deliveryType.data.length > 0) {
         setSelectedDeliveryType(deliveryType.data[0]);
-        setFormData(prev => ({ 
-          ...prev, 
-          delivery_type: deliveryType.data[0].name 
+        setFormData((prev) => ({
+          ...prev,
+          delivery_type: deliveryType.data[0].name,
         }));
       }
     }
   }, [deliveryType, formData.delivery_type]);
 
-  const deliveryPrice = useMemo(() => {
-    if (!selectedVehicle || !selectedDeliveryType) return 0;
-
-    const basePrice = Number(selectedVehicle.base_price);
-    const percentage = Number(selectedDeliveryType.percentage);
-
-    const discount = (basePrice * percentage) / 100;
-    return basePrice - discount;
-  }, [selectedVehicle, selectedDeliveryType]);
-
-  const totalCost = deliveryPrice + platformFee;
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: keyof SenderReceiverData, type: "sender" | "receiver") => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    field: keyof SenderReceiverData,
+    type: "sender" | "receiver"
+  ) => {
     const { value } = e.target;
-    
+
     if (type === "sender") {
-      setSender(prev => ({ ...prev, [field]: value }));
+      setSender((prev) => ({ ...prev, [field]: value }));
     } else if (type === "receiver") {
-      setReceiver(prev => ({ ...prev, [field]: value }));
+      setReceiver((prev) => ({ ...prev, [field]: value }));
     }
   };
 
   const handleCollectTimeChange = (value: string) => {
     setCollectTimeOption(value as "now" | "schedule");
-    
+
     if (value === "now") {
-      setFormData(prev => ({ 
-        ...prev, 
+      setFormData((prev) => ({
+        ...prev,
         collect_time: "ASAP",
-        scheduled_time: undefined 
+        scheduled_time: undefined,
       }));
       setScheduledDate("");
     } else if (value === "schedule") {
-      setFormData(prev => ({ 
-        ...prev, 
-        collect_time: "SCHEDULED" 
+      setFormData((prev) => ({
+        ...prev,
+        collect_time: "SCHEDULED",
       }));
     }
   };
 
-  const handleScheduledDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleScheduledDateChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const dateValue = e.target.value;
     setScheduledDate(dateValue);
-    
+
     if (dateValue) {
       const isoDate = new Date(dateValue).toISOString();
-      setFormData(prev => ({ 
-        ...prev, 
-        scheduled_time: isoDate 
+      setFormData((prev) => ({
+        ...prev,
+        scheduled_time: isoDate,
       }));
     }
   };
 
+  // Function to update order status for COD and Wallet payments
+  const updateOrderStatusAfterCreation = async (orderId: string, userId: string, paymentMethod: string) => {
+    try {
+      const statusUpdateData = {
+        status: "PENDING",
+        payType: "PAYMENT",
+        paymentMethod: paymentMethod
+      };
+
+      console.log("Updating order status with data:", {
+        orderId,
+        userId,
+        ...statusUpdateData
+      });
+
+      const response = await updateOrderStatus({
+        orderId,
+        userId,
+        ...statusUpdateData
+      });
+
+      if (response?.data?.success) {
+        console.log("Order status updated successfully:", response.data);
+        toast.success("Order confirmed!");
+      } else if (response) {
+        toast.error(response?.data?.error?.message || "Failed to update order status");
+      } 
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      toast.error("Order created but failed to update status");
+    }
+  };
+
+  // Step 1: Create Order (Initial step)
+  // Step 1: Create Order (Initial step)
+const handleCreateOrder = async () => {
+  // Validate form
+  if (
+    !validateForm(
+      sender,
+      receiver,
+      selectedDeliveryType,
+      selectedVehicle,
+      collectTimeOption,
+      scheduledDate
+    )
+  ) {
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  const orderData: any = {
+    ...formData,
+    vehicle_type_id: selectedVehicle?.id || formData.vehicle_type_id,
+    delivery_type: selectedDeliveryType?.name || formData.delivery_type,
+    collect_time: collectTimeOption === "now" ? "ASAP" : "SCHEDULED",
+    destinations: [
+      {
+        ...sender,
+        type: "SENDER",
+      },
+      {
+        ...receiver,
+        type: "RECEIVER",
+      },
+    ],
+  };
+
+  if (collectTimeOption === "schedule" && scheduledDate) {
+    orderData.scheduled_time = new Date(scheduledDate).toISOString();
+  }
+
+  console.log("Creating order:", orderData);
+
+  try {
+    const response = await createOrder(orderData);
+
+    // Get order details from response
+    const orderId = response?.data?.data?.order?.id;
+    const userId = response?.data?.data?.order?.userId;
+    const totalCostFromBackend = response?.data?.data?.order?.total_cost;
+
+    // Convert total_cost to number if it's a string
+    const totalCostNumber = totalCostFromBackend ? 
+      typeof totalCostFromBackend === 'string' ? 
+        parseFloat(totalCostFromBackend) : 
+        Number(totalCostFromBackend)
+      : 0;
+
+    console.log("Order ID:", orderId);
+    console.log("User ID:", userId);
+    console.log("Total cost from backend:", totalCostFromBackend);
+    console.log("Total cost as number:", totalCostNumber);
+    console.log("Full response:", response?.data?.data);
+
+    if (response?.data?.success === true) {
+      console.log("Order created successfully", response.data);
+      toast.success("Order created successfully!");
+      
+      // Store order details
+      setCreatedOrderId(orderId);
+      setCreatedUserId(userId || null);
+      setOrderTotalCost(totalCostNumber);
+      setOrderCreated(true);
+      
+    } else if (response?.data?.error) {
+      console.error("Order creation error:", response.data.error);
+      toast.error(response.data.error);
+    }
+  } catch (error) {
+    console.error("Error creating order:", error);
+    toast.error("An unexpected error occurred. Please try again.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+  // Step 2: Confirm Order (after order is created)
   const handleConfirmOrder = async () => {
-    // Validate form
-    if (!validateForm(sender, receiver, selectedDeliveryType, selectedVehicle, collectTimeOption, scheduledDate)) {
+    if (!createdOrderId || !createdUserId) {
+      toast.error("Order information is missing. Please create the order first.");
       return;
     }
 
-    // If Stripe payment is selected, open the modal instead of submitting
-    if (formData.pay_type === "ONLINE_PAY") {
+    console.log("Confirming order with pay_type:", formData.pay_type);
+
+    // If Stripe payment is selected, open the modal
+    if (formData.pay_type === PayType.ONLINE_PAY) {
       setIsStripeModalOpen(true);
       return;
     }
 
-    // For COD payments, proceed directly
-    await processOrder();
+    // For COD and WALLET payments, update status directly
+    await processOrderConfirmation();
   };
 
-  const processOrder = async () => {
+  // Process order confirmation for COD and Wallet
+  const processOrderConfirmation = async () => {
     setIsSubmitting(true);
-    
-    const orderData: any = {
-      ...formData,
-      total_cost: totalCost,
-      vehicle_type_id: selectedVehicle?.id || formData.vehicle_type_id,
-      delivery_type: selectedDeliveryType?.name || formData.delivery_type,
-      collect_time: collectTimeOption === "now" ? "ASAP" : "SCHEDULED",
-      destinations: [
-        {
-          ...sender,
-          type: "SENDER",
-        },
-        {
-          ...receiver,
-          type: "RECEIVER",
-        },
-      ],
-    };
-
-    if (collectTimeOption === "schedule" && scheduledDate) {
-      orderData.scheduled_time = new Date(scheduledDate).toISOString();
-    }
-
-    console.log("Submitting order data:", orderData);
 
     try {
-      const response = await createOrder(orderData);
-      
-      if (response?.data) {
-        console.log("Order created successfully", response.data);
-        toast.success(response?.data?.message);
-      } 
-      if (response.data?.error) {
-        console.error("Order creation error:", response.error);
-        toast.error(response.data.error);
+      // Map PayType enum to paymentMethod string for the API
+      let paymentMethod = "COD";
+      if (formData.pay_type === PayType.WALLET) {
+        paymentMethod = "WALLET";
       }
-    } catch (error) {
-      console.error("Error creating order:", error);
-      toast.error("An unexpected error occurred. Please try again.");
+      
+      await updateOrderStatusAfterCreation(createdOrderId!, createdUserId!, paymentMethod);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Handle successful payment for Stripe
   const handlePaymentSuccess = () => {
     toast.success("Payment processed successfully!");
     setIsStripeModalOpen(false);
-    processOrder();
+    
+    // Update order status for Stripe payment after successful payment
+    if (createdOrderId && createdUserId) {
+      updateOrderStatusAfterCreation(createdOrderId, createdUserId, "ONLINE_PAY");
+    }
+  };
+
+  const handlePaymentMethodChange = (value: string) => {
+    const payType = DISPLAY_TO_PAY_TYPE[value];
+    if (payType) {
+      setFormData((prev) => ({ ...prev, pay_type: payType }));
+    }
+  };
+
+  const getDisplayPayType = (): string => {
+    const displayValue = PAY_TYPE_DISPLAY[formData.pay_type as PayType];
+    if (!displayValue) return "cash";
+    return displayValue;
+  };
+
+  const getPayTypeLabel = (): string => {
+    switch (formData.pay_type) {
+      case PayType.COD:
+        return "COD";
+      case PayType.ONLINE_PAY:
+        return "Stripe";
+      case PayType.WALLET:
+        return "Wallet";
+      default:
+        return "Select";
+    }
   };
 
   return (
@@ -317,9 +486,9 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
                 );
                 if (found) {
                   setSelectedDeliveryType(found);
-                  setFormData(prev => ({ 
-                    ...prev, 
-                    delivery_type: found.name 
+                  setFormData((prev) => ({
+                    ...prev,
+                    delivery_type: found.name,
                   }));
                 }
               }}
@@ -347,7 +516,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
               value={formData.route_type === "ONE_WAY" ? "oneway" : "round"}
               onValueChange={(value) => {
                 const routeType = value === "oneway" ? "ONE_WAY" : "ROUND";
-                setFormData(prev => ({ ...prev, route_type: routeType }));
+                setFormData((prev) => ({ ...prev, route_type: routeType }));
               }}
             >
               <SelectTrigger className="w-full px-4 py-5 bg-[#FFFAE6] border border-gray-300 rounded">
@@ -366,23 +535,29 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
           <div>
             <Label className="mb-2 block">Select Vehicle</Label>
             <Select
-              value={selectedVehicle?.id?.toString() || formData.vehicle_type_id?.toString() || ""}
+              value={
+                selectedVehicle?.id?.toString() ||
+                formData.vehicle_type_id?.toString() ||
+                ""
+              }
               onValueChange={(value) => {
                 const found = vehicleTypes?.data?.find(
                   (item: any) => String(item.id) === value
                 );
                 if (found) {
                   setSelectedVehicle(found);
-                  setFormData(prev => ({ 
-                    ...prev, 
-                    vehicle_type_id: found.id 
+                  setFormData((prev) => ({
+                    ...prev,
+                    vehicle_type_id: found.id,
                   }));
                 }
               }}
             >
               <SelectTrigger className="w-full px-4 py-5 bg-[#FFFAE6] border border-gray-300 rounded">
                 <SelectValue placeholder="Select Vehicle">
-                  {selectedVehicle ? `${selectedVehicle.vehicle_type} (${selectedVehicle.dimension})` : "Select Vehicle"}
+                  {selectedVehicle
+                    ? `${selectedVehicle.vehicle_type} (${selectedVehicle.dimension})`
+                    : "Select Vehicle"}
                 </SelectValue>
               </SelectTrigger>
 
@@ -404,9 +579,9 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         <RadioGroup
           value={formData.isFixed ? "fixed" : "notfixed"}
           onValueChange={(value) => {
-            setFormData(prev => ({ 
-              ...prev, 
-              isFixed: value === "fixed" 
+            setFormData((prev) => ({
+              ...prev,
+              isFixed: value === "fixed",
             }));
           }}
           className="grid grid-cols-2 gap-4 mb-8"
@@ -422,7 +597,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         </RadioGroup>
 
         <h3 className="text-lg font-semibold mb-4">Collect Time</h3>
-        <RadioGroup 
+        <RadioGroup
           value={collectTimeOption}
           onValueChange={handleCollectTimeChange}
           className="grid grid-cols-2 gap-4 mb-8"
@@ -532,7 +707,9 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
             <Label className="mb-2">Recipient Number</Label>
             <Input
               value={receiver.contact_number}
-              onChange={(e) => handleInputChange(e, "contact_number", "receiver")}
+              onChange={(e) =>
+                handleInputChange(e, "contact_number", "receiver")
+              }
               placeholder="Recipient Number"
               required
             />
@@ -560,60 +737,81 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         </div>
       </div>
 
-      {/* Order Summary */}
-      <div className="bg-white rounded-lg p-8 border border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Order Summary</h2>
-        <div className="space-y-4 mb-8">
-          <div className="flex justify-between text-gray-700">
-            <span>Delivery</span>
-            <span>{deliveryPrice > 0 ? `$${deliveryPrice.toFixed(2)}` : "$0.00"}</span>
+      {/* Order Summary - Only show after order is created */}
+      {orderCreated && orderTotalCost !== null && (
+        <div className="bg-white rounded-lg p-8 border border-gray-200 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">
+            Order Summary
+          </h2>
+          <div className="space-y-4">
+            <div className="border-t pt-4 flex justify-between text-lg font-semibold text-gray-900">
+              <span>Total</span> 
+              <span>${orderTotalCost?.toFixed(2)}</span>
+            </div>
           </div>
-          <div className="flex justify-between text-gray-700">
-            <span>Fee</span>
-            <span>+S${platformFee}</span>
-          </div>
-          <div className="border-t pt-4 flex justify-between text-lg font-semibold text-gray-900">
-            <span>Total</span> <span>+${totalCost.toFixed(2)}</span>
-          </div>
-        </div>
 
-        <div className="mb-6 flex items-center justify-between">
-          <Label className="mb-0">Payment method</Label>
-          <Select 
-            value={formData.pay_type === "COD" ? "cash" : formData.pay_type === "ONLINE_PAY" ? "stripe" : formData.pay_type.toLowerCase()}
-            onValueChange={(value) => {
-              const payType = value === "cash" ? "COD" : value === "stripe" ? "ONLINE_PAY" : value.toUpperCase();
-              setFormData(prev => ({ ...prev, pay_type: payType }));
-            }}
-          >
-            <SelectTrigger className="w-[20%]">
-              <SelectValue placeholder="Select payment method">
-                {formData.pay_type === "COD" ? "COD" : formData.pay_type === "ONLINE_PAY" ? "Stripe" : formData.pay_type}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="cash">COD</SelectItem>
-              <SelectItem value="stripe">Stripe</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="mb-6 flex items-center justify-between mt-8">
+            <Label className="mb-0">Payment method</Label>
+            <Select
+              value={getDisplayPayType()}
+              onValueChange={handlePaymentMethodChange}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger className="w-[20%]">
+                <SelectValue placeholder="Select payment method">
+                  {getPayTypeLabel()}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cash">COD</SelectItem>
+                <SelectItem value="stripe">Stripe</SelectItem>
+                <SelectItem value="wallet">Wallet</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+      )}
+
+      {/* Buttons Section */}
+      <div className="space-y-4">
+        {/* Create Order Button - Always visible */}
+        <Button
+          className="w-full bg-yellow-400 cursor-pointer hover:bg-yellow-500 text-gray-900 font-bold py-3"
+          onClick={handleCreateOrder}
+          disabled={isSubmitting || orderCreated}
+        >
+          {isSubmitting
+            ? "Creating Order..."
+            : orderCreated
+            ? "Order Created"
+            : "Create Order"}
+        </Button>
+
+        {/* Confirm Order Button - Only show after order is created */}
+        {orderCreated && orderTotalCost !== null && (
+          <Button
+            className="w-full bg-green-600 cursor-pointer hover:bg-green-700 text-white font-bold py-3"
+            onClick={handleConfirmOrder}
+            disabled={isSubmitting}
+          >
+            {isSubmitting
+              ? "Confirming..."
+              : formData.pay_type === PayType.ONLINE_PAY
+              ? "Proceed to Payment"
+              : "Confirm Order"}
+          </Button>
+        )}
       </div>
 
-      <Button
-        className="w-full bg-yellow-400 cursor-pointer mt-4 hover:bg-yellow-500 text-gray-900 font-bold py-3"
-        onClick={handleConfirmOrder}
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? "Creating Order..." : formData.pay_type === "ONLINE_PAY" ? "Proceed to Payment" : "Confirm order"}
-      </Button>
-
       {/* Stripe Checkout Modal wrapped with Elements provider */}
-      {isStripeModalOpen && (
+      {isStripeModalOpen && createdOrderId && orderTotalCost !== null && (
         <Elements stripe={stripePromise}>
           <StripeCheckoutModal
             isOpen={isStripeModalOpen}
             onClose={() => setIsStripeModalOpen(false)}
-            totalAmount={totalCost}
+            totalAmount={orderTotalCost}
+            orderId={createdOrderId}
+            createdUserId={createdUserId}
             onPaymentSuccess={handlePaymentSuccess}
           />
         </Elements>
