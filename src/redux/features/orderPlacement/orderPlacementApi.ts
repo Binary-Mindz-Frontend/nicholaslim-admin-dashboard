@@ -41,7 +41,7 @@ const orderEndpoints = baseApi.injectEndpoints({
         url: `/order/bulk?page=${page}&limit=${limit}`, // Using query params for pagination
         method: "GET",
       }),
-      providesTags: ["BulkOrdersTab"]
+      providesTags: ["BulkOrdersTab"],
     }),
     getBulkOrdersTab: builder.query({
       query: () => ({
@@ -58,6 +58,22 @@ const orderEndpoints = baseApi.injectEndpoints({
         body: { orderIds },
       }),
     }),
+
+    orderStatus: builder.mutation({
+      query: ({ orderId, userId, status, payType, paymentMethod,paymentMethodId }) => ({
+        
+        url: `/order/status/${orderId}/${userId}`,
+        method: "PATCH",
+        body: {
+          status,
+          payType,
+          paymentMethod,
+          paymentMethodId
+        
+        },
+        
+      }),
+    }),
   }),
 });
 
@@ -69,6 +85,7 @@ export const {
   useGetBulkOrdersQuery,
   useGetBulkOrdersTabQuery,
   useBulkOrderStatusPendingMutation,
+  useOrderStatusMutation,
 } = orderEndpoints;
 
 export default orderEndpoints;

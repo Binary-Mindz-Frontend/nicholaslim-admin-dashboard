@@ -44,7 +44,7 @@ import Order from "@/pages/OrderPlacement/Order/Order";
 import LiveOrderTracking from "@/pages/OrderPlacement/LiveOrderTracking/LiveOrderTracking";
 // import OrderHistory from "@/pages/OrderPlacement/OrderHistory/OrderHistory";
 import SavedOrders from "@/pages/OrderPlacement/SavedOrders/SavedOrders";
-import PaymentOptions from "@/pages/OrderPlacement/PaymentOptions/PaymentOptions";
+// import PaymentOptions from "@/pages/OrderPlacement/PaymentOptions/PaymentOptions";
 import OrderConfirmed from "@/pages/OrderConfirmed/OrderConfirmed";
 import Login from "@/pages/Login/Login";
 import Quiz from "@/pages/Admin/QuizManagement/Quiz";
@@ -337,10 +337,10 @@ const routes = createBrowserRouter([
         path: "saved-order",
         element: <SavedOrders />,
       },
-      {
-        path: "payment-options",
-        element: <PaymentOptions />,
-      },
+      // {
+      //   path: "payment-options",
+      //   element: <PaymentOptions />,
+      // },
       {
         path: "order-confirm",
         element: <OrderConfirmed />,
