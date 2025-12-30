@@ -420,7 +420,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
   // Updated to receive paymentMethodId from StripeCheckoutModal
   const handlePaymentSuccess = (paymentMethodId: string) => {
     console.log(paymentMethodId, "paymentMethodId");
-    toast.success("Payment processed successfully!");
+    // toast.success("Payment processed successfully!");
     setIsStripeModalOpen(false);
 
     if (createdOrderId && createdUserId && paymentMethodId) {
@@ -773,7 +773,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
 
         {orderCreated && orderTotalCost !== null && (
           <Button
-            className="w-full bg-green-600 cursor-pointer hover:bg-green-700 text-white font-bold py-3"
+            className="w-full bg-yellow-500 cursor-pointer hover:bg-yellow-600 text-white font-bold py-3"
             onClick={handleConfirmOrder}
             disabled={isSubmitting}
           >

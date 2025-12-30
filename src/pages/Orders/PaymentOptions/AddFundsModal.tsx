@@ -60,7 +60,7 @@ function AddFundsFormContent() {
 
   const [deleteCard] = useDeleteCardMutation();
 
-  // console.log(walletCards)
+  console.log(walletCards, "walletCards");
   useEffect(() => {
     if (walletCards && Array.isArray(walletCards) && walletCards.length > 0) {
       // Find the card marked as default, or fallback to the first card
