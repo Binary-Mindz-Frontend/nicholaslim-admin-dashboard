@@ -98,6 +98,7 @@ export const baseApi = createApi({
     "Coin",
     "Incentive",
     "DriverPerformance",
+    "BulkOrders"
   ],
   endpoints: () => ({}),
 });

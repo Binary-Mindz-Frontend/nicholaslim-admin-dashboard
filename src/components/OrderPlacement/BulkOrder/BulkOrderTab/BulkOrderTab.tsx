@@ -49,25 +49,31 @@ const DISPLAY_TO_PAYMENT_METHOD: Record<string, PaymentMethod> = {
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const BulkOrderTab = () => {
-  const [exportCsv, { isLoading: isDownloading }] = useLazyExportOrdersCsvQuery();
-  const [uploadFile, { isLoading: isUploading }] = useUploadBulkOrderFileMutation();
-  const [bulkOrder, { isLoading: isCreatingBulkOrder }] = useBulkOrderMutation();
-  const [updateBulkOrderStatus, { isLoading: isUpdatingStatus }] = 
+  const [exportCsv, { isLoading: isDownloading }] =
+    useLazyExportOrdersCsvQuery();
+  const [uploadFile, { isLoading: isUploading }] =
+    useUploadBulkOrderFileMutation();
+  const [bulkOrder, { isLoading: isCreatingBulkOrder }] =
+    useBulkOrderMutation();
+  const [updateBulkOrderStatus, { isLoading: isUpdatingStatus }] =
     useBulkOrderStatusPendingMutation();
 
   const { data: bulkOrdersData, refetch } = useGetBulkOrdersTabQuery(undefined);
 
   // Extract bulk order IDs from the response
-  const bulkOrderIds = bulkOrdersData?.data?.totalOrderIds?.map((order: any) => order.id) || [];
+  const bulkOrderIds =
+    bulkOrdersData?.data?.totalOrderIds?.map((order: any) => order.id) || [];
 
   console.log("Bulk Order IDs:", bulkOrderIds);
   console.log("Bulk Orders Data:", bulkOrdersData?.data);
 
   // Convert totalCost to number to avoid string issues
-  const totalBulkOrdersCostRaw = bulkOrdersData?.data.totalCost._sum.total_cost || 0;
-  const totalBulkOrdersCost = typeof totalBulkOrdersCostRaw === 'string' 
-    ? parseFloat(totalBulkOrdersCostRaw) 
-    : Number(totalBulkOrdersCostRaw);
+  const totalBulkOrdersCostRaw =
+    bulkOrdersData?.data.totalCost._sum.total_cost || 0;
+  const totalBulkOrdersCost =
+    typeof totalBulkOrdersCostRaw === "string"
+      ? parseFloat(totalBulkOrdersCostRaw)
+      : Number(totalBulkOrdersCostRaw);
 
   // State for sender information
   const [senderName, setSenderName] = useState("");
@@ -80,7 +86,8 @@ const BulkOrderTab = () => {
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
 
   // State for payment method
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>(PaymentMethod.COD);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<PaymentMethod>(PaymentMethod.COD);
 
   // State for Stripe Modal
   const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
@@ -306,7 +313,9 @@ const BulkOrderTab = () => {
   };
 
   // Update bulk order status
-  const updateBulkOrderStatusToPending = async (stripePaymentMethodId?: string) => {
+  const updateBulkOrderStatusToPending = async (
+    stripePaymentMethodId?: string
+  ) => {
     try {
       Swal.fire({
         title: "Updating Order Status...",
@@ -325,7 +334,10 @@ const BulkOrderTab = () => {
       };
 
       // Add stripePaymentMethodId only for ONLINE_PAY
-      if (selectedPaymentMethod === PaymentMethod.ONLINE_PAY && stripePaymentMethodId) {
+      if (
+        selectedPaymentMethod === PaymentMethod.ONLINE_PAY &&
+        stripePaymentMethodId
+      ) {
         requestData.stripePaymentMethodId = stripePaymentMethodId;
       }
 
@@ -338,25 +350,28 @@ const BulkOrderTab = () => {
       console.log("Bulk order status update response:", response);
 
       Swal.fire({
-        title: "Success!",
-        text: response?.message || "Order status updated to pending successfully!",
-        icon: "success",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#3B82F6",
-      });
-
-      // Refetch to update the orders
-      refetch();
-    } catch (error: any) {
-      console.error("Failed to update bulk order status", error);
-      Swal.close();
-
-      Swal.fire({
         title: "Error!",
-        text: error?.data?.message || "Failed to update order status.",
+        text: response?.error || "Failed to update order status.",
         icon: "error",
         confirmButtonText: "OK",
       });
+
+      if (response.success === true) {
+        Swal.fire({
+          title: "Success!",
+          text:
+            response?.message || "Order status updated to pending successfully!",
+          icon: "success",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#3B82F6",
+        });
+      }
+
+      // Refetch to update the orders
+      // refetch();
+    } catch (error: any) {
+      console.error("Failed to update bulk order status", error);
+      Swal.close();
     }
   };
 
@@ -388,9 +403,12 @@ const BulkOrderTab = () => {
 
   // Handle successful Stripe payment
   const handlePaymentSuccess = (stripePaymentMethodId: string) => {
-    console.log("Payment successful with Stripe Payment Method ID:", stripePaymentMethodId);
+    console.log(
+      "Payment successful with Stripe Payment Method ID:",
+      stripePaymentMethodId
+    );
     setIsStripeModalOpen(false);
-    
+
     // Update bulk order status with Stripe payment method ID
     updateBulkOrderStatusToPending(stripePaymentMethodId);
   };
@@ -606,7 +624,9 @@ const BulkOrderTab = () => {
       <Button
         onClick={handleConfirmOrder}
         className="w-full bg-yellow-500 hover:bg-yellow-600 cursor-pointer text-white font-bold py-3"
-        disabled={isUpdatingStatus || !bulkOrderIds || bulkOrderIds.length === 0}
+        disabled={
+          isUpdatingStatus || !bulkOrderIds || bulkOrderIds.length === 0
+        }
       >
         {isUpdatingStatus
           ? "Updating Status..."

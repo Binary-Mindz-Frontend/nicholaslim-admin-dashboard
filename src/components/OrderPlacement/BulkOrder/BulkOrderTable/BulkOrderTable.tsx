@@ -1,5 +1,5 @@
 import { Edit2, Trash2, ChevronLeft, ChevronRight, Eye, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useGetBulkOrdersQuery } from "@/redux/features/orderPlacement/orderPlacementApi";
 import { Link } from "react-router-dom";
 import { useDeleteOrderMutation } from "@/redux/features/orders/ordersApi";
@@ -55,12 +55,11 @@ const BulkOrdersTable = () => {
   const [orderToDelete, setOrderToDelete] = useState<number | null>(null);
   const limit = 10;
 
-  // Fetch bulk orders from API
+  // Fetch bulk orders from API - removed refetch
   const {
     data: bulkOrdersData,
     isLoading,
     isError,
-    refetch,
   } = useGetBulkOrdersQuery({ page: currentPage, limit });
 
   const [deleteOrder, { isLoading: isDeleting }] = useDeleteOrderMutation();
@@ -101,7 +100,6 @@ const BulkOrdersTable = () => {
     }
   };
 
-
   // Handle page change
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -113,7 +111,7 @@ const BulkOrdersTable = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  // Handle delete confirmation
+  // Handle delete confirmation - removed manual refetch
   const handleConfirmDelete = async () => {
     if (orderToDelete) {
       try {
@@ -121,9 +119,10 @@ const BulkOrdersTable = () => {
         toast.success(`Order #${orderToDelete} deleted successfully`);
         setIsDeleteDialogOpen(false);
         setOrderToDelete(null);
-        refetch();
+        // RTK Query will automatically refetch due to cache invalidation
       } catch (error) {
         console.error("Failed to delete order:", error);
+        toast.error("Failed to delete order");
       }
     }
   };
@@ -134,10 +133,7 @@ const BulkOrdersTable = () => {
     setOrderToDelete(null);
   };
 
-  // Refresh data when page changes
-  useEffect(() => {
-    refetch();
-  }, [currentPage, refetch]);
+  // Removed useEffect that was manually calling refetch
 
   if (isLoading) {
     return (
@@ -155,12 +151,6 @@ const BulkOrdersTable = () => {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center text-red-600">
           <p>Failed to load bulk orders. Please try again.</p>
-          <button
-            onClick={() => refetch()}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Retry
-          </button>
         </div>
       </div>
     );
@@ -215,7 +205,7 @@ const BulkOrdersTable = () => {
                         <td className="px-6 py-4 text-sm text-slate-700">
                           <div>
                             {sender && (
-                              <div className="text-xs text-gray-400 mt-1">
+                              <div className=" text-gray-500 font-medium mt-1">
                                 {sender.contact_name}
                               </div>
                             )}
@@ -271,9 +261,8 @@ const BulkOrdersTable = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          <span
-                            className="px-3 py-1 rounded-full text-xs font-medium">
-                             { order.order_status}
+                          <span className="px-3 py-1 rounded-full text-xs bg-blue-100  font-medium">
+                            {order.order_status}
                           </span>
                         </td>
                       </tr>
@@ -320,8 +309,6 @@ const BulkOrdersTable = () => {
             </button>
           </div>
         </div>
-
-        
       </div>
 
       {/* Delete Confirmation Dialog */}
