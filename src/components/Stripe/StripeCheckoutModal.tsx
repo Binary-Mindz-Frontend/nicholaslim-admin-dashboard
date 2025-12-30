@@ -329,7 +329,7 @@ const StripeCheckoutModal = ({
                         isSavingCard ||
                         isProcessingPayment
                       }
-                      className="flex-1 py-3 cursor-pointer bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-gray-900 font-bold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                      className="flex-1 py-3 cursor-pointer bg-linear-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-gray-900 font-bold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     >
                       {isProcessing || isSavingCard || isProcessingPayment ? (
                         <span className="flex items-center justify-center">
