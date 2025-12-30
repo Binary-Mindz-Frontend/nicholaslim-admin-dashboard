@@ -245,7 +245,7 @@ const StripeCheckoutModal = ({
                 <DialogTitle className="text-2xl font-bold text-white">Secure Payment</DialogTitle>
               </div>
               <DialogDescription className="text-white/95 text-lg font-semibold">
-                Total Amount: <span className="text-2xl">${totalAmount.toFixed(2)}</span>
+                Total Amount: <span className="text-2xl">${totalAmount}</span>
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -337,7 +337,7 @@ const StripeCheckoutModal = ({
                           Processing...
                         </span>
                       ) : (
-                        `Pay $${totalAmount.toFixed(2)}`
+                        "Pay" 
                       )}
                     </Button>
                   </div>

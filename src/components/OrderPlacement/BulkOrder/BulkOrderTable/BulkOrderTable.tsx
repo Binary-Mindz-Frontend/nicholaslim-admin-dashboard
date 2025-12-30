@@ -321,46 +321,7 @@ const BulkOrdersTable = () => {
           </div>
         </div>
 
-        {/* Status Summary */}
-        {/* {orders.length > 0 && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex justify-between items-center">
-              <p className="text-center text-blue-600 font-medium text-sm flex-1">
-                Page {currentPage} of {totalPages} • Showing {orders.length}{" "}
-                orders
-              </p>
-              <div className="flex gap-4 text-sm">
-                <span className="text-green-600">
-                  ✓{" "}
-                  {
-                    orders.filter((o) =>
-                      o.order_status.toLowerCase().includes("complete")
-                    ).length
-                  }{" "}
-                  Completed
-                </span>
-                <span className="text-yellow-600">
-                  ⚡{" "}
-                  {
-                    orders.filter((o) =>
-                      o.order_status.toLowerCase().includes("progress")
-                    ).length
-                  }{" "}
-                  In Progress
-                </span>
-                <span className="text-red-600">
-                  ✗{" "}
-                  {
-                    orders.filter((o) =>
-                      o.order_status.toLowerCase().includes("cancel")
-                    ).length
-                  }{" "}
-                  Cancelled
-                </span>
-              </div>
-            </div>
-          </div>
-        )} */}
+        
       </div>
 
       {/* Delete Confirmation Dialog */}

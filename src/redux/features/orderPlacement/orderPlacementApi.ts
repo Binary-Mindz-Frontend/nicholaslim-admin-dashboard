@@ -52,26 +52,35 @@ const orderEndpoints = baseApi.injectEndpoints({
     }),
 
     bulkOrderStatusPending: builder.mutation({
-      query: (orderIds: number[]) => ({
+      query: ({ orderIds, payType, paymentMethod, stripePaymentMethodId }) => ({
         url: "/order/bulk/status/pending", // Assuming this is the correct URL for updating status
         method: "PATCH",
-        body: { orderIds },
+        body: {
+          orderIds,
+          payType,
+          paymentMethod,
+          stripePaymentMethodId,
+        },
       }),
     }),
 
     orderStatus: builder.mutation({
-      query: ({ orderId, userId, status, payType, paymentMethod,paymentMethodId }) => ({
-        
+      query: ({
+        orderId,
+        userId,
+        status,
+        payType,
+        paymentMethod,
+        paymentMethodId,
+      }) => ({
         url: `/order/status/${orderId}/${userId}`,
         method: "PATCH",
         body: {
           status,
           payType,
           paymentMethod,
-          paymentMethodId
-        
+          paymentMethodId,
         },
-        
       }),
     }),
   }),
