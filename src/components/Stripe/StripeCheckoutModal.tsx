@@ -31,7 +31,9 @@ interface StripeCheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
   totalAmount: number;
-  onPaymentSuccess: () => void;
+  onPaymentSuccess: (paymentMethodId: string) => void;
+  orderId?: string | null;
+  createdUserId?: string | null;
 }
 
 const StripeCheckoutModal = ({
@@ -43,11 +45,9 @@ const StripeCheckoutModal = ({
   const stripe = useStripe();
   const elements = useElements();
 
-  const [createSetupIntent, { isLoading: isCreatingIntent }] =
-    useCreateSetupIntentMutation();
+  const [createSetupIntent, { isLoading: isCreatingIntent }] = useCreateSetupIntentMutation();
   const [saveCard, { isLoading: isSavingCard }] = useSaveCardMutation();
-  const [walletPay, { isLoading: isProcessingPayment }] =
-    useWalletPayMutation();
+  const [walletPay, { isLoading: isProcessingPayment }] = useWalletPayMutation();
 
   const [cardholderName, setCardholderName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -87,8 +87,7 @@ const StripeCheckoutModal = ({
   const fetchClientSecret = async () => {
     try {
       const response = await createSetupIntent().unwrap();
-      const secret =
-        (response as any).clientSecret || response.data?.clientSecret;
+      const secret = (response as any).clientSecret || response.data?.clientSecret;
 
       if (secret) {
         setClientSecret(secret);
@@ -97,9 +96,7 @@ const StripeCheckoutModal = ({
       }
     } catch (err: any) {
       const msg = err?.data?.message;
-      setErrorMessage(
-        Array.isArray(msg) ? msg[0] : msg || "Failed to initialize payment"
-      );
+      setErrorMessage(Array.isArray(msg) ? msg[0] : msg || "Failed to initialize payment");
     }
   };
 
@@ -125,17 +122,14 @@ const StripeCheckoutModal = ({
     setIsProcessing(true);
 
     try {
-      const { setupIntent, error: stripeError } = await stripe.confirmCardSetup(
-        clientSecret,
-        {
-          payment_method: {
-            card: cardNumberElement,
-            billing_details: {
-              name: cardholderName,
-            },
+      const { setupIntent, error: stripeError } = await stripe.confirmCardSetup(clientSecret, {
+        payment_method: {
+          card: cardNumberElement,
+          billing_details: {
+            name: cardholderName,
           },
-        }
-      );
+        },
+      });
 
       if (stripeError) {
         setErrorMessage(stripeError.message || "Payment failed");
@@ -145,13 +139,13 @@ const StripeCheckoutModal = ({
 
       if (setupIntent && setupIntent.status === "succeeded") {
         const stripePaymentMethodId = setupIntent.payment_method as string;
-        console.log(stripePaymentMethodId, "stripePaymentMethodId");
+        console.log("Stripe Payment Method ID:", stripePaymentMethodId);
 
         try {
           const saveResponse = await saveCard({
             paymentMethodId: stripePaymentMethodId,
           }).unwrap();
-          console.log(saveResponse, "paymentId");
+          console.log("Save card response:", saveResponse);
 
           const numericPaymentMethodId =
             (saveResponse as any)?.data?.id ||
@@ -163,6 +157,8 @@ const StripeCheckoutModal = ({
             setIsProcessing(false);
             return;
           }
+
+          console.log("Numeric Payment Method ID:", numericPaymentMethodId);
 
           try {
             await walletPay({
@@ -179,34 +175,27 @@ const StripeCheckoutModal = ({
 
             setTimeout(() => {
               setShowSuccessModal(false);
-              onPaymentSuccess();
+              // Pass the Stripe payment method ID to the parent component
+              onPaymentSuccess(stripePaymentMethodId);
               onClose();
             }, 2000);
           } catch (paymentError: any) {
             const msg = paymentError?.data?.message;
-            setErrorMessage(
-              Array.isArray(msg) ? msg[0] : msg || "Payment processing failed"
-            );
+            setErrorMessage(Array.isArray(msg) ? msg[0] : msg || "Payment processing failed");
             setIsProcessing(false);
           }
         } catch (saveError: any) {
           const msg = saveError?.data?.message;
-          setErrorMessage(
-            Array.isArray(msg) ? msg[0] : msg || "Failed to save card"
-          );
+          setErrorMessage(Array.isArray(msg) ? msg[0] : msg || "Failed to save card");
           setIsProcessing(false);
         }
       } else {
-        setErrorMessage(
-          "Card verification was not successful. Please try again."
-        );
+        setErrorMessage("Card verification was not successful. Please try again.");
         setIsProcessing(false);
       }
     } catch (err: any) {
       const msg = err?.data?.message || err?.message;
-      setErrorMessage(
-        Array.isArray(msg) ? msg[0] : msg || "An unexpected error occurred"
-      );
+      setErrorMessage(Array.isArray(msg) ? msg[0] : msg || "An unexpected error occurred");
       setIsProcessing(false);
     }
   };
@@ -231,18 +220,12 @@ const StripeCheckoutModal = ({
               </div>
             </div>
             <div className="text-center space-y-3">
-              <h3 className="text-3xl font-bold text-emerald-800">
-                Payment Successful!
-              </h3>
-              <p className="text-emerald-700 text-lg">
-                ${totalAmount.toFixed(2)} has been processed
-              </p>
+              <h3 className="text-3xl font-bold text-emerald-800">Payment Successful!</h3>
+              <p className="text-emerald-700 text-lg">${totalAmount.toFixed(2)} has been processed</p>
               <div className="pt-4">
                 <div className="inline-flex items-center space-x-3 px-4 py-2 bg-emerald-100 rounded-full">
                   <Loader2 className="w-5 h-5 text-emerald-600 animate-spin" />
-                  <span className="text-emerald-700 font-medium">
-                    Creating your order...
-                  </span>
+                  <span className="text-emerald-700 font-medium">Confirming your order...</span>
                 </div>
               </div>
             </div>
@@ -254,23 +237,15 @@ const StripeCheckoutModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[520px] p-0 z-9999 overflow-hidden  to-gray-50 border border-gray-200 shadow-2xl">
+      <DialogContent className="sm:max-w-[520px] p-0 z-9999 overflow-hidden to-gray-50 border border-gray-200 shadow-2xl">
         <div className="relative">
-          {/* Header with gradient */}
           <div className="bg-linear-to-r from-amber-500 to-yellow-400 px-6 py-3">
             <DialogHeader className="space-y-2">
               <div className="flex items-center justify-between">
-                <DialogTitle className="text-2xl font-bold text-white">
-                  Secure Payment
-                </DialogTitle>
-                {/* <div className="flex items-center space-x-2 text-white/90">
-                  <Shield className="w-5 h-5" />
-                  <span className="text-sm font-medium">SSL Secured</span>
-                </div> */}
+                <DialogTitle className="text-2xl font-bold text-white">Secure Payment</DialogTitle>
               </div>
               <DialogDescription className="text-white/95 text-lg font-semibold">
-                Total Amount:{" "}
-                <span className="text-2xl">${totalAmount.toFixed(2)}</span>
+                Total Amount: <span className="text-2xl">${totalAmount.toFixed(2)}</span>
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -280,28 +255,18 @@ const StripeCheckoutModal = ({
               <div className="flex flex-col items-center justify-center py-12 space-y-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-3 border-t-amber-400 border-r-amber-400 border-b-transparent border-l-transparent"></div>
                 <div className="text-center space-y-2">
-                  <p className="text-gray-700 font-medium">
-                    Initializing secure payment
-                  </p>
-                  <p className="text-gray-500 text-sm">
-                    Please wait a moment...
-                  </p>
+                  <p className="text-gray-700 font-medium">Initializing secure payment</p>
+                  <p className="text-gray-500 text-sm">Please wait a moment...</p>
                 </div>
               </div>
             ) : (
               <>
-                {/* Payment Security Info */}
                 <div className="space-y-6">
                   <div className="text-center space-y-2">
-                    <h3 className="text-xl font-bold text-gray-800">
-                      Enter Card Information
-                    </h3>
-                    <p className="text-gray-600 text-sm">
-                      Your payment details are encrypted and secure
-                    </p>
+                    <h3 className="text-xl font-bold text-gray-800">Enter Card Information</h3>
+                    <p className="text-gray-600 text-sm">Your payment details are encrypted and secure</p>
                   </div>
 
-                  {/* Card Number */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 flex items-center">
                       <CreditCard className="w-4 h-4 mr-2 text-gray-500" />
@@ -312,27 +277,21 @@ const StripeCheckoutModal = ({
                     </div>
                   </div>
 
-                  {/* Expiry and CVC */}
                   <div className="grid grid-cols-2 gap-5">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Expiry Date
-                      </label>
+                      <label className="text-sm font-medium text-gray-700">Expiry Date</label>
                       <div className="p-3 border-2 border-gray-300 rounded-xl bg-white hover:border-amber-400 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-200 transition-all duration-200">
                         <CardExpiryElement options={cardElementOptions} />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        CVC / CVV
-                      </label>
+                      <label className="text-sm font-medium text-gray-700">CVC / CVV</label>
                       <div className="p-3 border-2 border-gray-300 rounded-xl bg-white hover:border-amber-400 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-200 transition-all duration-200">
                         <CardCvcElement options={cardElementOptions} />
                       </div>
                     </div>
                   </div>
 
-                  {/* Cardholder Name */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 flex items-center">
                       Cardholder Name
@@ -350,7 +309,6 @@ const StripeCheckoutModal = ({
                     </div>
                   </div>
 
-                  {/* Error Message */}
                   {errorMessage && (
                     <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
                       <p className="text-red-700 font-medium flex items-center">
@@ -360,7 +318,6 @@ const StripeCheckoutModal = ({
                     </div>
                   )}
 
-                  {/* Action Buttons */}
                   <div className="flex gap-4 pt-4">
                     <Button
                       type="button"
@@ -385,12 +342,10 @@ const StripeCheckoutModal = ({
                     </Button>
                   </div>
 
-                  {/* Security Footer */}
                   <div className="pt-4 border-t border-gray-200">
                     <p className="text-center text-gray-500 text-xs flex items-center justify-center">
                       <Lock className="w-4 h-4 mr-2" />
-                      Your payment is secure and encrypted. We never store your
-                      card details.
+                      Your payment is secure and encrypted. We never store your card details.
                     </p>
                   </div>
                 </div>

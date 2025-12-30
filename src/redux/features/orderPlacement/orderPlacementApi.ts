@@ -60,14 +60,18 @@ const orderEndpoints = baseApi.injectEndpoints({
     }),
 
     orderStatus: builder.mutation({
-      query: ({ orderId, userId, status, payType, paymentMethod }) => ({
+      query: ({ orderId, userId, status, payType, paymentMethod,paymentMethodId }) => ({
+        
         url: `/order/status/${orderId}/${userId}`,
         method: "PATCH",
         body: {
           status,
           payType,
           paymentMethod,
+          paymentMethodId
+        
         },
+        
       }),
     }),
   }),

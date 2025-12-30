@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRef, useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
@@ -19,9 +18,9 @@ import { Calendar } from "lucide-react";
 import { useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
 import { useGetDeliveryTypesQuery } from "@/redux/features/deliveryTypes/deliveryTypesApi";
 import { Textarea } from "@/components/ui/textarea";
-import { 
+import {
   useCreateOrderMutation,
-  useOrderStatusMutation 
+  useOrderStatusMutation,
 } from "@/redux/features/orderPlacement/orderPlacementApi";
 import {
   validateForm,
@@ -30,14 +29,12 @@ import {
 } from "@/types/orderValidation";
 import StripeCheckoutModal from "@/components/Stripe/StripeCheckoutModal";
 
-// PayType Enum
 enum PayType {
   COD = "COD",
   WALLET = "WALLET",
   ONLINE_PAY = "ONLINE_PAY",
 }
 
-// Mapping for display values
 const PAY_TYPE_DISPLAY: Record<PayType, string> = {
   [PayType.COD]: "cash",
   [PayType.ONLINE_PAY]: "stripe",
@@ -50,7 +47,6 @@ const DISPLAY_TO_PAY_TYPE: Record<string, PayType> = {
   wallet: PayType.WALLET,
 };
 
-// Initialize Stripe with your publishable key
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 interface IndivisualOrderTabProps {
@@ -58,7 +54,6 @@ interface IndivisualOrderTabProps {
 }
 
 const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
-  // const navigate = useNavigate();
   const { data: deliveryType } = useGetDeliveryTypesQuery(undefined);
   const { data: vehicleTypes } = useGetVehicleTypesQuery(undefined);
 
@@ -67,14 +62,13 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
 
   const dateInputRef = useRef<HTMLInputElement>(null);
 
-  // State for Stripe Modal
   const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const [createdUserId, setCreatedUserId] = useState<string | null>(null);
   const [orderTotalCost, setOrderTotalCost] = useState<number | null>(null);
+  const [orderTotalFee, setOrderTotalFee] = useState<number | null>(null);
   const [orderCreated, setOrderCreated] = useState<boolean>(false);
 
-  // State for form data
   const [formData, setFormData] = useState<OrderFormData>({
     route_type: "ONE_WAY",
     isFixed: false,
@@ -131,7 +125,6 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
   const [createOrder] = useCreateOrderMutation();
   const [updateOrderStatus] = useOrderStatusMutation();
 
-  // Debug effect to track pay_type changes
   useEffect(() => {
     console.log("Current pay_type:", formData.pay_type);
     console.log(
@@ -140,7 +133,6 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     );
   }, [formData.pay_type]);
 
-  // Initialize form with provided data if available
   useEffect(() => {
     if (data && Object.keys(data).length > 0) {
       const updatedFormData: Partial<OrderFormData> = {
@@ -159,18 +151,11 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         updatedFormData.scheduled_time = undefined;
       }
 
-      // Handle pay_type specifically
       if (data.pay_type) {
         updatedFormData.pay_type = data.pay_type as PayType;
       }
 
-      setFormData(
-        (prev) =>
-          ({
-            ...prev,
-            ...updatedFormData,
-          } as OrderFormData)
-      );
+      setFormData((prev) => ({ ...prev, ...updatedFormData } as OrderFormData));
 
       if (data.destinations && data.destinations.length > 0) {
         const senderData = data.destinations.find(
@@ -279,168 +264,176 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     }
   };
 
-  // Function to update order status for COD and Wallet payments
-  const updateOrderStatusAfterCreation = async (orderId: string, userId: string, paymentMethod: string) => {
+  const updateOrderStatusAfterCreation = async (
+    orderId: string,
+    userId: string,
+    paymentMethod: string,
+    paymentMethodId?: string
+  ) => {
     try {
-      const statusUpdateData = {
+      const statusUpdateData: any = {
         status: "PENDING",
         payType: "PAYMENT",
-        paymentMethod: paymentMethod
+        paymentMethod: paymentMethod,
       };
+
+      // Add paymentMethodId only for ONLINE_PAY
+      if (paymentMethod === "ONLINE_PAY" && paymentMethodId) {
+        statusUpdateData.paymentMethodId = paymentMethodId;
+      }
 
       console.log("Updating order status with data:", {
         orderId,
         userId,
-        ...statusUpdateData
+        ...statusUpdateData,
       });
 
       const response = await updateOrderStatus({
         orderId,
         userId,
-        ...statusUpdateData
+        ...statusUpdateData,
       });
 
       if (response?.data?.success) {
         console.log("Order status updated successfully:", response.data);
         toast.success("Order confirmed!");
       } else if (response) {
-        toast.error(response?.data?.error?.message || "Failed to update order status");
-      } 
+        toast.error(
+          response?.data?.error?.message || "Failed to update order status"
+        );
+      }
     } catch (error) {
       console.error("Error updating order status:", error);
       toast.error("Order created but failed to update status");
     }
   };
 
-  // Step 1: Create Order (Initial step)
-  // Step 1: Create Order (Initial step)
-const handleCreateOrder = async () => {
-  // Validate form
-  if (
-    !validateForm(
-      sender,
-      receiver,
-      selectedDeliveryType,
-      selectedVehicle,
-      collectTimeOption,
-      scheduledDate
-    )
-  ) {
-    return;
-  }
-
-  setIsSubmitting(true);
-
-  const orderData: any = {
-    ...formData,
-    vehicle_type_id: selectedVehicle?.id || formData.vehicle_type_id,
-    delivery_type: selectedDeliveryType?.name || formData.delivery_type,
-    collect_time: collectTimeOption === "now" ? "ASAP" : "SCHEDULED",
-    destinations: [
-      {
-        ...sender,
-        type: "SENDER",
-      },
-      {
-        ...receiver,
-        type: "RECEIVER",
-      },
-    ],
-  };
-
-  if (collectTimeOption === "schedule" && scheduledDate) {
-    orderData.scheduled_time = new Date(scheduledDate).toISOString();
-  }
-
-  console.log("Creating order:", orderData);
-
-  try {
-    const response = await createOrder(orderData);
-
-    // Get order details from response
-    const orderId = response?.data?.data?.order?.id;
-    const userId = response?.data?.data?.order?.userId;
-    const totalCostFromBackend = response?.data?.data?.order?.total_cost;
-
-    // Convert total_cost to number if it's a string
-    const totalCostNumber = totalCostFromBackend ? 
-      typeof totalCostFromBackend === 'string' ? 
-        parseFloat(totalCostFromBackend) : 
-        Number(totalCostFromBackend)
-      : 0;
-
-    console.log("Order ID:", orderId);
-    console.log("User ID:", userId);
-    console.log("Total cost from backend:", totalCostFromBackend);
-    console.log("Total cost as number:", totalCostNumber);
-    console.log("Full response:", response?.data?.data);
-
-    if (response?.data?.success === true) {
-      console.log("Order created successfully", response.data);
-      toast.success("Order created successfully!");
-      
-      // Store order details
-      setCreatedOrderId(orderId);
-      setCreatedUserId(userId || null);
-      setOrderTotalCost(totalCostNumber);
-      setOrderCreated(true);
-      
-    } else if (response?.data?.error) {
-      console.error("Order creation error:", response.data.error);
-      toast.error(response.data.error);
-    }
-  } catch (error) {
-    console.error("Error creating order:", error);
-    toast.error("An unexpected error occurred. Please try again.");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-
-  // Step 2: Confirm Order (after order is created)
-  const handleConfirmOrder = async () => {
-    if (!createdOrderId || !createdUserId) {
-      toast.error("Order information is missing. Please create the order first.");
+  const handleCreateOrder = async () => {
+    if (
+      !validateForm(
+        sender,
+        receiver,
+        selectedDeliveryType,
+        selectedVehicle,
+        collectTimeOption,
+        scheduledDate
+      )
+    ) {
       return;
     }
 
-    console.log("Confirming order with pay_type:", formData.pay_type);
-
-    // If Stripe payment is selected, open the modal
-    if (formData.pay_type === PayType.ONLINE_PAY) {
-      setIsStripeModalOpen(true);
-      return;
-    }
-
-    // For COD and WALLET payments, update status directly
-    await processOrderConfirmation();
-  };
-
-  // Process order confirmation for COD and Wallet
-  const processOrderConfirmation = async () => {
     setIsSubmitting(true);
 
+    const orderData: any = {
+      ...formData,
+      vehicle_type_id: selectedVehicle?.id || formData.vehicle_type_id,
+      delivery_type: selectedDeliveryType?.name || formData.delivery_type,
+      collect_time: collectTimeOption === "now" ? "ASAP" : "SCHEDULED",
+      destinations: [
+        { ...sender, type: "SENDER" },
+        { ...receiver, type: "RECEIVER" },
+      ],
+    };
+
+    if (collectTimeOption === "schedule" && scheduledDate) {
+      orderData.scheduled_time = new Date(scheduledDate).toISOString();
+    }
+
+    console.log("Creating order:", orderData);
+
     try {
-      // Map PayType enum to paymentMethod string for the API
-      let paymentMethod = "COD";
-      if (formData.pay_type === PayType.WALLET) {
-        paymentMethod = "WALLET";
+      const response = await createOrder(orderData);
+
+      const orderId = response?.data?.data?.order?.id;
+      const userId = response?.data?.data?.order?.userId;
+      const totalCostFromBackend = response?.data?.data?.order?.total_cost;
+      const total_fee = response?.data?.data?.order?.total_fee;
+
+      const totalCostNumber = totalCostFromBackend
+        ? typeof totalCostFromBackend === "string"
+          ? parseFloat(totalCostFromBackend)
+          : Number(totalCostFromBackend)
+        : 0;
+
+      console.log("Order ID:", orderId);
+      console.log("User ID:", userId);
+      console.log("Total cost:", totalCostNumber);
+
+      if (response?.data?.success === true) {
+        console.log("Order created successfully", response.data);
+        toast.success("Order created successfully!");
+
+        setCreatedOrderId(orderId);
+        setCreatedUserId(userId || null);
+        setOrderTotalCost(totalCostNumber);
+        setOrderTotalFee(total_fee);
+        setOrderCreated(true);
+      } else if (response?.data?.error) {
+        console.error("Order creation error:", response.data.error);
+        toast.error(response.data.error);
       }
-      
-      await updateOrderStatusAfterCreation(createdOrderId!, createdUserId!, paymentMethod);
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle successful payment for Stripe
-  const handlePaymentSuccess = () => {
+  const handleConfirmOrder = async () => {
+    if (!createdOrderId || !createdUserId) {
+      toast.error(
+        "Order information is missing. Please create the order first."
+      );
+      return;
+    }
+
+    console.log("Confirming order with pay_type:", formData.pay_type);
+
+    if (formData.pay_type === PayType.ONLINE_PAY) {
+      setIsStripeModalOpen(true);
+      return;
+    }
+
+    await processOrderConfirmation();
+  };
+
+  const processOrderConfirmation = async () => {
+    setIsSubmitting(true);
+
+    try {
+      let paymentMethod = "COD";
+      if (formData.pay_type === PayType.WALLET) {
+        paymentMethod = "WALLET";
+      }
+
+      await updateOrderStatusAfterCreation(
+        createdOrderId!,
+        createdUserId!,
+        paymentMethod
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Updated to receive paymentMethodId from StripeCheckoutModal
+  const handlePaymentSuccess = (paymentMethodId: string) => {
+    console.log(paymentMethodId, "paymentMethodId");
     toast.success("Payment processed successfully!");
     setIsStripeModalOpen(false);
-    
-    // Update order status for Stripe payment after successful payment
-    if (createdOrderId && createdUserId) {
-      updateOrderStatusAfterCreation(createdOrderId, createdUserId, "ONLINE_PAY");
+
+    if (createdOrderId && createdUserId && paymentMethodId) {
+      console.log(
+        "no hit==============",
+        createdOrderId && createdUserId && paymentMethodId
+      );
+      updateOrderStatusAfterCreation(
+        createdOrderId,
+        createdUserId,
+        "ONLINE_PAY",
+        paymentMethodId // Pass the payment method ID
+      );
     }
   };
 
@@ -472,10 +465,8 @@ const handleCreateOrder = async () => {
 
   return (
     <div>
-      {/* Delivery Details Section */}
       <div className="pt-8">
         <div className="grid grid-cols-3 gap-4 mb-8">
-          {/* Delivery Type */}
           <div>
             <Label className="mb-2 block">Delivery Type</Label>
             <Select
@@ -498,7 +489,6 @@ const handleCreateOrder = async () => {
                   {selectedDeliveryType?.name || "Select Delivery Type"}
                 </SelectValue>
               </SelectTrigger>
-
               <SelectContent>
                 {deliveryType?.data?.map((item: any) => (
                   <SelectItem key={item.id} value={String(item.id)}>
@@ -509,7 +499,6 @@ const handleCreateOrder = async () => {
             </Select>
           </div>
 
-          {/* Route Type */}
           <div>
             <Label className="mb-2 block">Route Type</Label>
             <Select
@@ -531,7 +520,6 @@ const handleCreateOrder = async () => {
             </Select>
           </div>
 
-          {/* Vehicle Type */}
           <div>
             <Label className="mb-2 block">Select Vehicle</Label>
             <Select
@@ -560,7 +548,6 @@ const handleCreateOrder = async () => {
                     : "Select Vehicle"}
                 </SelectValue>
               </SelectTrigger>
-
               <SelectContent>
                 {vehicleTypes?.data?.map((vehicle: any) => (
                   <SelectItem key={vehicle.id} value={String(vehicle.id)}>
@@ -573,16 +560,12 @@ const handleCreateOrder = async () => {
         </div>
       </div>
 
-      {/* Route & Services */}
       <div className="bg-white rounded-lg p-8 border border-gray-200 mb-6">
         <h3 className="text-lg font-semibold mb-4">Route</h3>
         <RadioGroup
           value={formData.isFixed ? "fixed" : "notfixed"}
           onValueChange={(value) => {
-            setFormData((prev) => ({
-              ...prev,
-              isFixed: value === "fixed",
-            }));
+            setFormData((prev) => ({ ...prev, isFixed: value === "fixed" }));
           }}
           className="grid grid-cols-2 gap-4 mb-8"
         >
@@ -637,7 +620,6 @@ const handleCreateOrder = async () => {
         </RadioGroup>
       </div>
 
-      {/* Sender Information */}
       <div className="bg-white rounded-lg p-8 border border-gray-200 mb-6">
         <div className="grid grid-cols-2 gap-6 mb-6">
           <div>
@@ -691,7 +673,6 @@ const handleCreateOrder = async () => {
         </div>
       </div>
 
-      {/* Receiver Information */}
       <div className="bg-white rounded-lg p-8 border border-gray-200 mb-6">
         <div className="grid grid-cols-2 gap-6 mb-6">
           <div>
@@ -737,15 +718,20 @@ const handleCreateOrder = async () => {
         </div>
       </div>
 
-      {/* Order Summary - Only show after order is created */}
       {orderCreated && orderTotalCost !== null && (
         <div className="bg-white rounded-lg p-8 border border-gray-200 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">
             Order Summary
           </h2>
           <div className="space-y-4">
+            <div className="border-t pt-2 pb-2.5 flex justify-between text-lg font-semibold text-gray-900">
+              <span>Fee</span>
+              <span>${orderTotalFee}</span>
+            </div>
+          </div>
+          <div className="space-y-4">
             <div className="border-t pt-4 flex justify-between text-lg font-semibold text-gray-900">
-              <span>Total</span> 
+              <span>Total</span>
               <span>${orderTotalCost?.toFixed(2)}</span>
             </div>
           </div>
@@ -772,9 +758,7 @@ const handleCreateOrder = async () => {
         </div>
       )}
 
-      {/* Buttons Section */}
       <div className="space-y-4">
-        {/* Create Order Button - Always visible */}
         <Button
           className="w-full bg-yellow-400 cursor-pointer hover:bg-yellow-500 text-gray-900 font-bold py-3"
           onClick={handleCreateOrder}
@@ -787,7 +771,6 @@ const handleCreateOrder = async () => {
             : "Create Order"}
         </Button>
 
-        {/* Confirm Order Button - Only show after order is created */}
         {orderCreated && orderTotalCost !== null && (
           <Button
             className="w-full bg-green-600 cursor-pointer hover:bg-green-700 text-white font-bold py-3"
@@ -803,7 +786,6 @@ const handleCreateOrder = async () => {
         )}
       </div>
 
-      {/* Stripe Checkout Modal wrapped with Elements provider */}
       {isStripeModalOpen && createdOrderId && orderTotalCost !== null && (
         <Elements stripe={stripePromise}>
           <StripeCheckoutModal
