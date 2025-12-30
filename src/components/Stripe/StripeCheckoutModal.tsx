@@ -445,7 +445,7 @@ const StripeCheckoutModal = ({
                   <div className="space-y-4">
                     <div className="text-center space-y-1">
                       <h3 className="text-lg font-bold text-gray-800">
-                        Add New Card
+                        Payment
                       </h3>
                       <p className="text-gray-600 text-xs">
                         Your details are encrypted and secure
