@@ -5,7 +5,6 @@ import { logout } from "../features/auth/authSlice";
 const baseQuery = fetchBaseQuery({
   baseUrl: "http://10.10.20.130:3000/api/v1",
   prepareHeaders: (headers, { getState }) => {
-   
     const token = (getState() as any).auth.accessToken;
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
@@ -22,7 +21,6 @@ const redirectToLogin = () => {
     window.location.href = "/login";
   }
 };
-
 
 // const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 //   const result = await baseQuery(args, api, extraOptions);
@@ -98,6 +96,7 @@ export const baseApi = createApi({
     "Coin",
     "Incentive",
     "DriverPerformance",
+    "Disputes",
     "BulkOrders"
   ],
   endpoints: () => ({}),

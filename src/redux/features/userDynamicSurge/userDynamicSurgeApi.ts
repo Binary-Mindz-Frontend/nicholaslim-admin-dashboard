@@ -36,6 +36,14 @@ const userDynamicSurgeApi = baseApi.injectEndpoints({
       invalidatesTags: ["UserDynamicSurge"],
     }),
 
+    updateUserDynamicSurgeStatus: build.mutation({
+      query: (id) => ({
+        url: `/user-dynamic-surge/status/${id}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["UserDynamicSurge"],
+    }),
+
     deleteUserDynamicSurge: build.mutation({
       query: (id) => ({
         url: `/user-dynamic-surge/${id}`,
@@ -51,5 +59,6 @@ export const {
   useSingleUserDynamicSurgeQuery,
   useAddUserDynamicSurgeMutation,
   useUpdateUserDynamicSurgeMutation,
+  useUpdateUserDynamicSurgeStatusMutation,
   useDeleteUserDynamicSurgeMutation,
 } = userDynamicSurgeApi;

@@ -284,13 +284,22 @@ export default function PlatformFeeManagement() {
               dynamicSurgeData={dynamicSurgeData || []}
               onAddFeeStructure={async (data: any) => {
                 try {
-                  const response = await addUserFeeStructure({
+                  const requestData: any = {
                     applicable_user: data.applicableUser,
                     fee_name: data.feeName,
                     amount: data.amount,
                     service_area: data.serviceArea,
                     applies_to: data.appliesTo,
-                  }).unwrap();
+                  };
+
+                  // Add condition_value only if it exists and appliesTo is ORDER_LESS
+                  if (data.appliesTo === "ORDER_LESS" && data.conditionValue) {
+                    requestData.condition_value = data.conditionValue;
+                  }
+
+                  const response = await addUserFeeStructure(
+                    requestData
+                  ).unwrap();
                   if (response?.success) userFeeStructureRefetch();
                   return response;
                 } catch (error: any) {
@@ -300,14 +309,23 @@ export default function PlatformFeeManagement() {
               }}
               onUpdateFeeStructure={async (data: any) => {
                 try {
-                  const response = await updateUserFeeStructure({
+                  const requestData: any = {
                     id: data.id,
                     applicable_user: data.applicableUser,
                     fee_name: data.feeName,
                     amount: data.amount,
                     service_area: data.serviceArea,
                     applies_to: data.appliesTo,
-                  }).unwrap();
+                  };
+
+                  // Add condition_value only if it exists and appliesTo is ORDER_LESS
+                  if (data.appliesTo === "ORDER_LESS" && data.conditionValue) {
+                    requestData.condition_value = data.conditionValue;
+                  }
+
+                  const response = await updateUserFeeStructure(
+                    requestData
+                  ).unwrap();
                   if (response?.success) userFeeStructureRefetch();
                   return response;
                 } catch (error: any) {
