@@ -1,9 +1,7 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import IndivisualOrderTab from "../IndivisualOrder/IndivisualOrderTab/IndivisualOrderTab";
 import BulkOrderTab from "../BulkOrder/BulkOrderTab/BulkOrderTab";
 export default function OrderPlacementPage() {
- 
   return (
     <div className="min-h-screen p-8">
       <div className="">
@@ -18,18 +16,15 @@ export default function OrderPlacementPage() {
             <TabsList className="grid grid-cols-2 gap-4 bg-transparent border-0 rounded-full w-full  -mt-4 ">
               <TabsTrigger
                 value="individual"
-                className="px-6 py-3 text-center cursor-pointer  shadow  rounded-full font-medium transition-colors
-              data-[state=active]:bg-[#FFFAE6] data-[state=active]:border-[#FC0] data-[state=active]:text-gray-900
-              data-[state=inactive]:bg-white data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-900"
+                className="px-6 py-3 text-center cursor-pointer shadow rounded-full font-medium border border-gray-300 data-[state=active]:bg-[#FFFAE6] data-[state=active]:border-[#FC0] data-[state=active]:text-gray-900"
               >
                 Individual Order
               </TabsTrigger>
 
               <TabsTrigger
                 value="bulk"
-                className="px-6 py-3 text-center cursor-pointer shadow rounded-full font-medium transition-colors  data-[state=active]:bg-[#FFFAE6] data-[state=active]:border-[#FC0] data-[state=active]:text-gray-900
-              data-[state=inactive]:bg-white data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-900             "
-              > 
+                className="px-6 py-3 text-center cursor-pointer shadow rounded-full font-medium border border-gray-300 data-[state=active]:bg-[#FFFAE6] data-[state=active]:border-[#FC0] data-[state=active]:text-gray-900"
+              >
                 Bulk Order
               </TabsTrigger>
             </TabsList>

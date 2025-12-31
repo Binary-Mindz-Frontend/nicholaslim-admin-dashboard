@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { DropIcons } from "@/components/Icons/Icons";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-// import { Link } from "react-router-dom";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
 import {
   useLazyExportOrdersCsvQuery,
   useUploadBulkOrderFileMutation,
@@ -22,6 +23,30 @@ import {
 } from "@/components/ui/select";
 import Swal from "sweetalert2";
 import BulkOrdersTable from "../BulkOrderTable/BulkOrderTable";
+import StripeCheckoutModal from "@/components/Stripe/StripeCheckoutModal";
+
+// Payment Method Enum
+enum PaymentMethod {
+  COD = "COD",
+  WALLET = "WALLET",
+  ONLINE_PAY = "ONLINE_PAY",
+}
+
+// Mapping for display values
+const PAYMENT_METHOD_DISPLAY: Record<PaymentMethod, string> = {
+  [PaymentMethod.COD]: "cash",
+  [PaymentMethod.ONLINE_PAY]: "stripe",
+  [PaymentMethod.WALLET]: "wallet",
+};
+
+const DISPLAY_TO_PAYMENT_METHOD: Record<string, PaymentMethod> = {
+  cash: PaymentMethod.COD,
+  stripe: PaymentMethod.ONLINE_PAY,
+  wallet: PaymentMethod.WALLET,
+};
+
+// Initialize Stripe
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const BulkOrderTab = () => {
   const [exportCsv, { isLoading: isDownloading }] =
@@ -30,23 +55,25 @@ const BulkOrderTab = () => {
     useUploadBulkOrderFileMutation();
   const [bulkOrder, { isLoading: isCreatingBulkOrder }] =
     useBulkOrderMutation();
-  const [updateBulkOrderStatus, { isLoading: isUpdatingStatus }] = 
-    useBulkOrderStatusPendingMutation(); // Add this mutation
+  const [updateBulkOrderStatus, { isLoading: isUpdatingStatus }] =
+    useBulkOrderStatusPendingMutation();
 
   const { data: bulkOrdersData, refetch } = useGetBulkOrdersTabQuery(undefined);
 
-  //  const navigate = useNavigate();
-
   // Extract bulk order IDs from the response
-  const bulkOrderIds = bulkOrdersData?.data?.totalOrderIds?.map((order: any) => order.id) || [];
+  const bulkOrderIds =
+    bulkOrdersData?.data?.totalOrderIds?.map((order: any) => order.id) || [];
 
-  // console.log(bulkOrderIds, 'bulkOrderIds')
+  console.log("Bulk Order IDs:", bulkOrderIds);
+  console.log("Bulk Orders Data:", bulkOrdersData?.data);
 
-  // I got the the id from here
-  console.log(bulkOrdersData?.data, "bulkOrdersId");
-
-  const totalBulkOrdersCost =
+  // Convert totalCost to number to avoid string issues
+  const totalBulkOrdersCostRaw =
     bulkOrdersData?.data.totalCost._sum.total_cost || 0;
+  const totalBulkOrdersCost =
+    typeof totalBulkOrdersCostRaw === "string"
+      ? parseFloat(totalBulkOrdersCostRaw)
+      : Number(totalBulkOrdersCostRaw);
 
   // State for sender information
   const [senderName, setSenderName] = useState("");
@@ -57,6 +84,13 @@ const BulkOrderTab = () => {
   // State to track uploaded file
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+
+  // State for payment method
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<PaymentMethod>(PaymentMethod.COD);
+
+  // State for Stripe Modal
+  const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
 
   // Helper function to check if sender information is complete
   const isSenderInfoComplete = () => {
@@ -100,7 +134,6 @@ const BulkOrderTab = () => {
   // Process bulk order creation
   const processBulkOrder = async (fileUrl: string) => {
     try {
-      // Show loading state
       Swal.fire({
         title: "Creating Bulk Orders...",
         text: "Please wait while we process your orders.",
@@ -111,7 +144,6 @@ const BulkOrderTab = () => {
         },
       });
 
-      // Create destinations dynamically based on sender info
       const destinations = [
         {
           address: senderAddress,
@@ -123,7 +155,6 @@ const BulkOrderTab = () => {
         },
       ];
 
-      // Prepare the request data for the bulk order
       const requestData = {
         fileUrl: fileUrl,
         destinations: destinations,
@@ -131,15 +162,12 @@ const BulkOrderTab = () => {
 
       console.log("Sending bulk order request:", requestData);
 
-      // Trigger the bulk order API to create the orders
       const response = await bulkOrder(requestData).unwrap();
 
-      // Close loading dialog
       Swal.close();
 
       console.log("Bulk order API response:", response);
 
-      // Show success message
       Swal.fire({
         title: "Success!",
         text: response?.data?.message || "Bulk orders created successfully!",
@@ -148,9 +176,11 @@ const BulkOrderTab = () => {
         confirmButtonColor: "#3B82F6",
       });
 
-      // Clear the uploaded file state
       setUploadedFileUrl(null);
       setUploadedFileName(null);
+
+      // Refetch to get updated bulk orders
+      refetch();
 
       return response;
     } catch (error: any) {
@@ -170,7 +200,6 @@ const BulkOrderTab = () => {
 
   // CSV UPLOAD
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Check if sender information is complete before uploading the file
     if (!isSenderInfoComplete()) {
       Swal.fire({
         title: "Warning!",
@@ -184,7 +213,6 @@ const BulkOrderTab = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.name.toLowerCase().endsWith(".csv")) {
       Swal.fire({
         title: "Error!",
@@ -195,7 +223,6 @@ const BulkOrderTab = () => {
       return;
     }
 
-    // Validate file size (10 MB limit)
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       Swal.fire({
@@ -211,7 +238,6 @@ const BulkOrderTab = () => {
     formData.append("images", file);
 
     try {
-      // Show uploading progress
       Swal.fire({
         title: "Uploading...",
         text: "Please wait while we upload your CSV file.",
@@ -233,13 +259,11 @@ const BulkOrderTab = () => {
         throw new Error("No file URL returned from upload");
       }
 
-      // Store the file URL and name
       setUploadedFileUrl(fileUrl);
       setUploadedFileName(file.name);
 
       console.log("File uploaded successfully:", fileUrl);
 
-      // Automatically trigger bulk order creation
       await processBulkOrder(fileUrl);
     } catch (error: any) {
       Swal.close();
@@ -252,12 +276,10 @@ const BulkOrderTab = () => {
         confirmButtonText: "OK",
       });
 
-      // Reset states
       setUploadedFileUrl(null);
       setUploadedFileName(null);
     }
 
-    // Reset file input
     e.target.value = "";
   };
 
@@ -290,11 +312,11 @@ const BulkOrderTab = () => {
     }
   };
 
-  const handleConfirmOrder = async (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent default link navigation
-
+  // Update bulk order status
+  const updateBulkOrderStatusToPending = async (
+    stripePaymentMethodId?: string
+  ) => {
     try {
-      // Show loading state
       Swal.fire({
         title: "Updating Order Status...",
         text: "Please wait while we update your order status to pending.",
@@ -305,46 +327,126 @@ const BulkOrderTab = () => {
         },
       });
 
-      // Update bulk order status to pending
-      const response = await updateBulkOrderStatus(bulkOrderIds).unwrap();
+      const requestData: any = {
+        orderIds: bulkOrderIds,
+        payType: "PAYMENT",
+        paymentMethod: selectedPaymentMethod,
+      };
 
-      // Close loading dialog
+      // Add stripePaymentMethodId only for ONLINE_PAY
+      if (
+        selectedPaymentMethod === PaymentMethod.ONLINE_PAY &&
+        stripePaymentMethodId
+      ) {
+        requestData.stripePaymentMethodId = stripePaymentMethodId;
+      }
+
+      console.log("Updating bulk order status with data:", requestData);
+
+      const response = await updateBulkOrderStatus(requestData).unwrap();
+
       Swal.close();
 
       console.log("Bulk order status update response:", response);
 
-      // Show success message
-      Swal.fire({
-        title: "Success!",
-        text: response?.message || "Order status updated to pending successfully!",
-        icon: "success",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#3B82F6",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Navigate to order confirmation page
-          // navigate("/order-confirm");
-        }
-      });
-
-    } catch (error: any) {
-      console.error("Failed to update bulk order status", error);
-      Swal.close();
-
       Swal.fire({
         title: "Error!",
-        text: error?.data?.message || "Failed to update order status.",
+        text: response?.error || "Failed to update order status.",
         icon: "error",
         confirmButtonText: "OK",
       });
+
+      if (response.success === true) {
+        Swal.fire({
+          title: "Success!",
+          text:
+            response?.message || "Order status updated to pending successfully!",
+          icon: "success",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#3B82F6",
+        });
+      }
+
+      // Refetch to update the orders
+      // refetch();
+    } catch (error: any) {
+      console.error("Failed to update bulk order status", error);
+      Swal.close();
     }
   };
 
+  // Handle confirm order button click
+  const handleConfirmOrder = async (e: React.MouseEvent) => {
+    e.preventDefault();
 
-  
+    if (!bulkOrderIds || bulkOrderIds.length === 0) {
+      Swal.fire({
+        title: "Warning!",
+        text: "No orders to confirm. Please create orders first.",
+        icon: "warning",
+        confirmButtonText: "OK",
+      });
+      return;
+    }
+
+    console.log("Confirming order with payment method:", selectedPaymentMethod);
+
+    // If Stripe payment is selected, open the modal
+    if (selectedPaymentMethod === PaymentMethod.ONLINE_PAY) {
+      setIsStripeModalOpen(true);
+      return;
+    }
+
+    // For COD and WALLET payments, update status directly
+    await updateBulkOrderStatusToPending();
+  };
+
+  // Handle successful Stripe payment
+  const handlePaymentSuccess = (stripePaymentMethodId: string) => {
+    console.log(
+      "Payment successful with Stripe Payment Method ID:",
+      stripePaymentMethodId
+    );
+    setIsStripeModalOpen(false);
+
+    // Update bulk order status with Stripe payment method ID
+    updateBulkOrderStatusToPending(stripePaymentMethodId);
+  };
+
+  // Handle payment method change
+  const handlePaymentMethodChange = (value: string) => {
+    const paymentMethod = DISPLAY_TO_PAYMENT_METHOD[value];
+    if (paymentMethod) {
+      setSelectedPaymentMethod(paymentMethod);
+      console.log("Payment method changed to:", paymentMethod);
+    }
+  };
+
+  // Get display value for payment method
+  const getDisplayPaymentMethod = (): string => {
+    const displayValue = PAYMENT_METHOD_DISPLAY[selectedPaymentMethod];
+    if (!displayValue) return "cash";
+    return displayValue;
+  };
+
+  // Get label for payment method
+  const getPaymentMethodLabel = (): string => {
+    switch (selectedPaymentMethod) {
+      case PaymentMethod.COD:
+        return "COD";
+      case PaymentMethod.ONLINE_PAY:
+        return "Stripe";
+      case PaymentMethod.WALLET:
+        return "Wallet";
+      default:
+        return "Select";
+    }
+  };
+
   useEffect(() => {
     refetch();
   }, [refetch]);
+
   return (
     <>
       <div className="bg-white rounded-lg p-8 border border-gray-200">
@@ -402,7 +504,6 @@ const BulkOrderTab = () => {
           </label>
         </div>
 
-        {/* Show uploaded file info and create order button */}
         {uploadedFileUrl && !isCreatingBulkOrder && (
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center justify-between">
@@ -483,7 +584,7 @@ const BulkOrderTab = () => {
       <BulkOrdersTable />
 
       {/* Order Summary */}
-      <div className="bg-white rounded-lg p-8 border border-gray-200">
+      <div className="bg-white rounded-lg p-8 border border-gray-200 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-6">
           Order Summary
         </h2>
@@ -491,26 +592,30 @@ const BulkOrderTab = () => {
         <div className="space-y-4 mb-8">
           <div className="flex justify-between text-gray-700">
             <span>Delivery</span>
-            <span>+${totalBulkOrdersCost}</span>
+            <span>${totalBulkOrdersCost.toFixed(2)}</span>
           </div>
           <div className="border-t pt-4 flex justify-between text-lg font-semibold text-gray-900">
             <span>Total</span>
-            <span>+${totalBulkOrdersCost}</span>
+            <span>${totalBulkOrdersCost.toFixed(2)}</span>
           </div>
         </div>
 
         <div className="mb-6 flex items-center justify-between">
           <Label className="mb-0">Payment method</Label>
           <Select
-            defaultValue="stripe"
-            disabled={isUploading || isCreatingBulkOrder}
+            value={getDisplayPaymentMethod()}
+            onValueChange={handlePaymentMethodChange}
+            disabled={isUploading || isCreatingBulkOrder || isUpdatingStatus}
           >
             <SelectTrigger className="w-[20%]">
-              <SelectValue placeholder="Select payment method" />
+              <SelectValue placeholder="Select payment method">
+                {getPaymentMethodLabel()}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="stripe">Stripe account</SelectItem>
-              <SelectItem value="cash">Cash</SelectItem>
+              <SelectItem value="cash">COD</SelectItem>
+              <SelectItem value="stripe">Stripe</SelectItem>
+              <SelectItem value="wallet">Wallet</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -518,11 +623,29 @@ const BulkOrderTab = () => {
 
       <Button
         onClick={handleConfirmOrder}
-        className="w-full bg-gray-300 hover:bg-gray-400 cursor-pointer text-gray-900 font-bold py-3"
-        // disabled={isConfirmButtonDisabled}
+        className="w-full bg-yellow-500 hover:bg-yellow-600 cursor-pointer text-white font-bold py-3"
+        disabled={
+          isUpdatingStatus || !bulkOrderIds || bulkOrderIds.length === 0
+        }
       >
-        {isUpdatingStatus ? "Updating Status..." : "Confirm Order"}
+        {isUpdatingStatus
+          ? "Updating Status..."
+          : selectedPaymentMethod === PaymentMethod.ONLINE_PAY
+          ? "Proceed to Payment"
+          : "Confirm Order"}
       </Button>
+
+      {/* Stripe Checkout Modal */}
+      {isStripeModalOpen && totalBulkOrdersCost > 0 && (
+        <Elements stripe={stripePromise}>
+          <StripeCheckoutModal
+            isOpen={isStripeModalOpen}
+            onClose={() => setIsStripeModalOpen(false)}
+            totalAmount={totalBulkOrdersCost}
+            onPaymentSuccess={handlePaymentSuccess}
+          />
+        </Elements>
+      )}
     </>
   );
 };
