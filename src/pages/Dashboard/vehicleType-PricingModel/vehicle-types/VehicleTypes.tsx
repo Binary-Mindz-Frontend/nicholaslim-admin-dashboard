@@ -7,6 +7,7 @@ import {
 } from "@/redux/features/vehicleType/vehicleTypeApi";
 import toast from "react-hot-toast";
 import CustomButton from "./_components/CustomButton";
+import { PeakPricingSection } from "./addVehicleTypes/_components/PeakPricingSection";
 
 interface VehicleTypeData {
   vehicle_type: string;
@@ -27,19 +28,43 @@ interface VehicleTypeStats {
 const VehicleTypes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<string>("all");
-  
+
   const [addVehicleType, { isLoading: isAdding }] = useAddVehicleTypeMutation();
   const { data: apiResponse, isLoading, refetch } = useGetVehicleTypesQuery("");
 
   // Generate random colors for vehicle types
   const generateRandomColor = () => {
     const colors = [
-      "#FF6B6B", "#4ECDC4", "#FFD166", "#06D6A0", "#118AB2",
-      "#EF476F", "#FF9A76", "#7BC950", "#2A9D8F", "#E9C46A",
-      "#F4A261", "#E76F51", "#264653", "#2A9D8F", "#E9C46A",
-      "#F4A261", "#E76F51", "#2D9CDB", "#FF8D28", "#27C840",
-      "#00C3D0", "#FF383C", "#9B5DE5", "#F15BB5", "#00BBF9",
-      "#00F5D4", "#FF006E", "#8338EC", "#3A86FF", "#FB5607"
+      "#FF6B6B",
+      "#4ECDC4",
+      "#FFD166",
+      "#06D6A0",
+      "#118AB2",
+      "#EF476F",
+      "#FF9A76",
+      "#7BC950",
+      "#2A9D8F",
+      "#E9C46A",
+      "#F4A261",
+      "#E76F51",
+      "#264653",
+      "#2A9D8F",
+      "#E9C46A",
+      "#F4A261",
+      "#E76F51",
+      "#2D9CDB",
+      "#FF8D28",
+      "#27C840",
+      "#00C3D0",
+      "#FF383C",
+      "#9B5DE5",
+      "#F15BB5",
+      "#00BBF9",
+      "#00F5D4",
+      "#FF006E",
+      "#8338EC",
+      "#3A86FF",
+      "#FB5607",
     ];
     return colors[Math.floor(Math.random() * colors.length)];
   };
@@ -49,7 +74,7 @@ const VehicleTypes = () => {
     if (!apiResponse?.data) return [];
 
     const statsMap = new Map<string, number>();
-    
+
     // Count occurrences of each vehicle type
     apiResponse.data.forEach((vehicle: any) => {
       const type = vehicle.vehicle_type || "Unknown";
@@ -57,11 +82,13 @@ const VehicleTypes = () => {
     });
 
     // Convert to array with random colors
-    const stats: VehicleTypeStats[] = Array.from(statsMap.entries()).map(([type, count]) => ({
-      vehicle_type: type,
-      count,
-      color: generateRandomColor(),
-    }));
+    const stats: VehicleTypeStats[] = Array.from(statsMap.entries()).map(
+      ([type, count]) => ({
+        vehicle_type: type,
+        count,
+        color: generateRandomColor(),
+      })
+    );
 
     return stats;
   }, [apiResponse]);
@@ -77,8 +104,8 @@ const VehicleTypes = () => {
     if (!apiResponse?.data || selectedType === "all") {
       return apiResponse?.data || [];
     }
-    return apiResponse.data.filter((vehicle: any) => 
-      vehicle.vehicle_type === selectedType
+    return apiResponse.data.filter(
+      (vehicle: any) => vehicle.vehicle_type === selectedType
     );
   }, [apiResponse, selectedType]);
 
@@ -103,7 +130,7 @@ const VehicleTypes = () => {
 
       toast.dismiss();
       toast.success("Vehicle type added successfully!");
-      
+
       refetch(); // Refresh the data
       setIsModalOpen(false);
     } catch (error: any) {
@@ -139,7 +166,9 @@ const VehicleTypes = () => {
         {vehicleTypeStats.map((stat) => (
           <CustomButton
             key={stat.vehicle_type}
-            bgColor={selectedType === stat.vehicle_type ? "#FFEA96" : "#FFE16B40"}
+            bgColor={
+              selectedType === stat.vehicle_type ? "#FFEA96" : "#FFE16B40"
+            }
             borderColor="#E2E8F0"
             indicatorColor={stat.color}
             text={`${stat.vehicle_type}`}
@@ -161,7 +190,7 @@ const VehicleTypes = () => {
         <VTtablesData
           apiResponse={{
             ...apiResponse,
-            data: filteredData // Pass filtered data to table
+            data: filteredData, // Pass filtered data to table
           }}
           isLoading={isLoading}
           refetch={refetch}
@@ -186,6 +215,10 @@ const VehicleTypes = () => {
         onSubmit={handleAddVehicle}
         // isSubmitting={isAdding}
       />
+
+      <div className="my-12">
+        <PeakPricingSection />
+      </div>
     </div>
   );
 };

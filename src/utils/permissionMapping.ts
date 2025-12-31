@@ -57,7 +57,7 @@ export const childRouteToParentMapping: Record<string, string> = {
   "payment-options": "order-placement",
   "order-list": "orders",
   "quiz-create-edit": "quiz", 
-  "support/view": "support",
+  "support": "support",
   "users-app/:id": "users",
   "driver-list/:id": "drivers",
   "join-request/:id": "drivers",
@@ -67,7 +67,8 @@ export const childRouteToParentMapping: Record<string, string> = {
   "order-history/:id": "users",
   "order/:id": "orders",
   "assign-driver/:id": "orders",
-  "live-order-tracking/:id": "order-placement"
+  "live-order-tracking/:id": "order-placement",
+  "support/view/:id": "support"
 };
 
 // Extract base route from dynamic route

@@ -2,17 +2,17 @@
 import type React from "react"
 import { BackButton } from "./_components/BackButton"
 import { BasePricingSection } from "./_components/BasePricingSection"
-import { PeakPricingSection } from "./_components/PeakPricingSection"
+// import { PeakPricingSection } from "./_components/PeakPricingSection"
 
 
-interface PricingRule {
-  id: string
-  title: string
-  timeRange?: string
-  days?: string
-  charge: string
-  enabled: boolean
-}
+// interface PricingRule {
+//   id: string
+//   title: string
+//   timeRange?: string
+//   days?: string
+//   charge: string
+//   enabled: boolean
+// }
 
 export const AddVehiclePage: React.FC = () => {
   const handleBack = () => {
@@ -24,15 +24,15 @@ export const AddVehiclePage: React.FC = () => {
     // Handle edit logic
   }
 
-  const handleRuleEdit = (rule: PricingRule) => {
-    console.log("Edit rule:", rule)
-    // Handle edit logic
-  }
+  // const handleRuleEdit = (rule: PricingRule) => {
+  //   console.log("Edit rule:", rule)
+  //   // Handle edit logic
+  // }
 
-  const handleRuleDelete = (id: string) => {
-    console.log("Delete rule:", id)
-    // Handle delete logic
-  }
+  // const handleRuleDelete = (id: string) => {
+  //   console.log("Delete rule:", id)
+  //   // Handle delete logic
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -41,7 +41,7 @@ export const AddVehiclePage: React.FC = () => {
 
         <BasePricingSection onEdit={handleBasePricingEdit} />
 
-        <PeakPricingSection onRuleEdit={handleRuleEdit} onRuleDelete={handleRuleDelete} />
+        {/* <PeakPricingSection onRuleEdit={handleRuleEdit} onRuleDelete={handleRuleDelete} /> */}
       </div>
     </div>
   )

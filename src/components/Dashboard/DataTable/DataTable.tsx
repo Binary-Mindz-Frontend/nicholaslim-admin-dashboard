@@ -15,9 +15,26 @@ export type Column<T> =
 export interface ITableProps<T> {
   columns: Column<T>[];
   data: T[];
+  isLoading?: boolean;
 }
 
-const CustomTable = <T extends object>({ columns, data }: ITableProps<T>) => {
+const CustomTable = <T extends object>({ columns, data, isLoading }: ITableProps<T>) => {
+  if (isLoading) {
+    return (
+      <div className="w-full overflow-x-auto bg-white rounded-lg border border-[#F0E5C9] p-8 text-center">
+        <div className="animate-pulse">Loading disputes...</div>
+      </div>
+    );
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="w-full overflow-x-auto bg-white rounded-lg border border-[#F0E5C9] p-8 text-center">
+        <p className="text-gray-500">No disputes found.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full overflow-x-auto bg-white rounded-lg border border-[#F0E5C9]">
       <table className="min-w-full divide-y divide-[#F0E5C9]">

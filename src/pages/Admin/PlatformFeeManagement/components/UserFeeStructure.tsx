@@ -3,7 +3,22 @@ import { Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import LoadingSpinner from "@/components/Shared/LoadingSpinner/LoadingSpinner";
 import DeleteConfirmationModal from "@/components/Shared/DeleteConfirmationModal/DeleteConfirmationModal";
-import { FeeStructure, UserFeeStructureProps } from "@/types/userFeeStructureType";
+import {
+  FeeStructure,
+  UserFeeStructureProps,
+} from "@/types/userFeeStructureType";
+
+// Define all order types as a constant for reuse
+const ORDER_TYPES = [
+  { value: "ALL_ORDERS", label: "All Orders" },
+  { value: "ORDER_LESS", label: "Order Less Than" },
+  { value: "EXPRESS_ORDERS", label: "Express Orders" },
+  { value: "SCHEDULED_ORDERS", label: "Scheduled Orders" },
+  { value: "STACKED_ORDERS", label: "Stacked Orders" },
+  { value: "STANDARD_ORDERS", label: "Standard Orders" },
+] as const;
+
+type OrderType = (typeof ORDER_TYPES)[number]["value"];
 
 export default function UserFeeStructure({
   feeStructureData,
@@ -30,13 +45,13 @@ export default function UserFeeStructure({
   // Function to parse amount string to number
   const parseAmountToNumber = (amountStr: string): number => {
     if (!amountStr) return 0;
-    
+
     // Remove any $, % signs and trim whitespace
-    const cleaned = amountStr.replace(/[$,%]/g, '').trim();
-    
+    const cleaned = amountStr.replace(/[$,%]/g, "").trim();
+
     // Convert to number
     const num = parseFloat(cleaned);
-    
+
     // Return 0 if not a valid number
     return isNaN(num) ? 0 : num;
   };
@@ -50,11 +65,12 @@ export default function UserFeeStructure({
         .map((fee) => ({
           id: fee.id,
           feeName: fee.fee_name,
-          amount: fee.amount, // API returns number
-          displayAmount: fee.amount.toString(), // For display
+          amount: fee.amount,
+          displayAmount: fee.amount.toString(),
           serviceArea: fee.service_area,
-          appliesTo: fee.applies_to,
+          appliesTo: fee.applies_to as OrderType,
           applicableUser: fee.applicable_user,
+          conditionValue: fee.condition_value || "", // Get condition value from API
         }));
 
       setFees(filteredFees);
@@ -65,13 +81,14 @@ export default function UserFeeStructure({
   const handleAddFee = () => {
     setFees([
       ...fees,
-      { 
-        feeName: "", 
-        amount: 0, 
+      {
+        feeName: "",
+        amount: 0,
         displayAmount: "",
-        serviceArea: "", 
-        appliesTo: "ALL_ORDERS", 
-        applicableUser: applicableUser 
+        serviceArea: "",
+        appliesTo: "ALL_ORDERS",
+        applicableUser: applicableUser,
+        conditionValue: 0,
       },
     ]);
   };
@@ -102,7 +119,7 @@ export default function UserFeeStructure({
     setIsLoading(true);
     try {
       const response = await onDeleteFeeStructure(deleteModal.feeId);
-      
+
       if (response?.success) {
         toast.success(response.message || "Fee deleted successfully");
         const newFees = fees.filter((_, i) => i !== deleteModal.feeIndex);
@@ -127,36 +144,66 @@ export default function UserFeeStructure({
   const handleFeeChange = (
     index: number,
     field: keyof FeeStructure,
-    value: string | number | "ALL_ORDERS" | "ORDERLESS15" | "EXPRESS_ORDERS"
+    value: string | number | OrderType
   ) => {
     const newFees = [...fees];
-    
+
     if (field === "amount") {
       // Parse string to number
-      const numValue = typeof value === 'string' ? parseAmountToNumber(value) : value;
-      newFees[index] = { 
-        ...newFees[index], 
+      const numValue =
+        typeof value === "string" ? parseAmountToNumber(value) : value;
+      newFees[index] = {
+        ...newFees[index],
         amount: numValue,
-        displayAmount: typeof value === 'string' ? value : value.toString()
+        displayAmount: typeof value === "string" ? value : value.toString(),
+      };
+    } else if (field === "appliesTo") {
+      // When order type changes, reset condition value if not ORDER_LESS
+      newFees[index] = {
+        ...newFees[index],
+        [field]: value as
+          | "ORDER_LESS"
+          | "ALL_ORDERS"
+          | "EXPRESS_ORDERS"
+          | "SCHEDULED_ORDERS"
+          | "STACKED_ORDERS"
+          | "STANDARD_ORDERS",
+        conditionValue:
+          value === "ORDER_LESS" ? newFees[index].conditionValue : 0,
       };
     } else {
       newFees[index] = { ...newFees[index], [field]: value };
     }
-    
+
     setFees(newFees);
   };
 
   const handleDisplayAmountChange = (index: number, value: string) => {
     const newFees = [...fees];
-    
+
     // Validate input (allow numbers, decimals, $, %)
     const isValid = /^[\$]?\d*(\.\d+)?[%]?$/.test(value);
-    
+
     if (isValid || value === "") {
-      newFees[index] = { 
-        ...newFees[index], 
+      newFees[index] = {
+        ...newFees[index],
         displayAmount: value,
-        amount: parseAmountToNumber(value)
+        amount: parseAmountToNumber(value),
+      };
+      setFees(newFees);
+    }
+  };
+
+  const handleConditionValueChange = (index: number, value: string) => {
+    const newFees = [...fees];
+
+    // Validate condition value (allow numbers, decimals, $)
+    const isValid = /^[\$]?\d*(\.\d+)?$/.test(value) || value === "";
+
+    if (isValid) {
+      newFees[index] = {
+        ...newFees[index],
+        conditionValue: parseInt(value),
       };
       setFees(newFees);
     }
@@ -169,7 +216,7 @@ export default function UserFeeStructure({
     try {
       const newFees = fees.filter((fee) => !fee.id);
       const existingFees = fees.filter((fee) => fee.id);
-      
+
       let newSuccessCount = 0;
       let newErrorCount = 0;
       let updateSuccessCount = 0;
@@ -178,14 +225,22 @@ export default function UserFeeStructure({
       // Save new fees (without ID)
       for (const fee of newFees) {
         if (fee.feeName.trim() && fee.amount > 0 && fee.serviceArea.trim()) {
+          // Only include conditionValue if ORDER_LESS is selected
+          const requestData: any = {
+            feeName: fee.feeName,
+            amount: fee.amount,
+            serviceArea: fee.serviceArea,
+            appliesTo: fee.appliesTo,
+            applicableUser: fee.applicableUser,
+          };
+
+          // Add conditionValue only for ORDER_LESS
+          if (fee.appliesTo === "ORDER_LESS" && fee.conditionValue) {
+            requestData.conditionValue = fee.conditionValue;
+          }
+
           try {
-            await onAddFeeStructure({
-              feeName: fee.feeName,
-              amount: fee.amount, // Send as number
-              serviceArea: fee.serviceArea,
-              appliesTo: fee.appliesTo,
-              applicableUser: fee.applicableUser,
-            });
+            await onAddFeeStructure(requestData);
             newSuccessCount++;
           } catch (error) {
             newErrorCount++;
@@ -196,16 +251,29 @@ export default function UserFeeStructure({
 
       // Update existing fees (with ID)
       for (const fee of existingFees) {
-        if (fee.id && fee.feeName.trim() && fee.amount > 0 && fee.serviceArea.trim()) {
+        if (
+          fee.id &&
+          fee.feeName.trim() &&
+          fee.amount > 0 &&
+          fee.serviceArea.trim()
+        ) {
+          // Only include conditionValue if ORDER_LESS is selected
+          const requestData: any = {
+            id: fee.id,
+            feeName: fee.feeName,
+            amount: fee.amount,
+            serviceArea: fee.serviceArea,
+            appliesTo: fee.appliesTo,
+            applicableUser: fee.applicableUser,
+          };
+
+          // Add conditionValue only for ORDER_LESS
+          if (fee.appliesTo === "ORDER_LESS" && fee.conditionValue) {
+            requestData.conditionValue = fee.conditionValue;
+          }
+
           try {
-            await onUpdateFeeStructure({
-              id: fee.id,
-              feeName: fee.feeName,
-              amount: fee.amount, // Send as number
-              serviceArea: fee.serviceArea,
-              appliesTo: fee.appliesTo,
-              applicableUser: fee.applicableUser,
-            });
+            await onUpdateFeeStructure(requestData);
             updateSuccessCount++;
           } catch (error) {
             updateErrorCount++;
@@ -216,10 +284,14 @@ export default function UserFeeStructure({
 
       // Show success/error messages
       const messages = [];
-      if (newSuccessCount > 0) messages.push(`${newSuccessCount} new fee(s) created`);
-      if (updateSuccessCount > 0) messages.push(`${updateSuccessCount} fee(s) updated`);
-      if (newErrorCount > 0) messages.push(`Failed to create ${newErrorCount} fee(s)`);
-      if (updateErrorCount > 0) messages.push(`Failed to update ${updateErrorCount} fee(s)`);
+      if (newSuccessCount > 0)
+        messages.push(`${newSuccessCount} new fee(s) created`);
+      if (updateSuccessCount > 0)
+        messages.push(`${updateSuccessCount} fee(s) updated`);
+      if (newErrorCount > 0)
+        messages.push(`Failed to create ${newErrorCount} fee(s)`);
+      if (updateErrorCount > 0)
+        messages.push(`Failed to update ${updateErrorCount} fee(s)`);
 
       if (messages.length > 0) {
         const summary = messages.join(", ");
@@ -229,7 +301,6 @@ export default function UserFeeStructure({
           toast.error(summary);
         }
       }
-      
     } catch (error) {
       console.error("Failed to save fees:", error);
       toast.error("Failed to save fee structure. Please try again.");
@@ -256,7 +327,9 @@ export default function UserFeeStructure({
     <>
       <div className="bg-white rounded-3xl shadow-lg p-8 mb-8 border border-gray-200">
         <div className="flex md:justify-between items-center mb-6 flex-col md:flex-row justify-center gap-4 md:gap-0 text-center md:text-left">
-          <h2 className="text-2xl font-bold text-gray-900">User Fee Structure</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            User Fee Structure
+          </h2>
           <button
             onClick={handleAddFee}
             type="button"
@@ -268,12 +341,13 @@ export default function UserFeeStructure({
         </div>
 
         <form onSubmit={handleSaveAll} className="space-y-4">
-          {/* Header Row */}
-          <div className="hidden md:grid grid-cols-[1fr_1fr_1fr_1fr_40px] gap-4 mb-2 text-sm font-semibold text-gray-600">
+          {/* Header Row - Updated for dynamic columns */}
+          <div className="hidden md:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_40px] gap-4 mb-2 text-sm font-semibold text-gray-600">
             <div>Fee Name</div>
             <div>Amount</div>
             <div>Service Area</div>
             <div>Applies to</div>
+            <div>Condition Value</div>
             <div className="w-10"></div>
           </div>
 
@@ -286,8 +360,9 @@ export default function UserFeeStructure({
             fees.map((fee, index) => (
               <div
                 key={fee.id || `new-${index}`}
-                className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1fr_40px] gap-4 items-center"
+                className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1fr_1fr_40px] gap-4 items-center"
               >
+                {/* Fee Name */}
                 <input
                   type="text"
                   value={fee.feeName}
@@ -299,10 +374,14 @@ export default function UserFeeStructure({
                   required
                   disabled={isLoading}
                 />
+
+                {/* Amount */}
                 <input
                   type="text"
                   value={fee.displayAmount || ""}
-                  onChange={(e) => handleDisplayAmountChange(index, e.target.value)}
+                  onChange={(e) =>
+                    handleDisplayAmountChange(index, e.target.value)
+                  }
                   placeholder="Amount (e.g., 3.99, 10%, $2.5)"
                   className={inputClasses}
                   required
@@ -310,6 +389,8 @@ export default function UserFeeStructure({
                   pattern="^[\$]?\d+(\.\d+)?[%]?$"
                   title="Enter a valid amount (e.g., 3.99, 10%, $2.5)"
                 />
+
+                {/* Service Area */}
                 <input
                   type="text"
                   className={inputClasses}
@@ -321,24 +402,50 @@ export default function UserFeeStructure({
                   required
                   disabled={isLoading}
                 />
+
+                {/* Applies To */}
                 <select
                   value={fee.appliesTo}
                   onChange={(e) =>
                     handleFeeChange(
                       index,
                       "appliesTo",
-                      e.target.value as "ALL_ORDERS" | "ORDERLESS15" | "EXPRESS_ORDERS"
+                      e.target.value as OrderType
                     )
                   }
                   className={selectClasses}
                   disabled={isLoading}
                 >
-                  <option value="ALL_ORDERS">All Orders</option>
-                  <option value="ORDERLESS15">Orders &lt; $15</option>
-                  <option value="EXPRESS_ORDERS">Express Orders</option>
+                  {ORDER_TYPES.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
                 </select>
-                
-                {/* Delete Button Only */}
+
+                {/* Condition Value (only for ORDER_LESS) */}
+                <div>
+                  {fee.appliesTo === "ORDER_LESS" ? (
+                    <input
+                      type="text"
+                      value={fee.conditionValue || ""}
+                      onChange={(e) =>
+                        handleConditionValueChange(index, e.target.value)
+                      }
+                      placeholder="e.g., $15"
+                      className={inputClasses}
+                      disabled={isLoading}
+                      pattern="^[\$]?\d+(\.\d+)?$"
+                      title="Enter a dollar amount (e.g., $15, 10.5)"
+                    />
+                  ) : (
+                    <div className="px-4 py-3 text-gray-400 text-base">
+                      Not applicable
+                    </div>
+                  )}
+                </div>
+
+                {/* Delete Button */}
                 <button
                   type="button"
                   onClick={() => openDeleteModal(index)}
@@ -361,9 +468,25 @@ export default function UserFeeStructure({
               >
                 {isLoading ? (
                   <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-900"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Saving...
                   </span>
