@@ -1,88 +1,153 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useGetUserTypesQuery, useToggleUserActiveStatusMutation } from "@/redux/features/usersTypes/usersTypesApi";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Switch } from "@/components/ui/switch";
 import ActionCell from "../ActionCell/ActionCell";
 import { TUser } from "../data/usersData";
+import toast from "react-hot-toast"; // Import toast
 
+interface UseUserColumnsParams {
+  status?: string;
+  dateFilter?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: string;
+}
 
-// State management hook
-export const useUserColumns = (initialData: TUser[]) => {
-    const [users, setUsers] = useState<TUser[]>(initialData);
+export const useUserColumns = (params: UseUserColumnsParams = {}) => {
+  const [users, setUsers] = useState<TUser[]>([]);
 
-    const handleToggleActive = (userId: string) => {
-        setUsers((prevUsers) =>
-            prevUsers.map((user) =>
-                user.id === userId ? { ...user, isActive: !user.isActive } : user
-            )
-        );
-    };
+  // Fetch user data using the custom RTK query hook with params
+  const { data: usersData, isLoading, isError } = useGetUserTypesQuery({
+    status: params.status || "",
+    dateFilter: params.dateFilter || "",
+    page: params.page || 1,
+    limit: params.limit || 10,
+    sortBy: params.sortBy || "createdAt",
+    sortOrder: params.sortOrder || "desc",
+  });
+  console.log("Fetched users data:", usersData?.data?.data);
+// Add the mutation hook
+  const [toggleActiveStatus] = useToggleUserActiveStatusMutation();
 
-    const userColumns: Column<TUser>[] = [
-        {
-            header: "User ID",
-            accessor: "id",
-            cell: (row: TUser) => (
-                <a href="#" className="text-blue-600 underline">
-                    {row.id}
-                </a>
-            ),
-        },
+  // Update users when data is fetched
+  useEffect(() => {
+    if (usersData?.data?.data) {
+      setUsers(usersData.data.data);
+    }
+  }, [usersData]);
 
-        {
-            header: "Name",
-            accessor: "name",
-            cell: (row: TUser) => (
-                <a href="#" className="text-blue-600 underline">
-                    {row.name}
-                </a>
-            ),
-        },
+  // Handle toggle active status - now calls the API
+  const handleToggleActive = async (userId: string) => {
+    try {
+      // Optimistic update (update UI immediately)
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userId ? { ...user, activeStatus: !user.activeStatus } : user
+        )
+      );
 
-        {
-            header: "Contact",
-            cell: (row: TUser) => (
-                <span>{row.contact.slice(0, 2) + "******"}</span>
-            ),
-        },
+      // Call the API to update on the server
+      await toggleActiveStatus(userId).unwrap();
+      
+      // Show success toast if successful
+      toast.success("User status updated successfully!");
 
-        {
-            header: "Total Order",
-            accessor: "totalOrder",
-        },
+    } catch (error) {
+      console.error("Failed to toggle active status:", error);
+      
+      // Revert the optimistic update on error
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userId ? { ...user, activeStatus: !user.activeStatus } : user
+        )
+      );
+      
+      // Show error toast if failed
+      toast.error("Failed to update user status. Please try again.");
+    }
+  };
 
-        {
-            header: "Total Order Account",
-            accessor: "totalOrderAmount",
-        },
+  // Column definitions for the table
+  const userColumns: Column<TUser>[] = [
+    {
+      header: "User ID",
+      accessor: "id",
+      cell: (row: TUser) => (
+        <a href="#" className="text-blue-600 underline">
+          U{row.id}
+        </a>
+      ),
+    },
 
-        {
-            header: "Joining Date",
-            accessor: "joiningDate",
-        },
+    {
+      header: "Name",
+      accessor: "name",
+      cell: (row: TUser) => (
+        <a href="#" className="text-blue-600 underline">
+          {row.name}
+        </a>
+      ),
+    },
+    {
+      header: "Email",
+      accessor: "contactEmail",
+      cell: (row: TUser) => (
+        <a href="#" className="text-blue-600 underline">
+          {row.contactEmail}
+        </a>
+      ),
+    },
 
-        {
-            header: "Active/Inactive",
-            cell: (row: TUser) => (
-                <div
-                    onClick={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                >
-                    <Switch
-                        checked={row.isActive}
-                        onCheckedChange={() => handleToggleActive(row.id)}
-                        className="data-[state=checked]:bg-green data-[state=unchecked]:bg-gray-300"
-                    />
-                </div>
-            ),
-        },
-        {
-            header: "Action",
-            cell: (user: TUser) => {
-                return <ActionCell row={user} />;
-            },
-        },
-    ];
+    {
+      header: "Contact",
+      cell: (row: TUser) => {
+        const contact = row.contactNum || "";
+        return <span>{contact.slice(0, 2) + "******"}</span>;
+      },
+    },
 
-    return { userColumns, users };
+    {
+      header: "Total Order",
+      accessor: "totalOrders",
+    },
+
+    {
+      header: "Total Order Amount",
+      accessor: "totalCost",
+    },
+
+    {
+      header: "Joining Date",
+      accessor: "joiningDate",
+    },
+
+    {
+      header: "Active/Inactive",
+      cell: (row: TUser) => (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <Switch
+            checked={row.activeStatus}
+            onCheckedChange={() => handleToggleActive(row.id)}
+            className="data-[state=checked]:bg-green data-[state=unchecked]:bg-gray-300"
+          />
+        </div>
+      ),
+    },
+    {
+      header: "Action",
+      cell: (user: TUser) => {
+        return <ActionCell row={user} />;
+      },
+    },
+  ];
+
+  // Get total count from API response
+  const totalItems = usersData?.data?.meta?.total || usersData?.data?.total || 0;
+
+  return { userColumns, users, isLoading, isError, totalItems };
 };

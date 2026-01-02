@@ -1,26 +1,18 @@
-
 import { useState } from "react";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
-import { Eye, Trash2 } from "lucide-react";
+import { Eye } from "lucide-react";
 import { TPayment } from "../data/PaymentsData";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
-export const usePaymentColumns = (initialData: TPayment[]) => {
-  const [payments, setPayments] = useState<TPayment[]>(initialData);
+interface UsePaymentColumnsProps {
+  initialData: TPayment[];
+  onViewClick?: (transactionId: string | number) => void;
+}
 
-  const handleDelete = (index: number) => {
-    setPayments((prev) => prev.filter((_, i) => i !== index));
-  };
+export const usePaymentColumns = ({ 
+  initialData, 
+  onViewClick 
+}: UsePaymentColumnsProps) => {
+  const [payments] = useState<TPayment[]>(initialData);
 
   const paymentColumns: Column<TPayment>[] = [
     {
@@ -35,7 +27,7 @@ export const usePaymentColumns = (initialData: TPayment[]) => {
       header: "NAME",
       accessor: "name",
       cell: (row) => (
-        <a href="#" className="text-blue-600 underline">
+        <a href="#" className="text-blue-600 underline hover:text-blue-800">
           {row.name}
         </a>
       ),
@@ -61,49 +53,16 @@ export const usePaymentColumns = (initialData: TPayment[]) => {
 
     {
       header: "ACTION",
-      cell: (_row, rowIndex?: number, rowData?: TPayment) => (
+      cell: (row) => (
         <div className="flex items-center gap-2">
-
-          {/* VIEW BUTTON — No action */}
+          {/* VIEW BUTTON with onClick */}
           <button
-            className="bg-green-100 p-1.5 rounded border border-green-300"
-            title="View"
+            className="bg-green-100 p-1.5 rounded border border-green-300 cursor-pointer hover:bg-green-200 transition-colors"
+            title="View Details"
+            onClick={() => onViewClick?.(row.orderId)}
           >
             <Eye size={16} className="text-green-700" />
           </button>
-
-          {/* DELETE BUTTON WITH SHADCN ALERT */}
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button
-                className="bg-red-100 p-1.5 rounded border border-red-300"
-                title="Delete"
-              >
-                <Trash2 size={16} className="text-red-700" />
-              </button>
-            </AlertDialogTrigger>
-
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action will permanently delete payment record{" "}
-                  <b>{rowData?.orderId}</b>.
-                  <br />
-                  You cannot undo this.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => handleDelete(rowIndex ?? 0)}
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       ),
     },

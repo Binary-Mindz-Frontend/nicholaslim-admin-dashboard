@@ -1,107 +1,401 @@
 import { useState } from "react";
-import ContentEditorSection from "./components/ContentEditorSection";
-import FAQManagement from "./components/FAQSection";
-import ArticleManagement from "./components/HelpArticle";
-import AboutUsManagement from "./components/AboutUs";
+import toast from "react-hot-toast";
 import ContentHistoryTable from "./components/History";
-
-// Define the available content types (tabs)
-type ContentType =
-  | "Terms & Conditions"
-  | "Privacy Policy"
-  | "Cancellation & Waiting Policy"
-  | "FAQ List"
-  | "Help Articles List"
-  | "About Us";
-
-// Mock content storage (in a real app, this would come from a database/API)
-const initialContentState: Record<ContentType, string> = {
-  "Terms & Conditions":
-    "These are the full terms and conditions for using our service. They cover usage rights, liability limitations, and payment obligations. Please review them carefully.",
-  "Privacy Policy":
-    "Our privacy policy details how we collect, use, and protect your personal data, including information on data security and user rights.",
-  "Cancellation & Waiting Policy":
-    "This outlines the rules and fees related to order cancellation and driver waiting times.",
-  "FAQ List":
-    "Frequently Asked Questions about service use, billing, and support.",
-  "Help Articles List":
-    "A comprehensive index of articles designed to help users troubleshoot and understand the application features.",
-  "About Us":
-    "Information about our company, our mission, and the team behind the service.",
-};
-
-const tabItems: ContentType[] = [
-  "Terms & Conditions",
-  "Privacy Policy",
-  "Cancellation & Waiting Policy",
-  "FAQ List",
-  "Help Articles List",
-  "About Us",
-];
-
-const activeTabClass =
-  "bg-yellow-100 border-yellow-500 text-gray-900 shadow-md";
-const inactiveTabClass =
-  "bg-white border-gray-300 text-gray-700 hover:bg-gray-50";
+import { CONTENT_TYPE_MAP, ContentEntityType, ContentType } from "@/types/contentManagementType";
+import { useContentApiHooks } from "./components/ContentApiHooks";
+import { useContentDataHandler } from "./components/ContentDataHandler";
+import ContentTabs from "./components/ContentTabs";
+import ContentSection from "./components/ContentSection";
+import ContentModals from "./components/ContentModals";
 
 export default function ContentManagementApp() {
   const [activeTab, setActiveTab] = useState<ContentType>("Terms & Conditions");
-  const [contentData, setContentData] = useState(initialContentState);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editContentModalOpen, setEditContentModalOpen] = useState(false);
+  const [editFAQModalOpen, setEditFAQModalOpen] = useState(false);
+  const [editArticleModalOpen, setEditArticleModalOpen] = useState(false);
+  const [editAboutUsModalOpen, setEditAboutUsModalOpen] = useState(false);
+  const [selectedContentId, setSelectedContentId] = useState<number | null>(null);
+  const [selectedContentData, setSelectedContentData] = useState<any>(null);
+  const [selectedFAQData, setSelectedFAQData] = useState<any>(null);
+  const [selectedArticleData, setSelectedArticleData] = useState<any>(null);
+  const [selectedAboutUsData, setSelectedAboutUsData] = useState<any>(null);
+  const [selectedContentType, setSelectedContentType] = useState<ContentEntityType>("content");
+  const apiHooks = useContentApiHooks();
+  const { contentData, setContentData } = useContentDataHandler(apiHooks.contentResponse);
+  const handlePublish = async (newContent: string) => {
+    toast.loading("Publishing content...");
+    try {
+      const existingContent = apiHooks.contentResponse?.data?.find(
+        (item: any) => CONTENT_TYPE_MAP[activeTab] === item.contenttype
+      );
 
-  // Handler for when the "Publish" button is clicked in the editor
-  const handlePublish = (newContent: string) => {
-    // 1. Update the state with the new content for the active tab
-    setContentData((prevData) => ({
-      ...prevData,
-      [activeTab]: newContent,
-    }));
+      if (existingContent) {
+        const updateData = {
+          id: existingContent.id,
+          contenttype: CONTENT_TYPE_MAP[activeTab],
+          description: newContent,
+          isPublished: true,
+        };
 
-    // 2. Perform mock API save (replace alert with actual API call)
-    console.log(`Publishing content for: ${activeTab}`);
-    console.log(`New Content: ${newContent.substring(0, 50)}...`);
-    alert(`Successfully published new content for "${activeTab}"!`);
+        const response = await apiHooks.updateContent(updateData).unwrap();
+
+        if (response.success) {
+          setContentData((prev) => ({
+            ...prev,
+            [activeTab]: "",
+          }));
+          apiHooks.refetchContent();
+          toast.dismiss();
+          toast.success(response.message || "Content updated successfully!");
+        } else {
+          toast.dismiss();
+          toast.error(response.message || "Failed to update content.");
+        }
+      } else {
+        const contentData = {
+          contenttype: CONTENT_TYPE_MAP[activeTab],
+          description: newContent,
+          isPublished: true,
+        };
+
+        const response = await apiHooks.addContent(contentData).unwrap();
+
+        if (response.success) {
+          setContentData((prev) => ({
+            ...prev,
+            [activeTab]: "",
+          }));
+          apiHooks.refetchContent();
+          toast.dismiss();
+          toast.success(response.message || "Content published successfully!");
+          
+        } else {
+          toast.dismiss();
+          toast.error(response.message || "Failed to publish content.");
+        }
+      }
+    } catch (error: any) {
+      toast.dismiss();
+      console.error("Failed to publish content:", error);
+      toast.error(error?.data?.message || "Failed to publish content.");
+    }
   };
+  const handleDeleteClick = (
+    id: number,
+    type: ContentEntityType,
+    data?: any
+  ) => {
+    setSelectedContentId(id);
+    setSelectedContentType(type);
+    if (type === "faq") setSelectedFAQData(data);
+    else if (type === "article") setSelectedArticleData(data);
+    else if (type === "aboutus") setSelectedAboutUsData(data);
+    else setSelectedContentData(data);
+    setDeleteModalOpen(true);
+  };
+  const handleDeleteConfirm = async () => {
+    if (!selectedContentId) return;
+    try {
+      let response;
+      let refetchFn;
+      let successMessage = "";
 
-  const Section = () => {
+      switch (selectedContentType) {
+        case "content":
+          response = await apiHooks.deleteContent(selectedContentId).unwrap();
+          refetchFn = apiHooks.refetchContent;
+          successMessage = "Content deleted successfully!";
+          break;
+        case "faq":
+          response = await apiHooks.deleteFAQ(selectedContentId).unwrap();
+          refetchFn = apiHooks.refetchFAQ;
+          successMessage = "FAQ deleted successfully!";
+          break;
+        case "article":
+          response = await apiHooks.deleteArticle(selectedContentId).unwrap();
+          refetchFn = apiHooks.refetchArticles;
+          successMessage = "Article deleted successfully!";
+          break;
+        case "aboutus":
+          response = await apiHooks.deleteAboutUs(selectedContentId).unwrap();
+          refetchFn = apiHooks.refetchAboutUs;
+          successMessage = "About Us content deleted successfully!";
+          break;
+        default:
+          throw new Error("Unknown content type");
+      }
+
+      if (response?.success) {
+        toast.success(successMessage);
+        if (refetchFn) refetchFn();
+        setDeleteModalOpen(false);
+        setSelectedContentId(null);
+        setSelectedContentData(null);
+        setSelectedFAQData(null);
+        setSelectedArticleData(null);
+        setSelectedAboutUsData(null);
+      } else if (response?.message) {
+        toast.error(response.message || "Failed to delete content.");
+      }
+    } catch (error: any) {
+      console.error("Failed to delete content:", error);
+      toast.error(error?.data?.message || "Failed to delete content.");
+      setDeleteModalOpen(false);
+      setSelectedContentId(null);
+    }
+  };
+  const handleEditClick = (
+    content: any,
+    type: ContentEntityType
+  ) => {
+    setSelectedContentType(type);
+    switch (type) {
+      case "content":
+        setSelectedContentData(content);
+        setEditContentModalOpen(true);
+        break;
+      case "faq":
+        setSelectedFAQData(content);
+        setEditFAQModalOpen(true);
+        break;
+      case "article":
+        setSelectedArticleData(content);
+        setEditArticleModalOpen(true);
+        break;
+      case "aboutus":
+        setSelectedAboutUsData(content);
+        setEditAboutUsModalOpen(true);
+        break;
+    }
+  };
+  const handleEditSave = async (
+    updatedData: any,
+    type: ContentEntityType
+  ) => {
+    try {
+      let response;
+      let refetchFn;
+      let successMessage = "";
+
+      switch (type) {
+        case "content":
+          response = await apiHooks.updateContent(updatedData).unwrap();
+          refetchFn = apiHooks.refetchContent;
+          successMessage = "Content updated successfully!";
+          break;
+        case "faq":
+          response = await apiHooks.updateFAQ(updatedData).unwrap();
+          refetchFn = apiHooks.refetchFAQ;
+          successMessage = "FAQ updated successfully!";
+          break;
+        case "article":
+          response = await apiHooks.updateArticle(updatedData).unwrap();
+          refetchFn = apiHooks.refetchArticles;
+          successMessage = "Article updated successfully!";
+          break;
+        case "aboutus":
+          response = await apiHooks.updateAboutUs(updatedData).unwrap();
+          refetchFn = apiHooks.refetchAboutUs;
+          successMessage = "About Us content updated successfully!";
+          break;
+        default:
+          throw new Error("Unknown content type");
+      }
+      if (response?.success) {
+        toast.success(successMessage);
+        if (refetchFn) refetchFn();
+        switch (type) {
+          case "content":
+            setEditContentModalOpen(false);
+            setSelectedContentData(null);
+            break;
+          case "faq":
+            setEditFAQModalOpen(false);
+            setSelectedFAQData(null);
+            break;
+          case "article":
+            setEditArticleModalOpen(false);
+            setSelectedArticleData(null);
+            break;
+          case "aboutus":
+            setEditAboutUsModalOpen(false);
+            setSelectedAboutUsData(null);
+            break;
+        }
+      } else if (response?.message) {
+        toast.error(response.message || "Failed to update content.");
+      }
+    } catch (error: any) {
+      console.error("Failed to update content:", error);
+      toast.error(error?.data?.message || "Failed to update content.");
+    }
+  };
+  const getActiveTabData = () => {
     switch (activeTab) {
       case "Terms & Conditions":
-        return (
-          <ContentEditorSection
-            title={activeTab}
-            initialContent={contentData[activeTab]}
-            onPublish={handlePublish}
-          />
-        );
-
       case "Privacy Policy":
-        return (
-          <ContentEditorSection
-            title={activeTab}
-            initialContent={contentData[activeTab]}
-            onPublish={handlePublish}
-          />
-        );
-
       case "Cancellation & Waiting Policy":
+        const apiType = CONTENT_TYPE_MAP[activeTab];
         return (
-          <ContentEditorSection
-            title={activeTab}
-            initialContent={contentData[activeTab]}
-            onPublish={handlePublish}
-          />
+          apiHooks.contentResponse?.data?.filter(
+            (item: any) => item.contenttype === apiType
+          ) || []
         );
 
       case "FAQ List":
-        return <FAQManagement />;
-
+        return (
+          apiHooks.faqResponse?.data?.map((item: any) => ({
+            id: item.id,
+            contenttype: "FAQ",
+            description: item.question,
+            isPublished: item.isActive,
+            version: null,
+            answer: item.answer,
+            question: item.question,
+            isActive: item.isActive,
+          })) || []
+        );
       case "Help Articles List":
-        return <ArticleManagement />;
-
+        return (
+          apiHooks.articleResponse?.data?.map((item: any) => ({
+            id: item.id,
+            contenttype: "ARTICLE",
+            description: item.title,
+            content: item.content,
+            isPublished: item.published,
+            version: null,
+            title: item.title,
+            published: item.published,
+          })) || []
+        );
       case "About Us":
-        return <AboutUsManagement />;
+        return (
+          apiHooks.aboutUsResponse?.data?.map((item: any) => ({
+            id: item.id,
+            contenttype: "ABOUTUS",
+            description: item.title,
+            content: item.content,
+            isPublished: item.isActive,
+            version: null,
+            title: item.title,
+            isActive: item.isActive,
+          })) || []
+        );
 
       default:
+        return [];
+    }
+  };
+  const handleToggleStatus = async (id: number, isPublished: boolean) => {
+    try {
+      switch (activeTab) {
+        case "Terms & Conditions":
+        case "Privacy Policy":
+        case "Cancellation & Waiting Policy":
+          const content = apiHooks.contentResponse?.data?.find(
+            (item: any) => item.id === id
+          );
+          if (content) {
+            const updateData = {
+              id,
+              contenttype: content.contenttype,
+              description: content.description,
+              isPublished,
+            };
+            await apiHooks.updateContent(updateData).unwrap();
+            apiHooks.refetchContent();
+            toast.success(
+              `Content ${
+                isPublished ? "activated" : "deactivated"
+              } successfully!`
+            );
+          }
+          break;
+
+        case "FAQ List":
+          await apiHooks.updateFAQStatus(id).unwrap();
+          apiHooks.refetchFAQ();
+          toast.success(`FAQ status updated successfully!`);
+          break;
+
+        case "Help Articles List":
+          await apiHooks.updateArticleStatus(id).unwrap();
+          apiHooks.refetchArticles();
+          toast.success(`Article status updated successfully!`);
+          break;
+
+        case "About Us":
+          await apiHooks.updateAboutUsStatus(id).unwrap();
+          apiHooks.refetchAboutUs();
+          toast.success(`About Us status updated successfully!`);
+          break;
+      }
+    } catch (error: any) {
+      console.error("Failed to update status:", error);
+      toast.error(error?.data?.message || "Failed to update status.");
+    }
+  };
+  const handlePublishFAQ = async (faqData: { question: string; answer: string }[]) => {
+    try {
+      const promises = faqData.map(async (faq) => {
+        if (faq.question.trim() && faq.answer.trim()) {
+          return await apiHooks.addFAQ({
+            question: faq.question,
+            answer: faq.answer,
+          }).unwrap();
+        }
         return null;
+      });
+
+      const results = await Promise.all(promises);
+      const successful = results.filter((r: any) => r?.success);
+
+      if (successful.length > 0) {
+        toast.success(`${successful.length} FAQ(s) published successfully!`);
+        apiHooks.refetchFAQ();
+      }
+    } catch (error: any) {
+      console.error("Failed to publish FAQs:", error);
+      toast.error(error?.data?.message || "Failed to publish FAQs.");
+    }
+  };
+  const handlePublishArticle = async (articleData: {
+    title: string;
+    content: string;
+  }) => {
+    try {
+      const response = await apiHooks.addArticle(articleData).unwrap();
+
+      if (response.success) {
+        toast.success("Article published successfully!");
+        apiHooks.refetchArticles();
+      } else {
+        toast.error(response.message || "Failed to publish article.");
+      }
+    } catch (error: any) {
+      console.error("Failed to publish article:", error);
+      toast.error(error?.data?.message || "Failed to publish article.");
+    }
+  };
+  const handlePublishAboutUs = async (aboutUsData: {
+    title: string;
+    content: string;
+  }) => {
+    try {
+      const response = await apiHooks.addAboutUs(aboutUsData).unwrap();
+
+      if (response.success) {
+        toast.success("About Us content published successfully!");
+        apiHooks.refetchAboutUs();
+      } else {
+        toast.error(response.message || "Failed to publish About Us content.");
+      }
+    } catch (error: any) {
+      console.error("Failed to publish About Us content:", error);
+      toast.error(
+        error?.data?.message || "Failed to publish About Us content."
+      );
     }
   };
 
@@ -110,30 +404,126 @@ export default function ContentManagementApp() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">
         Content Management
       </h1>
-
-      {/* --- Tab Navigation Section --- */}
-      <div className="flex flex-wrap gap-3 mb-8">
-        {tabItems.map((item) => (
-          <button
-            key={item}
-            onClick={() => setActiveTab(item)}
-            className={`
-              px-6 py-3 rounded-full text-base font-medium border transition-all duration-200
-              ${activeTab === item ? activeTabClass : inactiveTabClass}
-            `}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
-
-      {/* --- Content Editor Section --- */}
+      <ContentTabs
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        disabled={apiHooks.isAddingContent || apiHooks.isUpdatingContent}
+      />
       <div className="py-4">
-        <Section />
+        <ContentSection
+          activeTab={activeTab}
+          contentData={contentData}
+          onPublish={handlePublish}
+          onPublishFAQ={handlePublishFAQ}
+          onPublishArticle={handlePublishArticle}
+          onPublishAboutUs={handlePublishAboutUs}
+          onDelete={handleDeleteClick}
+          onEdit={handleEditClick}
+          faqResponse={apiHooks.faqResponse}
+          articleResponse={apiHooks.articleResponse}
+          aboutUsResponse={apiHooks.aboutUsResponse}
+          isAddingContent={apiHooks.isAddingContent}
+          isUpdatingContent={apiHooks.isUpdatingContent}
+          isAddingFAQ={apiHooks.isAddingFAQ}
+          isUpdatingFAQ={apiHooks.isUpdatingFAQ}
+          isAddingArticle={apiHooks.isAddingArticle}
+          isUpdatingArticle={apiHooks.isUpdatingArticle}
+          isAddingAboutUs={apiHooks.isAddingAboutUs}
+          isUpdatingAboutUs={apiHooks.isUpdatingAboutUs}
+        />
       </div>
       <div className="pt-8">
-        <ContentHistoryTable />
+        <ContentHistoryTable
+          data={getActiveTabData()}
+          onEdit={(content) => {
+            let type: ContentEntityType = "content";
+            switch (activeTab) {
+              case "FAQ List":
+                type = "faq";
+                break;
+              case "Help Articles List":
+                type = "article";
+                break;
+              case "About Us":
+                type = "aboutus";
+                break;
+              default:
+                type = "content";
+            }
+            handleEditClick(content, type);
+          }}
+          onDelete={(id) => {
+            let type: ContentEntityType = "content";
+            switch (activeTab) {
+              case "FAQ List":
+                type = "faq";
+                break;
+              case "Help Articles List":
+                type = "article";
+                break;
+              case "About Us":
+                type = "aboutus";
+                break;
+              default:
+                type = "content";
+            }
+            const data = getActiveTabData().find((item: any) => item.id === id);
+            handleDeleteClick(id, type, data);
+          }}
+          onToggleStatus={handleToggleStatus}
+          activeTab={activeTab}
+        />
       </div>
+
+      {/* All Modals */}
+      <ContentModals
+        deleteModalOpen={deleteModalOpen}
+        editContentModalOpen={editContentModalOpen}
+        editFAQModalOpen={editFAQModalOpen}
+        editArticleModalOpen={editArticleModalOpen}
+        editAboutUsModalOpen={editAboutUsModalOpen}
+        selectedContentId={selectedContentId}
+        selectedContentType={selectedContentType}
+        selectedContentData={selectedContentData}
+        selectedFAQData={selectedFAQData}
+        selectedArticleData={selectedArticleData}
+        selectedAboutUsData={selectedAboutUsData}
+        isDeletingContent={apiHooks.isDeletingContent}
+        isDeletingFAQ={apiHooks.isDeletingFAQ}
+        isDeletingArticle={apiHooks.isDeletingArticle}
+        isDeletingAboutUs={apiHooks.isDeletingAboutUs}
+        isUpdatingContent={apiHooks.isUpdatingContent}
+        isUpdatingFAQ={apiHooks.isUpdatingFAQ}
+        isUpdatingArticle={apiHooks.isUpdatingArticle}
+        isUpdatingAboutUs={apiHooks.isUpdatingAboutUs}
+        onCloseDeleteModal={() => {
+          setDeleteModalOpen(false);
+          setSelectedContentId(null);
+          setSelectedContentType("content");
+          setSelectedContentData(null);
+          setSelectedFAQData(null);
+          setSelectedArticleData(null);
+          setSelectedAboutUsData(null);
+        }}
+        onCloseEditContentModal={() => {
+          setEditContentModalOpen(false);
+          setSelectedContentData(null);
+        }}
+        onCloseEditFAQModal={() => {
+          setEditFAQModalOpen(false);
+          setSelectedFAQData(null);
+        }}
+        onCloseEditArticleModal={() => {
+          setEditArticleModalOpen(false);
+          setSelectedArticleData(null);
+        }}
+        onCloseEditAboutUsModal={() => {
+          setEditAboutUsModalOpen(false);
+          setSelectedAboutUsData(null);
+        }}
+        onDeleteConfirm={handleDeleteConfirm}
+        onEditSave={handleEditSave}
+      />
     </div>
   );
 }

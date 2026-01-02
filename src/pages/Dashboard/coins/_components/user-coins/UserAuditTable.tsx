@@ -1,111 +1,131 @@
+// UserAuditTable.tsx
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Eye, Loader2 } from "lucide-react";
 
-import type React from "react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { FiTrash } from "react-icons/fi";
-// import { LuScanEye } from "react-icons/lu";
-import TablePagination from "@/pages/Dashboard/_components/TablePagination";
-import SCustomTable from "@/pages/Dashboard/_components/CutomTable";
-import { useNavigate } from "react-router-dom";
-
-interface UserCoin {
-  id: number
-  name: string
-  totalCoinsAccumulated: number
-  currentCoinBalance: number
-
+interface UserCoinData {
+  id: number;
+  username: string;
+  total_coin_acc: number;
+  current_coin_balance: number;
+  email?: string;
+  phone?: string;
 }
 
-const wallet : UserCoin[] = [
-  { id: 1, name: "Ang Mo Kio", totalCoinsAccumulated: 15, currentCoinBalance: 100,  },
-  { id: 2, name: "Punggol", totalCoinsAccumulated: 15, currentCoinBalance: 100,  },
-  { id: 3, name: "Bishan", totalCoinsAccumulated: 15, currentCoinBalance: 100,  },
-  { id: 4, name: "Yishun", totalCoinsAccumulated: 15, currentCoinBalance: 90,  },
-  { id: 5, name: "Serangoon", totalCoinsAccumulated: 15, currentCoinBalance: 100,  },
-  { id: 6, name: "Ang Mo Kio", totalCoinsAccumulated: 15, currentCoinBalance: 100,  },
-  { id: 7, name: "Punggol", totalCoinsAccumulated: 15, currentCoinBalance: 100,  },
-  { id: 8, name: "Punggol", totalCoinsAccumulated: 15, currentCoinBalance: 60,  },
-  { id: 9, name: "Punggol", totalCoinsAccumulated: 15, currentCoinBalance: 85,  },
-  { id: 10, name: "Clementi", totalCoinsAccumulated: 15, currentCoinBalance: 95,  },
-]
-
-const UserAuditTable: React.FC = () => {
-    const navigate = useNavigate()
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
-  const totalItems = 21
-
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const displayData = wallet.slice(startIndex, endIndex)
-
-
-
-  const columns = [
-     {
-    key: "id" as const,
-    label: "User Id",
-    render: (value: number, row: UserCoin) => (
-      <span
-        onClick={() => navigate(`/coin-system/${row.id}`)}
-        className="text-[#0088FF] underline cursor-pointer hover:text-blue-800"
-      >
-        {value}
-      </span>
-    ),
-  },
-  {
-    key: "name" as const,
-    label: "NAME",
-    render: (value: string, row: UserCoin) => (
-      <span
-        onClick={() => navigate(`/coin-system/${row.id}`)}
-        className="text-[#0088FF] underline cursor-pointer hover:text-blue-800"
-      >
-        {value}
-      </span>
-    ),
-  },
-    {
-      key: "totalCoinsAccumulated" as const,
-      label: "TOTAL COINS ACCUMULATED",
-       render: (value: number) => `${value} Coins`,
-    },
-    {
-      key: "currentCoinBalance" as const,
-      label: "CURRENT COIN BALANCE",
-      render: (value: number) => `${value} Coins`,
-    },
-   {
-  label: "ACTION",
-  render: (_: any, row: UserCoin) => (
-    <div className="flex gap-2">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="p-2 h-auto cursor-pointer border border-[#FF4D4F] hover:bg-red-100"
-      >
-        <FiTrash size={16} className="text-[#FF4D4F]" />
-      </Button>
-    </div>
-  ),
+interface UserAuditTableProps {
+  data: UserCoinData[];
+  isLoading?: boolean;
+  searchQuery?: string;
+  handleViewClick: (id: number) => void;
 }
 
+const UserAuditTable: React.FC<UserAuditTableProps> = ({
+  data,
+  isLoading = false,
+  searchQuery = "",
+  handleViewClick
+}) => {
+  const highlightText = (text: string, searchTerm: string) => {
+    if (!searchTerm || !text) return text;
     
-  ]
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <span key={index} className="bg-yellow-200 font-semibold">
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-yellow-500" />
+      </div>
+    );
+  }
 
   return (
-       <div>
-         <SCustomTable data={displayData} columns={columns}
-          />
-        <TablePagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-        />
-       </div>
-  )
-}
+    <div className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-yellow-50 hover:bg-yellow-50">
+              <TableHead className="font-semibold text-gray-900">User ID</TableHead>
+              <TableHead className="font-semibold text-gray-900">Username</TableHead>
+              <TableHead className="font-semibold text-gray-900">Email</TableHead>
+              <TableHead className="font-semibold text-gray-900">Total Coins Accumulated</TableHead>
+              <TableHead className="font-semibold text-gray-900">Current Coin Balance</TableHead>
+              <TableHead className="font-semibold text-gray-900">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-12 text-gray-500">
+                  <div className="flex flex-col items-center">
+                    <div className="text-lg mb-2">No users found</div>
+                    <p className="text-sm text-gray-400">
+                      {searchQuery ? 'Try a different search term' : 'Start by searching for users'}
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.map((row) => (
+                <TableRow key={row.id} className="hover:bg-gray-50">
+                  <TableCell className="font-medium">{row.id}</TableCell>
+                  <TableCell>
+                    {searchQuery ? highlightText(row.username, searchQuery) : row.username}
+                  </TableCell>
+                  <TableCell>
+                    {searchQuery && row.email ? highlightText(row.email, searchQuery) : (row.email || "N/A")}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-yellow-600">
+                        {row.total_coin_acc.toLocaleString()}
+                      </span>
+                      <span className="text-gray-500">coins</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-green-600">
+                        {row.current_coin_balance.toLocaleString()}
+                      </span>
+                      <span className="text-gray-500">coins</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <button
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer p-1 rounded-lg bg-amber-100"
+                      onClick={() => {
+                        handleViewClick(row.id);
+                      }}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+};
 
-export default UserAuditTable
+export default UserAuditTable;

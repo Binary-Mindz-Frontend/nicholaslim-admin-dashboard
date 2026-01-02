@@ -1,0 +1,58 @@
+import { ServiceArea } from "@/types/serviceAreaType";
+
+export const initialServiceAreas: ServiceArea[] = [
+  {
+    id: 1,
+    name: "Downtown Zone",
+    displayName: "Downtown",
+    cityZone: "Dhaka North",
+    deliveryFee: 10,
+    priority: 8,
+    isActive: true,
+    color: "#FF5733",
+    minOrderAmount: 5,
+    notes: "High priority zone",
+    coordinates: [
+      { lat: 23.8103, lng: 90.4125 },
+      { lat: 23.8203, lng: 90.4225 },
+      { lat: 23.8153, lng: 90.4325 },
+      { lat: 23.8103, lng: 90.4125 },
+    ],
+  },
+  {
+    id: 2,
+    name: "North Delivery Area",
+    displayName: "North Zone",
+    cityZone: "Dhaka North",
+    deliveryFee: 15,
+    priority: 5,
+    isActive: true,
+    color: "#3498DB",
+    minOrderAmount: 10,
+    notes: "Standard zone",
+    coordinates: [
+      { lat: 23.83, lng: 90.42 },
+      { lat: 23.84, lng: 90.43 },
+      { lat: 23.835, lng: 90.44 },
+      { lat: 23.83, lng: 90.42 },
+    ],
+  },
+  {
+    id: 3,
+    name: "South Delivery Area",
+    displayName: "South Zone",
+    cityZone: "Dhaka South",
+    deliveryFee: 12,
+    priority: 6,
+    isActive: false,
+    color: "#27C840",
+    minOrderAmount: 8,
+    notes: "Pending activation",
+    coordinates: [
+      { lat: 23.79, lng: 90.41 },
+      { lat: 23.8, lng: 90.42 },
+      { lat: 23.795, lng: 90.43 },
+      { lat: 23.79, lng: 90.41 },
+    ],
+  },
+];

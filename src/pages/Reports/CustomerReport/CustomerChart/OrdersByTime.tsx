@@ -9,13 +9,16 @@ import {
   CartesianGrid,
 } from "recharts";
 
-const data = [
-  { name: "Morning", value: 950 },
-  { name: "Afternoon", value: 1200 },
-  { name: "Evening", value: 450 },
-];
+interface OrdersByTimeProps {
+  timeOfDayStats: [
+    {
+      timeSlot: string;
+      total: number;
+    }
+  ]
+}
 
-export default function OrdersByTime() {
+export default function OrdersByTime({ timeOfDayStats }: OrdersByTimeProps) {
   return (
     <div className="w-full bg-white p-6 rounded-xl shadow-sm">
       <h3 className="text-lg font-semibold mb-1">Orders by Time</h3>
@@ -23,13 +26,13 @@ export default function OrdersByTime() {
 
       <div className="w-full h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
+          <BarChart data={timeOfDayStats}>
             <CartesianGrid vertical={false} stroke="#f3f3f3" />
-            <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+            <XAxis dataKey="timeSlot" tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} />
             <Tooltip />
             <Bar
-              dataKey="value"
+              dataKey="total"
               radius={[6, 6, 0, 0]}
               fill="url(#colorGradient)"
             />

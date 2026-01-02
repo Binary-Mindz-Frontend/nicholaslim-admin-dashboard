@@ -1,91 +1,117 @@
-
-import { useState } from "react";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
-import { Eye,Trash2 } from "lucide-react";
-import { TSupportDispute } from "../data/SupportData";
-import { useNavigate } from "react-router-dom";
+import { Trash2, Eye } from "lucide-react";
 
-export const useSupportDisputeColumns = (initialData: TSupportDispute[]) => {
-  const [rows] = useState<TSupportDispute[]>(initialData);
-  const navigate = useNavigate();
+export interface DisputeData {
+  id: number;
+  orderId: number;
+  issueType: string;
+  description: string;
+  priority: string;
+  status: string;
+  created_at: string;
+  createdByType?: string;
+  createdById?: number;
+}
 
-  const columns: Column<TSupportDispute>[] = [
+interface UseSupportDisputeColumnsProps {
+  data: DisputeData[];
+  onDelete: (id: number) => void;
+  onView?: (id: number) => void;
+}
+
+export const useSupportDisputeColumns = ({
+  onDelete,
+  onView,
+}: UseSupportDisputeColumnsProps) => {
+  const columns: Column<DisputeData>[] = [
     {
-      header: "CASE ID",
-      accessor: "caseId",
-      cell: (row) => (
-        <span className="text-gray-700 font-medium">{row.caseId}</span>
-      ),
+      header: "Case ID",
+      accessor: "id",
+      cell: (row) => `DISP#${row.id.toString().padStart(4, '0')}`,
     },
-
     {
-      header: "NAME",
-      accessor: "customerName",
-      cell: (row) => (
-        <a href="#" className="text-blue-600 underline">
-          {row.customerName}
-        </a>
-      ),
+      header: "Order ID",
+      accessor: "orderId",
+      cell: (row) => `ORD-${row.orderId}`,
     },
-
     {
-      header: "ISSUE TYPE",
+      header: "Issue Type",
       accessor: "issueType",
-      cell: (row) => <span>{row.issueType}</span>,
     },
-
     {
-      header: "DATE",
-      accessor: "date",
-      cell: (row) => <span>{row.date}</span>,
-    },
-
-    {
-      header: "CATEGORY",
-      accessor: "category",
-      
-    },
-
-    {
-      header: "ACTION",
-      cell: (row) => (
-        <div className="flex items-center gap-2">
-          <button
-          className="bg-green-100 p-1.5 rounded border border-green-300"
-          onClick={() => navigate(`/support/view/${encodeURIComponent(row.caseId)}`)}
-
-        >
-          <Eye size={16} className="text-green-700" />
-        </button>
-
-          <button className="bg-red-100 p-1.5 rounded border border-red-300">
-            <Trash2 size={16} className="text-red-700" />
-          </button>
-        </div>
-      ),
-    },
-
-    {
-      header: "PRIORITY",
+      header: "Priority",
       accessor: "priority",
       cell: (row) => {
-        const style =
-          row.priority === "High"
-            ? "bg-red-500 text-white"
-            : row.priority === "Medium"
-            ? "bg-yellow-300 text-gray-900"
-            : "bg-gray-600 text-white"; 
-
+        const priorityMap: Record<string, { text: string; color: string }> = {
+          HIGH: { text: "High", color: "text-red-600 bg-red-100" },
+          MEDIUM: { text: "Medium", color: "text-yellow-600 bg-yellow-100" },
+          LOW: { text: "Low", color: "text-green-600 bg-green-100" },
+        };
+        
+        const priority = priorityMap[row.priority] || { text: row.priority, color: "text-gray-600 bg-gray-100" };
+        
         return (
-          <span
-            className={`px-4 py-1 rounded-md text-xs font-semibold ${style}`}
-          >
-            {row.priority}
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${priority.color}`}>
+            {priority.text}
           </span>
         );
       },
     },
+    {
+      header: "Status",
+      accessor: "status",
+      cell: (row) => {
+        const statusMap: Record<string, { text: string; color: string }> = {
+          PENDING: { text: "Pending", color: "text-yellow-600 bg-yellow-100" },
+          UNDER_REVIEW: { text: "Under Review", color: "text-blue-600 bg-blue-100" },
+          AWAITING_INFO: { text: "Awaiting Info", color: "text-orange-600 bg-orange-100" },
+          RESOLVED: { text: "Resolved", color: "text-green-600 bg-green-100" },
+          REJECTED: { text: "Rejected", color: "text-red-600 bg-red-100" },
+        };
+        
+        const status = statusMap[row.status] || { text: row.status, color: "text-gray-600 bg-gray-100" };
+        
+        return (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${status.color}`}>
+            {status.text}
+          </span>
+        );
+      },
+    },
+    {
+      header: "Date",
+      accessor: "created_at",
+      cell: (row) => {
+        const date = new Date(row.created_at);
+        return date.toLocaleDateString('en-US', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        });
+      },
+    },
+    {
+      header: "Actions",
+      cell: (row) => (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => onView && onView(row.id)}
+            className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+            title="View Details"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => onDelete(row.id)}
+            className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
+            title="Delete"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      ),
+    },
   ];
 
-  return { columns, rows };
+  return { columns };
 };

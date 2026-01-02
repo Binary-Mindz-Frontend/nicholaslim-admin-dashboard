@@ -1,11 +1,9 @@
-import QuizAttemptsTable from "./components/QuizTable";
-import QuizSection from "./components/MainFileForQuiz";
+import QuizSection from "./components/QuizSection";
 
 export default function CreateOrEditQuiz() {
   return (
     <div>
       <QuizSection />
-      <QuizAttemptsTable />
     </div>
   );
 }

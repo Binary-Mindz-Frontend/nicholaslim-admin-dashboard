@@ -1,24 +1,40 @@
 
-import CustomTable from "@/components/Dashboard/DataTable/DataTable";
-import { useUserColumns } from "./userTable/userTable";
-import { usersData } from "./data/usersData";
-import FilterSection from "@/components/Admin/FilterSection/FilterSection";
 import { useState } from "react";
-
-
+import FilterSection from "@/components/Users/FilterSection/FilterSection";
+import { useUserColumns } from "./userTable/userTable";
+import CustomTable from "@/components/Dashboard/DataTable/DataTable";
+import TablePagination from "@/pages/Dashboard/_components/TablePagination";
+import { useNavigate } from "react-router-dom";
 
 export default function UsersPage() {
-  const { userColumns, users } = useUserColumns(usersData);
   const [dateFilter, setDateFilter] = useState("");
-  const [activeFilter, setActiveFilter] = useState("");
   const [allFilter, setAllFilter] = useState("");
+  const navigate = useNavigate();
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
+  // Reset all filters and go back to page 1
   const handleResetFilter = () => {
     setDateFilter("");
-    setActiveFilter("");
     setAllFilter("");
+    setCurrentPage(1);
   };
 
+  // Get columns and users from the custom hook WITH pagination params
+  const { userColumns, users, isLoading, isError, totalItems } = useUserColumns({
+    status: allFilter,
+    dateFilter: dateFilter,
+    page: currentPage,
+    limit: itemsPerPage,
+    sortBy: "createdAt",
+    sortOrder: "desc",
+  });
+
+  // Check if data is still loading or if there was an error
+  if (isLoading) return <p>Loading...</p>;
+  if (isError) return <p>Error fetching users</p>;
 
   return (
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
@@ -33,28 +49,35 @@ export default function UsersPage() {
           <div className="flex items-center gap-2">
             <span className="text-[#6B6B6B] text-xl font-semibold">Category List</span>
             <span className="bg-secondary text-gray-700 px-3 py-1 rounded-full text-base font-medium border border-[#969696]">
-              {users.length}
+              {totalItems}
             </span>
           </div>
         </div>
 
+        {/* Filter Section */}
         <FilterSection
           dateFilter={dateFilter}
           setDateFilter={setDateFilter}
-          activeFilter={activeFilter}
-          setActiveFilter={setActiveFilter}
           allFilter={allFilter}
           setAllFilter={setAllFilter}
           handleResetFilter={handleResetFilter}
         />
-
-
       </div>
 
+      {/* Custom Table Section - Now uses server-paginated data */}
       <CustomTable columns={userColumns} data={users} />
 
+      {/* Pagination Component */}
+      <TablePagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+      />
+
+      {/* Add New User Button */}
       <div className="flex justify-center my-6">
-        <button
+        <button onClick={()=>navigate('/add-new-user')}
           className="px-3 sm:px-6 py-3 bg-yellow-400 cursor-pointer sm:font-bold hover:bg-yellow-500 text-black rounded transition-colors"
         >
           Add new user

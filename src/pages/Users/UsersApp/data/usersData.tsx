@@ -1,49 +1,13 @@
+// Define TUser type without using static data
 export type TUser = {
+  is_verified: boolean;
+  activeStatus: boolean;
   id: string;
   name: string;
-  contact: string;
-  totalOrder: number;
-  totalOrderAmount: string;
+  contactEmail: string;
+  contactNum: string;
+  totalOrders: number;
+  totalCost: string;
   joiningDate: string;
   isActive: boolean;
 };
-
-export const usersData: TUser[] = [
-  {
-    id: "U001",
-    name: "Harry Jason",
-    contact: "657894123",
-    totalOrder: 3,
-    totalOrderAmount: "$10,000",
-    joiningDate: "8 Oct 2025",
-    isActive: true,
-  },
-  {
-    id: "U002",
-    name: "Harry Jason",
-    contact: "657894123",
-    totalOrder: 3,
-    totalOrderAmount: "$10,000",
-    joiningDate: "8 Oct 2025",
-    isActive: true,
-  },
-  {
-    id: "U003",
-    name: "Harry Jason",
-    contact: "657894123",
-    totalOrder: 3,
-    totalOrderAmount: "$10,000",
-    joiningDate: "8 Oct 2025",
-    isActive: true,
-  },
-  {
-    id: "U004",
-    name: "Harry Jason",
-    contact: "657894123",
-    totalOrder: 3,
-    totalOrderAmount: "$10,000",
-    joiningDate: "8 Oct 2025",
-    isActive: true,
-  },
-  
-];

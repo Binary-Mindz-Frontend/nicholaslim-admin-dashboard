@@ -1,9 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import toast from "react-hot-toast";
 
 import { userProfileSchema, UserProfileType } from "./userProfile.schema";
+import { 
+    useGetRiderProfileByIdQuery, 
+    useUpdateRiderProfileMutation 
+} from "@/redux/features/drivers/driversApi";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +20,17 @@ import { Camera, Star, Files, Rss, ArrowLeft, Medal } from "lucide-react";
 export default function EditDriverProfile() {
     const navigate = useNavigate();
     const { id } = useParams();
+    // console.log("Editing driver with ID from params:", id);
 
     const [profileImage, setProfileImage] = useState<string | null>(null);
+    
+    // RTK Query hooks - NOW USING QUERY INSTEAD OF MUTATION
+    const { data: driverData, isLoading: isFetching, isError, error } = useGetRiderProfileByIdQuery(
+        Number(id),
+        { skip: !id } // Skip query if no ID
+    );
+    
+    const [updateRider, { isLoading: isUpdating }] = useUpdateRiderProfileMutation();
 
     // React Hook Form setup
     const form = useForm<UserProfileType>({
@@ -23,59 +38,115 @@ export default function EditDriverProfile() {
         defaultValues: {} as UserProfileType,
     });
 
-    const { register, handleSubmit, reset, watch, formState } = form;
+    const { register, handleSubmit, reset, formState } = form;
 
-    // Load Fake User Data
+    // Populate form when data is fetched
     useEffect(() => {
-        if (!id) return;
+        if (!driverData) return;
 
-        const fakeUser: UserProfileType = {
-            id,
-            firstName: "Henry",
-            lastName: "Johnson",
-            email: "henry@gmail.com",
-            phone: "01700000000",
-            dob: "26/07/2000",
-            gender: "Male",
-            emergencyContact: "01987654321",
-            driverId: "DRV-001",
+        // console.log("Fetched driver data:", driverData);
+        // console.log("Full data structure:", JSON.stringify(driverData, null, 2));
 
-            address: "House #10, Road #3",
-            city: "Dhaka",
-            state: "Dhaka",
-            postal: "1207",
+        try {
+            // Handle different possible response structures
+            let registration;
+            
+            // Case 1: Direct registration data
+            if (driverData.registrations && Array.isArray(driverData.registrations)) {
+                registration = driverData.registrations[0];
+            }
+            // Case 2: Data is wrapped in a data property
+            else if (driverData.data?.registrations && Array.isArray(driverData.data.registrations)) {
+                registration = driverData.data.registrations[0];
+            }
+            // Case 3: Registration data is at root level
+            else if (driverData.raider_name || driverData.contact_number) {
+                registration = driverData;
+            }
+            // Case 4: Data wrapped and registration at root
+            else if (driverData.data && (driverData.data.raider_name || driverData.data.contact_number)) {
+                registration = driverData.data;
+            }
 
-            rating: "4.8",
-            followers: "150",
-            deliveries: "250",
-            cancellations: "2",
-            incentives: "20000",
+            // console.log("Extracted registration:", registration);
 
-            drivingLicense: "DL-123456789",
-            dlIssueDate: "2022-01-01",
-            dlExpiryDate: "2030-01-01",
+            if (!registration) {
+                // console.error("No registration data found. Full response:", driverData);
+                toast.error("No registration data found for this driver");
+                navigate("/driver-list");
+                return;
+            }
 
-            vehiclePlate1: "DHAKA METRO",
-            vehicleType: "Bike",
-            vehiclePlate2: "22-12345",
-            model: "Yamaha FZS",
-            registrationDate: "2021-01-01",
-            vehicleLog: "LOG-54544",
-            vehicleIssueDate: "2021-02-01",
-            vehicleExpiryDate: "2030-02-01",
+            // Map API data to form schema
+            const formData: UserProfileType = {
+                raider_name: registration.raider_name || "",
+                contact_number: registration.contact_number || "",
+                email_address: registration.email_address || "",
+                dob: registration.dob || "",
+                gender: registration.gender || "",
+                driver_photos: registration.driver_photos || [],
+                emergency_contact_name: registration.emergency_contact_name || "",
+                emergency_contact_number: registration.emergency_contact_number || "",
+                identity_card_number: registration.identity_card_number || "",
+                nid_front_images: registration.nid_front_images || "",
+                nid_back_images: registration.nid_back_images || "",
+                driving_license_number: registration.driving_license_number || "",
+                driving_license_issue_date: registration.driving_license_issue_date || "",
+                driving_license_expire_date: registration.driving_license_expire_date || "",
+                driving_license_front_images: registration.driving_license_front_images || "",
+                driving_license_back_images: registration.driving_license_back_images || "",
+                vehicle_plate_number: registration.vehicle_plate_number || "",
+                vehicle_type: registration.vehicle_type || "",
+                vehicle_brand: registration.vehicle_brand || "",
+                registration_date: registration.registration_date || "",
+                vehicle_front_images: registration.vehicle_front_images || "",
+                vehicle_back_images: registration.vehicle_back_images || "",
+                vehicle_driver_side_images: registration.vehicle_driver_side_images || "",
+                vehicle_passenger_side_images: registration.vehicle_passenger_side_images || "",
+                vehicle_log_number: registration.vehicle_log_number || "",
+                vehicle_log_issue_date: registration.vehicle_log_issue_date || "",
+                vehicle_log_expire_date: registration.vehicle_log_expire_date || "",
+                vehicle_log_images: registration.vehicle_log_images || "",
+                vehicle_policy_number: registration.vehicle_policy_number || "",
+                vehicle_policy_issue_date: registration.vehicle_policy_issue_date || "",
+                vehicle_policy_expire_date: registration.vehicle_policy_expire_date || "",
+                vehicle_policy_images: registration.vehicle_policy_images || "",
+                current_address: registration.current_address || "",
+                current_apartment: registration.current_apartment || "",
+                current_state_province: registration.current_state_province || "",
+                current_city: registration.current_city || "",
+                current_country: registration.current_country || "",
+                current_zip_post_code: registration.current_zip_post_code || "",
+                permanent_address: registration.permanent_address || "",
+                permanent_apartment: registration.permanent_apartment || "",
+                permanent_state_province: registration.permanent_state_province || "",
+                permanent_city: registration.permanent_city || "",
+                permanent_country: registration.permanent_country || "",
+                permanent_zip_post_code: registration.permanent_zip_post_code || "",
+                bank_name: registration.bank_name || "",
+                account_number: registration.account_number || "",
+            };
 
-            policyNumber: "POL-5542",
-            policyIssue: "2021-05-01",
-            policyExpiry: "2031-05-01",
+            reset(formData);
+            
+            // Set profile image if available
+            if (registration.driver_photos?.[0]) {
+                setProfileImage(registration.driver_photos[0]);
+            }
+        } catch (error) {
+            console.error("Failed to process driver data:", error);
+            toast.error("Failed to load driver data");
+        }
+    }, [driverData, reset, navigate]);
 
-            bank: "DBBL",
-            accountNumber: "1234567890123",
-        };
-
-        reset(fakeUser);
-    }, [id, reset]);
-
-    const formData = watch();
+    // Handle error state
+    useEffect(() => {
+        if (isError) {
+            // console.error("Failed to fetch driver:", error);
+            toast.error("Driver not found");
+            navigate("/driver-list");
+        }
+    }, [isError, error, navigate]);
 
     // Image Upload
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,49 +155,83 @@ export default function EditDriverProfile() {
         setProfileImage(URL.createObjectURL(file));
     };
 
-    const onSubmit = (data: UserProfileType) => {
-        console.log("UPDATED DRIVER:", data);
+    const onSubmit = async (data: UserProfileType) => {
+        if (!id) return;
+
+        try {
+            await updateRider({
+                id: Number(id),
+                data: data,
+            }).unwrap();
+
+            toast.success("Driver profile updated successfully!");
+            navigate("/driver-list");
+        } catch (error: any) {
+            console.error("Update failed:", error);
+            toast.error(error?.data?.message || "Failed to update driver profile");
+        }
     };
 
     const allFields: { key: keyof UserProfileType; label: string }[] = [
-        { key: "firstName", label: "First Name" },
-        { key: "lastName", label: "Last Name" },
-        { key: "email", label: "Email Address" },
-        { key: "phone", label: "Phone Number" },
+        { key: "raider_name", label: "Full Name" },
+        { key: "contact_number", label: "Phone Number" },
+        { key: "email_address", label: "Email Address" },
         { key: "dob", label: "Date of Birth" },
         { key: "gender", label: "Gender" },
-        { key: "emergencyContact", label: "Emergency Contact" },
-        { key: "driverId", label: "Driver ID" },
+        { key: "emergency_contact_name", label: "Emergency Contact Name" },
+        { key: "emergency_contact_number", label: "Emergency Contact Number" },
+        { key: "identity_card_number", label: "Identity Card Number" },
 
-        { key: "address", label: "Address" },
-        { key: "city", label: "City" },
-        { key: "state", label: "State" },
-        { key: "postal", label: "Postal Code" },
+        // Current Address
+        { key: "current_address", label: "Current Address" },
+        { key: "current_apartment", label: "Current Apartment" },
+        { key: "current_city", label: "Current City" },
+        { key: "current_state_province", label: "Current State/Province" },
+        { key: "current_country", label: "Current Country" },
+        { key: "current_zip_post_code", label: "Current Postal Code" },
 
-        { key: "drivingLicense", label: "Driving License Number" },
-        { key: "dlIssueDate", label: "License Issue Date" },
-        { key: "dlExpiryDate", label: "License Expiry Date" },
+        // Permanent Address
+        { key: "permanent_address", label: "Permanent Address" },
+        { key: "permanent_apartment", label: "Permanent Apartment" },
+        { key: "permanent_city", label: "Permanent City" },
+        { key: "permanent_state_province", label: "Permanent State/Province" },
+        { key: "permanent_country", label: "Permanent Country" },
+        { key: "permanent_zip_post_code", label: "Permanent Postal Code" },
 
-        { key: "vehiclePlate1", label: "Vehicle Number Plate 1" },
-        { key: "vehiclePlate2", label: "Vehicle Number Plate 2" },
-        { key: "vehicleType", label: "Vehicle Type" },
-        { key: "model", label: "Vehicle Model" },
-        { key: "registrationDate", label: "Registration Date" },
-        { key: "vehicleLog", label: "Vehicle Log Number" },
-        { key: "vehicleIssueDate", label: "Vehicle Issue Date" },
-        { key: "vehicleExpiryDate", label: "Vehicle Expiry Date" },
+        // Driving License
+        { key: "driving_license_number", label: "Driving License Number" },
+        { key: "driving_license_issue_date", label: "License Issue Date" },
+        { key: "driving_license_expire_date", label: "License Expiry Date" },
 
-        { key: "policyNumber", label: "Policy Number" },
-        { key: "policyIssue", label: "Policy Issue Date" },
-        { key: "policyExpiry", label: "Policy Expiry Date" },
+        // Vehicle Information
+        { key: "vehicle_plate_number", label: "Vehicle Plate Number" },
+        { key: "vehicle_type", label: "Vehicle Type" },
+        { key: "vehicle_brand", label: "Vehicle Brand" },
+        { key: "registration_date", label: "Registration Date" },
+        { key: "vehicle_log_number", label: "Vehicle Log Number" },
+        { key: "vehicle_log_issue_date", label: "Vehicle Log Issue Date" },
+        { key: "vehicle_log_expire_date", label: "Vehicle Log Expiry Date" },
 
-        { key: "bank", label: "Bank Name" },
-        { key: "accountNumber", label: "Account Number" },
+        // Vehicle Policy
+        { key: "vehicle_policy_number", label: "Policy Number" },
+        { key: "vehicle_policy_issue_date", label: "Policy Issue Date" },
+        { key: "vehicle_policy_expire_date", label: "Policy Expiry Date" },
+
+        // Bank Information
+        { key: "bank_name", label: "Bank Name" },
+        { key: "account_number", label: "Account Number" },
     ];
+
+    if (isFetching) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <p className="text-lg">Loading driver data...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="sm:p-6 mx-auto space-y-6 bg-[#F5F7FA]">
-
             {/* Back Button */}
             <h1
                 onClick={() => navigate(`/driver-list`)}
@@ -136,13 +241,9 @@ export default function EditDriverProfile() {
             </h1>
 
             <div className="border rounded-xl py-10 px-6 lg:px-32 bg-white shadow-sm relative">
-
                 {/* Upload/Download Buttons */}
                 <div className="absolute top-6 right-6 flex gap-3">
-                    <Button variant="outline" className="flex gap-2 border text-black">
-                        <Files size={16} /> Upload
-                    </Button>
-                    <Button variant="outline" className="flex gap-2 text-black border">
+                    <Button variant="outline" className="flex gap-2 text-black border border-blue-500">
                         <Files size={16} /> Download
                     </Button>
                 </div>
@@ -152,7 +253,7 @@ export default function EditDriverProfile() {
                     <label className="cursor-pointer mt-8 sm:mt-0">
                         <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border overflow-hidden">
                             {profileImage ? (
-                                <img src={profileImage} className="w-full h-full object-cover" />
+                                <img src={profileImage} className="w-full h-full object-cover" alt="Profile" />
                             ) : (
                                 <Camera size={32} className="text-gray-500" />
                             )}
@@ -163,38 +264,19 @@ export default function EditDriverProfile() {
 
                 {/* Rating Section */}
                 <div className="text-center mt-4">
-                    <p
-                        className="
-                            flex flex-wrap justify-center items-center 
-                            gap-3 sm:gap-4 
-                            text-base sm:text-lg font-medium text-center
-                        "
-                    >
+                    <p className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 text-base sm:text-lg font-medium text-center">
                         <span className="flex items-center gap-1">
                             <Star size={20} className="text-yellow-500" />
-                            {formData.rating}/5
+                            4.8/5
                         </span>
-
                         <span className="flex items-center gap-1">
                             <Medal size={20} />
                             Bronze
                         </span>
-
                         <span className="flex items-center gap-1">
                             <Rss size={20} />
-                            {formData.followers} Followers
+                            150 Followers
                         </span>
-                    </p>
-
-
-                    <p className="mt-2 text-black font-medium text-base md:text-xl lg:text-2xl">
-                        Total Deliveries: {formData.deliveries}
-                    </p>
-                    <p className="text-red-500 font-medium text-base md:text-xl lg:text-2xl my-2">
-                        Total Cancellations: {formData.cancellations}
-                    </p>
-                    <p className="text-black font-medium text-base md:text-xl lg:text-2xl">
-                        Total Incentives: {formData.incentives}
                     </p>
                 </div>
 
@@ -221,11 +303,11 @@ export default function EditDriverProfile() {
                     <Button
                         className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-10 py-5 text-lg rounded-lg"
                         onClick={handleSubmit(onSubmit)}
+                        disabled={isUpdating}
                     >
-                        Save Changes
+                        {isUpdating ? "Saving..." : "Save Changes"}
                     </Button>
                 </div>
-
             </div>
         </div>
     );

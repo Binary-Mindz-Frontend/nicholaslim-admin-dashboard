@@ -1,5 +1,4 @@
 import { createBrowserRouter } from "react-router-dom";
-import DashboardLayout from "@/Layouts/DashboardLayout";
 import Dashboard from "@/pages/Dashboard/Dashboard";
 import CreateRoll from "@/pages/Admin/CreateRoll/CreateRoll";
 import AddRemovePermission from "@/pages/Admin/AddRemovePermission/AddRemovePermission";
@@ -24,19 +23,16 @@ import ContentManagementApp from "@/pages/Admin/ContentManagement/ContentManagem
 import PlatformFeeManagement from "@/pages/Admin/PlatformFeeManagement/PlatformFeeManagement";
 import DeliveryTypesPage from "@/pages/Dashboard/vehicleType-PricingModel/types-of-delivery/TypesOfDelivery";
 import UserWallet from "@/pages/Dashboard/Wallets/userWallet/UserWallet";
-import SingleUserWalletDetils from "@/pages/Dashboard/Wallets/userWallet/UserWalletDetails/SingleUserWalletDetils";
+import SingleUserWalletDetils from "@/pages/Dashboard/Wallets/userWalletHistory/SingleUserWalletHistory";
 import DriverWallet from "@/pages/Dashboard/Wallets/driverWallet/DriverWallet";
-import DriverWalletDetails from "@/pages/Dashboard/Wallets/driverWallet/DriverWalletDetails/DriverWalletDetails";
+// import DriverWalletDetails from "@/pages/Dashboard/Wallets/driverWallet/DriverWalletDetails/DriverWalletDetails";
 import IncentiveManagementPage from "@/pages/Dashboard/Wallets/IncentinveManagement/IncentinveManagement";
 import CoinPage from "@/pages/Dashboard/coins/CoinPage";
 import Advertisement from "@/pages/Admin/Advertisement/Advertisement";
 import CreateOrEditQuiz from "@/pages/Admin/QuizManagement/CreateOrEditQuiz";
-import OrderTracking from "@/pages/Orders/OrderTracking/OrderTracking";
-import OrderHistory from "@/pages/Orders/OrderHistory/OrderHistory";
 import PaymentOptionsPage from "@/pages/Orders/PaymentOptions/PaymentOptionsPage";
 import DriverOrderCompetition from "@/pages/Admin/DriverOrder/DriverOrder";
 import CustomerOrderConfirmation from "@/pages/Admin/CustomerOrder/CustomerOrderConfirmation";
-import UserCoinDetails from "@/pages/Dashboard/coins/_components/UserCoinDetails/UserCoinDetails";
 import OrderList from "@/pages/Orders/OrderList/OrderList";
 import Orders from "@/pages/Reports/Orders/Orders";
 import DriverPerformance from "@/pages/Reports/DriverPerformance/DriverPerformance";
@@ -44,11 +40,33 @@ import CustomerReport from "@/pages/Reports/CustomerReport/CustomerReport";
 import Kpis from "@/pages/Reports/Kpis/Kpis";
 import Coins from "@/pages/Reports/Coins/Coins";
 import Incentive from "@/pages/Reports/Incentives/Incentives";
+import Order from "@/pages/OrderPlacement/Order/Order";
+import LiveOrderTracking from "@/pages/OrderPlacement/LiveOrderTracking/LiveOrderTracking";
+// import OrderHistory from "@/pages/OrderPlacement/OrderHistory/OrderHistory";
+import SavedOrders from "@/pages/OrderPlacement/SavedOrders/SavedOrders";
+// import PaymentOptions from "@/pages/OrderPlacement/PaymentOptions/PaymentOptions";
+import OrderConfirmed from "@/pages/OrderConfirmed/OrderConfirmed";
+import Login from "@/pages/Login/Login";
+import Quiz from "@/pages/Admin/QuizManagement/Quiz";
+// import AdminRoute from "./AdminRoute";
+import ForgotPassword from "@/pages/ForgotPassword/ForgotPassword";
+import VerifyOtp from "@/pages/VerifyOtp/VerifyOtp";
+import ResetPassword from "@/pages/ResetPassword/ResetPassword";
+import ViewDriverProfile from "@/pages/Drivers/NewJoinRequest/ViewDriverProfile/ViewDriverProfile";
+import FavouriteDriversPage from "@/pages/Users/UsersApp/FavouriteDrivers/FavouriteDriversPage";
+import OrderHistoryPage from "@/pages/Users/UsersApp/OrderHistory/OrderHistoryPage";
+import DriverWalletDetailsTable from "@/pages/Dashboard/Wallets/driverWalletHistory/DriverWalletHistoryTable";
+import ViewTrackOrder from "@/pages/Orders/ViewTrackOrder/ViewTrackOrder";
+import DriverListTrack from "@/pages/Orders/ViewTrackOrder/components/Driver/DriverList";
+import ViewLiveTrackOrder from "@/pages/OrderPlacement/LiveOrderTracking/ViewLiveTrackOrder/ViewLiveTrackOrder";
+import OrderHistory from "@/pages/OrderPlacement/OrderHistory/OrderHistory";
+import StripeWrapper from "@/pages/Orders/PaymentOptions/StripeWrapper";
+import DashboardLayoutWrapper from "@/Layouts/DashboardLayoutWrapper";
 
 const routes = createBrowserRouter([
   {
     path: "/",
-    element: <DashboardLayout />,
+    element: <DashboardLayoutWrapper />,
     children: [
       {
         index: true,
@@ -63,59 +81,6 @@ const routes = createBrowserRouter([
         element: <AddRemovePermission />,
       },
 
-
-			{
-				path: "users-app",
-				element: <UsersApp />,
-			},
-			{
-			 path: "users-app/:id",
-				element: <UserProfile />,
-			},
-			{
-				path: "users-web-portal",
-				element: <UsersWebportal />,
-			},
-			{
-				path: "add-new-user",
-				element: <AddNewUser />,
-			},
-			{
-				path: "driver-list",
-				element: <DriverList/>,
-			},
-			{
-				path: "driver-list/:id",
-				element: <EditDriverProfile />,
-			},
-			{
-				path: "add-new-driver",
-				element: <AddNewDriver/>,
-			},
-			{
-				path: "new-join-request",
-				element: <NewJoinRequest />,
-			},
-			{
-				path: "service-area",
-				element: <VTPMserviceArea />,
-			},
-			{
-				path: "vehicle-types",
-				element: <VehicleTypes />,
-			},
-      {
-        path: "types-of-delivery",
-        element: <DeliveryTypesPage />
-      },
-			{
-				path: "vehicle-pricing-page",
-				element: <AddVehiclePage />,
-			},
-			{
-				path: "policy-management",
-				element: <PolicyManagementPage />
-			},
       {
         path: "users-app",
         element: <UsersApp />,
@@ -147,6 +112,63 @@ const routes = createBrowserRouter([
       {
         path: "new-join-request",
         element: <NewJoinRequest />,
+      },
+      {
+        path: "service-area",
+        element: <VTPMserviceArea />,
+      },
+      {
+        path: "vehicle-types",
+        element: <VehicleTypes />,
+      },
+      {
+        path: "types-of-delivery",
+        element: <DeliveryTypesPage />,
+      },
+      {
+        path: "vehicle-pricing-page",
+        element: <AddVehiclePage />,
+      },
+      {
+        path: "policy-management",
+        element: <PolicyManagementPage />,
+      },
+      {
+        path: "users-app",
+        element: <UsersApp />,
+      },
+      {
+        path: "users-app/:id",
+        element: <UserProfile />,
+      },
+      {
+        path: "users-web-portal",
+        element: <UsersWebportal />,
+      },
+      {
+        path: "add-new-user",
+        element: <AddNewUser />,
+      },
+      {
+        path: "driver-list",
+        element: <DriverList />,
+      },
+      {
+        path: "driver-list/:id",
+        element: <EditDriverProfile />,
+      },
+
+      {
+        path: "add-new-driver",
+        element: <AddNewDriver />,
+      },
+      {
+        path: "new-join-request",
+        element: <NewJoinRequest />,
+      },
+      {
+        path: "join-request/:id",
+        element: <ViewDriverProfile />,
       },
       {
         path: "order-list",
@@ -205,9 +227,12 @@ const routes = createBrowserRouter([
         path: "new-join-request",
         element: <NewJoinRequest />,
       },
-
       {
-        path: "quiz-create-edit",
+        path: "quiz",
+        element: <Quiz />,
+      },
+      {
+        path: "quiz-create-edit/:id",
         element: <CreateOrEditQuiz />,
       },
       {
@@ -224,7 +249,7 @@ const routes = createBrowserRouter([
       },
       {
         path: "live-order-tracking",
-        element: <OrderTracking />,
+        element: <LiveOrderTracking />,
       },
       {
         path: "order-history",
@@ -243,33 +268,28 @@ const routes = createBrowserRouter([
         element: <CustomerOrderConfirmation />,
       },
       {
-        path: "wallet-user" ,
-        element : <UserWallet />
+        path: "wallet-user",
+        element: <UserWallet />,
       },
       {
-        path: "wallet-user/:id" ,
-        element : <SingleUserWalletDetils />
-      },
-       {
-        path: "wallet-driver" ,
-        element : <DriverWallet />
+        path: "wallet-user/:id",
+        element: <SingleUserWalletDetils />,
       },
       {
-        path: "wallet-driver/:id" ,
-        element : <DriverWalletDetails />
-      }
-      ,
-      {
-        path: "incentive-management" ,
-        element : <IncentiveManagementPage />
+        path: "wallet-driver",
+        element: <DriverWallet />,
       },
       {
-        path: "coin-system" ,
-        element: <CoinPage />
+        path: "wallet-driver/:id",
+        element: <DriverWalletDetailsTable />,
       },
       {
-        path : "coin-system/:id" ,
-        element: <UserCoinDetails />
+        path: "incentive-management",
+        element: <IncentiveManagementPage />,
+      },
+      {
+        path: "coin-system",
+        element: <CoinPage />,
       },
       {
         path: "report-orders",
@@ -299,10 +319,75 @@ const routes = createBrowserRouter([
         path: "incentives",
         element: <Incentive />,
       },
-     
-    ],
-},
 
+      // Order Placement
+      {
+        path: "order",
+        element: <Order />,
+      },
+      {
+        path: "live-order-tracking",
+        element: <LiveOrderTracking />,
+      },
+      {
+        path: "order-history",
+        element: <OrderHistory />,
+      },
+      {
+        path: "saved-order",
+        element: <SavedOrders />,
+      },
+      // {
+      //   path: "payment-options",
+      //   element: <PaymentOptions />,
+      // },
+      {
+        path: "order-confirm",
+        element: <OrderConfirmed />,
+      },
+      {
+        path: "favourite-drivers/:id",
+        element: <FavouriteDriversPage />,
+      },
+      {
+        path: "order-history/:id",
+        element: <OrderHistoryPage />,
+      },
+      {
+        path: "order/:id",
+        element: <ViewTrackOrder />,
+      },
+      {
+        path: "assign-driver/:id",
+        element: <DriverListTrack />,
+      },
+      {
+        path: "live-order-tracking/:id",
+        element: <ViewLiveTrackOrder />,
+      },
+      {
+        path: "add-funds",
+        element: <StripeWrapper />,
+      },
+    ],
+  },
+
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+  },
+  {
+    path: "/verify-otp",
+    element: <VerifyOtp />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
+  },
 ]);
 
 export default routes;

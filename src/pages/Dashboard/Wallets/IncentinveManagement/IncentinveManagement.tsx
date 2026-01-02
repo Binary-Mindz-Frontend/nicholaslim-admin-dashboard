@@ -13,13 +13,6 @@ const IncentiveManagementPage: React.FC = () => {
     setOpenCreate(true) 
   }
 
-  const handleEdit = (id: number) => {
-    console.log("Edit incentive", id)
-  }
-
-  const handleDelete = (id: number) => {
-    console.log("Delete incentive", id)
-  }
 
   return (
     <main className="min-h-screen bg-gray-50 p-6">
@@ -42,9 +35,9 @@ const IncentiveManagementPage: React.FC = () => {
           </div>
         </div>
 
-        <IncentivesList onEdit={handleEdit} onDelete={handleDelete} />
+        <IncentivesList/>
 
-        <CreateIncentiveDialog open={openCreate} onOpenChange={setOpenCreate} />
+        <CreateIncentiveDialog open={openCreate} onOpenChange={setOpenCreate} incentiveToEdit={null} />
       </div>
     </main>
   )

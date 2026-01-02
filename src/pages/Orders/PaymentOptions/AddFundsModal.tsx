@@ -1,138 +1,521 @@
-import { CreditCard, User } from "lucide-react";
 
-export default function AddFundsModal() {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { CreditCard, Minus } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  useStripe,
+  useElements,
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  Elements,
+} from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  useAddMoneyToWalletMutation,
+  useCreateSetupIntentMutation,
+  useSaveCardMutation,
+  useGetWalletCardsQuery,
+  useDeleteCardMutation,
+
+} from "@/redux/features/payment/paymentApi";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+
+import toast from "react-hot-toast";
+
+
+/* Stripe instance */
+const stripePromise = loadStripe(
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+);
+
+function AddFundsFormContent() {
+  const stripe = useStripe();
+  const elements = useElements();
+
+  const [addMoneyToWallet, { isLoading, isError, isSuccess, error }] =
+    useAddMoneyToWalletMutation();
+
+  // Mutations & Queries
+  const [createSetupIntent, { isLoading: isCreatingIntent }] = useCreateSetupIntentMutation();
+  const [saveCard, { isLoading: isSavingCard }] = useSaveCardMutation();
+  const { data: walletCards, isLoading: isCardsLoading } = useGetWalletCardsQuery();
+
+  const [selectedAmount, setSelectedAmount] = useState(20);
+  const [customAmount, setCustomAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"saved" | "new" | "">("");
+  const [selectedSavedCardId, setSelectedSavedCardId] = useState<string>(""); // Track specific card ID
+  const [cardholderName, setCardholderName] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [cardToDelete, setCardToDelete] = useState<number | null>(null);
+
+  const [deleteCard] = useDeleteCardMutation();
+
+  console.log(walletCards, "walletCards");
+  useEffect(() => {
+    if (walletCards && Array.isArray(walletCards) && walletCards.length > 0) {
+      // Find the card marked as default, or fallback to the first card
+      const defaultCard = walletCards.find((c: any) => c.isDefault) || walletCards[0];
+
+      // Use the correct key: stripeMethodId
+      if (defaultCard?.stripeMethodId) {
+        setSelectedSavedCardId(defaultCard.stripeMethodId);
+        setPaymentMethod("saved");
+      }
+    }
+  }, [walletCards]);
+
+
+  const handleSaveCard = async () => {
+    setErrorMessage("");
+    if (!stripe || !elements) return;
+
+    const cardNumberElement = elements.getElement(CardNumberElement);
+    if (!cardNumberElement || !cardholderName) {
+      setErrorMessage("Please fill in card details and cardholder name");
+      return;
+    }
+
+    try {
+      const response = await createSetupIntent().unwrap();
+      const clientSecret = (response as any).clientSecret || response.data?.clientSecret;
+
+      console.log(clientSecret, 'clientSecret')
+
+      if (!clientSecret) {
+        setErrorMessage("Secure session could not be initialized.");
+        return;
+      }
+
+      const { setupIntent, error: stripeError } = await stripe.confirmCardSetup(
+        clientSecret,
+        {
+          payment_method: {
+            card: cardNumberElement,
+            billing_details: { name: cardholderName },
+          },
+        }
+      );
+
+      if (stripeError) {
+        setErrorMessage(stripeError.message || "Failed to verify card");
+        return;
+      }
+
+      if (setupIntent?.status === "succeeded") {
+        const payload = { paymentMethodId: setupIntent.payment_method as string };
+        await saveCard(payload).unwrap();
+        toast.success("Card saved successfully!");
+
+
+        setPaymentMethod("saved");
+        setCardholderName("");
+        elements.getElement(CardNumberElement)?.clear();
+        elements.getElement(CardExpiryElement)?.clear();
+        elements.getElement(CardCvcElement)?.clear();
+      }
+    } catch (err: any) {
+      const msg = err?.data?.message;
+      setErrorMessage(Array.isArray(msg) ? msg[0] : msg || "An error occurred while saving the card");
+    }
+  };
+
+  const handleRemoveCard = async () => {
+  if (!cardToDelete) return;
+
+  try {
+    await deleteCard(cardToDelete).unwrap();
+
+    toast.success("Card removed successfully!");
+
+    const deletedCardStripeId =
+      walletCards?.find(c => c.id === cardToDelete)?.stripeMethodId;
+
+    if (selectedSavedCardId === deletedCardStripeId) {
+      setSelectedSavedCardId("");
+      setPaymentMethod("");
+    }
+  } catch (err: any) {
+    toast.error(err?.data?.message || "Failed to remove card");
+  } finally {
+    setCardToDelete(null);
+  }
+};
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success("Funds added successfully!");
+      setCardholderName("");
+      setCustomAmount("");
+      setSelectedAmount(20);
+      setPaymentMethod("");
+
+      elements?.getElement(CardNumberElement)?.clear();
+      elements?.getElement(CardExpiryElement)?.clear();
+      elements?.getElement(CardCvcElement)?.clear();
+    }
+  }, [isSuccess, elements]);
+
+  useEffect(() => {
+    if (isError && error) {
+      setErrorMessage((error as any)?.data?.message || "Failed to add funds");
+    }
+  }, [isError, error]);
+
+  if (!stripe || !elements) {
+    return (
+      <div className="flex items-center justify-center p-20">
+        <div className="text-xl text-gray-600 animate-pulse">
+          Connecting to secure payment gateway...
+        </div>
+      </div>
+    );
+  }
+
+const getCardBrandImage = (brand: string) => {
+  if (!brand) return null;
+
+  const brandLower = brand.toLowerCase();
+
+  switch (brandLower) {
+    case "visa":
+      return "https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png";
+
+    case "mastercard":
+      return "https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg";
+
+    case "american express":
+      return "https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo.svg";
+
+    case "discover":
+      return "https://upload.wikimedia.org/wikipedia/commons/5/5a/Discover_Card_logo.svg";
+
+    case "diners club":
+      return "https://upload.wikimedia.org/wikipedia/commons/6/69/Diners_Club_Logo.svg";
+
+    case "jcb":
+      return "https://upload.wikimedia.org/wikipedia/commons/4/40/JCB_logo.svg";
+
+    case "unionpay":
+    case "union pay": // safety fallback
+      return "https://upload.wikimedia.org/wikipedia/commons/1/1b/UnionPay_logo.svg";
+
+    default:
+      return null;
+  }
+};
+
+  const handleAmountClick = (amount: number) => {
+    setSelectedAmount(amount);
+    setCustomAmount("");
+    setErrorMessage("");
+  };
+
+  const handleCustomAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9.]/g, "");
+    setCustomAmount(value);
+    setSelectedAmount(0);
+    setErrorMessage("");
+  };
+
+  const handleAddFund = async () => {
+    // 1. Calculate final amount
+    const amount = customAmount ? parseFloat(customAmount) : selectedAmount;
+
+    // 2. Validation
+    if (!amount || amount <= 0) {
+      setErrorMessage("Please select or enter a valid amount");
+      return;
+    }
+
+    if (!paymentMethod) {
+      setErrorMessage("Please select a payment method");
+      return;
+    }
+
+    try {
+      // CASE 1: USER SELECTED A SAVED CARD
+      if (paymentMethod === "saved") {
+        if (!selectedSavedCardId) {
+          setErrorMessage("Please select a saved card from the list");
+          return;
+        }
+
+        // Call the same mutation using the ID from your database
+        await addMoneyToWallet({
+          amount,
+          paymentMethodId: selectedSavedCardId, // This is the pm_... ID from your getWalletCards
+        }).unwrap();
+      }
+
+      // CASE 2: USER IS ADDING A NEW CARD
+      if (paymentMethod === "new") {
+        const cardElement = elements.getElement(CardNumberElement);
+        if (!cardElement) return;
+
+        // Create temporary PaymentMethod with Stripe
+        const { error: stripeError, paymentMethod: pm } = await stripe.createPaymentMethod({
+          type: "card",
+          card: cardElement,
+          billing_details: { name: cardholderName },
+        });
+
+        if (stripeError) {
+          setErrorMessage(stripeError.message || "Stripe validation failed");
+          return;
+        }
+
+        // Call the same mutation using the fresh ID from Stripe
+        await addMoneyToWallet({
+          amount,
+          paymentMethodId: pm.id, // This is the fresh pm_... ID from Stripe
+        }).unwrap();
+      }
+    } catch (err: any) {
+      // Error is handled by your useEffect [isError]
+      console.error("Payment Error:", err);
+    }
+  };
+
+  const cardElementOptions = {
+    style: {
+      base: {
+        fontSize: "16px",
+        color: "#374151",
+        "::placeholder": { color: "#9CA3AF" },
+      },
+    },
+  };
+
   return (
     <div className="m-6">
       <h2 className="text-2xl font-bold text-gray-900 py-8">Add Funds</h2>
-      <div className="bg-white rounded-2xl  overflow-hidden">
+
+      <div className="bg-white rounded-2xl overflow-hidden">
+        {/* AMOUNT SELECTION */}
         <div className="overflow-x-auto flex flex-col items-center justify-center">
-          {/* Header */}
-          <div className="">
-            <p className="text-2xl my-6 font-medium text-gray-600">
-              How much do you want to add?
-            </p>
-          </div>
-          <div className="grid grid-cols-2  md:grid-cols-4 gap-10">
-            {["$10", "$20", "$40", "$100"].map((amount) => (
+          <p className="text-2xl my-6 font-medium text-gray-600">
+            How much do you want to add?
+          </p>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
+            {[10, 20, 40, 100].map((amount) => (
               <button
                 key={amount}
-                className={`px-14 py-1 rounded-md font-medium text-lg transition-all border-2 ${
-                  amount === "$20"
-                    ? "bg-yellow-400 border-yellow-400 text-yellow-900 shadow-sm"
-                    : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
-                }`}
+                onClick={() => handleAmountClick(amount)}
+                className={`px-14 py-1 rounded-md font-medium text-lg transition-all border-2 ${selectedAmount === amount
+                  ? "bg-yellow-400 border-yellow-400 text-yellow-900 shadow-sm"
+                  : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
+                  }`}
               >
-                {amount}
+                ${amount}
               </button>
             ))}
           </div>
         </div>
-        <div className="p-8 space-y-8">
-          {/* Amount Buttons */}
 
-          {/* Custom Amount Input */}
+        <div className="p-8 space-y-8">
+          {/* CUSTOM AMOUNT */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Enter a custom amount
             </label>
             <input
+              type="text"
+              value={customAmount}
+              onChange={handleCustomAmountChange}
               className="w-full px-5 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
               placeholder="$0.00"
             />
           </div>
 
-          {/* Choose Payment Method */}
+          {/* PAYMENT METHOD */}
           <div>
             <h3 className="text-xl text-center font-bold text-gray-800 mb-4">
               Choose Payment Method
             </h3>
 
-           {/* Saved Card - Perfect Radio Button */}
-<label className="flex items-center justify-between p-4 border-y border-gray-200 cursor-pointer hover:bg-gray-50 transition">
-  {/* Hidden radio input */}
-  <input
-    type="radio"
-    name="paymentMethod"
-    defaultChecked
-    className="peer sr-only"
-  />
+            {/* Dynamic Saved Cards */}
+            {isCardsLoading ? (
+              <div className="text-center p-4 text-gray-500">Loading cards...</div>
+            ) : (
+              walletCards?.map((card: any) => {
+                const brandImgUrl = getCardBrandImage(card.brand);
 
-  {/* Card Info */}
-  <div className="flex items-center gap-4">
-    <img
-      src="https://js.stripe.com/v3/fingerprinted/img/visa-729c05c240c4bdb47b03ac81d9945bfe.svg"
-      alt="Visa"
-      className="w-12 h-8 object-contain"
-    />
-    <div>
-      <p className="font-medium text-gray-900">Mastercard ****456</p>
-      <p className="text-sm text-gray-500">Expires 12/26</p>
-    </div>
-  </div>
+                return (
+                  <label
+                    key={card.id}
+                    className="flex items-center justify-between p-4 border-y border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-8 flex items-center justify-center overflow-hidden">
+                        {brandImgUrl ? (
+                          <img
+                            src={brandImgUrl}
+                            className="w-full h-full object-contain"
+                            alt={card.brand}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none";
+                              (e.target as HTMLImageElement).parentElement!.appendChild(
+                                document.createElement("span")
+                              ); // optional fallback
+                            }}
+                          />
+                        ) : (
+                          <CreditCard className="w-6 h-6 text-gray-400" />
+                        )}
+                      </div>
 
-  {/* Custom Radio Circle - EXACTLY like your design */}
-  <div className="relative w-8 h-8">
-    {/* Outer circle: white when unchecked, yellow when checked */}
-    <div className="absolute inset-0 rounded-full border-6 border-yellow-500 bg-white peer-checked:bg-yellow-400 transition-colors duration-200" />
-    
-    {/* Inner white dot - appears only when selected */}
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="w-4 h-4 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform duration-200" />
-    </div>
-  </div>
-</label>
+                      <div>
+                        <p className="font-medium capitalize">
+                          {card.brand} ****{card.last4}
+                        </p>
+                        {card.isDefault && (
+                          <span className="text-[10px] font-bold text-blue-600 uppercase">
+                            Default
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        checked={
+                          paymentMethod === "saved" &&
+                          selectedSavedCardId === card.stripeMethodId
+                        }
+                        onChange={() => {
+                          setPaymentMethod("saved");
+                          setSelectedSavedCardId(card.stripeMethodId);
+                          setErrorMessage("");
+                        }}
+                        className="w-5 h-5 accent-yellow-400"
+                      />
+
+                      {/* Remove Button */}
+                      <button
+                        type="button"
+                        onClick={() => setCardToDelete(card.id)} // ✅ store id
+                        className="text-red-600 text-sm font-bold px-1 py-1 border border-red-600 rounded-full hover:bg-red-50"
+                      >
+                        <Minus size={12} />
+                      </button>
+
+
+
+                    </div>
+                  </label>
+                );
+              })
+            )}
+
+            <label className="flex items-center justify-between p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50">
+              <div className="flex items-center gap-4">
+                <CreditCard className="w-6 h-6 text-gray-400" />
+                <p className="font-medium">Add new card</p>
+              </div>
+              <input
+                type="radio"
+                name="paymentMethod"
+                checked={paymentMethod === "new"}
+                onChange={() => setPaymentMethod("new")}
+                className="w-5 h-5 accent-yellow-400"
+              />
+            </label>
           </div>
 
-          {/* Add New Card */}
-          <div className=" border-gray-200 rounded-xl p-6 text-center">
-            <h4 className="font-bold text-gray-800 mb-4 text-xl">
-              Add payment method
-            </h4>
-
-            <div className="space-y-6">
-              <div className="relative">
-                <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Card number"
-                  className="w-full pl-12 pr-5 py-2 border border-gray-300 rounded-md  focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                />
+          {/* ADD NEW CARD FORM */}
+          {paymentMethod === "new" && (
+            <div className="border-gray-200 rounded-xl p-6 space-y-6">
+              <div className="pl-2 py-2 border rounded-md">
+                <CardNumberElement options={cardElementOptions} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  placeholder="MM/YY"
-                  className="px-5 py-2 border border-gray-300 rounded-md  focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                />
-                <input
-                  type="text"
-                  placeholder="CVV"
-                  className="px-5 py-2 border border-gray-300 rounded-md  focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                />
+                <div className="p-2 border rounded-md">
+                  <CardExpiryElement options={cardElementOptions} />
+                </div>
+                <div className="p-2 border rounded-md">
+                  <CardCvcElement options={cardElementOptions} />
+                </div>
               </div>
 
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Name on card"
-                  className="w-full pl-12 pr-5 py-2 border border-gray-300 rounded-md  focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                />
-              </div>
+              <input
+                type="text"
+                placeholder="Name on card"
+                value={cardholderName}
+                onChange={(e) => setCardholderName(e.target.value)}
+                className="w-full pl-2 pr-5 py-2 outline-none border border-gray-200 rounded-md"
+              />
 
-              <button className=" px-14 font-bold py-2 rounded-md bg-yellow-400 hover:bg-yellow-500 text-yellow-900  transition">
-                Save Card
+              <button
+                type="button"
+                onClick={handleSaveCard}
+                disabled={isCreatingIntent || isSavingCard}
+                className="w-full py-2 rounded-md bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold disabled:opacity-50"
+              >
+                {isSavingCard || isCreatingIntent ? "Saving..." : "Save Card"}
               </button>
             </div>
-          </div>
+          )}
 
-          {/* Final Add Fund Button */}
-          <button className="w-full py-2 rounded-md bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold text-xl  transition shadow-lg">
-            Add Fund
+          {errorMessage && (
+            <div className="text-red-600 text-center font-medium">
+              {errorMessage}
+            </div>
+          )}
+
+          {/* ADD FUND BUTTON */}
+          <button
+            onClick={handleAddFund}
+            disabled={isLoading}
+            className="w-full py-2 rounded-md bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold text-xl"
+          >
+            {isLoading ? "Processing..." : "Add Fund"}
           </button>
         </div>
       </div>
+      <AlertDialog open={!!cardToDelete} onOpenChange={() => setCardToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Card</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this card? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={handleRemoveCard}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
+  );
+}
+
+export default function AddFundsModal() {
+  return (
+    <Elements stripe={stripePromise}>
+      <AddFundsFormContent />
+    </Elements>
   );
 }

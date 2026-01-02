@@ -1,12 +1,21 @@
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
-const data = [
-  { name: "Genuine Orders", value: 80, color: "#10b981" },
-  { name: "Manual Check", value: 15, color: "#f59e0b" },
-  { name: "Suspicious Orders", value: 5, color: "#ef4444" },
-];
+interface ConfirmationRatioChartProps {
+  data: {
+    geniune_count: number;
+    manual_check_count: number;
+    suspicious_count: number;
+  };
+}
 
-export function ConfirmationRatioChart() {
+export function ConfirmationRatioChart({
+  data: { geniune_count, manual_check_count, suspicious_count },
+}: ConfirmationRatioChartProps) {
+  const data = [
+    { name: "Genuine Orders", value: geniune_count, color: "#10b981" },
+    { name: "Manual Check", value: manual_check_count, color: "#f59e0b" },
+    { name: "Suspicious Orders", value: suspicious_count, color: "#ef4444" },
+  ];
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-8">
       <h2 className="mb-8 text-lg font-semibold text-slate-900">
@@ -36,7 +45,7 @@ export function ConfirmationRatioChart() {
               textAnchor="middle"
               className="text-5xl font-bold fill-slate-900"
             >
-              80%
+              {geniune_count + manual_check_count + suspicious_count}%
             </text>
             <text
               x="50%"
@@ -44,7 +53,7 @@ export function ConfirmationRatioChart() {
               textAnchor="middle"
               className="text-sm fill-slate-600"
             >
-              Genuine
+              Orders
             </text>
           </PieChart>
         </ResponsiveContainer>

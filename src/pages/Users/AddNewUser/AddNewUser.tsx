@@ -1,14 +1,14 @@
-
 import React, { useRef, useState } from "react";
-import { Camera, ChevronDown } from "lucide-react";
+import { Camera } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-
+import { useAddUserTypeMutation } from "@/redux/features/usersTypes/usersTypesApi"; // Import the mutation
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 // ---------------------- ZOD SCHEMA ----------------------
 const userSchema = z.object({
-  firstName: z.string().min(1, { message: "First name is required" }),
-  lastName: z.string().min(1, { message: "Last name is required" }),
+  fullName: z.string().min(1, { message: "Full name is required" }),
 
   email: z
     .string()
@@ -16,18 +16,15 @@ const userSchema = z.object({
     .email({ message: "Invalid email format" }),
 
   phone: z.string().min(1, { message: "Phone is required" }),
-  role: z.string().min(1, { message: "Role is required" }),
   password: z.string().min(1, { message: "Password is required" }),
 });
-
-
 
 type FormData = z.infer<typeof userSchema>;
 
 export default function AddNewUser() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
-
+ const navigate = useNavigate(); 
   // ---------------------- REACT HOOK FORM ----------------------
   const {
     register,
@@ -37,22 +34,48 @@ export default function AddNewUser() {
   } = useForm<FormData>({
     resolver: zodResolver(userSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
+      fullName: "",
       email: "",
       phone: "",
-      role: "Finance",
       password: "",
     },
   });
 
+  // ---------------------- ADD USER MUTATION ----------------------
+  const [addUser, { isLoading }] = useAddUserTypeMutation();
+
   // ---------------------- ON SUBMIT ----------------------
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
+    
     console.log("Form Submitted:", data);
     console.log("Photo:", photo);
 
-    reset();
-    setPhoto(null);
+    try {
+      // Prepare the new user data
+      const newUser = {
+        username: data.fullName.trim().replace(/\s+/g, "_"), // Convert full name to username format
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+        role: "USER", // Always send the role as "USER"
+      };
+
+      // Call the addUser mutation to create the user
+      const response = await addUser(newUser).unwrap();
+
+      // Show success message
+      toast.success("User created successfully!");
+      console.log("User created:", response);
+
+      // Reset form
+      reset();
+      setPhoto(null);
+      navigate("/users-app"); // Navigate back to users list
+    } catch (error) {
+      // Show error message
+      toast.error("Failed to create user. Please try again.");
+      console.error("Error creating user:", error);
+    }
   };
 
   // ---------------------- PHOTO UPLOAD ----------------------
@@ -103,109 +126,59 @@ export default function AddNewUser() {
 
         {/* ---------------------- FORM ---------------------- */}
         <form onSubmit={handleSubmit(onSubmit)}>
-          {/* FIRST + LAST NAME */}
+          {/* FULL NAME + EMAIL (In one row for large screens) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
-            {/* FIRST */}
             <div>
-              <label className="block text-gray-600 font-medium mb-2">First Name</label>
+              <label className="block text-gray-600 font-medium mb-2">Full Name</label>
               <input
-                {...register("firstName")}
-                placeholder="Enter first name"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 focus:ring-2 ${
-                  errors.firstName ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-400"
-                }`}
+                {...register("fullName")}
+                placeholder="Enter full name"
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.fullName ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-200"
+                  }`}
               />
-              {errors.firstName && (
-                <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
+              {errors.fullName && (
+                <p className="text-red-500 text-sm mt-1">{errors.fullName.message}</p>
               )}
             </div>
 
-            {/* LAST */}
-            <div>
-              <label className="block text-gray-600 font-medium mb-2">Last Name</label>
-              <input
-                {...register("lastName")}
-                placeholder="Enter last name"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 focus:ring-2 ${
-                  errors.lastName ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-400"
-                }`}
-              />
-              {errors.lastName && (
-                <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>
-              )}
-            </div>
-          </div>
-
-          {/* EMAIL + PHONE */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
-            {/* EMAIL */}
             <div>
               <label className="block text-gray-600 font-medium mb-2">Email Address</label>
               <input
                 {...register("email")}
                 type="email"
                 placeholder="Enter email"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 focus:ring-2 ${
-                  errors.email ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-400"
-                }`}
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.email ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-200"
+                  }`}
               />
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
               )}
             </div>
+          </div>
 
-            {/* PHONE */}
+          {/* PHONE + PASSWORD (In one row for large screens) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-12">
             <div>
               <label className="block text-gray-600 font-medium mb-2">Phone Number</label>
               <input
                 {...register("phone")}
                 placeholder="Enter phone number"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 focus:ring-2 ${
-                  errors.phone ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-400"
-                }`}
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.phone ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-200"
+                  }`}
               />
               {errors.phone && (
                 <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
               )}
             </div>
-          </div>
 
-          {/* ROLE + PASSWORD */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-12">
-            {/* ROLE */}
-            <div>
-              <label className="block text-gray-600 font-medium mb-2">Role Name</label>
-              <div className="relative">
-                <select
-                  {...register("role")}
-                  className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 appearance-none focus:ring-2 cursor-pointer ${
-                    errors.role ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-400"
-                  }`}
-                >
-                  <option value="Finance">Finance</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Sales">Sales</option>
-                  <option value="IT">IT</option>
-                  <option value="HR">HR</option>
-                </select>
-
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-700 pointer-events-none" />
-              </div>
-              {errors.role && (
-                <p className="text-red-500 text-sm mt-1">{errors.role.message}</p>
-              )}
-            </div>
-
-            {/* PASSWORD */}
             <div>
               <label className="block text-gray-600 font-medium mb-2">Password</label>
               <input
                 {...register("password")}
                 type="password"
                 placeholder="Enter Password"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 focus:ring-2 ${
-                  errors.password ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-400"
-                }`}
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.password ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-200"
+                  }`}
               />
               {errors.password && (
                 <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
@@ -218,8 +191,9 @@ export default function AddNewUser() {
             <button
               type="submit"
               className="px-12 py-3 bg-yellow-400 font-bold text-black rounded hover:bg-yellow-500"
+              disabled={isLoading} // Disable button while loading
             >
-              Add Now
+              {isLoading ? "Adding..." : "Add Now"}
             </button>
           </div>
         </form>

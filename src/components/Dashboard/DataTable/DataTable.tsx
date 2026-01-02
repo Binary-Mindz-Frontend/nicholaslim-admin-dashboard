@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 
 export type Column<T> =
@@ -17,9 +15,26 @@ export type Column<T> =
 export interface ITableProps<T> {
   columns: Column<T>[];
   data: T[];
+  isLoading?: boolean;
 }
 
-const CustomTable = <T extends object>({ columns, data }: ITableProps<T>) => {
+const CustomTable = <T extends object>({ columns, data, isLoading }: ITableProps<T>) => {
+  if (isLoading) {
+    return (
+      <div className="w-full overflow-x-auto bg-white rounded-lg border border-[#F0E5C9] p-8 text-center">
+        <div className="animate-pulse">Loading disputes...</div>
+      </div>
+    );
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="w-full overflow-x-auto bg-white rounded-lg border border-[#F0E5C9] p-8 text-center">
+        <p className="text-gray-500">No disputes found.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full overflow-x-auto bg-white rounded-lg border border-[#F0E5C9]">
       <table className="min-w-full divide-y divide-[#F0E5C9]">
@@ -44,7 +59,7 @@ const CustomTable = <T extends object>({ columns, data }: ITableProps<T>) => {
               key={rowIndex}
               className={`${
                 rowIndex % 2 === 1 ? "bg-[#F7F9FA]" : "bg-white"
-              } pointer-events-auto`}   // ✅ Allow interactivity
+              } pointer-events-auto`}
             >
               {columns.map((column, colIndex) => {
                 const content = column.cell
@@ -62,9 +77,12 @@ const CustomTable = <T extends object>({ columns, data }: ITableProps<T>) => {
                     "                                
                   >
                     <div
-                      className="inline-block"
+                      className="inline-block max-w-[150px] overflow-hidden text-ellipsis"
                       onClick={(e) => e.stopPropagation()}    
                       onMouseDown={(e) => e.stopPropagation()}
+                      title={column.accessor && typeof row[column.accessor] === 'string' 
+                        ? String(row[column.accessor]) 
+                        : undefined}
                     >
                       {content}
                     </div>
