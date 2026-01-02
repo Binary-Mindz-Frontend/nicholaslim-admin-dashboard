@@ -5,7 +5,6 @@ import { useGetOwnProfileQuery } from "@/redux/features/users/usersApi";
 
 const Navbar = () => {
   const { data: user } = useGetOwnProfileQuery("");
-
   const userName = user?.data?.username;
   const userRole = user?.data?.role.name;
   const userImage = user?.data?.image;
