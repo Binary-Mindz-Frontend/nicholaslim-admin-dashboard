@@ -14,7 +14,8 @@ export const GoogleMapsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         }
 
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=drawing`;
+        // script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=drawing`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDUEEC9Rx0I26QEc88zOTKjxOGVqTgw9VQ&libraries=drawing`;
         script.async = true;
 
         script.onload = () => setIsLoaded(true);
