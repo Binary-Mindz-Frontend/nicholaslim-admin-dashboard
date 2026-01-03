@@ -38,7 +38,6 @@ interface LeafletStatic {
   ) => LeafletMarker;
 }
 
-
 declare global {
   interface Window {
     L?: LeafletStatic;
@@ -66,41 +65,41 @@ export default function FleetMapHeader() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [lastUpdated, setLastUpdated] = useState<string>("2 mins ago");
+  const [, setLastUpdated] = useState<string>("2 mins ago");
 
   const categories: Category[] = [
     {
       id: "all",
       label: "All vehicles",
-      count: 245,
+      count: 0,
       color: "bg-blue-500",
       markerColor: "#3B82F6",
     },
     {
       id: "bikes",
       label: "Bikes",
-      count: 128,
+      count: 0,
       color: "bg-orange-500",
       markerColor: "#F97316",
     },
     {
       id: "cars",
       label: "Cars",
-      count: 89,
+      count: 0,
       color: "bg-green-500",
       markerColor: "#22C55E",
     },
     {
       id: "van",
       label: "Van",
-      count: 20,
+      count: 0,
       color: "bg-cyan-500",
       markerColor: "#06B6D4",
     },
     {
       id: "truck",
       label: "Truck",
-      count: 5,
+      count: 0,
       color: "bg-red-500",
       markerColor: "#EF4444",
     },
@@ -109,49 +108,49 @@ export default function FleetMapHeader() {
   // Generate random vehicle locations around Singapore
   const generateVehicles = (): Vehicle[] => {
     const vehicles: Vehicle[] = [];
-    const center = { lat: 1.3521, lng: 103.8198 }; // Singapore center
+    // const center = { lat: 1.3521, lng: 103.8198 }; // Singapore center
 
     // Bikes
-    for (let i = 0; i < 8; i++) {
-      vehicles.push({
-        type: "bikes",
-        lat: center.lat + (Math.random() - 0.5) * 0.1,
-        lng: center.lng + (Math.random() - 0.5) * 0.1,
-        icon: "🚲",
-        color: "#F97316",
-      });
-    }
+    // for (let i = 0; i < 8; i++) {
+    //   vehicles.push({
+    //     type: "bikes",
+    //     lat: center.lat + (Math.random() - 0.5) * 0.1,
+    //     lng: center.lng + (Math.random() - 0.5) * 0.1,
+    //     icon: "🚲",
+    //     color: "#F97316",
+    //   });
+    // }
 
-    // Cars
-    for (let i = 0; i < 3; i++) {
-      vehicles.push({
-        type: "cars",
-        lat: center.lat + (Math.random() - 0.5) * 0.1,
-        lng: center.lng + (Math.random() - 0.5) * 0.1,
-        icon: "🚗",
-        color: "#22C55E",
-      });
-    }
+    // // Cars
+    // for (let i = 0; i < 3; i++) {
+    //   vehicles.push({
+    //     type: "cars",
+    //     lat: center.lat + (Math.random() - 0.5) * 0.1,
+    //     lng: center.lng + (Math.random() - 0.5) * 0.1,
+    //     icon: "🚗",
+    //     color: "#22C55E",
+    //   });
+    // }
 
-    // Vans
-    for (let i = 0; i < 2; i++) {
-      vehicles.push({
-        type: "van",
-        lat: center.lat + (Math.random() - 0.5) * 0.1,
-        lng: center.lng + (Math.random() - 0.5) * 0.1,
-        icon: "🚐",
-        color: "#06B6D4",
-      });
-    }
+    // // Vans
+    // for (let i = 0; i < 2; i++) {
+    //   vehicles.push({
+    //     type: "van",
+    //     lat: center.lat + (Math.random() - 0.5) * 0.1,
+    //     lng: center.lng + (Math.random() - 0.5) * 0.1,
+    //     icon: "🚐",
+    //     color: "#06B6D4",
+    //   });
+    // }
 
-    // Trucks
-    vehicles.push({
-      type: "truck",
-      lat: center.lat + (Math.random() - 0.5) * 0.1,
-      lng: center.lng + (Math.random() - 0.5) * 0.1,
-      icon: "🚚",
-      color: "#EF4444",
-    });
+    // // Trucks
+    // vehicles.push({
+    //   type: "truck",
+    //   lat: center.lat + (Math.random() - 0.5) * 0.1,
+    //   lng: center.lng + (Math.random() - 0.5) * 0.1,
+    //   icon: "🚚",
+    //   color: "#EF4444",
+    // });
 
     return vehicles;
   };
@@ -270,11 +269,11 @@ export default function FleetMapHeader() {
         </div>
 
         {/* Last Updated */}
-        <div className="absolute bottom-6 right-4 bg-white px-4 py-2 rounded-lg shadow-md z-400">
+        {/* <div className="absolute bottom-6 right-4 bg-white px-4 py-2 rounded-lg shadow-md z-400">
           <span className="text-sm text-gray-500">
             Last updated {lastUpdated}
           </span>
-        </div>
+        </div> */}
       </div>
     </div>
   );

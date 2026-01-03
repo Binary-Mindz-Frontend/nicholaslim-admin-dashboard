@@ -1,22 +1,23 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useRef, useState } from "react";
 import { Camera } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAddUserTypeMutation } from "@/redux/features/usersTypes/usersTypesApi"; // Import the mutation
+import { useAddUserTypeMutation } from "@/redux/features/usersTypes/usersTypesApi";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-// ---------------------- ZOD SCHEMA ----------------------
+import { useGetRoleBasedAccessControlQuery } from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
+
 const userSchema = z.object({
   fullName: z.string().min(1, { message: "Full name is required" }),
-
   email: z
     .string()
     .min(1, { message: "Email is required" })
     .email({ message: "Invalid email format" }),
-
   phone: z.string().min(1, { message: "Phone is required" }),
   password: z.string().min(1, { message: "Password is required" }),
+  role: z.string().min(1, { message: "Role is required" }),
 });
 
 type FormData = z.infer<typeof userSchema>;
@@ -24,8 +25,8 @@ type FormData = z.infer<typeof userSchema>;
 export default function AddNewUser() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
- const navigate = useNavigate(); 
-  // ---------------------- REACT HOOK FORM ----------------------
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -38,45 +39,50 @@ export default function AddNewUser() {
       email: "",
       phone: "",
       password: "",
+      role: "",
     },
   });
 
-  // ---------------------- ADD USER MUTATION ----------------------
   const [addUser, { isLoading }] = useAddUserTypeMutation();
+  const { data: rolesResponse, isLoading: rolesLoading } = useGetRoleBasedAccessControlQuery("");
 
-  // ---------------------- ON SUBMIT ----------------------
+  const roles = rolesResponse || [];
+
   const onSubmit = async (data: FormData) => {
-    
+    if (!data.fullName || !data.email || !data.phone || !data.password || !data.role) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
 
+    toast.loading("Creating user...");
     try {
-      // Prepare the new user data
       const newUser = {
-        username: data.fullName.trim().replace(/\s+/g, "_"), // Convert full name to username format
+        username: data.fullName.trim().replace(/\s+/g, "_"),
         email: data.email,
         phone: data.phone,
         password: data.password,
-        role: "USER", // Always send the role as "USER"
+        role_name: data.role,
       };
 
-      // Call the addUser mutation to create the user
       const response = await addUser(newUser).unwrap();
 
-      // Show success message
+      if (!response.success) {
+        toast.dismiss();
+        toast.error(response.message || "Failed to create user. Please try again.");
+        return;
+      }
+      toast.dismiss();
       toast.success("User created successfully!");
-      console.log("User created:", response);
-
-      // Reset form
       reset();
       setPhoto(null);
-      navigate("/users-app"); // Navigate back to users list
+      navigate("/users-app");
     } catch (error) {
-      // Show error message
+      toast.dismiss();
+      console.error("Failed to create user:", error);
       toast.error("Failed to create user. Please try again.");
-      console.error("Error creating user:", error);
     }
   };
 
-  // ---------------------- PHOTO UPLOAD ----------------------
   const handlePhotoClick = () => fileInputRef.current?.click();
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,10 +96,11 @@ export default function AddNewUser() {
 
   return (
     <div className="px-8 min-h-screen bg-gray-50 lg:p-8">
-      <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 mb-8 pt-4 sm:pt-0">Add New User</h1>
+      <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 mb-8 pt-4 sm:pt-0">
+        Add New User
+      </h1>
 
       <div className="bg-white rounded-lg shadow-sm p-4 lg:p-32">
-        {/* ---------------------- PHOTO SECTION ---------------------- */}
         <div className="flex flex-col items-center mb-12">
           <input
             type="file"
@@ -108,7 +115,11 @@ export default function AddNewUser() {
             className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mb-3 cursor-pointer hover:bg-yellow-100 overflow-hidden"
           >
             {photo ? (
-              <img src={photo} className="w-full h-full object-cover" alt="Preview" />
+              <img
+                src={photo}
+                className="w-full h-full object-cover"
+                alt="Preview"
+              />
             ) : (
               <Camera className="w-8 h-8 text-gray-400" />
             )}
@@ -122,74 +133,128 @@ export default function AddNewUser() {
           </p>
         </div>
 
-        {/* ---------------------- FORM ---------------------- */}
         <form onSubmit={handleSubmit(onSubmit)}>
-          {/* FULL NAME + EMAIL (In one row for large screens) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 gap-8 mb-8">
             <div>
-              <label className="block text-gray-600 font-medium mb-2">Full Name</label>
+              <label className="block text-gray-600 font-medium mb-2">
+                Full Name
+              </label>
               <input
                 {...register("fullName")}
                 placeholder="Enter full name"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.fullName ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-200"
-                  }`}
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${
+                  errors.fullName
+                    ? "focus:ring-red-400 ring-2 ring-red-400"
+                    : "focus:ring-yellow-200"
+                }`}
               />
               {errors.fullName && (
-                <p className="text-red-500 text-sm mt-1">{errors.fullName.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.fullName.message}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-gray-600 font-medium mb-2">Email Address</label>
+              <label className="block text-gray-600 font-medium mb-2">
+                Email Address
+              </label>
               <input
                 {...register("email")}
                 type="email"
                 placeholder="Enter email"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.email ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-200"
-                  }`}
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${
+                  errors.email
+                    ? "focus:ring-red-400 ring-2 ring-red-400"
+                    : "focus:ring-yellow-200"
+                }`}
               />
               {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.email.message}
+                </p>
               )}
             </div>
           </div>
 
-          {/* PHONE + PASSWORD (In one row for large screens) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-12">
+          <div className="grid grid-cols-1 gap-8 mb-12">
             <div>
-              <label className="block text-gray-600 font-medium mb-2">Phone Number</label>
+              <label className="block text-gray-600 font-medium mb-2">
+                Phone Number
+              </label>
               <input
                 {...register("phone")}
                 placeholder="Enter phone number"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.phone ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-200"
-                  }`}
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${
+                  errors.phone
+                    ? "focus:ring-red-400 ring-2 ring-red-400"
+                    : "focus:ring-yellow-200"
+                }`}
               />
               {errors.phone && (
-                <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.phone.message}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-gray-600 font-medium mb-2">Password</label>
+              <label className="block text-gray-600 font-medium mb-2">
+                Password
+              </label>
               <input
                 {...register("password")}
                 type="password"
                 placeholder="Enter Password"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.password ? "focus:ring-red-400 ring-2 ring-red-400" : "focus:ring-yellow-200"
-                  }`}
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${
+                  errors.password
+                    ? "focus:ring-red-400 ring-2 ring-red-400"
+                    : "focus:ring-yellow-200"
+                }`}
               />
               {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-gray-600 font-medium mb-2">
+                Role
+              </label>
+              <select
+                {...register("role")}
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${
+                  errors.role
+                    ? "focus:ring-red-400 ring-2 ring-red-400"
+                    : "focus:ring-yellow-200"
+                }`}
+                disabled={rolesLoading}
+              >
+                <option value="">Select Role</option>
+                {roles.map((role: any) => (
+                  <option key={role.id} value={role.name}>
+                    {role.name}
+                  </option>
+                ))}
+              </select>
+              {errors.role && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.role.message}
+                </p>
+              )}
+              {rolesLoading && (
+                <p className="text-gray-500 text-sm mt-1">Loading roles...</p>
               )}
             </div>
           </div>
 
-          {/* SUBMIT BUTTON */}
           <div className="flex justify-center">
             <button
               type="submit"
               className="px-12 py-3 bg-yellow-400 font-bold text-black rounded hover:bg-yellow-500"
-              disabled={isLoading} // Disable button while loading
+              disabled={isLoading}
             >
               {isLoading ? "Adding..." : "Add Now"}
             </button>
