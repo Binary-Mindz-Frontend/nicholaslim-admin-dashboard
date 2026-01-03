@@ -42,7 +42,7 @@ export const menuItems: MenuItem[] = [
     children: [
       {
         id: "create-edit-role",
-        label: "Create/Edit Role",
+        label: "Create/Edit & Delete Role",
         icon: null,
       },
       {

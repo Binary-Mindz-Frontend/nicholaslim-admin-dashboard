@@ -1,18 +1,18 @@
 
-import { useState } from "react";
+// import { useState } from "react";
 import RealTimeFleetMap from '@/components/Dashboard/RealTimeFleetMap/RealTimeFleetMap'
-import FilterSection from "@/components/Users/FilterSection/FilterSection";
+// import FilterSection from "@/components/Users/FilterSection/FilterSection";
 
 export default function Livemap() {
-  const [dateFilter, setDateFilter] = useState("");
-  // const [activeFilter, setActiveFilter] = useState("");
-  const [allFilter, setAllFilter] = useState("");
+  // const [dateFilter, setDateFilter] = useState("");
+  // // const [activeFilter, setActiveFilter] = useState("");
+  // const [allFilter, setAllFilter] = useState("");
 
-  const handleResetFilter = () => {
-    setDateFilter("");
-    // setActiveFilter("");
-    setAllFilter("");
-  };
+  // const handleResetFilter = () => {
+  //   setDateFilter("");
+  //   // setActiveFilter("");
+  //   setAllFilter("");
+  // };
 
   return (
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
@@ -22,7 +22,7 @@ export default function Livemap() {
         </div>
 
         {/* Filter Section */}
-        <FilterSection
+        {/* <FilterSection
         dateFilter={dateFilter}
         setDateFilter={setDateFilter}
         // activeFilter={activeFilter}
@@ -30,7 +30,7 @@ export default function Livemap() {
         allFilter={allFilter}
         setAllFilter={setAllFilter}
         handleResetFilter={handleResetFilter}
-      />
+      /> */}
       </div>
       <RealTimeFleetMap />
     </div>
