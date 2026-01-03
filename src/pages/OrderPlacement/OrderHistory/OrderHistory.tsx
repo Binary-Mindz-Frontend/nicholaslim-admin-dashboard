@@ -11,7 +11,7 @@ export default function OrderHistory() {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(20);
+  const [itemsPerPage] = useState(10);
 
   const handleStatusChange = (value: string | undefined) => {
     setStatus(value);

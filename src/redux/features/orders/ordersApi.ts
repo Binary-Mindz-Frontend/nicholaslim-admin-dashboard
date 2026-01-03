@@ -5,7 +5,7 @@ const driverOrdersApi = baseApi.injectEndpoints({
         getDriverOrders: builder.query({
             query: ({
                 page = 1,
-                limit = 20,
+                limit = 10,
                 startDate,
                 endDate,
                 status,

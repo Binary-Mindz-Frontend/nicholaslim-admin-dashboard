@@ -3,8 +3,8 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { logout } from "../features/auth/authSlice";
 
 const baseQuery = fetchBaseQuery({
-  // baseUrl: "http://10.10.20.130:3000/api/v1",
-  baseUrl: "https://api.zipbee.sg/api/v1",
+  baseUrl: "http://10.10.20.130:3000/api/v1",
+  // baseUrl: "https://api.zipbee.sg/api/v1",
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as any).auth.accessToken;
     if (token) {
