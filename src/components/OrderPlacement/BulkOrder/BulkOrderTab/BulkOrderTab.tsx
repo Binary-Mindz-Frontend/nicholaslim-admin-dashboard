@@ -64,8 +64,8 @@ const BulkOrderTab = () => {
   const bulkOrderIds =
     bulkOrdersData?.data?.totalOrderIds?.map((order: any) => order.id) || [];
 
-  console.log("Bulk Order IDs:", bulkOrderIds);
-  console.log("Bulk Orders Data:", bulkOrdersData?.data);
+  // console.log("Bulk Order IDs:", bulkOrderIds);
+  // console.log("Bulk Orders Data:", bulkOrdersData?.data);
 
   // Convert totalCost to number to avoid string issues
   const totalBulkOrdersCostRaw =
@@ -333,7 +333,15 @@ const BulkOrderTab = () => {
         paymentMethod: selectedPaymentMethod,
       };
 
-      // Add stripePaymentMethodId only for ONLINE_PAY
+      // For COD and WALLET, add codCollectFrom
+      if (
+        selectedPaymentMethod === PaymentMethod.COD ||
+        selectedPaymentMethod === PaymentMethod.WALLET
+      ) {
+        requestData.codCollectFrom = "RECEIVER";
+      }
+
+      // For ONLINE_PAY, add stripePaymentMethodId
       if (
         selectedPaymentMethod === PaymentMethod.ONLINE_PAY &&
         stripePaymentMethodId
@@ -349,14 +357,7 @@ const BulkOrderTab = () => {
 
       console.log("Bulk order status update response:", response);
 
-      Swal.fire({
-        title: "Error!",
-        text: response?.error || "Failed to update order status.",
-        icon: "error",
-        confirmButtonText: "OK",
-      });
-
-      if (response.success === true) {
+      if (response?.success === true) {
         Swal.fire({
           title: "Success!",
           text:
@@ -365,13 +366,27 @@ const BulkOrderTab = () => {
           confirmButtonText: "OK",
           confirmButtonColor: "#3B82F6",
         });
-      }
 
-      // Refetch to update the orders
-      // refetch();
+        // Refetch to update the orders
+        refetch();
+      } else {
+        Swal.fire({
+          title: "Error!",
+          text: response?.error || "Failed to update order status.",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+      }
     } catch (error: any) {
       console.error("Failed to update bulk order status", error);
       Swal.close();
+
+      Swal.fire({
+        title: "Error!",
+        text: error?.data?.message || "Failed to update order status.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
     }
   };
 

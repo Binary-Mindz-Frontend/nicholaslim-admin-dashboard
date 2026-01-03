@@ -55,7 +55,7 @@ const orderEndpoints = baseApi.injectEndpoints({
     }),
 
     bulkOrderStatusPending: builder.mutation({
-      query: ({ orderIds, payType, paymentMethod, stripePaymentMethodId }) => ({
+      query: ({ orderIds, payType, paymentMethod, stripePaymentMethodId,  codCollectFrom, }) => ({
         url: "/order/bulk/status/pending", // Assuming this is the correct URL for updating status
         method: "PATCH",
         body: {
@@ -63,31 +63,11 @@ const orderEndpoints = baseApi.injectEndpoints({
           payType,
           paymentMethod,
           stripePaymentMethodId,
+          codCollectFrom,
         },
       }),
       invalidatesTags: ["BulkOrders", "BulkOrdersTab"],
     }),
-
-    // orderStatus: builder.mutation({
-    //   query: ({
-    //     orderId,
-    //     userId,
-    //     status,
-    //     payType,
-    //     paymentMethod,
-    //     paymentMethodId,
-    //   }) => ({
-    //     url: `/order/status/${orderId}/${userId}`,
-    //     method: "PATCH",
-    //     body: {
-    //       status,
-    //       payType,
-    //       paymentMethod,
-    //       paymentMethodId,
-    //     },
-    //   }),
-    //   invalidatesTags: ["BulkOrders", "BulkOrdersTab"],
-    // }),
 
     placeOrder: builder.mutation({
       query: ({ orderId, paymentMethod, paymentMethodId, codCollectFrom }) => ({
@@ -117,3 +97,26 @@ export const {
 } = orderEndpoints;
 
 export default orderEndpoints;
+
+
+
+// orderStatus: builder.mutation({
+    //   query: ({
+    //     orderId,
+    //     userId,
+    //     status,
+    //     payType,
+    //     paymentMethod,
+    //     paymentMethodId,
+    //   }) => ({
+    //     url: `/order/status/${orderId}/${userId}`,
+    //     method: "PATCH",
+    //     body: {
+    //       status,
+    //       payType,
+    //       paymentMethod,
+    //       paymentMethodId,
+    //     },
+    //   }),
+    //   invalidatesTags: ["BulkOrders", "BulkOrdersTab"],
+    // }),

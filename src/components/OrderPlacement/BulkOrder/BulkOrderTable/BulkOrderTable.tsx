@@ -80,7 +80,7 @@ const BulkOrdersTable = () => {
     (paginationData?.limit ? Math.ceil(totalItems / paginationData.limit) : 1);
 
   const getSenderInfo = (destinations: BulkOrder["destinations"]) => {
-    const sender = destinations.find((dest) => dest.type === "SENDER");
+    const sender = destinations?.find((dest) => dest.type === "SENDER");
     return sender || null;
   };
 
