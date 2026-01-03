@@ -518,7 +518,7 @@ const StripeCheckoutModal = ({
                     (paymentMode === "saved" && !selectedCardId) ||
                     (paymentMode === "new" && (!stripe || !clientSecret))
                   }
-                  className="w-full py-2.5 cursor-pointer bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-gray-900 font-bold rounded-lg shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="w-full py-2.5 cursor-pointer bg-linear-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-gray-900 font-bold rounded-lg shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   {isProcessing || isProcessingPayment ? (
                     <span className="flex items-center justify-center">

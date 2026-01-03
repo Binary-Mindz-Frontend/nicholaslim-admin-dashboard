@@ -34,7 +34,7 @@ const ViewLiveTrackOrder = () => {
 
     const order = response?.data;
 
-    console.log(order?.destinations);
+    console.log(order?.orderStops, "destinations");
 
     if (isLoading) return <div className="p-10 text-center">Loading...</div>;
     if (isError || !order) return <div className="p-10 text-center">Order not found.</div>;
@@ -100,8 +100,8 @@ const ViewLiveTrackOrder = () => {
                     </span>
                 </div>
                 <div className="p-2">
-                    {order.destinations && order.destinations.length > 0 ? (
-                        <OrderMap destinations={order.destinations} />
+                    {order.orderStops && order.orderStops.length > 0 ? (
+                        <OrderMap destinations={order.orderStops} />
                     ) : (
                         <div className="h-[400px] bg-gray-50 flex items-center justify-center text-gray-400">
                             No location data available for this order.

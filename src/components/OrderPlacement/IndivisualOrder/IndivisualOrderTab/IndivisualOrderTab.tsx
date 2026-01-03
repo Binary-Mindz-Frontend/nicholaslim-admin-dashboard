@@ -20,7 +20,7 @@ import { useGetDeliveryTypesQuery } from "@/redux/features/deliveryTypes/deliver
 import { Textarea } from "@/components/ui/textarea";
 import {
   useCreateOrderMutation,
-  useOrderStatusMutation,
+  usePlaceOrderMutation,
 } from "@/redux/features/orderPlacement/orderPlacementApi";
 import {
   validateForm,
@@ -64,7 +64,6 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
 
   const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
-  const [createdUserId, setCreatedUserId] = useState<string | null>(null);
   const [orderTotalCost, setOrderTotalCost] = useState<number | null>(null);
   const [orderTotalFee, setOrderTotalFee] = useState<number | null>(null);
   const [orderCreated, setOrderCreated] = useState<boolean>(false);
@@ -116,14 +115,12 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     note_to_driver: "",
   });
 
-  const [collectTimeOption, setCollectTimeOption] = useState<
-    "now" | "schedule"
-  >("now");
+  const [collectTimeOption, setCollectTimeOption] = useState<"now" | "schedule">("now");
   const [scheduledDate, setScheduledDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [createOrder] = useCreateOrderMutation();
-  const [updateOrderStatus] = useOrderStatusMutation();
+  const [placeOrder] = usePlaceOrderMutation();
 
   useEffect(() => {
     console.log("Current pay_type:", formData.pay_type);
@@ -264,124 +261,120 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     }
   };
 
-  const updateOrderStatusAfterCreation = async (
+  const placeOrderAfterCreation = async (
     orderId: string,
-    userId: string,
     paymentMethod: string,
     paymentMethodId?: string
   ) => {
     try {
-      const statusUpdateData: any = {
-        status: "PENDING",
-        payType: "PAYMENT",
+      const placeOrderData: any = {
+        orderId,
         paymentMethod: paymentMethod,
       };
 
-      // Add paymentMethodId only for ONLINE_PAY
-      if (paymentMethod === "ONLINE_PAY" && paymentMethodId) {
-        statusUpdateData.paymentMethodId = paymentMethodId;
+      // For COD and WALLET, add codCollectFrom
+      if (paymentMethod === "COD" || paymentMethod === "WALLET") {
+        placeOrderData.codCollectFrom = "RECEIVER";
       }
 
-      console.log("Updating order status with data:", {
-        orderId,
-        userId,
-        ...statusUpdateData,
-      });
+      // For ONLINE_PAY, add paymentMethodId
+      if (paymentMethod === "ONLINE_PAY" && paymentMethodId) {
+        placeOrderData.paymentMethodId = paymentMethodId;
+      }
 
-      const response = await updateOrderStatus({
-        orderId,
-        userId,
-        ...statusUpdateData,
-      });
+      console.log("Placing order with data:", placeOrderData);
+
+      const response = await placeOrder(placeOrderData);
 
       if (response?.data?.success) {
-        console.log("Order status updated successfully:", response.data);
+        console.log("Order placed successfully:", response.data);
         toast.success("Order confirmed!");
       } else if (response) {
         toast.error(
-          response?.data?.error?.message || "Failed to update order status"
+          response?.data?.error?.message || "Failed to place order"
         );
       }
     } catch (error) {
-      console.error("Error updating order status:", error);
-      toast.error("Order created but failed to update status");
+      console.error("Error placing order:", error);
+      toast.error("Order created but failed to place order");
     }
   };
 
   const handleCreateOrder = async () => {
-    if (
-      !validateForm(
-        sender,
-        receiver,
-        selectedDeliveryType,
-        selectedVehicle,
-        collectTimeOption,
-        scheduledDate
-      )
-    ) {
-      return;
-    }
+  if (
+    !validateForm(
+      sender,
+      receiver,
+      selectedDeliveryType,
+      selectedVehicle,
+      collectTimeOption,
+      scheduledDate
+    )
+  ) {
+    return;
+  }
 
-    setIsSubmitting(true);
+  setIsSubmitting(true);
 
-    const orderData: any = {
-      ...formData,
-      vehicle_type_id: selectedVehicle?.id || formData.vehicle_type_id,
-      delivery_type: selectedDeliveryType?.name || formData.delivery_type,
-      collect_time: collectTimeOption === "now" ? "ASAP" : "SCHEDULED",
-      destinations: [
-        { ...sender, type: "SENDER" },
-        { ...receiver, type: "RECEIVER" },
-      ],
-    };
-
-    if (collectTimeOption === "schedule" && scheduledDate) {
-      orderData.scheduled_time = new Date(scheduledDate).toISOString();
-    }
-
-    console.log("Creating order:", orderData);
-
-    try {
-      const response = await createOrder(orderData);
-
-      const orderId = response?.data?.data?.order?.id;
-      const userId = response?.data?.data?.order?.userId;
-      const totalCostFromBackend = response?.data?.data?.order?.total_cost;
-      const total_fee = response?.data?.data?.order?.total_fee;
-
-      const totalCostNumber = totalCostFromBackend
-        ? typeof totalCostFromBackend === "string"
-          ? parseFloat(totalCostFromBackend)
-          : Number(totalCostFromBackend)
-        : 0;
-
-      console.log("Order ID:", orderId);
-      console.log("User ID:", userId);
-      console.log("Total cost:", totalCostNumber);
-
-      if (response?.data?.success === true) {
-        console.log("Order created successfully", response.data);
-        toast.success("Order created successfully!");
-
-        setCreatedOrderId(orderId);
-        setCreatedUserId(userId || null);
-        setOrderTotalCost(totalCostNumber);
-        setOrderTotalFee(total_fee);
-        setOrderCreated(true);
-      } else if (response?.data?.error) {
-        console.error("Order creation error:", response.data.error);
-        toast.error(response.data.error);
-      }
-    } catch (error) {
-      console.error("Error creating order:", error);
-      toast.error("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const orderData: any = {
+    route_type: formData.route_type,
+    isFixed: formData.isFixed,
+    delivery_type: selectedDeliveryType?.name || formData.delivery_type,
+    vehicle_type_id: selectedVehicle?.id || formData.vehicle_type_id,
+    collect_time: collectTimeOption === "now" ? "ASAP" : "SCHEDULED",
+    has_additional_services: formData.has_additional_services,
+    notify_favorite_raider: formData.notify_favorite_raider,
+    pay_type: formData.pay_type,
+    destinations: [
+      { ...sender, type: "SENDER" },
+      { ...receiver, type: "RECEIVER" },
+    ],
   };
 
+  if (collectTimeOption === "schedule" && scheduledDate) {
+    orderData.scheduled_time = new Date(scheduledDate).toISOString();
+  }
+
+  console.log("Creating order:", orderData);
+
+  try {
+    const response = await createOrder(orderData);
+
+    const orderId = response?.data?.data?.order?.id;
+    const totalCostFromBackend = response?.data?.data?.order?.total_cost;
+    const total_fee = response?.data?.data?.order?.total_fee;
+
+    const totalCostNumber = totalCostFromBackend
+      ? typeof totalCostFromBackend === "string"
+        ? parseFloat(totalCostFromBackend)
+        : Number(totalCostFromBackend)
+      : 0;
+
+    console.log("Order ID:", orderId);
+    console.log("Total cost:", totalCostNumber);
+
+    if (response?.data?.success === true) {
+      console.log("Order created successfully", response.data);
+      toast.success("Order created successfully!");
+
+      setCreatedOrderId(orderId);
+      setOrderTotalCost(totalCostNumber);
+      setOrderTotalFee(total_fee);
+      setOrderCreated(true);
+    } else if (response?.data?.error) {
+      console.error("Order creation error:", response.data.error);
+      toast.error(response.data.error);
+    }
+  } catch (error) {
+    console.error("Error creating order:", error);
+    toast.error("An unexpected error occurred. Please try again.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
   const handleConfirmOrder = async () => {
-    if (!createdOrderId || !createdUserId) {
+    if (!createdOrderId) {
       toast.error(
         "Order information is missing. Please create the order first."
       );
@@ -407,33 +400,19 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         paymentMethod = "WALLET";
       }
 
-      await updateOrderStatusAfterCreation(
-        createdOrderId!,
-        createdUserId!,
-        paymentMethod
-      );
+      await placeOrderAfterCreation(createdOrderId!, paymentMethod);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Updated to receive paymentMethodId from StripeCheckoutModal
   const handlePaymentSuccess = (paymentMethodId: string) => {
     console.log(paymentMethodId, "paymentMethodId");
-    // toast.success("Payment processed successfully!");
     setIsStripeModalOpen(false);
 
-    if (createdOrderId && createdUserId && paymentMethodId) {
-      console.log(
-        "no hit==============",
-        createdOrderId && createdUserId && paymentMethodId
-      );
-      updateOrderStatusAfterCreation(
-        createdOrderId,
-        createdUserId,
-        "ONLINE_PAY",
-        paymentMethodId // Pass the payment method ID
-      );
+    if (createdOrderId && paymentMethodId) {
+      console.log("Processing stripe payment", createdOrderId, paymentMethodId);
+      placeOrderAfterCreation(createdOrderId, "ONLINE_PAY", paymentMethodId);
     }
   };
 
@@ -793,7 +772,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
             onClose={() => setIsStripeModalOpen(false)}
             totalAmount={orderTotalCost}
             orderId={createdOrderId}
-            createdUserId={createdUserId}
+            createdUserId={null}
             onPaymentSuccess={handlePaymentSuccess}
           />
         </Elements>
