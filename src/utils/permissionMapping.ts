@@ -59,8 +59,11 @@ export const childRouteToParentMapping: Record<string, string> = {
   "quiz-create-edit": "quiz", 
   "support": "support",
   "users-app/:id": "users",
+  "join-request": "drivers",
   "driver-list/:id": "drivers",
   "join-request/:id": "drivers",
+  "raider-details": "driver-order-competition", // CHANGED: from "driver" to "driver-order-competition"
+  "raider-details/:id": "driver-order-competition", // CHANGED: from "driver" to "driver-order-competition"
   "wallet-user/:id": "wallet",
   "wallet-driver/:id": "wallet",
   "favourite-drivers/:id": "users",
@@ -95,6 +98,7 @@ export const extractBaseRoute = (route: string): string => {
     /^live-order-tracking\/\d+$/,
     /^quiz-create-edit\/\d+$/,
     /^join-request\/\d+$/,
+    /^raider-details\/\d+$/, // ADDED: for raider-details
     /^support\/view\/\d+$/
   ];
   
@@ -115,6 +119,9 @@ export const isDynamicRoute = (route: string): boolean => {
     "users-app/:id",
     "driver-list/:id",
     "join-request/:id",
+    "join-request",
+    "raider-details/:id", // ADDED
+    "raider-details", // ADDED
     "wallet-user/:id",
     "wallet-driver/:id",
     "favourite-drivers/:id",
@@ -124,11 +131,46 @@ export const isDynamicRoute = (route: string): boolean => {
     "live-order-tracking/:id"
   ];
   
+  const cleanRoute = route.split('?')[0];
+  
   return dynamicRoutes.some(dynamicRoute => {
     const dynamicPattern = dynamicRoute.replace(':id', '\\d+').replace(/\//g, '\\/');
-    return new RegExp(`^${dynamicPattern}$`).test(route);
+    return new RegExp(`^${dynamicPattern}$`).test(cleanRoute);
   });
 };
+
+// export const hasPermissionForMenu = (
+//   menuId: string, 
+//   permissionsData: any
+// ): boolean => {
+//   if (menuId === "login") return true;
+  
+//   const baseMenuId = extractBaseRoute(menuId);
+  
+//   const parentMenuId = childRouteToParentMapping[baseMenuId] || childRouteToParentMapping[menuId];
+//   const finalMenuId = parentMenuId || baseMenuId;
+  
+//   const permissionModules = menuToPermissionMapping[finalMenuId];
+  
+//   if (!permissionModules) {
+//     return false;
+//   }
+  
+//   if (!permissionsData?.permissions) {
+//     return false;
+//   }
+  
+//   for (const module of permissionModules) {
+//     const modulePermissions = permissionsData.permissions[module];
+    
+//     if (modulePermissions?.includes("read")) {
+//       return true;
+//     }
+//   }
+  
+//   return false;
+// };
+
 
 export const hasPermissionForMenu = (
   menuId: string, 
@@ -143,12 +185,19 @@ export const hasPermissionForMenu = (
   
   const permissionModules = menuToPermissionMapping[finalMenuId];
   
-  if (!permissionModules) return false;
+  if (!permissionModules) {
+    return false;
+  }
   
-  if (!permissionsData?.permissions) return false;
+  if (!permissionsData?.permissions) {
+    return false;
+  }
   
   for (const module of permissionModules) {
-    if (permissionsData.permissions[module]?.includes("read")) {
+    const modulePermissions = permissionsData.permissions[module];
+    
+    // Check if user has ANY permission for this module (not just "read")
+    if (modulePermissions && modulePermissions.length > 0) {
       return true;
     }
   }

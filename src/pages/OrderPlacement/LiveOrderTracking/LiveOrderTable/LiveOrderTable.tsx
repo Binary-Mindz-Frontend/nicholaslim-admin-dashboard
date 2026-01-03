@@ -64,7 +64,7 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
 
   const queryParams: OrderFilters = {
     page: params.page || 1,
-    limit: params.limit || 20,
+    limit: params.limit || 10,
     ...params,
   };
 

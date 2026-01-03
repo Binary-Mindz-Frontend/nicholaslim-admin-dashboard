@@ -44,7 +44,7 @@ export default function AdvertisementsTable({
   const handleToggleStatus = async (ad: any) => {
     try {
       await updateStatus({ id: ad.id, status: !ad.status }).unwrap();
-      console.log(`Status updated for ad ${ad.id}`);
+     
     } catch (error) {
       console.error("Failed to update status:", error);
     }

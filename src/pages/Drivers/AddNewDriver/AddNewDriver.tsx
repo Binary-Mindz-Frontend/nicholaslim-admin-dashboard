@@ -537,7 +537,7 @@ export default function AddNewDriver() {
         account_number: data.accountNumber,
       };
 
-      console.log("Data being sent to API:", formData); // Added console log
+       // Added console log
 
       await addRiderProfile(formData).unwrap();
 

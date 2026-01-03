@@ -25,8 +25,6 @@ export function WeightSliders({
     { label: "Follower Weight", key: "follower" as const },
   ];
 
-  // Debug: Log weights when they change
-  console.log('Current weights in WeightSliders:', weights);
 
   return (
     <section className="mb-8 rounded-lg border border-slate-200 bg-white p-8">
@@ -45,7 +43,6 @@ export function WeightSliders({
               value={weights[key]}
               onChange={(e) => {
                 const newValue = Number(e.target.value);
-                console.log(`Slider ${key} changed to:`, newValue); // Debug
                 onChange(key, newValue);
               }}
               className="h-3 flex-1 appearance-none rounded-full bg-linear-to-r from-amber-400 to-amber-300 accent-amber-500 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:ring-4 [&::-webkit-slider-thumb]:ring-amber-300"

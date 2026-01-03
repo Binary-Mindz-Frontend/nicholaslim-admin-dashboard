@@ -27,7 +27,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
     sortBy: params.sortBy || "createdAt",
     sortOrder: params.sortOrder || "desc",
   });
-  console.log("Fetched users data:", usersData?.data?.data);
+  
 // Add the mutation hook
   const [toggleActiveStatus] = useToggleUserActiveStatusMutation();
 

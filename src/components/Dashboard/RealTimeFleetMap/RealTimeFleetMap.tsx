@@ -38,7 +38,6 @@ interface LeafletStatic {
   ) => LeafletMarker;
 }
 
-
 declare global {
   interface Window {
     L?: LeafletStatic;
@@ -66,41 +65,41 @@ export default function FleetMapHeader() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [lastUpdated, setLastUpdated] = useState<string>("2 mins ago");
+  const [, setLastUpdated] = useState<string>("2 mins ago");
 
   const categories: Category[] = [
     {
       id: "all",
       label: "All vehicles",
-      count: 245,
+      count: 0,
       color: "bg-blue-500",
       markerColor: "#3B82F6",
     },
     {
       id: "bikes",
       label: "Bikes",
-      count: 128,
+      count: 0,
       color: "bg-orange-500",
       markerColor: "#F97316",
     },
     {
       id: "cars",
       label: "Cars",
-      count: 89,
+      count: 0,
       color: "bg-green-500",
       markerColor: "#22C55E",
     },
     {
       id: "van",
       label: "Van",
-      count: 20,
+      count: 0,
       color: "bg-cyan-500",
       markerColor: "#06B6D4",
     },
     {
       id: "truck",
       label: "Truck",
-      count: 5,
+      count: 0,
       color: "bg-red-500",
       markerColor: "#EF4444",
     },
@@ -109,49 +108,49 @@ export default function FleetMapHeader() {
   // Generate random vehicle locations around Singapore
   const generateVehicles = (): Vehicle[] => {
     const vehicles: Vehicle[] = [];
-    const center = { lat: 1.3521, lng: 103.8198 }; // Singapore center
+    // const center = { lat: 1.3521, lng: 103.8198 }; // Singapore center
 
-    // Bikes
-    for (let i = 0; i < 8; i++) {
-      vehicles.push({
-        type: "bikes",
-        lat: center.lat + (Math.random() - 0.5) * 0.1,
-        lng: center.lng + (Math.random() - 0.5) * 0.1,
-        icon: "🚲",
-        color: "#F97316",
-      });
-    }
+    // // Bikes
+    // for (let i = 0; i < 8; i++) {
+    //   vehicles.push({
+    //     type: "bikes",
+    //     lat: center.lat + (Math.random() - 0.5) * 0.1,
+    //     lng: center.lng + (Math.random() - 0.5) * 0.1,
+    //     icon: "🚲",
+    //     color: "#F97316",
+    //   });
+    // }
 
     // Cars
-    for (let i = 0; i < 3; i++) {
-      vehicles.push({
-        type: "cars",
-        lat: center.lat + (Math.random() - 0.5) * 0.1,
-        lng: center.lng + (Math.random() - 0.5) * 0.1,
-        icon: "🚗",
-        color: "#22C55E",
-      });
-    }
+    // for (let i = 0; i < 3; i++) {
+    //   vehicles.push({
+    //     type: "cars",
+    //     lat: center.lat + (Math.random() - 0.5) * 0.1,
+    //     lng: center.lng + (Math.random() - 0.5) * 0.1,
+    //     icon: "🚗",
+    //     color: "#22C55E",
+    //   });
+    // }
 
-    // Vans
-    for (let i = 0; i < 2; i++) {
-      vehicles.push({
-        type: "van",
-        lat: center.lat + (Math.random() - 0.5) * 0.1,
-        lng: center.lng + (Math.random() - 0.5) * 0.1,
-        icon: "🚐",
-        color: "#06B6D4",
-      });
-    }
+    // // Vans
+    // for (let i = 0; i < 2; i++) {
+    //   vehicles.push({
+    //     type: "van",
+    //     lat: center.lat + (Math.random() - 0.5) * 0.1,
+    //     lng: center.lng + (Math.random() - 0.5) * 0.1,
+    //     icon: "🚐",
+    //     color: "#06B6D4",
+    //   });
+    // }
 
-    // Trucks
-    vehicles.push({
-      type: "truck",
-      lat: center.lat + (Math.random() - 0.5) * 0.1,
-      lng: center.lng + (Math.random() - 0.5) * 0.1,
-      icon: "🚚",
-      color: "#EF4444",
-    });
+    // // Trucks
+    // vehicles.push({
+    //   type: "truck",
+    //   lat: center.lat + (Math.random() - 0.5) * 0.1,
+    //   lng: center.lng + (Math.random() - 0.5) * 0.1,
+    //   icon: "🚚",
+    //   color: "#EF4444",
+    // });
 
     return vehicles;
   };
@@ -171,11 +170,24 @@ export default function FleetMapHeader() {
 
     script.onload = () => {
       if (mapRef.current && window.L && !mapInstanceRef.current) {
-        // Initialize map
+        // Initialize map with lower z-index for the container
         const map = window.L.map(mapRef.current).setView(
           [1.3521, 103.8198],
           12
         );
+
+        // Set lower z-index for all Leaflet layers
+        const mapContainer = mapRef.current;
+        if (mapContainer) {
+          // Target Leaflet's pane elements and set lower z-index
+          const leafletPanes = mapContainer.querySelectorAll('.leaflet-pane');
+          leafletPanes.forEach((pane: Element) => {
+            (pane as HTMLElement).style.zIndex = '10'; // Lower than navbar
+          });
+
+          // Also set z-index for the map container itself
+          mapContainer.style.zIndex = '10';
+        }
 
         // Add OpenStreetMap tiles
         window.L.tileLayer(
@@ -220,9 +232,9 @@ export default function FleetMapHeader() {
   }, []);
 
   return (
-    <div className="w-full h-150 bg-white shadow-sm border border-border rounded-2xl flex flex-col mt-8">
+    <div className="w-full h-150 bg-white shadow-sm border border-border rounded-2xl flex flex-col mt-8 relative z-10">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-4 sm:px-6 md:px-8 py-4 md:py-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-4 sm:px-6 md:px-8 py-4 md:py-6 relative z-20">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 md:mb-0">
           Real-Time Fleet Map
         </h1>
@@ -232,7 +244,7 @@ export default function FleetMapHeader() {
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg border-2 transition-all text-sm sm:text-base ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg border-2 transition-all text-sm sm:text-base relative z-20 ${
                 selectedCategory === category.id
                   ? "bg-yellow-200 border-yellow-400"
                   : "bg-yellow-50 border-yellow-200 hover:bg-yellow-100"
@@ -251,10 +263,14 @@ export default function FleetMapHeader() {
 
       {/* Map Container */}
       <div className="flex-1 relative bg-white m-6 rounded-lg shadow-lg overflow-hidden">
-        <div ref={mapRef} className="w-full h-full"></div>
+        <div 
+          ref={mapRef} 
+          className="w-full h-full"
+          style={{ zIndex: 10 }}
+        ></div>
 
         {/* Zoom Controls */}
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-30">
           <button
             className="w-10 h-10 bg-white rounded shadow-lg flex items-center justify-center text-xl font-bold hover:bg-gray-50"
             onClick={() => mapInstanceRef.current?.zoomIn()}
@@ -270,9 +286,9 @@ export default function FleetMapHeader() {
         </div>
 
         {/* Last Updated */}
-        <div className="absolute bottom-6 right-4 bg-white px-4 py-2 rounded-lg shadow-md z-400">
+        <div className="absolute bottom-6 right-4 bg-white px-4 py-2 rounded-lg shadow-md z-30">
           <span className="text-sm text-gray-500">
-            Last updated {lastUpdated}
+            {/* Last updated {lastUpdated} */}
           </span>
         </div>
       </div>
