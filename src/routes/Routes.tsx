@@ -171,6 +171,10 @@ const routes = createBrowserRouter([
         element: <ViewDriverProfile />,
       },
       {
+        path: "raider-details/:id",
+        element: <ViewDriverProfile />,
+      },
+      {
         path: "order-list",
         element: <OrderList />,
       },

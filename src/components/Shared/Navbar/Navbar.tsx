@@ -287,7 +287,7 @@ const Navbar = () => {
                               <Card
                                 key={raider.id}
                                 onClick={() => {
-                                  navigate(`/join-request/${raider.id}`);
+                                  navigate(`/raider-details/${raider.id}`);
                                   setShowResults(false);
                                   setSearchTerm("");
                                 }}
