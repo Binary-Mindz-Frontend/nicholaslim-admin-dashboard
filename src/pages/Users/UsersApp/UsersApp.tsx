@@ -41,7 +41,7 @@ export default function UsersPage() {
       <div className="w-full mx-auto space-y-4 mb-6">
         {/* Header Section */}
         <div className="pt-2 sm:py-2">
-          <h1 className="text-black text-2xl font-bold">User's- App</h1>
+          <h1 className="text-black text-2xl font-bold">User List (Mobile App)</h1>
         </div>
 
         {/* Category List Section */}
