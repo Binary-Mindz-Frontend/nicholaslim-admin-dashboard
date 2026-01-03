@@ -67,8 +67,6 @@ const BulkOrdersTable = () => {
   const ordersResponse = bulkOrdersData as BulkOrdersResponse | undefined;
   const orders = ordersResponse?.data?.data || [];
 
-  console.log(orders, "orders");
-
   // Get pagination data from response
   const paginationData =
     ordersResponse?.data?.pagination || ordersResponse?.data;
@@ -80,7 +78,7 @@ const BulkOrdersTable = () => {
     (paginationData?.limit ? Math.ceil(totalItems / paginationData.limit) : 1);
 
   const getSenderInfo = (destinations: BulkOrder["destinations"]) => {
-    const sender = destinations.find((dest) => dest.type === "SENDER");
+    const sender = destinations?.find((dest) => dest.type === "SENDER");
     return sender || null;
   };
 

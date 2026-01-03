@@ -61,6 +61,8 @@ export default function DriverList() {
     </div>
   );
 
+  console.log(drivers, "drivers");
+
   return (
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
       <div className="w-full mx-auto space-y-4 mb-6">

@@ -60,7 +60,7 @@ function AddFundsFormContent() {
 
   const [deleteCard] = useDeleteCardMutation();
 
-  console.log(walletCards, "walletCards");
+
   useEffect(() => {
     if (walletCards && Array.isArray(walletCards) && walletCards.length > 0) {
       // Find the card marked as default, or fallback to the first card
@@ -88,8 +88,6 @@ function AddFundsFormContent() {
     try {
       const response = await createSetupIntent().unwrap();
       const clientSecret = (response as any).clientSecret || response.data?.clientSecret;
-
-      console.log(clientSecret, 'clientSecret')
 
       if (!clientSecret) {
         setErrorMessage("Secure session could not be initialized.");

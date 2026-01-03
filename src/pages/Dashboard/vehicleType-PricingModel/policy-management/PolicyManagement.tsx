@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type React from "react"
 import { useState, useEffect } from "react"
 import { PolicyData } from "./_components/_common/PolicyCard"

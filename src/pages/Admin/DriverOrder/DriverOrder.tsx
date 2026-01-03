@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { WeightSliders } from "./components/WeightSliders";
@@ -42,7 +43,6 @@ export default function DriverOrderCompetition() {
 
   // Fixed: Properly handle weight changes from WeightSliders
   const handleWeightChange = (key: 'ranking' | 'rating' | 'follower', value: number) => {
-    console.log(`Changing ${key} to ${value}`); // Debug log
     
     // Map the WeightSliders keys to your config keys
     const configKeyMap = {
@@ -59,7 +59,6 @@ export default function DriverOrderCompetition() {
         [configKey]: value,
       };
       
-      console.log('Updated config:', updated); // Debug log
       return updated;
     });
   };

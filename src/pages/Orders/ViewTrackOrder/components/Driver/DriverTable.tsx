@@ -107,7 +107,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
   // Fetch the data using useGetRiderProfilesQuery hook with filtered params
   const { data, isLoading, isError } = useGetApprovedRiderProfilesQuery(queryParams);
 
-  // console.log(data?.data?.pagination?.total)
+ 
   useEffect(() => {
     if (data?.data?.data) {
       const approvedOnly = data.data.data.filter(
@@ -119,7 +119,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
     }
   }, [data]);
 
-  // console.log(data?.data?.data);
+
 
 const handleAssignClick = async (riderId: number) => {
   if (!orderId) return toast.error("Order ID not found");

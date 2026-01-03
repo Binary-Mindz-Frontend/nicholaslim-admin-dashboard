@@ -32,7 +32,7 @@ export default function PerformanceTrendsChart({
 
   // Fetch weekly stats using RTK Query
   const { data, isLoading } = useGetPerformanceTrendsQuery({ role:activeTab, months });
-  console.log(data);
+  
 
   if (isLoading) return <p>Loading...</p>;
 
