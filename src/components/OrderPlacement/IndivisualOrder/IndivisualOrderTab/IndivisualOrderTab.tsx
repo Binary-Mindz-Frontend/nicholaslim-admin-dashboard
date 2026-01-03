@@ -123,11 +123,6 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
   const [placeOrder] = usePlaceOrderMutation();
 
   useEffect(() => {
-    console.log("Current pay_type:", formData.pay_type);
-    console.log(
-      "Mapped display value:",
-      PAY_TYPE_DISPLAY[formData.pay_type as PayType]
-    );
   }, [formData.pay_type]);
 
   useEffect(() => {
@@ -282,12 +277,12 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         placeOrderData.paymentMethodId = paymentMethodId;
       }
 
-      console.log("Placing order with data:", placeOrderData);
+
 
       const response = await placeOrder(placeOrderData);
 
       if (response?.data?.success) {
-        console.log("Order placed successfully:", response.data);
+    
         toast.success("Order confirmed!");
       } else if (response) {
         toast.error(
@@ -335,7 +330,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     orderData.scheduled_time = new Date(scheduledDate).toISOString();
   }
 
-  console.log("Creating order:", orderData);
+  
 
   try {
     const response = await createOrder(orderData);
@@ -350,11 +345,9 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         : Number(totalCostFromBackend)
       : 0;
 
-    console.log("Order ID:", orderId);
-    console.log("Total cost:", totalCostNumber);
+    
 
     if (response?.data?.success === true) {
-      console.log("Order created successfully", response.data);
       toast.success("Order created successfully!");
 
       setCreatedOrderId(orderId);
@@ -381,7 +374,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
       return;
     }
 
-    console.log("Confirming order with pay_type:", formData.pay_type);
+   
 
     if (formData.pay_type === PayType.ONLINE_PAY) {
       setIsStripeModalOpen(true);
@@ -407,11 +400,11 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
   };
 
   const handlePaymentSuccess = (paymentMethodId: string) => {
-    console.log(paymentMethodId, "paymentMethodId");
+   
     setIsStripeModalOpen(false);
 
     if (createdOrderId && paymentMethodId) {
-      console.log("Processing stripe payment", createdOrderId, paymentMethodId);
+    
       placeOrderAfterCreation(createdOrderId, "ONLINE_PAY", paymentMethodId);
     }
   };

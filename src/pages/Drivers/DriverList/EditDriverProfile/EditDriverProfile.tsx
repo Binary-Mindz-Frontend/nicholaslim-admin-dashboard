@@ -20,7 +20,7 @@ import { Camera, Star, Files, Rss, ArrowLeft, Medal } from "lucide-react";
 export default function EditDriverProfile() {
     const navigate = useNavigate();
     const { id } = useParams();
-    // console.log("Editing driver with ID from params:", id);
+    
 
     const [profileImage, setProfileImage] = useState<string | null>(null);
     
@@ -44,9 +44,7 @@ export default function EditDriverProfile() {
     useEffect(() => {
         if (!driverData) return;
 
-        // console.log("Fetched driver data:", driverData);
-        // console.log("Full data structure:", JSON.stringify(driverData, null, 2));
-
+      
         try {
             // Handle different possible response structures
             let registration;
@@ -68,7 +66,7 @@ export default function EditDriverProfile() {
                 registration = driverData.data;
             }
 
-            // console.log("Extracted registration:", registration);
+       
 
             if (!registration) {
                 // console.error("No registration data found. Full response:", driverData);

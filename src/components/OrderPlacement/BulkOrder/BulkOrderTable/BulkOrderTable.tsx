@@ -67,8 +67,6 @@ const BulkOrdersTable = () => {
   const ordersResponse = bulkOrdersData as BulkOrdersResponse | undefined;
   const orders = ordersResponse?.data?.data || [];
 
-  console.log(orders, "orders");
-
   // Get pagination data from response
   const paginationData =
     ordersResponse?.data?.pagination || ordersResponse?.data;

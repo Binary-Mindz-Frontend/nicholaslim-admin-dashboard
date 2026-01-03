@@ -64,9 +64,6 @@ const BulkOrderTab = () => {
   const bulkOrderIds =
     bulkOrdersData?.data?.totalOrderIds?.map((order: any) => order.id) || [];
 
-  // console.log("Bulk Order IDs:", bulkOrderIds);
-  // console.log("Bulk Orders Data:", bulkOrdersData?.data);
-
   // Convert totalCost to number to avoid string issues
   const totalBulkOrdersCostRaw =
     bulkOrdersData?.data.totalCost._sum.total_cost || 0;
@@ -160,13 +157,12 @@ const BulkOrderTab = () => {
         destinations: destinations,
       };
 
-      console.log("Sending bulk order request:", requestData);
+    
 
       const response = await bulkOrder(requestData).unwrap();
 
       Swal.close();
 
-      console.log("Bulk order API response:", response);
 
       Swal.fire({
         title: "Success!",
@@ -251,8 +247,6 @@ const BulkOrderTab = () => {
       const uploadResponse = await uploadFile(formData).unwrap();
       Swal.close();
 
-      console.log("CSV upload API response:", uploadResponse);
-
       const fileUrl = uploadResponse?.data[0] || uploadResponse?.fileUrl;
 
       if (!fileUrl) {
@@ -262,7 +256,7 @@ const BulkOrderTab = () => {
       setUploadedFileUrl(fileUrl);
       setUploadedFileName(file.name);
 
-      console.log("File uploaded successfully:", fileUrl);
+      
 
       await processBulkOrder(fileUrl);
     } catch (error: any) {
@@ -349,13 +343,13 @@ const BulkOrderTab = () => {
         requestData.stripePaymentMethodId = stripePaymentMethodId;
       }
 
-      console.log("Updating bulk order status with data:", requestData);
+   
 
       const response = await updateBulkOrderStatus(requestData).unwrap();
 
       Swal.close();
 
-      console.log("Bulk order status update response:", response);
+    
 
       if (response?.success === true) {
         Swal.fire({
@@ -404,7 +398,6 @@ const BulkOrderTab = () => {
       return;
     }
 
-    console.log("Confirming order with payment method:", selectedPaymentMethod);
 
     // If Stripe payment is selected, open the modal
     if (selectedPaymentMethod === PaymentMethod.ONLINE_PAY) {
@@ -418,10 +411,6 @@ const BulkOrderTab = () => {
 
   // Handle successful Stripe payment
   const handlePaymentSuccess = (stripePaymentMethodId: string) => {
-    console.log(
-      "Payment successful with Stripe Payment Method ID:",
-      stripePaymentMethodId
-    );
     setIsStripeModalOpen(false);
 
     // Update bulk order status with Stripe payment method ID
@@ -433,7 +422,6 @@ const BulkOrderTab = () => {
     const paymentMethod = DISPLAY_TO_PAYMENT_METHOD[value];
     if (paymentMethod) {
       setSelectedPaymentMethod(paymentMethod);
-      console.log("Payment method changed to:", paymentMethod);
     }
   };
 

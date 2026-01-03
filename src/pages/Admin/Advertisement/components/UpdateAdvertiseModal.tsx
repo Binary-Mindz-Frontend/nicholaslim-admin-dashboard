@@ -60,7 +60,7 @@ const endDateRef = useRef<HTMLInputElement>(null);
 
     try {
       let imageUrl = ad.ad_image;
-      console.log(imageUrl);
+     
       // Upload new file only if selected
       if (uploadedFile) {
         const uploadRes: any = await uploadFile(uploadedFile);

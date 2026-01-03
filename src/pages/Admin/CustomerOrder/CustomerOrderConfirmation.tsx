@@ -48,7 +48,7 @@ export default function CustomerOrderConfirmation() {
     //   toast.error("Configuration not found");
     //   return;
     // }
-    console.log(localSettings, "localSettings");
+  
     
     try {
       await updateConfig({
@@ -58,6 +58,7 @@ export default function CustomerOrderConfirmation() {
       
       await refetchConfig();
       toast.success("Settings updated successfully!");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Failed to update settings:", error);
       toast.error(error?.data?.message || "Failed to update settings");

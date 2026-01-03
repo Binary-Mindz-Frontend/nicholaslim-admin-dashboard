@@ -5,12 +5,7 @@
 import DriverWalletHistoryTable from "./DriverWalletHistoryTable";
 
 const DriverWalletDetails = () => {
-  // const handleFilterChange = (filters: Record<string, string>) => {
-  //   console.log("Applied filters:", filters);
-  // };
-  // const handleResetFilter = () => {
-  //   console.log("Filters reset");
-  // };
+ 
 
   return (
     <div className="mx-6 sm:mx-12">

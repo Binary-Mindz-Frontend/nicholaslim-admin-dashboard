@@ -47,8 +47,6 @@ export default function AddNewUser() {
   // ---------------------- ON SUBMIT ----------------------
   const onSubmit = async (data: FormData) => {
     
-    console.log("Form Submitted:", data);
-    console.log("Photo:", photo);
 
     try {
       // Prepare the new user data

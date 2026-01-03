@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type React from "react"
 import { BackButton } from "./_components/BackButton"
@@ -24,15 +25,7 @@ export const AddVehiclePage: React.FC = () => {
     // Handle edit logic
   }
 
-  // const handleRuleEdit = (rule: PricingRule) => {
-  //   console.log("Edit rule:", rule)
-  //   // Handle edit logic
-  // }
 
-  // const handleRuleDelete = (id: string) => {
-  //   console.log("Delete rule:", id)
-  //   // Handle delete logic
-  // }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">

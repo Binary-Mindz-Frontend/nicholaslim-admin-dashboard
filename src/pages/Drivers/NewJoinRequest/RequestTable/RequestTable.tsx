@@ -69,7 +69,7 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
 
   // Fetch the data using useGetRiderProfilesQuery hook with filtered params
   const { data, isLoading, isError } = useGetGoinReqestRiderProfilesQuery(queryParams);
-  console.log("Fetched pagination data:", data?.data?.data);
+  
  
 
   useEffect(() => {
