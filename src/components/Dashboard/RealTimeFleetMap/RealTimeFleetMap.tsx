@@ -110,7 +110,7 @@ export default function FleetMapHeader() {
     const vehicles: Vehicle[] = [];
     // const center = { lat: 1.3521, lng: 103.8198 }; // Singapore center
 
-    // Bikes
+    // // Bikes
     // for (let i = 0; i < 8; i++) {
     //   vehicles.push({
     //     type: "bikes",
@@ -121,7 +121,7 @@ export default function FleetMapHeader() {
     //   });
     // }
 
-    // // Cars
+    // Cars
     // for (let i = 0; i < 3; i++) {
     //   vehicles.push({
     //     type: "cars",
@@ -170,11 +170,24 @@ export default function FleetMapHeader() {
 
     script.onload = () => {
       if (mapRef.current && window.L && !mapInstanceRef.current) {
-        // Initialize map
+        // Initialize map with lower z-index for the container
         const map = window.L.map(mapRef.current).setView(
           [1.3521, 103.8198],
           12
         );
+
+        // Set lower z-index for all Leaflet layers
+        const mapContainer = mapRef.current;
+        if (mapContainer) {
+          // Target Leaflet's pane elements and set lower z-index
+          const leafletPanes = mapContainer.querySelectorAll('.leaflet-pane');
+          leafletPanes.forEach((pane: Element) => {
+            (pane as HTMLElement).style.zIndex = '10'; // Lower than navbar
+          });
+
+          // Also set z-index for the map container itself
+          mapContainer.style.zIndex = '10';
+        }
 
         // Add OpenStreetMap tiles
         window.L.tileLayer(
@@ -219,9 +232,9 @@ export default function FleetMapHeader() {
   }, []);
 
   return (
-    <div className="w-full h-150 bg-white shadow-sm border border-border rounded-2xl flex flex-col mt-8">
+    <div className="w-full h-150 bg-white shadow-sm border border-border rounded-2xl flex flex-col mt-8 relative z-10">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-4 sm:px-6 md:px-8 py-4 md:py-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-4 sm:px-6 md:px-8 py-4 md:py-6 relative z-20">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 md:mb-0">
           Real-Time Fleet Map
         </h1>
@@ -231,7 +244,7 @@ export default function FleetMapHeader() {
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg border-2 transition-all text-sm sm:text-base ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg border-2 transition-all text-sm sm:text-base relative z-20 ${
                 selectedCategory === category.id
                   ? "bg-yellow-200 border-yellow-400"
                   : "bg-yellow-50 border-yellow-200 hover:bg-yellow-100"
@@ -250,10 +263,14 @@ export default function FleetMapHeader() {
 
       {/* Map Container */}
       <div className="flex-1 relative bg-white m-6 rounded-lg shadow-lg overflow-hidden">
-        <div ref={mapRef} className="w-full h-full"></div>
+        <div 
+          ref={mapRef} 
+          className="w-full h-full"
+          style={{ zIndex: 10 }}
+        ></div>
 
         {/* Zoom Controls */}
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-30">
           <button
             className="w-10 h-10 bg-white rounded shadow-lg flex items-center justify-center text-xl font-bold hover:bg-gray-50"
             onClick={() => mapInstanceRef.current?.zoomIn()}
@@ -269,11 +286,11 @@ export default function FleetMapHeader() {
         </div>
 
         {/* Last Updated */}
-        {/* <div className="absolute bottom-6 right-4 bg-white px-4 py-2 rounded-lg shadow-md z-400">
+        <div className="absolute bottom-6 right-4 bg-white px-4 py-2 rounded-lg shadow-md z-30">
           <span className="text-sm text-gray-500">
-            Last updated {lastUpdated}
+            {/* Last updated {lastUpdated} */}
           </span>
-        </div> */}
+        </div>
       </div>
     </div>
   );
