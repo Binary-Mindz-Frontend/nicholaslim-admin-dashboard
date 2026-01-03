@@ -7,7 +7,7 @@ import { useGetOwnProfileQuery } from "@/redux/features/users/usersApi";
 // import { useGetSearchbarQuery } from "@/redux/features/search/searchApi"; // Adjust the import path
 import { useState, useEffect, useRef } from "react";
 import { useGetSearchbarQuery } from "@/redux/features/searchbar/searchbarApi";
- import { Link, useNavigate } from "react-router-dom"; // Add this import at the top
+import { Link, useNavigate } from "react-router-dom"; // Add this import at the top
 
 const Navbar = () => {
   const { data: user } = useGetOwnProfileQuery("");
@@ -19,8 +19,6 @@ const Navbar = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-
- 
 
   // Inside your component, add this hook
   const navigate = useNavigate();
@@ -86,7 +84,9 @@ const Navbar = () => {
         <div className="flex items-center gap-6 w-1/2">
           {/* Logo */}
           <div className="shrink-0">
-           <Link to ='/'><img src={logo} className="h-25" alt="" /></Link>
+            <Link to="/">
+              <img src={logo} className="h-25" alt="" />
+            </Link>
           </div>
 
           {/* Search Bar */}
@@ -214,7 +214,7 @@ const Navbar = () => {
                                 setShowResults(false);
                                 setSearchTerm("");
                               }}
-                              className="p-4 hover:bg-gradient-to-r hover:from-yellow-50 hover:to-transparent cursor-pointer transition-all duration-200 hover:shadow-md hover:border-yellow-300 group"
+                              className="p-4 hover:bg-linear-to-r hover:from-yellow-50 hover:to-transparent cursor-pointer transition-all duration-200 hover:shadow-md hover:border-yellow-300 group"
                             >
                               <div className="flex items-center gap-3">
                                 <div className="relative">
@@ -223,7 +223,7 @@ const Navbar = () => {
                                       src={user.image}
                                       alt={user.username}
                                     />
-                                    <AvatarFallback className="bg-gradient-to-br from-yellow-400 to-yellow-600 text-white font-bold">
+                                    <AvatarFallback className="bg-linear-to-br from-yellow-400 to-yellow-600 text-white font-bold">
                                       {user.username?.charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                   </Avatar>
@@ -256,6 +256,7 @@ const Navbar = () => {
                       </div>
                     )}
 
+                  
                     {/* Raiders Section */}
                     {raiders.length > 0 && (
                       <div>
@@ -271,54 +272,114 @@ const Navbar = () => {
                           </span>
                         </div>
                         <div className="space-y-2">
-                          {raiders.map((raider: any) => (
-                            <Card
-                              key={raider.id}
-                              onClick={() => {
-                                navigate(`/raider/${raider.id}`);
-                                setShowResults(false);
-                                setSearchTerm("");
-                              }}
-                              className="p-4 hover:bg-linear-to-r hover:from-yellow-50 hover:to-transparent cursor-pointer transition-all duration-200 hover:shadow-md hover:border-yellow-300 group"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="relative">
-                                  <Avatar className="w-12 h-12 ring-2 ring-yellow-200 group-hover:ring-yellow-400 transition-all">
-                                    <AvatarImage
-                                      src={raider.image}
-                                      alt={raider.username}
-                                    />
-                                    <AvatarFallback className="bg-linear-to-br from-yellow-400 to-yellow-600 text-white font-bold">
-                                      {raider.username?.charAt(0).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  {raider.is_active && (
-                                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
-                                  )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-bold text-gray-900 group-hover:text-yellow-600 transition-colors truncate">
-                                    {raider.username}
-                                  </p>
-                                  <p className="text-sm text-gray-600 truncate">
-                                    {raider.email}
-                                  </p>
-                                  {raider.phone && (
-                                    <p className="text-xs text-gray-500 mt-0.5">
-                                      {raider.phone}
-                                    </p>
-                                  )}
-                                </div>
-                                {raider.status && (
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
-                                      {raider.status}
-                                    </span>
+                          {raiders.map((raider: any) => {
+                            const registration = raider.registrations?.[0];
+                            const raiderName =
+                              registration?.raider_name || "Unknown";
+                            const raiderEmail =
+                              registration?.email_address || "";
+                            const raiderPhone =
+                              registration?.contact_number || "";
+                            const raiderPhoto =
+                              registration?.driver_photos?.[0] || null;
+
+                            return (
+                              <Card
+                                key={raider.id}
+                                onClick={() => {
+                                  navigate(`/join-request/${raider.id}`);
+                                  setShowResults(false);
+                                  setSearchTerm("");
+                                }}
+                                className="p-4 hover:bg-linear-to-r hover:from-yellow-50 hover:to-transparent cursor-pointer transition-all duration-200 hover:shadow-md hover:border-yellow-300 group"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="relative">
+                                    <Avatar className="w-12 h-12 ring-2 ring-yellow-200 group-hover:ring-yellow-400 transition-all">
+                                      <AvatarImage
+                                        src={raiderPhoto}
+                                        alt={raiderName}
+                                      />
+                                      <AvatarFallback className="bg-linear-to-br from-yellow-400 to-yellow-600 text-white font-bold">
+                                        {raiderName?.charAt(0).toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    {raider.is_online && (
+                                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+                                    )}
+                                    {!raider.is_online &&
+                                      raider.is_available && (
+                                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-gray-400 border-2 border-white rounded-full"></div>
+                                      )}
                                   </div>
-                                )}
-                              </div>
-                            </Card>
-                          ))}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <p className="font-bold text-gray-900 group-hover:text-yellow-600 transition-colors truncate">
+                                        {raiderName}
+                                      </p>
+                                      {raider.rank && (
+                                        <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded uppercase">
+                                          {raider.rank}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {raiderEmail && (
+                                      <p className="text-sm text-gray-600 truncate">
+                                        {raiderEmail}
+                                      </p>
+                                    )}
+                                    {raiderPhone && (
+                                      <p className="text-xs text-gray-500 mt-0.5">
+                                        {raiderPhone}
+                                      </p>
+                                    )}
+                                    {registration?.vehicle_type && (
+                                      <p className="text-xs text-gray-500 mt-0.5">
+                                        🏍️ {registration.vehicle_brand} -{" "}
+                                        {registration.vehicle_plate_number}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col items-end gap-1">
+                                    {raider.raider_status && (
+                                      <span
+                                        className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
+                                          raider.raider_status === "ACTIVE"
+                                            ? "bg-green-100 text-green-700"
+                                            : raider.raider_status ===
+                                              "IN_ACTIVE"
+                                            ? "bg-red-100 text-red-700"
+                                            : "bg-yellow-100 text-yellow-700"
+                                        }`}
+                                      >
+                                        {raider.raider_status}
+                                      </span>
+                                    )}
+                                    {raider.raider_verificationFromAdmin && (
+                                      <span
+                                        className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${
+                                          raider.raider_verificationFromAdmin ===
+                                          "APPROVED"
+                                            ? "bg-green-100 text-green-700"
+                                            : raider.raider_verificationFromAdmin ===
+                                              "PENDING"
+                                            ? "bg-yellow-100 text-yellow-700"
+                                            : "bg-red-100 text-red-700"
+                                        }`}
+                                      >
+                                        {raider.raider_verificationFromAdmin}
+                                      </span>
+                                    )}
+                                    {raider.is_online && (
+                                      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-semibold rounded-full">
+                                        ONLINE
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </Card>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
