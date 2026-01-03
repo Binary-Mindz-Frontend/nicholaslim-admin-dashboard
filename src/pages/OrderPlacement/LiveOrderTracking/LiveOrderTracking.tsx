@@ -16,7 +16,7 @@ export default function LiveOrderTracking() {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(20);
+  const [itemsPerPage] = useState(10);
 
   // Filter reset function
   const handleResetFilter = () => {
