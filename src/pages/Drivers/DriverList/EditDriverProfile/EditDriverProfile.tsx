@@ -137,6 +137,8 @@ export default function EditDriverProfile() {
         }
     }, [driverData, reset, navigate]);
 
+    // console.log(driverData);
+
     // Handle error state
     useEffect(() => {
         if (isError) {
