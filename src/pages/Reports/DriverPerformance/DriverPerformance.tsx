@@ -1,43 +1,60 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import DriverPerformanceChart from "./DriverChart/DriverChart";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 import { useDriverColumns } from "./DriverTable/DriverTable";
-import { driversData } from "./data/DriverData";
-import { useGetDriverPerformanceGraphQuery, useGetDriverPerformanceTopQuery } from "@/redux/features/reportAndAnalytics/reportAndAnalyticsApi";
+import {
+  useGetDriverPerformanceGraphQuery,
+  useGetDriverPerformanceTopQuery,
+} from "@/redux/features/reportAndAnalytics/reportAndAnalyticsApi";
 import { useState } from "react";
 import CustomTable from "./DriverTable/CustomTable";
 
 export default function DriverPerformance() {
   const [selectedMonth, setSelectedMonth] = useState("THIS_MONTH");
-  
-  const { 
-    data: performanceData = [], 
+
+  const {
+    data: performanceData = [],
     isLoading: isChartLoading,
     isError: isChartError,
-    error: chartError 
+    error: chartError,
   } = useGetDriverPerformanceGraphQuery(selectedMonth);
-  
-  const { 
-    data: topDriversData = [], 
+
+  const {
+    data: topDriversData = [],
     isLoading: isTableLoading,
-    isError: isTableError 
+    isError: isTableError,
   } = useGetDriverPerformanceTopQuery(20);
-  
+
   const columns = useDriverColumns();
 
   const transformDriverData = (apiData: any[]): any[] => {
     if (!apiData || !Array.isArray(apiData)) return [];
-    
-    return apiData.map(driver => ({
+
+    return apiData.map((driver) => ({
       id: driver.driverId || driver.id || 0,
       name: driver.driverName || driver.name || "Unknown Driver",
       orders: driver.totalOrders || driver.orders || 0,
       completed: driver.completedOrders || driver.completed || 0,
       cancelled: driver.cancelledOrders || driver.cancelled || 0,
-      rating: typeof driver.avgRating === 'number' ? driver.avgRating : 
-              (typeof driver.rating === 'number' ? driver.rating : 0),
-      revenue: driver.revenue ? 
-               `$${typeof driver.revenue === 'number' ? driver.revenue.toFixed(2) : driver.revenue}` :
-               "$0.00",
+      rating:
+        typeof driver.avgRating === "number"
+          ? driver.avgRating
+          : typeof driver.rating === "number"
+          ? driver.rating
+          : 0,
+      revenue: driver.revenue
+        ? `$${
+            typeof driver.revenue === "number"
+              ? driver.revenue.toFixed(2)
+              : driver.revenue
+          }`
+        : "$0.00",
       complaints: driver.disputes || driver.complaints || 0,
     }));
   };
@@ -90,19 +107,18 @@ export default function DriverPerformance() {
               </div>
             </div>
           ) : (
-            <DriverPerformanceChart 
-              selectedMonth={selectedMonth} 
-              performanceData={performanceData} 
+            <DriverPerformanceChart
+              selectedMonth={selectedMonth}
+              performanceData={performanceData}
             />
           )}
         </div>
-
       </div>
-      
+
       <h1 className="text-base sm:text-xl font-bold mt-10 mb-5">
         Top Driver Performance ({topDriversData.length} drivers)
       </h1>
-      
+
       {isTableLoading ? (
         <div className="w-full h-[200px] flex items-center justify-center">
           <div className="text-gray-500">Loading driver data...</div>
@@ -112,10 +128,7 @@ export default function DriverPerformance() {
           <div className="text-red-500">Error loading driver data</div>
         </div>
       ) : (
-        <CustomTable 
-          columns={columns} 
-          data={transformedData.length > 0 ? transformedData : driversData} 
-        />
+        <CustomTable columns={columns} data={transformedData} />
       )}
 
       {/* Download Report Section */}
