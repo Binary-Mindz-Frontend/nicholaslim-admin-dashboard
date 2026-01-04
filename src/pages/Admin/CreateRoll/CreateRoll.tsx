@@ -476,13 +476,16 @@ const CreateRoll: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
-  
+
   // Selected role states
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [editRoleData, setEditRoleData] = useState({ name: "" });
 
   // Handle form submission for creating role
-  const handleCreateRole = async (data: { name: string; permissions: any[] }) => {
+  const handleCreateRole = async (data: {
+    name: string;
+    permissions: any[];
+  }) => {
     toast.loading("Creating role...");
     try {
       const response = await addRole(data).unwrap();
@@ -504,10 +507,13 @@ const CreateRoll: React.FC = () => {
     if (!selectedRole) return;
 
     toast.loading("Updating role...");
-    
+
     try {
-      const response = await updateRole({ id: selectedRole.id, name: data.name }).unwrap();
-      
+      const response = await updateRole({
+        id: selectedRole.id,
+        name: data.name,
+      }).unwrap();
+
       if (response.success) {
         setShowEditModal(false);
         toast.dismiss();
@@ -523,12 +529,12 @@ const CreateRoll: React.FC = () => {
   // Handle delete role
   const handleDeleteRole = async () => {
     if (!selectedRole) return;
-    
+
     toast.loading("Deleting role...");
-    
+
     try {
       const response = await deleteRole(selectedRole.id).unwrap();
-      
+
       if (response.success) {
         setShowDeleteModal(false);
         toast.dismiss();
@@ -544,7 +550,7 @@ const CreateRoll: React.FC = () => {
   // Handle update permissions
   const handleUpdatePermissions = async (permissions: any[]) => {
     if (!selectedRole) return;
-    
+
     try {
       await updateRolePermissions({
         id: selectedRole.id,
@@ -579,11 +585,13 @@ const CreateRoll: React.FC = () => {
       header: "Created Date",
       cell: (row: Role) => (
         <span className="text-gray-600">
-          {row.createdAt ? new Date(row.createdAt).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          }) : 'N/A'}
+          {row.createdAt
+            ? new Date(row.createdAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            : "N/A"}
         </span>
       ),
     },
@@ -625,7 +633,13 @@ const CreateRoll: React.FC = () => {
               setEditRoleData({ name: row.name });
               setShowEditModal(true);
             }}
-            className="p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded transition-colors cursor-pointer"
+            disabled={row._count.users > 0 || row.isStatic}
+            // className="p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded transition-colors cursor-pointer"
+            className={`p-2 rounded transition-colors cursor-pointer ${
+              row._count.users > 0 || row.isStatic
+                ? "text-gray-400 hover:cursor-not-allowed"
+                : "text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50"
+            }`}
             title="Edit Role"
           >
             <Edit2 size={18} />
@@ -644,7 +658,7 @@ const CreateRoll: React.FC = () => {
                 : "text-red-600 hover:text-red-800 hover:bg-red-50"
             }`}
             title={
-              row.isStatic 
+              row.isStatic
                 ? "Cannot delete static role"
                 : row._count.users > 0
                 ? "Cannot delete role with assigned users"
