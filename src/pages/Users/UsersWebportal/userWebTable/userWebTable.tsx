@@ -7,14 +7,15 @@ import { Switch } from "@/components/ui/switch";
 import toast from "react-hot-toast"; // Import toast
 import ActionCell from "../../UsersApp/ActionCell/ActionCell";
 
+
 export type TUser = {
   is_verified: boolean;
   activeStatus: boolean;
   id: string;
   name: string;
   contact: string;
-  totalOrder: number;
-  totalOrderAmount: string;
+  totalOrders: number;
+  totalCost: string;
   joiningDate: string;
   isActive: boolean;
 };
@@ -40,6 +41,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
     sortBy: params.sortBy || "createdAt",
     sortOrder: params.sortOrder || "desc",
   });
+
   
 // Add the mutation hook
   const [toggleActiveStatus] = useToggleUserActiveStatusMutation();
@@ -50,6 +52,8 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
       setUsers(usersData.data.data);
     }
   }, [usersData]);
+
+  console.log(usersData?.data?.data)
 
   // Handle toggle active status - now calls the API
   const handleToggleActive = async (userId: string) => {
@@ -114,12 +118,12 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
 
     {
       header: "Total Order",
-      accessor: "totalOrder",
+      accessor: "totalOrders",
     },
 
     {
       header: "Total Order Amount",
-      accessor: "totalOrderAmount",
+      accessor: "totalCost",
     },
 
     {
