@@ -29,7 +29,7 @@ interface TOrderRaw {
   status?: string;
   order_status?: string;
   route_type?: string;
-  destinations?: { address: string }[];
+  orderStops?: { address: string }[];
 }
 
 type TOrder = {
@@ -78,7 +78,7 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
       customerName: item.user?.username || item.user?.phone || "N/A",
       
       // --- UPDATED THIS LINE ---
-      address: item.destinations?.[0]?.address || "No Address Provided",
+      address: item.orderStops?.[0]?.address || "No Address Provided",
       
       date: item.created_at 
         ? new Date(item.created_at).toLocaleDateString("en-GB", {

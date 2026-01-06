@@ -335,6 +335,8 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
   try {
     const response = await createOrder(orderData);
 
+    // console.log(response, "createOrder");
+
     const orderId = response?.data?.data?.order?.id;
     const totalCostFromBackend = response?.data?.data?.order?.total_cost;
     const total_fee = response?.data?.data?.order?.total_fee;
