@@ -29,7 +29,7 @@ interface TOrderRaw {
   status?: string;
   order_status?: string;
   route_type?: string;
-  destinations?: { address: string }[];
+  orderStops?: { address: string }[];
 }
 
 type TOrder = {
@@ -72,13 +72,14 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
 
   useEffect(() => {
   const rawData = data?.data?.data || [];
+  // console.log(rawData);
   if (rawData) {
     const mappedOrders: TOrder[] = rawData.map((item: TOrderRaw) => ({
       orderId: item.id?.toString() || "N/A",
       customerName: item.user?.username || item.user?.phone || "N/A",
       
       // --- UPDATED THIS LINE ---
-      address: item.destinations?.[0]?.address || "No Address Provided",
+      address: item.orderStops?.[0]?.address || "No Address Provided",
       
       date: item.created_at 
         ? new Date(item.created_at).toLocaleDateString("en-GB", {
@@ -126,12 +127,9 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
   header: "ADDRESS",
   accessor: "address",
   cell: (row) => (
-    <div className="flex flex-col">
-      <span className="text-gray-700 truncate max-w-[200px]">
-        {row.address}
-      </span>
-  
-    </div>
+    <span className="text-gray-700 truncate max-w-[200px]" title={row.address}>
+      {row.address}
+    </span>
   ),
 },
     { header: "DATE", accessor: "date" },
