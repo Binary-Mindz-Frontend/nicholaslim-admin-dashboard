@@ -562,7 +562,7 @@ export default function AddNewDriver() {
     "Mymensingh",
   ];
   const vehicleTypes = ["Bike", "Car", "Pickup", "CNG", "Truck"];
-  const bankOptions = [];
+  const bankOptions = [""];
 
   const allFields = [
     { key: "firstName", label: "First Name" },
