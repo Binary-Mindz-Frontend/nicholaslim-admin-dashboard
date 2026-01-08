@@ -34,6 +34,8 @@ const ViewLiveTrackOrder = () => {
 
     const order = response?.data;
 
+    console.log(order);
+
 
     if (isLoading) return <div className="p-10 text-center">Loading...</div>;
     if (isError || !order) return <div className="p-10 text-center">Order not found.</div>;
