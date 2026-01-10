@@ -288,7 +288,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Star, Files, Rss, ArrowLeft } from "lucide-react";
+import { Camera, Star, Rss, ArrowLeft } from "lucide-react";
 // Import the update mutation
 import { useGetUserTypeByIdQuery, useUpdateUserTypeMutation } from "@/redux/features/usersTypes/usersTypesApi";
 
@@ -412,11 +412,11 @@ export default function UserProfile() {
                     </Button>
                 </div>
 
-                <div className="absolute top-6 right-6 flex gap-3"> 
+                {/* <div className="absolute top-6 right-6 flex gap-3"> 
                     <Button variant="outline" className="flex gap-2 text-black border border-blue-500 hover:bg-blue-50">
                         <Files size={16} /> Download
                     </Button>
-                </div>
+                </div> */}
 
                 {/* PROFILE IMAGE SECTION */}
                 <div className="flex flex-col items-center justify-center">
