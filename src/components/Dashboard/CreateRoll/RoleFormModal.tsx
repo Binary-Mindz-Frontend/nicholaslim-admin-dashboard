@@ -36,6 +36,9 @@ const RoleFormModal: React.FC<RoleFormModalProps> = ({
     }
     setError("");
     onSubmit({ name, permissions: [] });
+    onClose();
+    setName("");
+    setError("");
   };
 
   if (!isOpen) return null;

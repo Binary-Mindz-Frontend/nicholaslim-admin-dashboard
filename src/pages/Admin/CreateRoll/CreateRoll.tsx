@@ -551,23 +551,41 @@ const CreateRoll: React.FC = () => {
   const handleUpdatePermissions = async (permissions: any[]) => {
     if (!selectedRole) return;
 
+    toast.loading("Updating permissions...");
+
     try {
-      await updateRolePermissions({
+      const response = await updateRolePermissions({
         id: selectedRole.id,
         permissions: permissions,
       }).unwrap();
-      setShowPermissionsModal(false);
+
+      if (response.success) {
+        toast.dismiss();
+        toast.success(response.message || "Permissions updated successfully!");
+        setShowPermissionsModal(false);
+      }
     } catch (error) {
+      toast.dismiss();
       console.error("Failed to update permissions:", error);
+      toast.error("Failed to update permissions");
     }
   };
 
   // Handle status toggle
   const handleToggleStatus = async (id: number) => {
+    toast.loading("Updating status...");
+
     try {
-      await updateStatus(id).unwrap();
+      const response = await updateStatus(id).unwrap();
+
+      if (response.success) {
+        toast.dismiss();
+        toast.success(response.message || "Status updated successfully!");
+      }
     } catch (error) {
+      toast.dismiss();
       console.error("Failed to update status:", error);
+      toast.error("Failed to update status");
     }
   };
 

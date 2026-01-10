@@ -1,47 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 
-// Leaflet types
-interface LeafletMap {
-  setView: (center: [number, number], zoom: number) => LeafletMap;
-  zoomIn: () => void;
-  zoomOut: () => void;
-  remove: () => void;
+// Google Maps types
+interface GoogleMap {
+  setCenter: (center: google.maps.LatLng | google.maps.LatLngLiteral) => void;
+  setZoom: (zoom: number) => void;
 }
 
-interface LeafletTileLayer {
-  addTo: (map: LeafletMap) => void;
-}
-
-interface LeafletIcon {
-  iconSize?: [number, number];
-  iconAnchor?: [number, number];
-  className?: string;
-  html?: string;
-}
-
-interface LeafletMarker {
-  addTo: (map: LeafletMap) => void;
-}
-
-interface LeafletStatic {
-  map: (element: HTMLElement) => LeafletMap;
-  tileLayer: (
-    url: string,
-    options: { attribution: string }
-  ) => LeafletTileLayer;
-
-  divIcon: (options: LeafletIcon) => LeafletIcon;
-
-  marker: (
-    latlng: [number, number],
-    options: { icon: LeafletIcon }
-  ) => LeafletMarker;
-}
-
-declare global {
-  interface Window {
-    L?: LeafletStatic;
-  }
+interface Marker {
+  setMap: (map: GoogleMap | null) => void;
+  setIcon: (icon: google.maps.Icon | google.maps.Symbol | null) => void;
+  setVisible: (visible: boolean) => void;
 }
 
 // Component types
@@ -63,9 +31,9 @@ interface Vehicle {
 
 export default function FleetMapHeader() {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<LeafletMap | null>(null);
+  const mapInstanceRef = useRef<GoogleMap | null>(null);
+  const markersRef = useRef<Marker[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [, setLastUpdated] = useState<string>("2 mins ago");
 
   const categories: Category[] = [
     {
@@ -121,8 +89,8 @@ export default function FleetMapHeader() {
     //   });
     // }
 
-    // Cars
-    // for (let i = 0; i < 3; i++) {
+    // // Cars
+    // for (let i = 0; i < 7; i++) {
     //   vehicles.push({
     //     type: "cars",
     //     lat: center.lat + (Math.random() - 0.5) * 0.1,
@@ -155,81 +123,119 @@ export default function FleetMapHeader() {
     return vehicles;
   };
 
-  useEffect(() => {
-    // Load Leaflet CSS and JS
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href =
-      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
-    document.head.appendChild(link);
+  // Initialize Google Maps
+  const initMap = () => {
+    if (!mapRef.current || !window.google) return;
 
-    const script = document.createElement("script");
-    script.src =
-      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
-    script.async = true;
+    const map = new google.maps.Map(mapRef.current, {
+      center: { lat: 1.3521, lng: 103.8198 },
+      zoom: 12,
+      disableDefaultUI: true,
+      zoomControl: false,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+      styles: [
+        {
+          featureType: "poi",
+          elementType: "labels",
+          stylers: [{ visibility: "off" }],
+        },
+      ],
+    });
 
-    script.onload = () => {
-      if (mapRef.current && window.L && !mapInstanceRef.current) {
-        // Initialize map with lower z-index for the container
-        const map = window.L.map(mapRef.current).setView(
-          [1.3521, 103.8198],
-          12
-        );
+    mapInstanceRef.current = map;
 
-        // Set lower z-index for all Leaflet layers
-        const mapContainer = mapRef.current;
-        if (mapContainer) {
-          // Target Leaflet's pane elements and set lower z-index
-          const leafletPanes = mapContainer.querySelectorAll('.leaflet-pane');
-          leafletPanes.forEach((pane: Element) => {
-            (pane as HTMLElement).style.zIndex = '10'; // Lower than navbar
-          });
+    // Add vehicle markers
+    const vehicles = generateVehicles();
+    const markers: Marker[] = [];
 
-          // Also set z-index for the map container itself
-          mapContainer.style.zIndex = '10';
-        }
+    vehicles.forEach((vehicle) => {
+      const marker = new google.maps.Marker({
+        position: { lat: vehicle.lat, lng: vehicle.lng },
+        map: map,
+        icon: {
+          url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+              <rect width="40" height="40" rx="8" fill="${vehicle.color}" fill-opacity="0.9"/>
+              <text x="20" y="20" font-family="Arial" font-size="20" text-anchor="middle" dy=".3em" fill="white">${vehicle.icon}</text>
+            </svg>
+          `)}`,
+          scaledSize: new google.maps.Size(36, 36),
+          anchor: new google.maps.Point(18, 18),
+        },
+        zIndex: 10,
+      });
 
-        // Add OpenStreetMap tiles
-        window.L.tileLayer(
-          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-          {
-            attribution: "© OpenStreetMap contributors",
-          }
-        ).addTo(map);
+      markers.push(marker as Marker);
+    });
 
-        // Add vehicle markers
+    markersRef.current = markers;
+  };
+
+  // Filter markers based on selected category
+  const filterMarkers = () => {
+    markersRef.current.forEach((marker, index) => {
+      if (selectedCategory === "all") {
+        marker.setVisible(true);
+      } else {
+        // You'll need to track which vehicle type each marker represents
+        // For now, we'll use a simple approach based on marker count distribution
         const vehicles = generateVehicles();
-        vehicles.forEach((vehicle: Vehicle) => {
-          const icon = window.L!.divIcon({
-            html: `<div style="background-color: ${vehicle.color}; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">${vehicle.icon}</div>`,
-            className: "custom-icon",
-            iconSize: [36, 36],
-            iconAnchor: [18, 18],
-          });
-
-          window.L!.marker([vehicle.lat, vehicle.lng], { icon }).addTo(map);
-        });
-
-        mapInstanceRef.current = map;
+        const vehicle = vehicles[index];
+        marker.setVisible(vehicle.type === selectedCategory);
       }
+    });
+  };
+
+  useEffect(() => {
+    // Load Google Maps API
+    const loadGoogleMaps = () => {
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      
+      script.onload = () => {
+        // Check if Google Maps is loaded
+        const checkGoogleMaps = () => {
+          if (window.google && window.google.maps) {
+            initMap();
+          } else {
+            setTimeout(checkGoogleMaps, 100);
+          }
+        };
+        checkGoogleMaps();
+      };
+
+      document.head.appendChild(script);
     };
 
-    document.body.appendChild(script);
+    if (!window.google || !window.google.maps) {
+      loadGoogleMaps();
+    } else {
+      initMap();
+    }
+  });
 
-    // Update time every minute
-    const interval = setInterval(() => {
-      const time = Math.floor(Math.random() * 5) + 1;
-      setLastUpdated(`${time} mins ago`);
-    }, 60000);
+  useEffect(() => {
+    filterMarkers();
+  });
 
-    return () => {
-      clearInterval(interval);
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, []);
+  // Zoom functions
+  const handleZoomIn = () => {
+    if (mapInstanceRef.current) {
+      const currentZoom = 12; // You might want to track zoom state
+      mapInstanceRef.current.setZoom(currentZoom + 1);
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (mapInstanceRef.current) {
+      const currentZoom = 12; // You might want to track zoom state
+      mapInstanceRef.current.setZoom(currentZoom - 1);
+    }
+  };
 
   return (
     <div className="w-full h-150 bg-white shadow-sm border border-border rounded-2xl flex flex-col mt-8 relative z-10">
@@ -273,24 +279,24 @@ export default function FleetMapHeader() {
         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-30">
           <button
             className="w-10 h-10 bg-white rounded shadow-lg flex items-center justify-center text-xl font-bold hover:bg-gray-50"
-            onClick={() => mapInstanceRef.current?.zoomIn()}
+            onClick={handleZoomIn}
           >
             +
           </button>
           <button
             className="w-10 h-10 bg-white rounded shadow-lg flex items-center justify-center text-xl font-bold hover:bg-gray-50"
-            onClick={() => mapInstanceRef.current?.zoomOut()}
+            onClick={handleZoomOut}
           >
             −
           </button>
         </div>
 
         {/* Last Updated */}
-        <div className="absolute bottom-6 right-4 bg-white px-4 py-2 rounded-lg shadow-md z-30">
+        {/* <div className="absolute bottom-6 right-4 bg-white px-4 py-2 rounded-lg shadow-md z-30">
           <span className="text-sm text-gray-500">
-            {/* Last updated {lastUpdated} */}
+            Last updated {lastUpdated}
           </span>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { 
   useCreateQuizMutation, 
@@ -50,7 +51,8 @@ const Quiz: React.FC = () => {
     if (!editingQuiz?.id) return;
     toast.loading("Updating quiz...");
 
-    const { created_at, created_by_id, id, createdAt, updatedAt, ...updateFields } = quizData;
+    // const { created_at, created_by_id, id, createdAt, updatedAt, ...updateFields } = quizData;
+    const { ...updateFields } = quizData;
     
     const payload = {
       ...updateFields,
@@ -152,7 +154,7 @@ const Quiz: React.FC = () => {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800 flex items-center">
           <BookOpen className="w-8 h-8 mr-3 text-yellow-500" />
-          Quizzes Management
+          Quiz Management
         </h1>
         <button
           onClick={openCreateModal}
