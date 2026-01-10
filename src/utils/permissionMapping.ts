@@ -35,6 +35,8 @@ export const childRouteToParentMapping: Record<string, string> = {
   "users-app": "users",
   "users-web-portal": "users",
   "add-new-user": "users",
+  "favourite-drivers": "users",
+  "": "users",
   "driver-list": "drivers",
   "add-new-driver": "drivers",
   "new-join-request": "drivers",
@@ -69,6 +71,7 @@ export const childRouteToParentMapping: Record<string, string> = {
   "favourite-drivers/:id": "users",
   "order-history/:id": "users",
   "order/:id": "orders",
+  "assign-driver": "orders",
   "assign-driver/:id": "orders",
   "live-order-tracking/:id": "order-placement",
   "support/view/:id": "support"
