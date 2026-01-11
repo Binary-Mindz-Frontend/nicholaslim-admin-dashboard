@@ -21,7 +21,7 @@ const AllQuizShowTable: React.FC<QuizTableProps> = ({
     return (
       <div className="text-center py-16">
         <BookOpen className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-        <p className="text-gray-500 text-lg">No quizzes found.</p>
+        <p className="text-gray-500 text-lg">No quiz found.</p>
         <p className="text-gray-400 mt-2">Create your first quiz to get started!</p>
       </div>
     );
