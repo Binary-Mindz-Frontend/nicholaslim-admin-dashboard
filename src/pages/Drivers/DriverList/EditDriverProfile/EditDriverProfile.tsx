@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { Camera, Star, Files, Rss, ArrowLeft, Medal } from "lucide-react";
+import { Camera, Star, Rss, ArrowLeft, Medal } from "lucide-react";
 
 export default function EditDriverProfile() {
     const navigate = useNavigate();
@@ -242,11 +242,11 @@ export default function EditDriverProfile() {
 
             <div className="border rounded-xl py-10 px-6 lg:px-32 bg-white shadow-sm relative">
                 {/* Upload/Download Buttons */}
-                <div className="absolute top-6 right-6 flex gap-3">
+                {/* <div className="absolute top-6 right-6 flex gap-3">
                     <Button variant="outline" className="flex gap-2 text-black border border-blue-500">
                         <Files size={16} /> Download
                     </Button>
-                </div>
+                </div> */}
 
                 {/* Profile Image */}
                 <div className="flex justify-center">

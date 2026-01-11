@@ -288,7 +288,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Star, Files, Rss, ArrowLeft } from "lucide-react";
+import { Camera, ArrowLeft } from "lucide-react";
 // Import the update mutation
 import { useGetUserTypeByIdQuery, useUpdateUserTypeMutation } from "@/redux/features/usersTypes/usersTypesApi";
 
@@ -324,7 +324,8 @@ export default function UserProfile() {
     const [formData, setFormData] = useState<Partial<UserProfileType>>({});
     const [profileImage, setProfileImage] = useState<string | null>(null);
 
-    // ------------------ CORE LOGIC: DATA MAPPING ------------------
+    console.log("Fetched user data:", userData); 
+    
     useEffect(() => {
         if (userData && userData.data) {
             const apiData = userData.data as ApiUserData;
@@ -412,11 +413,11 @@ export default function UserProfile() {
                     </Button>
                 </div>
 
-                <div className="absolute top-6 right-6 flex gap-3"> 
+                {/* <div className="absolute top-6 right-6 flex gap-3"> 
                     <Button variant="outline" className="flex gap-2 text-black border border-blue-500 hover:bg-blue-50">
                         <Files size={16} /> Download
                     </Button>
-                </div>
+                </div> */}
 
                 {/* PROFILE IMAGE SECTION */}
                 <div className="flex flex-col items-center justify-center">
@@ -442,14 +443,14 @@ export default function UserProfile() {
                 {/* RATING & STATS */}
                 <div className="text-center mt-4">
                     <p className="flex justify-center items-center gap-2 text-lg font-medium">
-                        <Star className="text-yellow-500" size={20} />
-                         /5 <Rss />
-                        <span className="text-gray-700"> Followers</span>
+                        {/* <Star className="text-yellow-500" size={20} />
+                         {userData?.data?.avg_customerRating} /5  */}
+                        {/* <span className="text-gray-700"> Followers</span> */}
                     </p>
                     <div className="mt-2 space-y-1">
-                        <p className="text-gray-800 font-medium">Total Deliveries : </p>
+                        <p className="text-gray-800 font-medium">Total Complete : </p>
                         <p className="text-red-500 font-medium">Total Cancellations : </p>
-                        <p className="text-gray-800 font-medium">Total Incentives : </p>
+                        {/* <p className="text-gray-800 font-medium">Total Incentives : </p> */}
                     </div>
                        {/* EXTRA BUTTONS (ONLY IN VIEW MODE) */}
                     {!isEditMode && (

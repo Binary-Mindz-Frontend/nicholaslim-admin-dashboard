@@ -87,10 +87,11 @@ interface UseDriverColumnsParams {
 
 export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
   const [drivers, setDrivers] = useState<TDriver[]>([]);
+  const [assigningDriverId, setAssigningDriverId] = useState<number | null>(null);
   const [totalItems, setTotalItems] = useState(0);
-  
-  const { id: orderId } = useParams(); 
-  const [assignDriver, { isLoading: isAssigning }] = useAssignDriverMutation();
+
+  const { id: orderId } = useParams();
+  const [assignDriver] = useAssignDriverMutation();
 
   const queryParams: UseDriverColumnsParams = {
     page: params.page || 1,
@@ -107,13 +108,13 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
   // Fetch the data using useGetRiderProfilesQuery hook with filtered params
   const { data, isLoading, isError } = useGetApprovedRiderProfilesQuery(queryParams);
 
- 
+  // console.log(data?.data?.data, "driver data");
   useEffect(() => {
     if (data?.data?.data) {
       const approvedOnly = data.data.data.filter(
         (d: TDriver) => d.raider_verificationFromAdmin === "APPROVED"
       );
-      
+
       setDrivers(approvedOnly);
       setTotalItems(data?.data?.pagination?.total);
     }
@@ -121,8 +122,10 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
 
 
 
-const handleAssignClick = async (riderId: number) => {
+ const handleAssignClick = async (riderId: number) => {
   if (!orderId) return toast.error("Order ID not found");
+
+  setAssigningDriverId(riderId);
 
   try {
     const response = await assignDriver({ orderId, riderId }).unwrap();
@@ -130,18 +133,20 @@ const handleAssignClick = async (riderId: number) => {
     if (response.success) {
       toast.success("Driver assigned successfully!");
     } else {
-      // Show API error message
-      toast.error(response?.message || "This rider is already assigned to another active order");
+     toast.error(response?.error?.message || response?.message || "Failed to assign driver");
     }
   } catch (error: any) {
-    // For real network errors / rejected requests
-    const errorMessage =
-      error?.data?.message ||
-      error?.error?.response?.message ||
-      error?.error?.message ||
-      "This rider is already assigned to another active order";
+ 
+  const errorMessage =
+    error?.data?.error?.message ||
+    error?.data?.message ||             
+    error?.error?.message ||            
+    error?.message ||                   
+    "Failed to assign driver";
 
-    toast.error(errorMessage);
+  toast.error(errorMessage);
+  } finally {
+    setAssigningDriverId(null);
   }
 };
 
@@ -225,13 +230,12 @@ const handleAssignClick = async (riderId: number) => {
       accessor: "raider_verificationFromAdmin",
       cell: (row) => (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            row.raider_verificationFromAdmin === "APPROVED"
+          className={`px-3 py-1 rounded-full text-xs font-medium ${row.raider_verificationFromAdmin === "APPROVED"
               ? "bg-green-100 text-green-800"
               : row.raider_verificationFromAdmin === "PENDING"
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-red-100 text-red-800"
-          }`}
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-red-100 text-red-800"
+            }`}
         >
           {row.raider_verificationFromAdmin}
         </span>
@@ -242,11 +246,10 @@ const handleAssignClick = async (riderId: number) => {
       accessor: "LoginType",
       cell: (row) => (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            row.LoginType === "ADMIN_SIGNIN"
+          className={`px-3 py-1 rounded-full text-xs font-medium ${row.LoginType === "ADMIN_SIGNIN"
               ? "bg-yellow-300 text-black"
               : "bg-gray-300 text-black"
-          }`}
+            }`}
         >
           {row.LoginType === "ADMIN_SIGNIN" ? "Assigned by Admin" : "Self Registered"}
         </span>
@@ -278,10 +281,10 @@ const handleAssignClick = async (riderId: number) => {
       cell: (row) => (
         <button
           onClick={() => handleAssignClick(row.id)}
-          disabled={isAssigning}
-          className="cursor-pointer bg-amber-300 px-4 py-2 rounded-lg font-medium transition-all disabled:bg-blue-300 flex items-center gap-2"
+          disabled={assigningDriverId === row.id}
+          className="cursor-pointer bg-amber-300 px-4 py-2 rounded-lg font-medium transition-all disabled:bg-blue-300 flex items-center justify-center gap-2 min-w-[100px]"
         >
-          {isAssigning && <Loader2 className="h-4 w-4 animate-spin" />}
+          {assigningDriverId === row.id && <Loader2 className="h-4 w-4 animate-spin" />}
           Assign
         </button>
       ),

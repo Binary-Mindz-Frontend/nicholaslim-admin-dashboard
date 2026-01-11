@@ -3,23 +3,25 @@ import { Star } from "lucide-react"
 import placeholderImg from '@/assets/placeholder.png'
 
 interface RiderDetailsProps {
-  userData?: any;
+  riderData?: any;
   vehicleData?: any;
 }
 
-export default function RiderDetails({ userData, vehicleData }: RiderDetailsProps) {
+export default function RiderDetails({ riderData, vehicleData }: RiderDetailsProps) {
   // Map data from the API response
-  const riderName = userData?.username || "Not Assigned";
-  const riderImage = userData?.image || placeholderImg;
-  const vehicleType = vehicleData?.vehicle_type || "N/A";
-  const vehicleName = vehicleData?.dimension ? `SUV (${vehicleData.dimension})` : "Standard";
-  const riderPhone = userData?.phone || "";
+  console.log("Rider Data in RiderDetails component:", riderData);
+  console.log("Vehicle Data in RiderDetails component:", vehicleData);
+  const riderName = riderData?.assign_rider || "Not Assigned";
+  const riderImage = riderData?.image || placeholderImg;
+  const vehicleId = riderData?.vehicle_type_id || "N/A";
+  const vehicleName = riderData?.route_type;
+  // const riderPhone = riderData?.phone || "";
 
   return (
     <div className="flex items-center justify-center bg-gray-100 mb-8">
       <div className="w-full bg-white rounded-2xl border border-gray-300 p-8 shadow-sm">
         {/* Header */}
-        <h2 className="text-center text-2xl font-semibold text-gray-800 mb-8">Rider's Detail</h2>
+        <h2 className="text-center text-2xl font-semibold text-gray-800 mb-8">Rider's Detail </h2>
 
         {/* Profile Section */}
         <div className="flex flex-col items-center mb-6">
@@ -38,7 +40,7 @@ export default function RiderDetails({ userData, vehicleData }: RiderDetailsProp
           {/* Badges */}
           <div className="flex gap-2 mb-4">
             <span className="px-3 py-1 bg-gray-600 text-white text-sm rounded-md font-medium">
-              {vehicleType}
+              {vehicleId}
             </span>
             <span className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md font-medium">
               {vehicleName}
@@ -52,9 +54,9 @@ export default function RiderDetails({ userData, vehicleData }: RiderDetailsProp
               <span className="font-semibold">4.8/5</span>
               <span className="text-gray-500">(Verified Rider)</span>
             </div>
-            <span>ID: #{userData?.id || "N/A"}</span>
+            <span>ID: #{riderData?.assign_rider_id || "N/A"}</span>
           </div>
-          <span className="text-sm text-gray-700 my-3">Phone: {riderPhone}</span>
+          {/* <span className="text-sm text-gray-700 my-3">Phone: {riderPhone}</span> */}
         </div>
 
         {/* Action Buttons */}

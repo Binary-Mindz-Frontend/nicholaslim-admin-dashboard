@@ -34,7 +34,8 @@ const ViewLiveTrackOrder = () => {
 
     const order = response?.data;
 
-    console.log(order);
+    // console.log("Rider ID Value:", order?.assign_rider_id);
+    // console.log(order);
 
 
     if (isLoading) return <div className="p-10 text-center">Loading...</div>;
@@ -111,18 +112,19 @@ const ViewLiveTrackOrder = () => {
                 </div>
             </div>
 
-    
+
 
             <OrderForm
                 initialData={order}
                 isEditMode={isEditMode}
 
             />
-
-            <RiderDetails
-                userData={order.user}
-                vehicleData={order.vehicle}
-            />
+            {order?.assign_rider_id !== null && order?.assign_rider_id !== undefined && (
+                <RiderDetails
+                    riderData={order}
+                    vehicleData={order.vehicle}
+                />
+            )}
 
             <div className="flex flex-col lg:flex-row justify-between gap-6">
                 <OrderPending data={mappedOrderData} />
@@ -137,7 +139,7 @@ const ViewLiveTrackOrder = () => {
                 />
 
             </div>
-            
+
         </div>
     );
 };

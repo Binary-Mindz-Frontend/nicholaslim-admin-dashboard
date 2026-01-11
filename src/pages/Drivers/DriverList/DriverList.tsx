@@ -61,7 +61,7 @@ export default function DriverList() {
     </div>
   );
 
-  console.log(drivers, "drivers");
+  // console.log(drivers, "drivers");
 
   return (
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
