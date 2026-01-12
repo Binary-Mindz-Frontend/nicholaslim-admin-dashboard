@@ -59,12 +59,12 @@ export const menuItems: MenuItem[] = [
     children: [
       {
         id: "users-app",
-        label: "Users-App",
+        label: "User List (Mobile App)",
         icon: null,
       },
       {
         id: "users-web-portal",
-        label: "Users-Web Portal",
+        label: "User List (Web Portal)",
         icon: null,
       },
       {
