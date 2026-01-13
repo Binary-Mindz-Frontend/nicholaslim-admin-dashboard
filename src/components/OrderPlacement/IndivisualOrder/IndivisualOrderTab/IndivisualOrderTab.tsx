@@ -1,3 +1,5 @@
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRef, useState, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -14,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "lucide-react";
+import { Calendar, X } from "lucide-react";
 import { useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
 import { useGetDeliveryTypesQuery } from "@/redux/features/deliveryTypes/deliveryTypesApi";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,6 +55,10 @@ interface IndivisualOrderTabProps {
   data?: Partial<OrderFormData>;
 }
 
+interface RecipientData extends SenderReceiverData {
+  id: string;
+}
+
 const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
   const { data: deliveryType } = useGetDeliveryTypesQuery(undefined);
   const { data: vehicleTypes } = useGetVehicleTypesQuery(undefined);
@@ -82,14 +88,17 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     destinations: [
       {
         address: "",
+        postal_code: "",
         floor_unit: "",
         contact_name: "",
         contact_number: "",
         note_to_driver: "",
+
         type: "SENDER",
       },
       {
         address: "",
+        postal_code: "",
         floor_unit: "",
         contact_name: "",
         contact_number: "",
@@ -105,15 +114,20 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     address: "",
     floor_unit: "",
     note_to_driver: "",
+    postal_code: "",
   });
 
-  const [receiver, setReceiver] = useState<SenderReceiverData>({
-    contact_name: "",
-    contact_number: "",
-    address: "",
-    floor_unit: "",
-    note_to_driver: "",
-  });
+  const [recipients, setRecipients] = useState<RecipientData[]>([
+    {
+      id: "recipient-1",
+      contact_name: "",
+      contact_number: "",
+      address: "",
+      floor_unit: "",
+      note_to_driver: "",
+      postal_code: "",
+    },
+  ]);
 
   const [collectTimeOption, setCollectTimeOption] = useState<
     "now" | "schedule"
@@ -161,20 +175,25 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
             address: senderData.address || "",
             floor_unit: senderData.floor_unit || "",
             note_to_driver: senderData.note_to_driver || "",
+            postal_code: senderData.postal_code || "",
           });
         }
 
-        const receiverData = data.destinations.find(
+        const receiverDataList = data.destinations.filter(
           (dest: any) => dest.type === "RECEIVER"
         );
-        if (receiverData) {
-          setReceiver({
-            contact_name: receiverData.contact_name || "",
-            contact_number: receiverData.contact_number || "",
-            address: receiverData.address || "",
-            floor_unit: receiverData.floor_unit || "",
-            note_to_driver: receiverData.note_to_driver || "",
-          });
+        if (receiverDataList.length > 0) {
+          setRecipients(
+            receiverDataList.map((receiverData: any, index: number) => ({
+              id: `recipient-${index + 1}`,
+              contact_name: receiverData.contact_name || "",
+              contact_number: receiverData.contact_number || "",
+              address: receiverData.address || "",
+              floor_unit: receiverData.floor_unit || "",
+              note_to_driver: receiverData.note_to_driver || "",
+              postal_code: receiverData.postal_code || "",
+            }))
+          );
         }
       }
     }
@@ -210,17 +229,47 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     }
   }, [deliveryType, formData.delivery_type]);
 
-  const handleInputChange = (
+  const handleSenderInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    field: keyof SenderReceiverData,
-    type: "sender" | "receiver"
+    field: keyof SenderReceiverData
   ) => {
     const { value } = e.target;
+    setSender((prev) => ({ ...prev, [field]: value }));
+  };
 
-    if (type === "sender") {
-      setSender((prev) => ({ ...prev, [field]: value }));
-    } else if (type === "receiver") {
-      setReceiver((prev) => ({ ...prev, [field]: value }));
+  const handleRecipientInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    recipientId: string,
+    field: keyof SenderReceiverData
+  ) => {
+    const { value } = e.target;
+    setRecipients((prev) =>
+      prev.map((recipient) =>
+        recipient.id === recipientId
+          ? { ...recipient, [field]: value }
+          : recipient
+      )
+    );
+  };
+
+  const addRecipient = () => {
+    const newRecipient: RecipientData = {
+      id: `recipient-${Date.now()}`,
+      contact_name: "",
+      contact_number: "",
+      address: "",
+      floor_unit: "",
+      note_to_driver: "",
+      postal_code: "",
+    };
+    setRecipients((prev) => [...prev, newRecipient]);
+  };
+
+  const removeRecipient = (recipientId: string) => {
+    if (recipients.length > 1) {
+      setRecipients((prev) => prev.filter((r) => r.id !== recipientId));
+    } else {
+      toast.error("At least one recipient is required");
     }
   };
 
@@ -268,17 +317,18 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         paymentMethod: paymentMethod,
       };
 
-      // For COD and WALLET, add codCollectFrom
       if (paymentMethod === "COD" || paymentMethod === "WALLET") {
         placeOrderData.codCollectFrom = "RECEIVER";
       }
 
-      // For ONLINE_PAY, add paymentMethodId
       if (paymentMethod === "ONLINE_PAY" && paymentMethodId) {
         placeOrderData.paymentMethodId = paymentMethodId;
       }
 
       const response = await placeOrder(placeOrderData);
+
+      console.log(response, "respnse" );
+      // console.log(first)
 
       if (response?.data?.success) {
         toast.success("Order confirmed!");
@@ -292,21 +342,46 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
   };
 
   const handleCreateOrder = async () => {
-    if (
-      !validateForm(
-        sender,
-        receiver,
-        selectedDeliveryType,
-        selectedVehicle,
-        collectTimeOption,
-        scheduledDate
-      )
-    ) {
-      return;
+    // Validate all recipients
+    for (let i = 0; i < recipients.length; i++) {
+      if (
+        !validateForm(
+          sender,
+          recipients[i],
+          selectedDeliveryType,
+          selectedVehicle,
+          collectTimeOption,
+          scheduledDate
+        )
+      ) {
+        toast.error(`Please fill all required fields for recipient ${i + 1}`);
+        return;
+      }
     }
 
     setIsSubmitting(true);
 
+    // Prepare destinations without postal_code (backend doesn't accept it)
+    const destinations = [
+      {
+        contact_name: sender.contact_name,
+        contact_number: sender.contact_number,
+        address: sender.address,
+        floor_unit: sender.floor_unit,
+        note_to_driver: sender.note_to_driver,
+        type: "SENDER",
+      },
+      ...recipients.map((recipient) => ({
+        contact_name: recipient.contact_name,
+        contact_number: recipient.contact_number,
+        address: recipient.address,
+        floor_unit: recipient.floor_unit,
+        note_to_driver: recipient.note_to_driver,
+        type: "RECEIVER",
+      })),
+    ];
+
+    // Prepare order data without properties backend doesn't accept
     const orderData: any = {
       route_type: formData.route_type,
       isFixed: formData.isFixed,
@@ -314,12 +389,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
       vehicle_type_id: selectedVehicle?.id || formData.vehicle_type_id,
       collect_time: collectTimeOption === "now" ? "ASAP" : "SCHEDULED",
       has_additional_services: formData.has_additional_services,
-      notify_favorite_raider: formData.notify_favorite_raider,
-      pay_type: formData.pay_type,
-      destinations: [
-        { ...sender, type: "SENDER" },
-        { ...receiver, type: "RECEIVER" },
-      ],
+      destinations,
     };
 
     if (collectTimeOption === "schedule" && scheduledDate) {
@@ -329,11 +399,11 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     try {
       const response = await createOrder(orderData);
 
-      // console.log(response, "createOrder");
-
       const orderId = response?.data?.data?.order?.id;
       const totalCostFromBackend = response?.data?.data?.order?.total_cost;
       const total_fee = response?.data?.data?.order?.total_fee;
+
+      console.log(total_fee);
 
       const totalCostNumber = totalCostFromBackend
         ? typeof totalCostFromBackend === "string"
@@ -581,7 +651,8 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
           </div>
         </RadioGroup>
       </div>
-      {/* Sender Info      */}
+
+      {/* Sender Info */}
       <div className="bg-white rounded-lg p-8 border border-gray-200 mb-6">
         <h3 className="text-lg font-medium mb-4">Sender Info</h3>
         <div className="grid grid-cols-2 gap-6 mb-4">
@@ -589,7 +660,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
             <Label className="mb-2">Name</Label>
             <Input
               value={sender.contact_name}
-              onChange={(e) => handleInputChange(e, "contact_name", "sender")}
+              onChange={(e) => handleSenderInputChange(e, "contact_name")}
               placeholder="Enter Name"
               required
             />
@@ -599,7 +670,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
             <Input
               type="tel"
               value={sender.contact_number}
-              onChange={(e) => handleInputChange(e, "contact_number", "sender")}
+              onChange={(e) => handleSenderInputChange(e, "contact_number")}
               placeholder="Enter Number"
               required
             />
@@ -610,9 +681,10 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
           <div>
             <Label className="mb-2">Postal Code</Label>
             <Input
+              type="number"
               value={sender.postal_code}
-              onChange={(e) => handleInputChange(e, "address", "sender")}
-              placeholder="Enter postal_code"
+              onChange={(e) => handleSenderInputChange(e, "postal_code")}
+              placeholder="Enter postal code"
               required
             />
           </div>
@@ -620,7 +692,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
             <Label className="mb-2">Address</Label>
             <Input
               value={sender.address}
-              onChange={(e) => handleInputChange(e, "address", "sender")}
+              onChange={(e) => handleSenderInputChange(e, "address")}
               placeholder="Enter Address"
               required
             />
@@ -629,7 +701,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
             <Label className="mb-2">Floor or Unit no.</Label>
             <Input
               value={sender.floor_unit}
-              onChange={(e) => handleInputChange(e, "floor_unit", "sender")}
+              onChange={(e) => handleSenderInputChange(e, "floor_unit")}
               placeholder="Floor or Unit no."
             />
           </div>
@@ -639,72 +711,119 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
           <Label className="mb-2">Note to driver</Label>
           <Textarea
             value={sender.note_to_driver}
-            onChange={(e) => handleInputChange(e, "note_to_driver", "sender")}
+            onChange={(e) => handleSenderInputChange(e, "note_to_driver")}
             className="h-32"
             placeholder="Note to driver"
           />
         </div>
       </div>
-      {/* Recipient Info */}
-      <div className="bg-white rounded-lg p-8 border border-gray-200 mb-6">
-        <h3 className="text-lg font-medium mb-4">Recipient Info</h3>
-        <div className="grid grid-cols-2 gap-6 mb-6">
-          <div>
-            <Label className="mb-2">Recipient</Label>
-            <Input
-              value={receiver.contact_name}
-              onChange={(e) => handleInputChange(e, "contact_name", "receiver")}
-              placeholder="Enter Recipient"
-              required
-            />
+
+      {/* Recipients Info */}
+      {recipients.map((recipient, index) => (
+        <div
+          key={recipient.id}
+          className="bg-white rounded-lg p-8 border border-gray-200 mb-6 relative"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium">
+              Recipient Info {index + 1}
+            </h3>
+            {recipients.length > 1 && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => removeRecipient(recipient.id)}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <X size={16} />
+                
+              </Button>
+            )}
           </div>
+
+          <div className="grid grid-cols-2 gap-6 mb-6">
+            <div>
+              <Label className="mb-2">Recipient</Label>
+              <Input
+                value={recipient.contact_name}
+                onChange={(e) =>
+                  handleRecipientInputChange(e, recipient.id, "contact_name")
+                }
+                placeholder="Enter Recipient"
+                required
+              />
+            </div>
+            <div>
+              <Label className="mb-2">Number</Label>
+              <Input
+                value={recipient.contact_number}
+                onChange={(e) =>
+                  handleRecipientInputChange(e, recipient.id, "contact_number")
+                }
+                placeholder="Enter Number"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-6 mb-6">
+            <div>
+              <Label className="mb-2">Postal Code</Label>
+              <Input
+                type="number"
+                value={recipient.postal_code}
+                onChange={(e) =>
+                  handleRecipientInputChange(e, recipient.id, "postal_code")
+                }
+                placeholder="Enter postal code"
+                required
+              />
+            </div>
+            <div>
+              <Label className="mb-2">Address</Label>
+              <Input
+                value={recipient.address}
+                onChange={(e) =>
+                  handleRecipientInputChange(e, recipient.id, "address")
+                }
+                placeholder="Enter Address"
+                required
+              />
+            </div>
+            <div>
+              <Label className="mb-2">Floor or Unit no.</Label>
+              <Input
+                value={recipient.floor_unit}
+                onChange={(e) =>
+                  handleRecipientInputChange(e, recipient.id, "floor_unit")
+                }
+                placeholder="Floor or Unit no."
+              />
+            </div>
+          </div>
+
           <div>
-            <Label className="mb-2">Number</Label>
-            <Input
-              value={receiver.contact_number}
+            <Label className="mb-2">Note to driver</Label>
+            <Textarea
+              value={recipient.note_to_driver}
               onChange={(e) =>
-                handleInputChange(e, "contact_number", "receiver")
+                handleRecipientInputChange(e, recipient.id, "note_to_driver")
               }
-              placeholder="Enter Number"
-              required
+              className="h-32"
+              placeholder="Note to driver"
             />
           </div>
         </div>
+      ))}
 
-        <div className="grid grid-cols-3 gap-6">
-          <div>
-            <Label className="mb-2">Postal Code</Label>
-            <Input
-              value={receiver.postal_code}
-              onChange={(e) => handleInputChange(e, "address", "receiver")}
-              placeholder="postal_code"
-              required
-            />
-          </div>
-          <div>
-            <Label className="mb-2">Address</Label>
-            <Input
-              value={receiver.address}
-              onChange={(e) => handleInputChange(e, "address", "receiver")}
-              placeholder="Enter Address"
-              required
-            />
-          </div>
-
-          <div>
-            <Label className="mb-2">Floor or Unit no.</Label>
-            <Input
-              value={receiver.floor_unit}
-              onChange={(e) => handleInputChange(e, "floor_unit", "receiver")}
-              placeholder="Floor or Unit no."
-            />
-          </div>
-        </div>
-
-        <Button className="mt-8 bg-yellow-400 py-3 mx-auto block cursor-pointer text-black hover:bg-yellow-500 rounded-md">
-          Add more recipient
-        </Button>
-      </div>
+      <Button
+        type="button"
+        onClick={addRecipient}
+        className="mb-6 bg-yellow-400 py-3 mx-auto block cursor-pointer text-black hover:bg-yellow-500 rounded-md"
+      >
+        Add more recipient
+      </Button>
 
       {orderCreated && orderTotalCost !== null && (
         <div className="bg-white rounded-lg p-8 border border-gray-200 mb-6">
