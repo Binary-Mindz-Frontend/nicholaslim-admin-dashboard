@@ -115,15 +115,16 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     note_to_driver: "",
   });
 
-  const [collectTimeOption, setCollectTimeOption] = useState<"now" | "schedule">("now");
+  const [collectTimeOption, setCollectTimeOption] = useState<
+    "now" | "schedule"
+  >("now");
   const [scheduledDate, setScheduledDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [createOrder] = useCreateOrderMutation();
   const [placeOrder] = usePlaceOrderMutation();
 
-  useEffect(() => {
-  }, [formData.pay_type]);
+  useEffect(() => {}, [formData.pay_type]);
 
   useEffect(() => {
     if (data && Object.keys(data).length > 0) {
@@ -277,17 +278,12 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         placeOrderData.paymentMethodId = paymentMethodId;
       }
 
-
-
       const response = await placeOrder(placeOrderData);
 
       if (response?.data?.success) {
-    
         toast.success("Order confirmed!");
       } else if (response) {
-        toast.error(
-          response?.data?.error?.message || "Failed to place order"
-        );
+        toast.error(response?.data?.error?.message || "Failed to place order");
       }
     } catch (error) {
       console.error("Error placing order:", error);
@@ -296,77 +292,73 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
   };
 
   const handleCreateOrder = async () => {
-  if (
-    !validateForm(
-      sender,
-      receiver,
-      selectedDeliveryType,
-      selectedVehicle,
-      collectTimeOption,
-      scheduledDate
-    )
-  ) {
-    return;
-  }
-
-  setIsSubmitting(true);
-
-  const orderData: any = {
-    route_type: formData.route_type,
-    isFixed: formData.isFixed,
-    delivery_type: selectedDeliveryType?.name || formData.delivery_type,
-    vehicle_type_id: selectedVehicle?.id || formData.vehicle_type_id,
-    collect_time: collectTimeOption === "now" ? "ASAP" : "SCHEDULED",
-    has_additional_services: formData.has_additional_services,
-    notify_favorite_raider: formData.notify_favorite_raider,
-    pay_type: formData.pay_type,
-    destinations: [
-      { ...sender, type: "SENDER" },
-      { ...receiver, type: "RECEIVER" },
-    ],
-  };
-
-  if (collectTimeOption === "schedule" && scheduledDate) {
-    orderData.scheduled_time = new Date(scheduledDate).toISOString();
-  }
-
-  
-
-  try {
-    const response = await createOrder(orderData);
-
-    // console.log(response, "createOrder");
-
-    const orderId = response?.data?.data?.order?.id;
-    const totalCostFromBackend = response?.data?.data?.order?.total_cost;
-    const total_fee = response?.data?.data?.order?.total_fee;
-
-    const totalCostNumber = totalCostFromBackend
-      ? typeof totalCostFromBackend === "string"
-        ? parseFloat(totalCostFromBackend)
-        : Number(totalCostFromBackend)
-      : 0;
-
-    
-
-    if (response?.data?.success === true) {
-      toast.success("Order created successfully!");
-
-      setCreatedOrderId(orderId);
-      setOrderTotalCost(totalCostNumber);
-      setOrderTotalFee(total_fee);
-      setOrderCreated(true);
-    } else if (response?.data?.error) {
-      console.error("Order creation error:", response.data.error);
-      toast.error(response.data.error);
+    if (
+      !validateForm(
+        sender,
+        receiver,
+        selectedDeliveryType,
+        selectedVehicle,
+        collectTimeOption,
+        scheduledDate
+      )
+    ) {
+      return;
     }
-  } catch (error) {
-    console.error("Error creating order:", error);
-    toast.error("An unexpected error occurred. Please try again.");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+
+    setIsSubmitting(true);
+
+    const orderData: any = {
+      route_type: formData.route_type,
+      isFixed: formData.isFixed,
+      delivery_type: selectedDeliveryType?.name || formData.delivery_type,
+      vehicle_type_id: selectedVehicle?.id || formData.vehicle_type_id,
+      collect_time: collectTimeOption === "now" ? "ASAP" : "SCHEDULED",
+      has_additional_services: formData.has_additional_services,
+      notify_favorite_raider: formData.notify_favorite_raider,
+      pay_type: formData.pay_type,
+      destinations: [
+        { ...sender, type: "SENDER" },
+        { ...receiver, type: "RECEIVER" },
+      ],
+    };
+
+    if (collectTimeOption === "schedule" && scheduledDate) {
+      orderData.scheduled_time = new Date(scheduledDate).toISOString();
+    }
+
+    try {
+      const response = await createOrder(orderData);
+
+      // console.log(response, "createOrder");
+
+      const orderId = response?.data?.data?.order?.id;
+      const totalCostFromBackend = response?.data?.data?.order?.total_cost;
+      const total_fee = response?.data?.data?.order?.total_fee;
+
+      const totalCostNumber = totalCostFromBackend
+        ? typeof totalCostFromBackend === "string"
+          ? parseFloat(totalCostFromBackend)
+          : Number(totalCostFromBackend)
+        : 0;
+
+      if (response?.data?.success === true) {
+        toast.success("Order created successfully!");
+
+        setCreatedOrderId(orderId);
+        setOrderTotalCost(totalCostNumber);
+        setOrderTotalFee(total_fee);
+        setOrderCreated(true);
+      } else if (response?.data?.error) {
+        console.error("Order creation error:", response.data.error);
+        toast.error(response.data.error);
+      }
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleConfirmOrder = async () => {
     if (!createdOrderId) {
@@ -375,8 +367,6 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
       );
       return;
     }
-
-   
 
     if (formData.pay_type === PayType.ONLINE_PAY) {
       setIsStripeModalOpen(true);
@@ -402,11 +392,9 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
   };
 
   const handlePaymentSuccess = (paymentMethodId: string) => {
-   
     setIsStripeModalOpen(false);
 
     if (createdOrderId && paymentMethodId) {
-    
       placeOrderAfterCreation(createdOrderId, "ONLINE_PAY", paymentMethodId);
     }
   };
@@ -593,36 +581,47 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
           </div>
         </RadioGroup>
       </div>
-
+      {/* Sender Info      */}
       <div className="bg-white rounded-lg p-8 border border-gray-200 mb-6">
-        <div className="grid grid-cols-2 gap-6 mb-6">
+        <h3 className="text-lg font-medium mb-4">Sender Info</h3>
+        <div className="grid grid-cols-2 gap-6 mb-4">
           <div>
-            <Label className="mb-2">Sender Name</Label>
+            <Label className="mb-2">Name</Label>
             <Input
               value={sender.contact_name}
               onChange={(e) => handleInputChange(e, "contact_name", "sender")}
-              placeholder="Sender Name"
+              placeholder="Enter Name"
               required
             />
           </div>
           <div>
-            <Label className="mb-2">Sender Number</Label>
+            <Label className="mb-2">Number</Label>
             <Input
+              type="tel"
               value={sender.contact_number}
               onChange={(e) => handleInputChange(e, "contact_number", "sender")}
-              placeholder="Sender Number"
+              placeholder="Enter Number"
               required
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-3 gap-6 mb-6">
           <div>
-            <Label className="mb-2">Sender Address</Label>
+            <Label className="mb-2">Postal Code</Label>
+            <Input
+              value={sender.postal_code}
+              onChange={(e) => handleInputChange(e, "address", "sender")}
+              placeholder="Enter postal_code"
+              required
+            />
+          </div>
+          <div>
+            <Label className="mb-2">Address</Label>
             <Input
               value={sender.address}
               onChange={(e) => handleInputChange(e, "address", "sender")}
-              placeholder="Sender Address"
+              placeholder="Enter Address"
               required
             />
           </div>
@@ -646,41 +645,52 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
           />
         </div>
       </div>
-
+      {/* Recipient Info */}
       <div className="bg-white rounded-lg p-8 border border-gray-200 mb-6">
+        <h3 className="text-lg font-medium mb-4">Recipient Info</h3>
         <div className="grid grid-cols-2 gap-6 mb-6">
           <div>
             <Label className="mb-2">Recipient</Label>
             <Input
               value={receiver.contact_name}
               onChange={(e) => handleInputChange(e, "contact_name", "receiver")}
-              placeholder="Recipient"
+              placeholder="Enter Recipient"
               required
             />
           </div>
           <div>
-            <Label className="mb-2">Recipient Number</Label>
+            <Label className="mb-2">Number</Label>
             <Input
               value={receiver.contact_number}
               onChange={(e) =>
                 handleInputChange(e, "contact_number", "receiver")
               }
-              placeholder="Recipient Number"
+              placeholder="Enter Number"
               required
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-3 gap-6">
           <div>
-            <Label className="mb-2">Recipient Address</Label>
+            <Label className="mb-2">Postal Code</Label>
             <Input
-              value={receiver.address}
+              value={receiver.postal_code}
               onChange={(e) => handleInputChange(e, "address", "receiver")}
-              placeholder="Recipient Address"
+              placeholder="postal_code"
               required
             />
           </div>
+          <div>
+            <Label className="mb-2">Address</Label>
+            <Input
+              value={receiver.address}
+              onChange={(e) => handleInputChange(e, "address", "receiver")}
+              placeholder="Enter Address"
+              required
+            />
+          </div>
+
           <div>
             <Label className="mb-2">Floor or Unit no.</Label>
             <Input
@@ -690,6 +700,10 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
             />
           </div>
         </div>
+
+        <Button className="mt-8 bg-yellow-400 py-3 mx-auto block cursor-pointer text-black hover:bg-yellow-500 rounded-md">
+          Add more recipient
+        </Button>
       </div>
 
       {orderCreated && orderTotalCost !== null && (
