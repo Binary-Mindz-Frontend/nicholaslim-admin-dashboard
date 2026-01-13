@@ -27,8 +27,8 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
     sortBy: params.sortBy || "createdAt",
     sortOrder: params.sortOrder || "desc",
   });
-  
-// Add the mutation hook
+
+  // Add the mutation hook
   const [toggleActiveStatus] = useToggleUserActiveStatusMutation();
 
   // Update users when data is fetched
@@ -50,20 +50,20 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
 
       // Call the API to update on the server
       await toggleActiveStatus(userId).unwrap();
-      
+
       // Show success toast if successful
       toast.success("User status updated successfully!");
 
     } catch (error) {
       console.error("Failed to toggle active status:", error);
-      
+
       // Revert the optimistic update on error
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
           user.id === userId ? { ...user, activeStatus: !user.activeStatus } : user
         )
       );
-      
+
       // Show error toast if failed
       toast.error("Failed to update user status. Please try again.");
     }
@@ -82,7 +82,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
     },
 
     {
-      header: "Name",
+      header: "FullName",
       accessor: "name",
       cell: (row: TUser) => (
         <p>
@@ -90,19 +90,19 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
         </p>
       ),
     },
-   {
-  header: "Email",
-  accessor: "contactEmail",
-  cell: (row: TUser) => (
-    <div className="whitespace-normal wrap-break-word">
-      {row.contactEmail}
-    </div>
-  ),
-},
+    {
+      header: "Email Address",
+      accessor: "contactEmail",
+      cell: (row: TUser) => (
+        <div className="whitespace-normal wrap-break-word">
+          {row.contactEmail}
+        </div>
+      ),
+    },
 
 
     {
-      header: "Contact",
+      header: "Phone Number",
       cell: (row: TUser) => {
         const contact = row.contactNum || "";
         return <span>{contact}</span>;
