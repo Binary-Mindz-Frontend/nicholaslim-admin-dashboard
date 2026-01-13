@@ -33,7 +33,7 @@ export default function Advertisement() {
             onClick={() => setActiveTab("RAIDER")}
             className={getTabClasses("RAIDER")}
           >
-            Advertisement for RAIDER
+            Advertisement for DRIVER
           </button>
         </span>
       </div>
