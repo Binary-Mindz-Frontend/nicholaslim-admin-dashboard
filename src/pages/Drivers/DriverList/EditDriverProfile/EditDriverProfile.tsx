@@ -27,7 +27,7 @@ export default function EditDriverProfile() {
     // RTK Query hooks - NOW USING QUERY INSTEAD OF MUTATION
     const { data: driverData, isLoading: isFetching, isError, error } = useGetRiderProfileByIdQuery(
         Number(id),
-        { skip: !id } // Skip query if no ID
+        { skip: !id }  
     );
     
     const [updateRider, { isLoading: isUpdating }] = useUpdateRiderProfileMutation();
@@ -48,6 +48,7 @@ export default function EditDriverProfile() {
         try {
             // Handle different possible response structures
             let registration;
+            console.log("Driver Data:", driverData);
             
             // Case 1: Direct registration data
             if (driverData.registrations && Array.isArray(driverData.registrations)) {
