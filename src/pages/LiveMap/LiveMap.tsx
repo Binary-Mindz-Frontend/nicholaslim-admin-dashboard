@@ -1,5 +1,6 @@
 
 // import { useState } from "react";
+import FleetMap from '@/components/Dashboard/RealTimeFleetMap/FleetMap/FleetMap';
 import RealTimeFleetMap from '@/components/Dashboard/RealTimeFleetMap/RealTimeFleetMap'
 // import FilterSection from "@/components/Users/FilterSection/FilterSection";
 
@@ -33,6 +34,7 @@ export default function Livemap() {
       /> */}
       </div>
       <RealTimeFleetMap />
+      {/* <FleetMap /> */}
     </div>
   );
 }
