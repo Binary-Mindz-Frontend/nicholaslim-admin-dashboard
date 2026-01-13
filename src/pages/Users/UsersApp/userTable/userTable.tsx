@@ -75,9 +75,9 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
       header: "User ID",
       accessor: "id",
       cell: (row: TUser) => (
-        <a href="#" className="text-blue-600 underline">
+        <p>
           U{row.id}
-        </a>
+        </p>
       ),
     },
 
@@ -85,26 +85,27 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
       header: "Name",
       accessor: "name",
       cell: (row: TUser) => (
-        <a href="#" className="text-blue-600 underline">
+        <p>
           {row.name}
-        </a>
+        </p>
       ),
     },
-    {
-      header: "Email",
-      accessor: "contactEmail",
-      cell: (row: TUser) => (
-        <a href="#" className="text-blue-600 underline">
-          {row.contactEmail}
-        </a>
-      ),
-    },
+   {
+  header: "Email",
+  accessor: "contactEmail",
+  cell: (row: TUser) => (
+    <div className="whitespace-normal wrap-break-word">
+      {row.contactEmail}
+    </div>
+  ),
+},
+
 
     {
       header: "Contact",
       cell: (row: TUser) => {
         const contact = row.contactNum || "";
-        return <span>{contact.slice(0, 2) + "******"}</span>;
+        return <span>{contact}</span>;
       },
     },
 
