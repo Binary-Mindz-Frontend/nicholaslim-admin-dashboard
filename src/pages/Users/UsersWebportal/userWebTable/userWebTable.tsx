@@ -13,7 +13,7 @@ export type TUser = {
   activeStatus: boolean;
   id: string;
   name: string;
-  contact: string;
+  contactNum: string;
   totalOrders: number;
   totalCost: string;
   joiningDate: string;
@@ -92,9 +92,9 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
       header: "User ID",
       accessor: "id",
       cell: (row: TUser) => (
-        <a href="#" className="text-blue-600 underline">
+        <p>
           U{row.id}
-        </a>
+        </p>
       ),
     },
 
@@ -102,19 +102,19 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
       header: "Name",
       accessor: "name",
       cell: (row: TUser) => (
-        <a href="#" className="text-blue-600 underline">
+        <p>
           {row.name}
-        </a>
+        </p>
       ),
     },
 
-    {
-      header: "Contact",
-      cell: (row: TUser) => {
-        const contact = row.contact || "";
-        return <span>{contact.slice(0, 2) + "******"}</span>;
-      },
-    },
+   {
+         header: "Contact",
+         cell: (row: TUser) => {
+           const contact = row.contactNum || "";
+           return <span>{contact}</span>;
+         },
+       },
 
     {
       header: "Total Order",
