@@ -15,7 +15,7 @@ const reportAndAnalyticsApi = baseApi.injectEndpoints({
         url: "/report-and-analytics/analytics",
         method: "GET",
       }),
-      providesTags: ["ReportAndAnalytics"],
+      providesTags: ["ReportAndAnalytics", "ServiceZones"],
     }),
 
     getKpiStats: builder.query({
