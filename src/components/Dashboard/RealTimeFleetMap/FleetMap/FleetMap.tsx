@@ -234,7 +234,7 @@ const FleetMap: React.FC = () => {
   // Socket connection for real-time updates
   useEffect(() => {
     // Connect to admin socket for real-time updates
-    const adminSocket = socketService.connectAdmin(adminToken);
+    const adminSocket = socketService.connectAdmin(adminToken || '');
     
     if (adminSocket) {
       adminSocket.connect();

@@ -214,6 +214,10 @@ export const menuItems: MenuItem[] = [
     id: "content-management",
     label: "Content Management",
     icon: <FileText className="w-5 h-5" />,
+    children: [
+      { id: "content-management-user", label: "User", icon: null },
+      { id: "content-management-driver", label: "Driver", icon: null },
+    ],
   },
   {
     id: "driver-order-competition",
