@@ -10,20 +10,23 @@ interface AboutUsContent {
 
 interface AboutUsManagementProps {
   onDelete: (id: number, type: "aboutus", data: any) => void;
-  onEdit: (content: AboutUsContent, type: "aboutus") => void;
-  onPublish: (data: { title: string; content: string }) => void;
+  onEdit: (content: AboutUsContent, type: "aboutus", faq_for?: string) => void;
+  onPublish: (data: { title: string; content: string, faq_for?: string }) => void;
   data: AboutUsContent[];
   isLoading?: boolean;
+  faq_for?: string;
 }
 
 export default function AboutUsManagement({
   onPublish,
   isLoading = false,
+  faq_for,
 }: AboutUsManagementProps) {
   const MAX_CHARACTERS = 1000;
   const [aboutUs, setAboutUs] = useState({
     title: "",
     content: "",
+    faq_for,
   });
   const [hasPublished, setHasPublished] = useState(false);
 
@@ -44,7 +47,7 @@ export default function AboutUsManagement({
 
     try {
       await onPublish(aboutUs);
-      setAboutUs({ title: "", content: "" });
+      setAboutUs({ title: "", content: "" , faq_for: faq_for});
       setHasPublished(true);
       setTimeout(() => setHasPublished(false), 3000);
     } catch (error) {

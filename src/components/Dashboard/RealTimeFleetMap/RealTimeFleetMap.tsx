@@ -1,3 +1,5 @@
+// import { useGetDriverOrdersQuery, useGetSingleOrderQuery } from "@/redux/features/orders/ordersApi";
+// import { useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
 import { useEffect, useRef, useState } from "react";
 
 // Google Maps types
@@ -34,6 +36,10 @@ export default function FleetMapHeader() {
   const mapInstanceRef = useRef<GoogleMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  // const { data: vehicleTypes } = useGetVehicleTypesQuery("");
+
+  // const { data: driverOrders } = useGetSingleOrderQuery("");
 
   const categories: Category[] = [
     {

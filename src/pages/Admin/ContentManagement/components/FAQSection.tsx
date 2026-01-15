@@ -8,14 +8,16 @@ interface FAQItem {
   question: string;
   answer: string;
   isActive: boolean;
+  faq_for?: string
 }
 
 interface FAQManagementProps {
   onDelete: (id: number, type: "faq", data: any) => void;
-  onEdit: (faq: FAQItem, type: "faq") => void;
-  onPublish: (data: { question: string; answer: string }[]) => void;
+  onEdit: (faq: FAQItem, type: "faq", faq_for?: string) => void;
+  onPublish: (data: { question: string; answer: string, faq_for?: string }[]) => void;
   data: FAQItem[];
   isLoading?: boolean;
+  faq_for?: string
 }
 
 export default function FAQManagement({
@@ -24,10 +26,11 @@ export default function FAQManagement({
   onPublish,
   data: faqData,
   isLoading = false,
+  faq_for
 }: FAQManagementProps) {
   const [, setFaqItems] = useState<FAQItem[]>(faqData || []);
   const [localFaqs, setLocalFaqs] = useState<
-    Array<{ question: string; answer: string }>
+    Array<{ question: string; answer: string, faq_for?: string }>
   >([]);
   const [hasPublished, setHasPublished] = useState(false);
   console.log(onDelete);
@@ -64,7 +67,7 @@ export default function FAQManagement({
 
     // Filter out empty FAQs
     const validFAQs = localFaqs.filter(
-      (faq) => faq.question.trim() && faq.answer.trim()
+      (faq) => faq.question.trim() && faq.answer.trim() || faq.faq_for
     );
 
     if (validFAQs.length === 0) {
@@ -85,6 +88,7 @@ export default function FAQManagement({
       console.error("Failed to publish FAQs:", error);
     }
   };
+  console.log(faq_for, "faq_for");
 
   const inputClasses =
     "w-full p-3 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-base shadow-sm";
