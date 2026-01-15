@@ -10,19 +10,22 @@ interface Article {
 
 interface ArticleManagementProps {
   onDelete: (id: number, type: "article", data: any) => void;
-  onEdit: (article: Article, type: "article") => void;
+  onEdit: (article: Article, type: "article", faq_for?: string) => void;
   onPublish: (data: { title: string; content: string }) => void;
   data: Article[];
   isLoading?: boolean;
+  faq_for?: string
 }
 
 export default function ArticleManagement({
   onPublish,
   isLoading = false,
+  faq_for
 }: ArticleManagementProps) {
   const [article, setArticle] = useState({
     title: "",
     content: "",
+    faq_for
   });
   const [hasPublished, setHasPublished] = useState(false);
 
@@ -40,7 +43,7 @@ export default function ArticleManagement({
 
     try {
       await onPublish(article);
-      setArticle({ title: "", content: "" });
+      setArticle({ title: "", content: "" , faq_for: faq_for});
       setHasPublished(true);
       
       setTimeout(() => setHasPublished(false), 3000);
