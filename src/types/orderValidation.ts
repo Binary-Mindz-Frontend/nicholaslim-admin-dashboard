@@ -65,8 +65,10 @@ export interface SenderReceiverData {
   contact_name: string;
   contact_number: string;
   address: string;
+  postal_code: string;
   floor_unit: string;
   note_to_driver: string;
+
 }
 
 export interface OrderFormData {
@@ -81,11 +83,13 @@ export interface OrderFormData {
   is_promo_used: boolean;
   notify_favorite_raider: boolean;
   pay_type: string;
+  
   destinations: Array<{
     address: string;
     floor_unit: string;
     contact_name: string;
     contact_number: string;
+    postal_code: string;
     note_to_driver: string;
     type: "SENDER" | "RECEIVER";
   }>;
