@@ -1,6 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useState } from 'react';
-import 'leaflet/dist/leaflet.css';
-import type { Map as LeafletMap, LatLngExpression } from 'leaflet';
 
 interface PolygonPoint {
   lat: number;
@@ -21,9 +20,15 @@ interface DeliveryHeatmapProps {
 
 const DeliveryHeatmap: React.FC<DeliveryHeatmapProps> = ({ heatmapData = [] }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<LeafletMap | null>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [polygons, setPolygons] = useState<google.maps.Polygon[]>([]);
+  const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
+  const [infoWindow, setInfoWindow] = useState<google.maps.InfoWindow | null>(null);
+
+  // Get Google Maps API key from environment variable
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   const getIntensityLevel = (orderCount: number, intensity: number) => {
     const value = intensity > 0 ? intensity : orderCount;
@@ -50,9 +55,9 @@ const DeliveryHeatmap: React.FC<DeliveryHeatmapProps> = ({ heatmapData = [] }) =
     return opacity[intensityLevel as keyof typeof opacity];
   };
 
-  const calculatePolygonCenter = (polygon: PolygonPoint[]): LatLngExpression => {
+  const calculatePolygonCenter = (polygon: PolygonPoint[]): google.maps.LatLngLiteral => {
     if (!polygon || polygon.length === 0) {
-      return [0, 0];
+      return { lat: 0, lng: 0 };
     }
     
     const sum = polygon.reduce(
@@ -64,159 +69,256 @@ const DeliveryHeatmap: React.FC<DeliveryHeatmapProps> = ({ heatmapData = [] }) =
       { lat: 0, lng: 0 }
     );
     
-    return [sum.lat / polygon.length, sum.lng / polygon.length];
+    return {
+      lat: sum.lat / polygon.length,
+      lng: sum.lng / polygon.length
+    };
   };
 
-  useEffect(() => {
-    const initMap = async () => {
-      try {
-        const L = await import('leaflet');
-        
-        if (!mapRef.current) return;
+  // Create zone popup content
+  const createZonePopupContent = (zone: HeatmapZone) => {
+    const intensityLevel = getIntensityLevel(zone.orderCount, zone.intensity);
+    const zoneColor = getColorByIntensity(intensityLevel);
+    
+    return `
+      <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 200px;">
+        <strong style="font-size: 14px;">${zone.zoneName}</strong>
+        <div style="margin-top: 8px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span style="color: #666;">Zone ID:</span>
+            <span style="font-weight: 600;">${zone.zoneId}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span style="color: #666;">Orders:</span>
+            <span style="font-weight: 600;">${zone.orderCount}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span style="color: #666;">Intensity:</span>
+            <span style="color: ${zoneColor}; font-weight: 600;">${intensityLevel.toUpperCase()}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  };
 
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.remove();
-          mapInstanceRef.current = null;
-        }
+  // Initialize Google Maps
+  const initGoogleMap = () => {
+    if (!mapRef.current || !apiKey) {
+      setError('Google Maps API key is missing or invalid.');
+      setIsLoading(false);
+      return;
+    }
 
-        let initialCenter: LatLngExpression = [0, 0];
-        let initialZoom = 2;
+    try {
+      // Check if Google Maps API is already loaded
+      if (!window.google) {
+        setError('Google Maps API failed to load. Please check your API key.');
+        setIsLoading(false);
+        return;
+      }
 
-        if (heatmapData.length > 0 && heatmapData[0].polygon.length > 0) {
-          initialCenter = calculatePolygonCenter(heatmapData[0].polygon);
-          initialZoom = 12;
-        }
+      // Determine initial map center and zoom
+      let initialCenter: google.maps.LatLngLiteral = { lat: 0, lng: 0 };
+      let initialZoom = 2;
 
-        const map = L.map(mapRef.current, {
-          center: initialCenter,
-          zoom: initialZoom,
-          zoomControl: true,
-        });
+      if (heatmapData.length > 0 && heatmapData[0].polygon.length > 0) {
+        initialCenter = calculatePolygonCenter(heatmapData[0].polygon);
+        initialZoom = 12;
+      }
 
-        mapInstanceRef.current = map;
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors',
-          maxZoom: 19,
-        }).addTo(map);
-
-        const polygons: any[] = [];
-
-        heatmapData.forEach((zone) => {
-          if (!zone.polygon || zone.polygon.length === 0) return;
-
-          const latLngs = zone.polygon.map(point => [point.lat, point.lng] as LatLngExpression);
-          
-          if (latLngs.length > 0) {
-            latLngs.push(latLngs[0]);
+      // Create new map instance
+      const map = new google.maps.Map(mapRef.current, {
+        center: initialCenter,
+        zoom: initialZoom,
+        mapTypeControl: true,
+        streetViewControl: false,
+        fullscreenControl: true,
+        zoomControl: true,
+        gestureHandling: 'greedy',
+        styles: [
+          {
+            featureType: 'poi',
+            elementType: 'labels',
+            stylers: [{ visibility: 'off' }]
           }
+        ]
+      });
 
-          const intensityLevel = getIntensityLevel(zone.orderCount, zone.intensity);
-          const zoneColor = getColorByIntensity(intensityLevel);
-          const fillOpacity = getOpacityByIntensity(intensityLevel);
+      mapInstanceRef.current = map;
 
-          const polygon = L.polygon(latLngs, {
-            color: zoneColor,
-            weight: 2,
-            opacity: 0.8,
-            fillColor: zoneColor,
-            fillOpacity: fillOpacity,
-          }).addTo(map);
+      // Create info window instance
+      const infoWindowInstance = new google.maps.InfoWindow({
+        maxWidth: 300
+      });
+      setInfoWindow(infoWindowInstance);
 
-          polygons.push(polygon);
+      // Clear previous polygons and markers
+      polygons.forEach(polygon => polygon.setMap(null));
+      markers.forEach(marker => marker.setMap(null));
 
-          polygon.bindPopup(`
-            <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 200px;">
-              <strong style="font-size: 14px;">${zone.zoneName}</strong>
-              <div style="margin-top: 8px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                  <span style="color: #666;">Zone ID:</span>
-                  <span style="font-weight: 600;">${zone.zoneId}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                  <span style="color: #666;">Orders:</span>
-                  <span style="font-weight: 600;">${zone.orderCount}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                  <span style="color: #666;">Intensity:</span>
-                  <span style="color: ${zoneColor}; font-weight: 600;">${intensityLevel.toUpperCase()}</span>
-                </div>
-                <div style="margin-top: 8px; font-size: 12px; color: #999;">
-                  Click outside to close
-                </div>
-              </div>
-            </div>
-          `);
+      const newPolygons: google.maps.Polygon[] = [];
+      const newMarkers: google.maps.Marker[] = [];
+      const bounds = new google.maps.LatLngBounds();
 
-          const center = calculatePolygonCenter(zone.polygon);
-          
-          const marker = L.marker(center, {
-            icon: L.divIcon({
-              className: 'custom-marker',
-              html: `
-                <div style="
-                  width: 28px;
-                  height: 28px;
-                  background: ${zoneColor};
-                  border: 2px solid white;
-                  border-radius: 50%;
-                  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  cursor: pointer;
-                ">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-                  </svg>
-                </div>
-              `,
-              iconSize: [28, 28],
-              iconAnchor: [14, 14],
-            }),
-          }).addTo(map);
+      // Create polygons and markers for each zone
+      heatmapData.forEach((zone) => {
+        if (!zone.polygon || zone.polygon.length === 0) return;
 
-          marker.bindPopup(`
-            <div style="font-family: system-ui, -apple-system, sans-serif;">
-              <strong>${zone.zoneName} Center</strong>
-              <div style="margin-top: 4px; font-size: 12px; color: #666;">
-                Click polygon for details
-              </div>
-            </div>
-          `);
+        // Convert polygon points to LatLng array
+        const polygonPath = zone.polygon.map(point => 
+          new google.maps.LatLng(point.lat, point.lng)
+        );
 
-          marker.on('mouseover', () => {
-            polygon.setStyle({ weight: 4, fillOpacity: fillOpacity + 0.2 });
-          });
-          
-          marker.on('mouseout', () => {
-            polygon.setStyle({ weight: 2, fillOpacity: fillOpacity });
+        // Extend bounds with polygon points
+        polygonPath.forEach(latlng => bounds.extend(latlng));
+
+        const intensityLevel = getIntensityLevel(zone.orderCount, zone.intensity);
+        const zoneColor = getColorByIntensity(intensityLevel);
+        const fillOpacity = getOpacityByIntensity(intensityLevel);
+
+        // Create polygon
+        const polygon = new google.maps.Polygon({
+          paths: polygonPath,
+          strokeColor: zoneColor,
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: zoneColor,
+          fillOpacity: fillOpacity,
+          map: map,
+          zIndex: 1
+        });
+
+        newPolygons.push(polygon);
+
+        // Add polygon click listener
+        polygon.addListener('click', (e: google.maps.PolyMouseEvent) => {
+          if (infoWindowInstance) {
+            infoWindowInstance.setContent(createZonePopupContent(zone));
+            infoWindowInstance.setPosition(e.latLng);
+            infoWindowInstance.open(map);
+          }
+        });
+
+        // Add mouseover and mouseout effects
+        polygon.addListener('mouseover', () => {
+          polygon.setOptions({
+            strokeWeight: 4,
+            fillOpacity: fillOpacity + 0.2
           });
         });
 
-        if (heatmapData.length > 0 && polygons.length > 0) {
-          const group = L.featureGroup(polygons);
-          map.fitBounds(group.getBounds().pad(0.1));
-        }
+        polygon.addListener('mouseout', () => {
+          polygon.setOptions({
+            strokeWeight: 2,
+            fillOpacity: fillOpacity
+          });
+        });
 
-        setIsLoading(false);
-        setError(null);
-      } catch (err) {
-        console.error('Error initializing map:', err);
-        setError('Failed to load map. Please try again.');
-        setIsLoading(false);
+        // Create center marker
+        const center = calculatePolygonCenter(zone.polygon);
+        const marker = new google.maps.Marker({
+          position: center,
+          map: map,
+          title: zone.zoneName,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 14,
+            fillColor: zoneColor,
+            fillOpacity: 1,
+            strokeColor: '#FFFFFF',
+            strokeWeight: 2
+          },
+          zIndex: 2
+        });
+
+        newMarkers.push(marker);
+
+        // Add marker click listener
+        marker.addListener('click', () => {
+          if (infoWindowInstance) {
+            infoWindowInstance.setContent(createZonePopupContent(zone));
+            infoWindowInstance.setPosition(center);
+            infoWindowInstance.open(map);
+          }
+        });
+
+        // Add hover effects for marker
+        marker.addListener('mouseover', () => {
+          polygon.setOptions({
+            strokeWeight: 4,
+            fillOpacity: fillOpacity + 0.2
+          });
+        });
+
+        marker.addListener('mouseout', () => {
+          polygon.setOptions({
+            strokeWeight: 2,
+            fillOpacity: fillOpacity
+          });
+        });
+      });
+
+      setPolygons(newPolygons);
+      setMarkers(newMarkers);
+
+      // Fit bounds if there are polygons
+      if (heatmapData.length > 0 && newPolygons.length > 0) {
+        map.fitBounds(bounds);
       }
+
+      setIsLoading(false);
+      setError(null);
+    } catch (err) {
+      console.error('Error initializing Google Maps:', err);
+      setError('Failed to load Google Maps. Please check your API key and try again.');
+      setIsLoading(false);
+    }
+  };
+
+  // Load Google Maps script
+  useEffect(() => {
+    const loadGoogleMapsScript = () => {
+      if (!apiKey) {
+        setError('Google Maps API key is missing. Please check your environment variables.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if script is already loaded
+      if (window.google && window.google.maps) {
+        initGoogleMap();
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry`;
+      script.async = true;
+      script.defer = true;
+      
+      script.onload = () => {
+        // Small delay to ensure Google Maps is fully loaded
+        setTimeout(initGoogleMap, 100);
+      };
+      
+      script.onerror = () => {
+        setError('Failed to load Google Maps. Please check your API key and internet connection.');
+        setIsLoading(false);
+      };
+      
+      document.head.appendChild(script);
     };
 
-    initMap();
+    loadGoogleMapsScript();
 
+    // Cleanup function
     return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
+      polygons.forEach(polygon => polygon.setMap(null));
+      markers.forEach(marker => marker.setMap(null));
+      if (infoWindow) {
+        infoWindow.close();
       }
     };
-  }, [heatmapData]);
+  }, [heatmapData]); // Re-initialize when heatmapData changes
 
   if (error) {
     return (
@@ -230,6 +332,11 @@ const DeliveryHeatmap: React.FC<DeliveryHeatmapProps> = ({ heatmapData = [] }) =
             <div className="text-center p-8">
               <div className="text-red-500 text-lg mb-2">⚠️ Map Error</div>
               <p className="text-gray-600">{error}</p>
+              {!apiKey && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Please set VITE_GOOGLE_MAPS_API_KEY in your .env file
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -279,7 +386,7 @@ const DeliveryHeatmap: React.FC<DeliveryHeatmapProps> = ({ heatmapData = [] }) =
             <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
               <div className="text-center">
                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-orange-500"></div>
-                <p className="mt-4 text-gray-600">Loading map...</p>
+                <p className="mt-4 text-gray-600">Loading Google Maps...</p>
               </div>
             </div>
           )}
@@ -299,24 +406,6 @@ const DeliveryHeatmap: React.FC<DeliveryHeatmapProps> = ({ heatmapData = [] }) =
           )}
           
           <div ref={mapRef} className="w-full h-full" />
-          
-          <div className="absolute bottom-6 right-6 bg-white rounded-lg shadow-lg p-4 z-0">
-            <h3 className="font-semibold text-gray-900 mb-3 text-sm">Order Intensity</h3>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-[#FF6B35]"></div>
-                <span className="text-sm text-gray-700">High (100+ orders)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-[#F7931E]"></div>
-                <span className="text-sm text-gray-700">Medium (50-99)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-[#FDB913]"></div>
-                <span className="text-sm text-gray-700">Low (0-49)</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

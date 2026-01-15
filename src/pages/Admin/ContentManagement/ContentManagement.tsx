@@ -1,7 +1,13 @@
+/* eslint-disable no-case-declarations */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import toast from "react-hot-toast";
 import ContentHistoryTable from "./components/History";
-import { CONTENT_TYPE_MAP, ContentEntityType, ContentType } from "@/types/contentManagementType";
+import {
+  CONTENT_TYPE_MAP,
+  ContentEntityType,
+  ContentType,
+} from "@/types/contentManagementType";
 import { useContentApiHooks } from "./components/ContentApiHooks";
 import { useContentDataHandler } from "./components/ContentDataHandler";
 import ContentTabs from "./components/ContentTabs";
@@ -15,14 +21,25 @@ export default function ContentManagementApp() {
   const [editFAQModalOpen, setEditFAQModalOpen] = useState(false);
   const [editArticleModalOpen, setEditArticleModalOpen] = useState(false);
   const [editAboutUsModalOpen, setEditAboutUsModalOpen] = useState(false);
-  const [selectedContentId, setSelectedContentId] = useState<number | null>(null);
+  const [selectedContentId, setSelectedContentId] = useState<number | null>(
+    null
+  );
   const [selectedContentData, setSelectedContentData] = useState<any>(null);
   const [selectedFAQData, setSelectedFAQData] = useState<any>(null);
   const [selectedArticleData, setSelectedArticleData] = useState<any>(null);
   const [selectedAboutUsData, setSelectedAboutUsData] = useState<any>(null);
-  const [selectedContentType, setSelectedContentType] = useState<ContentEntityType>("content");
+  const [selectedContentType, setSelectedContentType] =
+    useState<ContentEntityType>("content");
   const apiHooks = useContentApiHooks();
-  const { contentData, setContentData } = useContentDataHandler(apiHooks.contentResponse);
+  const { contentData, setContentData } = useContentDataHandler(
+    apiHooks.contentResponse
+  );
+
+  const route = window.location.pathname;
+  const faq_for = route.includes("content-management-driver")
+    ? "RAIDER"
+    : "USER";
+
   const handlePublish = async (newContent: string) => {
     toast.loading("Publishing content...");
     try {
@@ -36,6 +53,7 @@ export default function ContentManagementApp() {
           contenttype: CONTENT_TYPE_MAP[activeTab],
           description: newContent,
           isPublished: true,
+          faq_for: faq_for,
         };
 
         const response = await apiHooks.updateContent(updateData).unwrap();
@@ -57,6 +75,7 @@ export default function ContentManagementApp() {
           contenttype: CONTENT_TYPE_MAP[activeTab],
           description: newContent,
           isPublished: true,
+          faq_for: faq_for,
         };
 
         const response = await apiHooks.addContent(contentData).unwrap();
@@ -69,7 +88,6 @@ export default function ContentManagementApp() {
           apiHooks.refetchContent();
           toast.dismiss();
           toast.success(response.message || "Content published successfully!");
-          
         } else {
           toast.dismiss();
           toast.error(response.message || "Failed to publish content.");
@@ -145,10 +163,7 @@ export default function ContentManagementApp() {
       setSelectedContentId(null);
     }
   };
-  const handleEditClick = (
-    content: any,
-    type: ContentEntityType
-  ) => {
+  const handleEditClick = (content: any, type: ContentEntityType) => {
     setSelectedContentType(type);
     switch (type) {
       case "content":
@@ -169,10 +184,7 @@ export default function ContentManagementApp() {
         break;
     }
   };
-  const handleEditSave = async (
-    updatedData: any,
-    type: ContentEntityType
-  ) => {
+  const handleEditSave = async (updatedData: any, type: ContentEntityType) => {
     try {
       let response;
       let refetchFn;
@@ -239,39 +251,48 @@ export default function ContentManagementApp() {
         const apiType = CONTENT_TYPE_MAP[activeTab];
         return (
           apiHooks.contentResponse?.data?.filter(
-            (item: any) => item.contenttype === apiType
+            (item: any) =>
+              item.contenttype === apiType && item.faq_for === faq_for
           ) || []
         );
 
       case "FAQ List":
         return (
-          apiHooks.faqResponse?.data?.map((item: any) => ({
-            id: item.id,
-            contenttype: "FAQ",
-            description: item.question,
-            isPublished: item.isActive,
-            version: null,
-            answer: item.answer,
-            question: item.question,
-            isActive: item.isActive,
-          })) || []
+          apiHooks.faqResponse?.data
+            ?.filter((item: any) => item.faq_for === faq_for)
+            ?.map((item: any) => ({
+              id: item.id,
+              contenttype: "FAQ",
+              description: item.question,
+              isPublished: item.isActive,
+              version: null,
+              answer: item.answer,
+              question: item.question,
+              isActive: item.isActive,
+              faq_for: item.faq_for,
+            })) || []
         );
       case "Help Articles List":
         return (
-          apiHooks.articleResponse?.data?.map((item: any) => ({
-            id: item.id,
-            contenttype: "ARTICLE",
-            description: item.title,
-            content: item.content,
-            isPublished: item.published,
-            version: null,
-            title: item.title,
-            published: item.published,
-          })) || []
+          apiHooks.articleResponse?.data
+            ?.filter((item: any) => item.faq_for === faq_for)
+            ?.map((item: any) => ({
+              id: item.id,
+              contenttype: "ARTICLE",
+              description: item.title,
+              content: item.content,
+              isPublished: item.published,
+              version: null,
+              title: item.title,
+              published: item.published,
+              faq_for: item.faq_for,
+            })) || []
         );
       case "About Us":
         return (
-          apiHooks.aboutUsResponse?.data?.map((item: any) => ({
+          apiHooks.aboutUsResponse?.data?.
+          filter((item: any) => item.faq_for === faq_for)
+          ?.map((item: any) => ({
             id: item.id,
             contenttype: "ABOUTUS",
             description: item.title,
@@ -336,14 +357,19 @@ export default function ContentManagementApp() {
       toast.error(error?.data?.message || "Failed to update status.");
     }
   };
-  const handlePublishFAQ = async (faqData: { question: string; answer: string }[]) => {
+  const handlePublishFAQ = async (
+    faqData: { question: string; answer: string }[]
+  ) => {
     try {
       const promises = faqData.map(async (faq) => {
         if (faq.question.trim() && faq.answer.trim()) {
-          return await apiHooks.addFAQ({
-            question: faq.question,
-            answer: faq.answer,
-          }).unwrap();
+          return await apiHooks
+            .addFAQ({
+              question: faq.question,
+              faq_for: faq_for,
+              answer: faq.answer,
+            })
+            .unwrap();
         }
         return null;
       });
@@ -430,6 +456,7 @@ export default function ContentManagementApp() {
           isUpdatingArticle={apiHooks.isUpdatingArticle}
           isAddingAboutUs={apiHooks.isAddingAboutUs}
           isUpdatingAboutUs={apiHooks.isUpdatingAboutUs}
+          faq_for={faq_for}
         />
       </div>
       <div className="pt-8">

@@ -19,7 +19,7 @@ const ContentTabs: React.FC<ContentTabsProps> = ({
 }) => {
   return (
     <div className="flex">
-      <span className="flex flex-wrap gap-3 mb-8 rounded-full p-2 md:border border-black">
+      <span className="flex flex-wrap gap-3 mb-8 rounded-full p-2">
         {tabItems.map((item) => (
           <button
             key={item}
