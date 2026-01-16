@@ -27,6 +27,32 @@ const userTypesApi = baseApi.injectEndpoints({
       },
       providesTags: ["UserTypes"],
     }),
+    
+    getWebUserTypes: builder.query({
+      query: ({
+        status,
+        dateFilter,
+        page = 1,
+        limit = 10,
+        sortBy = "createdAt",
+        sortOrder = "asc",
+      }) => {
+         
+        let url = `/users/web-portal?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
+
+        if (status) url += `&status=${status}`;
+
+        if (dateFilter) {
+          url += `&dateFilter=${dateFilter}`;
+        }
+
+        return {
+          url,
+          method: "GET",
+        };
+      },
+      providesTags: ["UserTypes"],
+    }),
 
     // Query to get user by ID
     getUserTypeById: builder.query({
@@ -93,6 +119,7 @@ const userTypesApi = baseApi.injectEndpoints({
 
 export const {
   useGetUserTypesQuery,
+  useGetWebUserTypesQuery,
   useGetUserTypeByIdQuery,
   useDeleteUserTypeMutation,
   useToggleUserActiveStatusMutation,
