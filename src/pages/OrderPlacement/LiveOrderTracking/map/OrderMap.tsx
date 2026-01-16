@@ -7,8 +7,8 @@ const containerStyle = { width: '100%', height: '400px', borderRadius: '12px' };
 const OrderMap = ({ destinations }: { destinations: any[] }) => {
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
-        // googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-        googleMapsApiKey: "AIzaSyDUEEC9Rx0I26QEc88zOTKjxOGVqTgw9VQ"
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+        // googleMapsApiKey: ""
     });
 
     // Calculate the center based on the first destination
