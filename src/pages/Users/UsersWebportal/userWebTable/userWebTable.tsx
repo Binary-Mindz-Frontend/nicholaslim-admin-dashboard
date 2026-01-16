@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useGetUserTypesQuery, useToggleUserActiveStatusMutation } from "@/redux/features/usersTypes/usersTypesApi";
+import {  useGetWebUserTypesQuery, useToggleUserActiveStatusMutation } from "@/redux/features/usersTypes/usersTypesApi";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Switch } from "@/components/ui/switch";
 
@@ -13,6 +13,7 @@ export type TUser = {
   activeStatus: boolean;
   id: string;
   name: string;
+  role?: string;
   contactEmail: string;
   contactNum: string;
   totalOrders: number;
@@ -34,7 +35,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
   const [users, setUsers] = useState<TUser[]>([]);
 
   // Fetch user data using the custom RTK query hook with params
-  const { data: usersData, isLoading, isError } = useGetUserTypesQuery({
+  const { data: usersData, isLoading, isError } = useGetWebUserTypesQuery({
     status: params.status || "",
     dateFilter: params.dateFilter || "",
     page: params.page || 1,
@@ -43,8 +44,8 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
     sortOrder: params.sortOrder || "desc",
   });
 
-  
-// Add the mutation hook
+
+  // Add the mutation hook
   const [toggleActiveStatus] = useToggleUserActiveStatusMutation();
 
   // Update users when data is fetched
@@ -54,7 +55,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
     }
   }, [usersData]);
 
-  console.log(usersData?.data?.data)
+  // console.log("web", usersData?.data?.data)
 
   // Handle toggle active status - now calls the API
   const handleToggleActive = async (userId: string) => {
@@ -68,20 +69,20 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
 
       // Call the API to update on the server
       await toggleActiveStatus(userId).unwrap();
-      
+
       // Show success toast if successful
       toast.success("User status updated successfully!");
 
     } catch (error) {
       console.error("Failed to toggle active status:", error);
-      
+
       // Revert the optimistic update on error
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
           user.id === userId ? { ...user, activeStatus: !user.activeStatus } : user
         )
       );
-      
+
       // Show error toast if failed
       toast.error("Failed to update user status. Please try again.");
     }
@@ -109,6 +110,12 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
       ),
     },
     {
+      header: "Role",
+      cell: (row: TUser) => {
+        return <span>{row.role}</span>;
+      },
+    },
+    {
       header: "Email Address",
       accessor: "contactEmail",
       cell: (row: TUser) => (
@@ -118,13 +125,14 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
       ),
     },
 
-   {
-         header: "Phone Number",
-         cell: (row: TUser) => {
-           const contact = row.contactNum || "";
-           return <span>{contact}</span>;
-         },
-       },
+    {
+      header: "Phone Number",
+      cell: (row: TUser) => {
+        const contact = row.contactNum || "";
+        return <span>{contact}</span>;
+      },
+    },
+    
 
     {
       header: "Total Order",
