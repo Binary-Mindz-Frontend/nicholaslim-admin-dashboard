@@ -14,6 +14,7 @@ export type TUser = {
   id: string;
   name: string;
   role?: string;
+  regi_status?: string;
   contactEmail: string;
   contactNum: string;
   totalOrders: number;
@@ -55,7 +56,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
     }
   }, [usersData]);
 
-  // console.log("web", usersData?.data?.data)
+  console.log("web", usersData?.data?.data)
 
   // Handle toggle active status - now calls the API
   const handleToggleActive = async (userId: string) => {
@@ -132,7 +133,15 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
         return <span>{contact}</span>;
       },
     },
-    
+    {
+  header: "Registration Source",
+  cell: (row: TUser) => {
+    if (row.regi_status === "ADMIN_SIGNIN") {
+      return <span>Web Admin</span>;
+    }
+    return <span></span>;
+  },
+},
 
     {
       header: "Total Order",

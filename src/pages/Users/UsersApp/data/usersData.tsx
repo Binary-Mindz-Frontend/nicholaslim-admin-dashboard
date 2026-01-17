@@ -4,6 +4,7 @@ export type TUser = {
   activeStatus: boolean;
   id: string;
   name: string;
+  regi_status?:string;
   contactEmail: string;
   contactNum: string;
   totalOrders: number;

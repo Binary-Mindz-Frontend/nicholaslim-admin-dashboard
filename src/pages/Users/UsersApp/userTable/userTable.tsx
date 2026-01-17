@@ -38,6 +38,8 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
     }
   }, [usersData]);
 
+  console.log(usersData?.data?.data);
+
   // Handle toggle active status - now calls the API
   const handleToggleActive = async (userId: string) => {
     try {
@@ -108,6 +110,15 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
         return <span>{contact}</span>;
       },
     },
+     {
+      header: "Registration Source",
+      cell: (row: TUser) => {
+        if (row.regi_status === "DIRECT_SIGNIN") {
+          return <span>Mobile App</span>;
+        }
+        return <span></span>;
+      },
+    },
 
     {
       header: "Total Order",
@@ -123,7 +134,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
       header: "Joining Date",
       accessor: "joiningDate",
     },
-
+   
     {
       header: "Active/Inactive",
       cell: (row: TUser) => (
