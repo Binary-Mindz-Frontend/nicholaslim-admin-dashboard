@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useGetUserTypesQuery, useToggleUserActiveStatusMutation } from "@/redux/features/usersTypes/usersTypesApi";
+import { useGetOnlyUserTypesQuery, useToggleUserActiveStatusMutation } from "@/redux/features/usersTypes/usersTypesApi";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Switch } from "@/components/ui/switch";
 import ActionCell from "../ActionCell/ActionCell";
@@ -19,7 +19,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
   const [users, setUsers] = useState<TUser[]>([]);
 
   // Fetch user data using the custom RTK query hook with params
-  const { data: usersData, isLoading, isError } = useGetUserTypesQuery({
+  const { data: usersData, isLoading, isError } = useGetOnlyUserTypesQuery({
     status: params.status || "",
     dateFilter: params.dateFilter || "",
     page: params.page || 1,

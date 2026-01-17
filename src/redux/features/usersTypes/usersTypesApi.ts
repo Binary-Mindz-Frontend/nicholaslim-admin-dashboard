@@ -27,6 +27,31 @@ const userTypesApi = baseApi.injectEndpoints({
       },
       providesTags: ["UserTypes"],
     }),
+    getOnlyUserTypes: builder.query({
+      query: ({
+        status,
+        dateFilter,
+        page = 1,
+        limit = 10,
+        sortBy = "createdAt",
+        sortOrder = "asc",
+      }) => {
+         
+        let url = `/users/only-users?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
+
+        if (status) url += `&status=${status}`;
+
+        if (dateFilter) {
+          url += `&dateFilter=${dateFilter}`;
+        }
+
+        return {
+          url,
+          method: "GET",
+        };
+      },
+      providesTags: ["UserTypes"],
+    }),
     
     getWebUserTypes: builder.query({
       query: ({
@@ -119,6 +144,7 @@ const userTypesApi = baseApi.injectEndpoints({
 
 export const {
   useGetUserTypesQuery,
+  useGetOnlyUserTypesQuery,
   useGetWebUserTypesQuery,
   useGetUserTypeByIdQuery,
   useDeleteUserTypeMutation,
