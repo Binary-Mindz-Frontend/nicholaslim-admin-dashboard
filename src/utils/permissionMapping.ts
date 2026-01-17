@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { menuItems } from "@/components/Shared/Sidebar/MenuItems";
 
 interface PermissionMapping {
@@ -77,6 +78,8 @@ export const childRouteToParentMapping: Record<string, string> = {
   "support/view/:id": "support",
   "content-management-user": "content-management",
   "content-management-driver": "content-management",
+  "customize-profile": "admin",
+  "changePassword": "admin"
 };
 
 // Extract base route from dynamic route

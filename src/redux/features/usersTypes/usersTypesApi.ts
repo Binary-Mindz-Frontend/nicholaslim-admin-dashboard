@@ -139,6 +139,30 @@ const userTypesApi = baseApi.injectEndpoints({
       }),
       providesTags: ["UserTypes", "Stripe"],
     }),
+
+    updateUserProfile: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/users/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["UserTypes"],
+    }),
+
+    // Image upload mutation
+       uploadFile: builder.mutation({
+      query: (file) => {
+        const formData = new FormData();
+        formData.append("images", file); // MUST be "images"
+
+        return {
+          url: "/auth/upload",
+          method: "POST",
+          body: formData,
+        };
+      },
+      invalidatesTags: ["UserTypes"],
+    }),
   }),
 });
 
@@ -152,4 +176,6 @@ export const {
   useUpdateUserTypeMutation,
   useAddUserTypeMutation,
   useGetUserProfileQuery,
+  useUpdateUserProfileMutation,
+  useUploadFileMutation,
 } = userTypesApi;
