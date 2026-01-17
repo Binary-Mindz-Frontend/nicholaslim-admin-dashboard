@@ -38,7 +38,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
     }
   }, [usersData]);
 
-  console.log(usersData?.data?.data);
+  // console.log(usersData?.data?.data);
 
   // Handle toggle active status - now calls the API
   const handleToggleActive = async (userId: string) => {
