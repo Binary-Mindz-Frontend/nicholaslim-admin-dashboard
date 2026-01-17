@@ -79,7 +79,7 @@ export const childRouteToParentMapping: Record<string, string> = {
   "content-management-user": "content-management",
   "content-management-driver": "content-management",
   "customize-profile": "admin",
-  "changePassword": "admin"
+  "change-password": "admin"
 };
 
 // Extract base route from dynamic route

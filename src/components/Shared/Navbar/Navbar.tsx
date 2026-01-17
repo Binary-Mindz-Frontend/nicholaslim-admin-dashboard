@@ -439,6 +439,7 @@ const Navbar = () => {
                 <div className="p-2">
                   <Link
                     to="/customize-profile"
+                    onClick={() => setIsProfileOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors group"
                   >
                     <Settings className="w-4 h-4 text-gray-400 group-hover:text-amber-500" />
@@ -447,6 +448,7 @@ const Navbar = () => {
 
                   <Link
                     to="/change-password"
+                    onClick={() => setIsProfileOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors group"
                   >
                     <Key className="w-4 h-4 text-gray-400 group-hover:text-amber-500" />

@@ -42,9 +42,6 @@ const CustomizeProfile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Remove the manual "new FormData()" logic here because 
-    // your RTK Query mutation now handles it for you.
-
     const toastId = toast.loading("Uploading image...");
     try {
         // Just pass the 'file' directly to the mutation
@@ -85,8 +82,8 @@ const CustomizeProfile = () => {
     if (isLoading) return <div className="p-10 text-center">Loading...</div>;
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] pt-24 pb-12 px-4">
-            <div className="max-w-2xl mx-auto">
+        <div className=" bg-[#F8FAFC] pt-4 pb-12 px-4">
+            <div className=" mx-auto">
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold text-gray-900">Customize Profile</h1>
                     <p className="text-gray-500">Update your personal information and profile picture.</p>
