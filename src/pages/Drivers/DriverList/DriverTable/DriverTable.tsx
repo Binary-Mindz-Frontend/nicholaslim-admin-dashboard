@@ -123,7 +123,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       ),
     },
     {
-      header: "Name",
+      header: "Driver Name",
       accessor: "registrations",
       cell: (row) => (
         <p>
