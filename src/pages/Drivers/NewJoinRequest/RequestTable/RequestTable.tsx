@@ -110,9 +110,10 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
       header: "Driver ID",
       accessor: "id",
       cell: (row) => (
-        <span className="font-medium text-blue-600">D{row.id}</span>
+        <span className="font-medium  ">D{row.id}</span>
       ),
     },
+    
     {
       header: "Name",
       cell: (row) => {
@@ -153,6 +154,13 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
           year: "numeric",
         })}</span>;
       },
+    },
+    {
+      header: "Registered",
+      accessor: "registrations",
+      cell: (row) => (
+        <span className="font-medium  ">{row?.registrations?.length === 0? "NO": "Yes"}</span>
+      ),
     },
     {
       header: "Vehicle Type",
