@@ -1,24 +1,28 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Search, X, User, Package, Bike } from "lucide-react";
+import { Search, X, User, Package, Bike, Settings, Key } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import logo from "@/assets/images/logo.svg";
-import { useGetOwnProfileQuery } from "@/redux/features/users/usersApi";
 // import { useGetSearchbarQuery } from "@/redux/features/search/searchApi"; // Adjust the import path
 import { useState, useEffect, useRef } from "react";
 import { useGetSearchbarQuery } from "@/redux/features/searchbar/searchbarApi";
 import { Link, useNavigate } from "react-router-dom"; // Add this import at the top
+import { useGetUserProfileQuery } from "@/redux/features/usersTypes/usersTypesApi";
 
 const Navbar = () => {
-  const { data: user } = useGetOwnProfileQuery("");
+  const { data: user } = useGetUserProfileQuery("");
   const userName = user?.data?.username;
   const userRole = user?.data?.role.name;
   const userImage = user?.data?.image;
+
+  console.log("user info", user?.data?.id);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   // Inside your component, add this hook
   const navigate = useNavigate();
@@ -40,13 +44,19 @@ const Navbar = () => {
     }
   );
 
+  
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         searchRef.current &&
         !searchRef.current.contains(event.target as Node)
-      ) {
+      )
+        if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+          setIsProfileOpen(false);
+        }
+      {
         setShowResults(false);
       }
     };
@@ -256,7 +266,7 @@ const Navbar = () => {
                       </div>
                     )}
 
-                  
+
                     {/* Raiders Section */}
                     {raiders.length > 0 && (
                       <div>
@@ -343,29 +353,27 @@ const Navbar = () => {
                                   <div className="flex flex-col items-end gap-1">
                                     {raider.raider_status && (
                                       <span
-                                        className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
-                                          raider.raider_status === "ACTIVE"
-                                            ? "bg-green-100 text-green-700"
-                                            : raider.raider_status ===
-                                              "IN_ACTIVE"
+                                        className={`px-2.5 py-1 text-xs font-semibold rounded-full ${raider.raider_status === "ACTIVE"
+                                          ? "bg-green-100 text-green-700"
+                                          : raider.raider_status ===
+                                            "IN_ACTIVE"
                                             ? "bg-red-100 text-red-700"
                                             : "bg-yellow-100 text-yellow-700"
-                                        }`}
+                                          }`}
                                       >
                                         {raider.raider_status}
                                       </span>
                                     )}
                                     {raider.raider_verificationFromAdmin && (
                                       <span
-                                        className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${
-                                          raider.raider_verificationFromAdmin ===
+                                        className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${raider.raider_verificationFromAdmin ===
                                           "APPROVED"
-                                            ? "bg-green-100 text-green-700"
-                                            : raider.raider_verificationFromAdmin ===
-                                              "PENDING"
+                                          ? "bg-green-100 text-green-700"
+                                          : raider.raider_verificationFromAdmin ===
+                                            "PENDING"
                                             ? "bg-yellow-100 text-yellow-700"
                                             : "bg-red-100 text-red-700"
-                                        }`}
+                                          }`}
                                       >
                                         {raider.raider_verificationFromAdmin}
                                       </span>
@@ -391,18 +399,64 @@ const Navbar = () => {
         </div>
 
         {/* Right Section - 50% */}
+        {/* Right Section - 50% */}
         <div className="flex items-center justify-end gap-16 w-1/2">
-          {/* Profile */}
-          <div className="flex items-center gap-3 px-4">
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-900">{userName}</p>
-              <p className="text-xs text-gray-500">{userRole}</p>
+          {/* Profile Wrapper */}
+          <div className="relative" ref={profileRef}>
+            <div
+              className="flex items-center gap-3 px-4 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+            >
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">{userName}</p>
+                <p className="text-xs text-gray-500">{userRole}</p>
+              </div>
+
+              <Avatar className="w-10 h-10 ring ring-amber-500">
+                <AvatarImage src={userImage} alt={userName} />
+                <AvatarFallback>NA</AvatarFallback>
+              </Avatar>
             </div>
 
-            <Avatar className="w-10 h-10 ring ring-amber-500">
-              <AvatarImage src={userImage} alt={userName} />
-              <AvatarFallback>NA</AvatarFallback>
-            </Avatar>
+            {/* Dropdown Menu */}
+            {isProfileOpen && (
+              <div className="absolute right-0 mt-3 w-72 bg-white border border-gray-100 rounded-xl shadow-xl z-50 overflow-hidden">
+                {/* User Header Section (Matching Image Style) */}
+                <div className="p-6 bg-gray-50 flex flex-col items-center border-b border-gray-100">
+                  <Avatar className="w-16 h-16 mb-3 ring-4 ring-white shadow-sm">
+                    <AvatarImage src={userImage} alt={userName} />
+                    <AvatarFallback className="bg-amber-500 text-white text-xl uppercase">
+                      {userName?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <p className="font-bold text-gray-900">{userName}</p>
+                  <p className="text-sm text-gray-500 truncate w-full text-center">
+                    {user?.data?.email}
+                  </p>
+                </div>
+
+                {/* Action Options */}
+                <div className="p-2">
+                  <Link
+                    to="/customize-profile"
+                    onClick={() => setIsProfileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors group"
+                  >
+                    <Settings className="w-4 h-4 text-gray-400 group-hover:text-amber-500" />
+                    Customize Profile
+                  </Link>
+
+                  <Link
+                    to="/change-password"
+                    onClick={() => setIsProfileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors group"
+                  >
+                    <Key className="w-4 h-4 text-gray-400 group-hover:text-amber-500" />
+                    Change Password
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

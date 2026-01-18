@@ -14,6 +14,7 @@ export type TUser = {
   id: string;
   name: string;
   role?: string;
+  regi_status?: string;
   contactEmail: string;
   contactNum: string;
   totalOrders: number;
@@ -132,7 +133,15 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
         return <span>{contact}</span>;
       },
     },
-    
+    {
+  header: "Registration Source",
+  cell: (row: TUser) => {
+    if (row.regi_status === "ADMIN_SIGNIN") {
+      return <span>Web Admin</span>;
+    }
+    return <span></span>;
+  },
+},
 
     {
       header: "Total Order",

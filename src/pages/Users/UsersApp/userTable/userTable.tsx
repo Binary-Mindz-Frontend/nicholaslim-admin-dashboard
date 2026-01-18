@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useGetUserTypesQuery, useToggleUserActiveStatusMutation } from "@/redux/features/usersTypes/usersTypesApi";
+import { useGetOnlyUserTypesQuery, useToggleUserActiveStatusMutation } from "@/redux/features/usersTypes/usersTypesApi";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Switch } from "@/components/ui/switch";
 import ActionCell from "../ActionCell/ActionCell";
@@ -19,7 +19,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
   const [users, setUsers] = useState<TUser[]>([]);
 
   // Fetch user data using the custom RTK query hook with params
-  const { data: usersData, isLoading, isError } = useGetUserTypesQuery({
+  const { data: usersData, isLoading, isError } = useGetOnlyUserTypesQuery({
     status: params.status || "",
     dateFilter: params.dateFilter || "",
     page: params.page || 1,
@@ -37,6 +37,8 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
       setUsers(usersData.data.data);
     }
   }, [usersData]);
+
+  // console.log(usersData?.data?.data);
 
   // Handle toggle active status - now calls the API
   const handleToggleActive = async (userId: string) => {
@@ -108,6 +110,15 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
         return <span>{contact}</span>;
       },
     },
+     {
+      header: "Registration Source",
+      cell: (row: TUser) => {
+        if (row.regi_status === "DIRECT_SIGNIN") {
+          return <span>Mobile App</span>;
+        }
+        return <span></span>;
+      },
+    },
 
     {
       header: "Total Order",
@@ -123,7 +134,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
       header: "Joining Date",
       accessor: "joiningDate",
     },
-
+   
     {
       header: "Active/Inactive",
       cell: (row: TUser) => (

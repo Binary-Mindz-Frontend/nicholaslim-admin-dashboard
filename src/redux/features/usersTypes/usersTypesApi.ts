@@ -27,6 +27,31 @@ const userTypesApi = baseApi.injectEndpoints({
       },
       providesTags: ["UserTypes"],
     }),
+    getOnlyUserTypes: builder.query({
+      query: ({
+        status,
+        dateFilter,
+        page = 1,
+        limit = 10,
+        sortBy = "createdAt",
+        sortOrder = "asc",
+      }) => {
+         
+        let url = `/users/only-users?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
+
+        if (status) url += `&status=${status}`;
+
+        if (dateFilter) {
+          url += `&dateFilter=${dateFilter}`;
+        }
+
+        return {
+          url,
+          method: "GET",
+        };
+      },
+      providesTags: ["UserTypes"],
+    }),
     
     getWebUserTypes: builder.query({
       query: ({
@@ -114,11 +139,36 @@ const userTypesApi = baseApi.injectEndpoints({
       }),
       providesTags: ["UserTypes", "Stripe"],
     }),
+
+    updateUserProfile: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/users/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["UserTypes"],
+    }),
+
+    // Image upload mutation
+       uploadFile: builder.mutation({
+      query: (file) => {
+        const formData = new FormData();
+        formData.append("images", file); // MUST be "images"
+
+        return {
+          url: "/auth/upload",
+          method: "POST",
+          body: formData,
+        };
+      },
+      invalidatesTags: ["UserTypes"],
+    }),
   }),
 });
 
 export const {
   useGetUserTypesQuery,
+  useGetOnlyUserTypesQuery,
   useGetWebUserTypesQuery,
   useGetUserTypeByIdQuery,
   useDeleteUserTypeMutation,
@@ -126,4 +176,6 @@ export const {
   useUpdateUserTypeMutation,
   useAddUserTypeMutation,
   useGetUserProfileQuery,
+  useUpdateUserProfileMutation,
+  useUploadFileMutation,
 } = userTypesApi;

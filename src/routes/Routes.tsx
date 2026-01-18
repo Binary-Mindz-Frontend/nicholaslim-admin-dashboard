@@ -62,6 +62,8 @@ import ViewLiveTrackOrder from "@/pages/OrderPlacement/LiveOrderTracking/ViewLiv
 import OrderHistory from "@/pages/OrderPlacement/OrderHistory/OrderHistory";
 import StripeWrapper from "@/pages/Orders/PaymentOptions/StripeWrapper";
 import DashboardLayoutWrapper from "@/Layouts/DashboardLayoutWrapper";
+import CustomizeProfile from "@/components/Users/Profile/CustomizeProfile";
+import ChangePassword from "@/components/Users/Profile/ChangePassword";
 
 const routes = createBrowserRouter([
   {
@@ -84,6 +86,14 @@ const routes = createBrowserRouter([
       {
         path: "users-app",
         element: <UsersApp />,
+      },
+      {
+        path: "customize-profile",
+        element: <CustomizeProfile/>,
+      },
+      {
+        path: "change-password",
+        element: <ChangePassword />,
       },
       {
         path: "users-app/:id",
