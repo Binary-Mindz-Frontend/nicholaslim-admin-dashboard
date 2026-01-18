@@ -117,18 +117,18 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       header: "Driver ID",
       accessor: "id",
       cell: (row) => (
-        <a href="#" className="text-blue-600 underline">
+        <p>
           D{row.id}
-        </a>
+        </p>
       ),
     },
     {
-      header: "Name",
+      header: "Driver Name",
       accessor: "registrations",
       cell: (row) => (
-        <a href="#" className="text-blue-600 underline">
+        <p>
           {row.registrations?.[0]?.raider_name || "N/A"}
-        </a>
+        </p>
       ),
     },
     {

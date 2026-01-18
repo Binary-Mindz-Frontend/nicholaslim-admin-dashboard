@@ -174,7 +174,7 @@ export default function EditDriverProfile() {
     };
 
     const allFields: { key: keyof UserProfileType; label: string }[] = [
-        { key: "raider_name", label: "Full Name" },
+        { key: "raider_name", label: "Driver Name" },
         { key: "contact_number", label: "Phone Number" },
         { key: "email_address", label: "Email Address" },
         { key: "dob", label: "Date of Birth" },

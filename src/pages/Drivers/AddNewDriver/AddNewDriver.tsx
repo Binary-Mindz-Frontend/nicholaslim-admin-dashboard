@@ -44,25 +44,18 @@ const Label = ({ children, className = "" }: LabelProps) => (
   </label>
 );
 
-// Interface specifically for UploadBox props
 interface UploadBoxProps {
   label: string;
-  // onChange now expects the File object OR null (for clear)
   onChange: (file: File | null) => void;
   error?: string | null;
   isUploading?: boolean;
-  // IMPORTANT: This URL comes from the parent's uploaded URL state (e.g., documentUrls.nidFront)
   currentPreviewUrl?: string | null;
 }
 
-// UploadBox Component (FIXED to prioritize uploaded URL)
 const UploadBox = ({ label, onChange, error, isUploading, currentPreviewUrl }: UploadBoxProps) => {
-  // Local state to hold the file selected before API upload (for instant preview)
+
   const [localFileUrl, setLocalFileUrl] = useState<string | null>(null);
 
-  // Determine which preview to show: 
-  // 1. Uploaded URL (if available, it's the final source of truth)
-  // 2. Local File URL (while waiting for API upload)
   const preview = currentPreviewUrl || localFileUrl;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,31 +64,24 @@ const UploadBox = ({ label, onChange, error, isUploading, currentPreviewUrl }: U
 
     // 1. Update local preview URL
     if (file.type.startsWith("image/")) {
-      // Revoke previous local object URL to prevent memory leak
       if (localFileUrl) URL.revokeObjectURL(localFileUrl);
       setLocalFileUrl(URL.createObjectURL(file));
     } else {
       setLocalFileUrl(null);
     }
-
-    // 2. Notify parent component with the File object (to trigger API upload)
     onChange(file);
 
-    // Clearing the input allows re-uploading the same file, but now it's less critical
-    // e.target.value = ""; 
   };
 
   const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // 1. Clear local preview if it exists
     if (localFileUrl) {
       URL.revokeObjectURL(localFileUrl);
       setLocalFileUrl(null);
     }
 
-    // 2. Notify parent to clear the File and URL state (documentUrls[key] in parent)
     onChange(null);
 
     // Force clear the input element (optional, but good practice)
@@ -212,10 +198,8 @@ export default function AddNewDriver() {
     vehiclePolicy: "",
   });
 
-  // State to track currently uploading documents
   const [uploadingDocs, setUploadingDocs] = useState<Set<DocumentKey>>(new Set());
 
-  // State to hold validation errors for documents
   type DocumentErrorState = Record<DocumentKey, string | null>;
 
   const [documentErrors, setDocumentErrors] = useState<DocumentErrorState>({
@@ -350,8 +334,6 @@ export default function AddNewDriver() {
       setDocumentUrls((prev) => ({ ...prev, [key]: uploadedUrl }));
       setDocumentErrors((prev) => ({ ...prev, [key]: null }));
 
-      // **FIX: Removed the success toast here to prevent alert for every single document upload**
-      // toast.success(`${key} uploaded successfully!`);
     } catch (error: any) {
       toast.error(`Failed to upload ${key}`);
       setDocumentUrls((prev) => ({ ...prev, [key]: "" })); // Clear URL on error
@@ -421,10 +403,6 @@ export default function AddNewDriver() {
       return "";
     }
 
-    // The local date string is usually in YYYY-MM-DD format. 
-    // To prevent timezone issues shifting the date, we can just return the local date string 
-    // if the API expects YYYY-MM-DDT00:00:00.000Z. For this example, we keep toISOString 
-    // but ensure the input is valid.
     return date.toISOString();
   };
 
@@ -491,53 +469,53 @@ export default function AddNewDriver() {
       const formData = {
         raider_name: data.firstName + " " + data.lastName,
         contact_number: data.phone,
-        email_address: data.email,
+        email_address:  data.email || undefined,
         dob: formatDateToISO(data.dob),
         gender: mapGender(data.gender),
-        driver_photos: profileImageUrls, // Send URL
+        driver_photos: profileImageUrls,
         emergency_contact_name: data.emergencyContact,
         emergency_contact_number: data.emergencyContactNumber,
         identity_card_number: data.driverId,
-        nid_front_images: documentUrls.nidFront, // Send URL
-        nid_back_images: documentUrls.nidBack, // Send URL
+        nid_front_images: documentUrls.nidFront,
+        nid_back_images: documentUrls.nidBack,
         driving_license_number: data.drivingLicense,
         driving_license_issue_date: formatDateToISO(data.dlIssueDate),
         driving_license_expire_date: formatDateToISO(data.dlExpiryDate),
-        driving_license_front_images: documentUrls.licenseFront, // Send URL
-        driving_license_back_images: documentUrls.licenseBack, // Send URL
+        driving_license_front_images: documentUrls.licenseFront,
+        driving_license_back_images: documentUrls.licenseBack,
         vehicle_plate_number: data.vehiclePlate1 + "-" + data.vehiclePlate2,
         vehicle_type: mapVehicleType(data.vehicleType),
         vehicle_brand: data.model,
         registration_date: formatDateToISO(data.registrationDate),
-        vehicle_front_images: documentUrls.vehicleFront, // Send URL
-        vehicle_back_images: documentUrls.vehicleBack, // Send URL
-        vehicle_driver_side_images: documentUrls.driverSide, // Send URL
-        vehicle_passenger_side_images: documentUrls.passengerSide, // Send URL
+        vehicle_front_images: documentUrls.vehicleFront,
+        vehicle_back_images: documentUrls.vehicleBack,
+        vehicle_driver_side_images: documentUrls.driverSide,
+        vehicle_passenger_side_images: documentUrls.passengerSide,
         vehicle_log_number: data.vehicleLog,
         vehicle_log_issue_date: formatDateToISO(data.vehicleIssueDate),
         vehicle_log_expire_date: formatDateToISO(data.vehicleExpiryDate),
-        vehicle_log_images: documentUrls.vehicleLog, // Send URL
+        vehicle_log_images: documentUrls.vehicleLog,
         vehicle_policy_number: data.policyNumber,
         vehicle_policy_issue_date: formatDateToISO(data.policyIssue),
         vehicle_policy_expire_date: formatDateToISO(data.policyExpiry),
-        vehicle_policy_images: documentUrls.vehiclePolicy, // Send URL
+        vehicle_policy_images: documentUrls.vehiclePolicy,
         current_address: data.currentaddress,
         current_apartment: data.currentapartment,
         current_state_province: data.currentstate,
         current_city: data.currentcity,
-        current_country: "Bangladesh",
+        current_country: "Singapore",
         current_zip_post_code: data.currentpostal,
         permanent_address: data.permanentaddress,
         permanent_apartment: data.permanentapartment,
         permanent_state_province: data.permanentstate,
         permanent_city: data.permanentcity,
-        permanent_country: "Bangladesh",
+        permanent_country: "Singapore",
         permanent_zip_post_code: data.permanentpostal,
         bank_name: data.bank,
         account_number: data.accountNumber,
       };
 
-       // Added console log
+      // Added console log
 
       await addRiderProfile(formData).unwrap();
 
@@ -565,15 +543,15 @@ export default function AddNewDriver() {
   const bankOptions = [""];
 
   const allFields = [
-    { key: "firstName", label: "First Name" },
-    { key: "lastName", label: "Last Name" },
+    { key: "firstName", label: "Driver Name" },
+    // { key: "lastName", label: "Last Name" },
     { key: "email", label: "Email Address" },
-    { key: "phone", label: "Phone Number" },
+    { key: "phone", label: "Contact Number" },
     { key: "dob", label: "Date of Birth" },
-    { key: "gender", label: "Gender" },
+    { key: "gender", label: "Select Gender" },
     { key: "emergencyContact", label: "Emergency Contact Name" },
     { key: "emergencyContactNumber", label: "Emergency Contact Number" },
-    { key: "driverId", label: "Driver ID" },
+    { key: "driverId", label: "Identity Card Number" },
     { key: "currentaddress", label: "Current Address" },
     { key: "currentapartment", label: "Current Apartment" },
     { key: "currentcity", label: "Current City" },
@@ -682,9 +660,16 @@ export default function AddNewDriver() {
                 {/* Normal Input */}
                 {!["gender", "currentstate", "permanentstate", "vehicleType", "bank"].includes(key) &&
                   !isDateField(key) && (
+                    // <Input
+                    //   className="bg-secondary rounded"
+                    //   {...register(key as any, { required: `${label} is required` })}
+                    // />
                     <Input
                       className="bg-secondary rounded"
-                      {...register(key as any, { required: `${label} is required` })}
+                      {...register(key as any, key === "email"
+                        ? {}
+                        : { required: `${label} is required` }
+                      )}
                     />
                   )}
 
@@ -730,14 +715,14 @@ export default function AddNewDriver() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
               <UploadBox
-                label="Front of Driving License"
+                label="Front side of Driving License"
                 onChange={(file) => handleDocumentChange("licenseFront", file)}
                 error={documentErrors.licenseFront}
                 isUploading={uploadingDocs.has("licenseFront")}
               //        currentPreviewUrl={documentUrls.licenseFront} // **FIX: Pass the uploaded URL**
               />
               <UploadBox
-                label="Back of Driving License"
+                label="Back side of Driving License"
                 onChange={(file) => handleDocumentChange("licenseBack", file)}
                 error={documentErrors.licenseBack}
                 isUploading={uploadingDocs.has("licenseBack")}
@@ -767,14 +752,14 @@ export default function AddNewDriver() {
               //        currentPreviewUrl={documentUrls.vehicleBack} // **FIX: Pass the uploaded URL**
               />
               <UploadBox
-                label="Driver Side"
+                label="Driver Side of Vehicle"
                 onChange={(file) => handleDocumentChange("driverSide", file)}
                 error={documentErrors.driverSide}
                 isUploading={uploadingDocs.has("driverSide")}
               //        currentPreviewUrl={documentUrls.driverSide} // **FIX: Pass the uploaded URL**
               />
               <UploadBox
-                label="Passenger Side"
+                label="Passenger Side of Vehicle"
                 onChange={(file) => handleDocumentChange("passengerSide", file)}
                 error={documentErrors.passengerSide}
                 isUploading={uploadingDocs.has("passengerSide")}

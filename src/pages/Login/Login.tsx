@@ -114,7 +114,7 @@ const Login: React.FC = () => {
             Login to Account
           </h1>
           <p className="text-sm text-gray-500">
-            Please enter your email and password to continue
+           Please enter your mobile number, email address, or login ID along with your password to continue.
           </p>
         </div>
 
@@ -124,7 +124,7 @@ const Login: React.FC = () => {
               htmlFor="email"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Email
+              Mobile Number / Email / Login ID
             </label>
             <div className="relative">
               <input
@@ -133,7 +133,7 @@ const Login: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-gray-700 pl-11"
-                placeholder="Enter your email"
+                placeholder="mobile / email / login id"
                 required
                 disabled={isLoading}
               />
@@ -165,7 +165,7 @@ const Login: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-gray-700 pl-11 pr-12"
-                placeholder="Enter your password"
+                placeholder="password"
                 required
                 disabled={isLoading}
               />
