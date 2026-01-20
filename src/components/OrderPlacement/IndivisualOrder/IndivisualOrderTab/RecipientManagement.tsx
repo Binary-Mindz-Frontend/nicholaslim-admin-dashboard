@@ -111,6 +111,8 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
           )}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
         );
 
+        console.log("===========mapKey is coming=========", import.meta.env.VITE_GOOGLE_MAPS_API_KEY)
+
         const data: GeocodeResult = await response.json();
 
         if (data.status === "OK" && data.results.length > 0) {
