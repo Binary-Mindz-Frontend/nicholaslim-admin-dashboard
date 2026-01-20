@@ -320,6 +320,8 @@ const FleetMap: React.FC = () => {
   useEffect(() => {
     const loadGoogleMaps = () => {
       const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+        console.log('apikey================', apiKey);
+    
       if (!apiKey) {
         console.error('Google Maps API key is missing');
         return;
@@ -350,6 +352,7 @@ const FleetMap: React.FC = () => {
       initMap();
     }
   }, []);
+  
 
   // Zoom functions
   const handleZoomIn = () => {
