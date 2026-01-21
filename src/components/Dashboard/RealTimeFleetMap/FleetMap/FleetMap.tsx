@@ -31,7 +31,7 @@ const FleetMap: React.FC = () => {
 
   const { data: vehicleTypesResponse } = useGetVehicleTypesQuery('');
   const vehicleTypes = vehicleTypesResponse?.data || [];
-  
+
   const accessToken = localStorage.getItem('accessToken');
 
   // Mock socket token (replace with actual token from your auth system)
@@ -40,7 +40,7 @@ const FleetMap: React.FC = () => {
   // Get categories based on vehicle types
   const getCategories = (): Category[] => {
     const vehicleTypeMap = new Map<string, number>();
-    
+
     vehicleTypes.forEach((vehicle: VehicleType) => {
       const category = VEHICLE_CATEGORY_MAP[vehicle.vehicle_type] || 'other';
       vehicleTypeMap.set(category, (vehicleTypeMap.get(category) || 0) + 1);
@@ -116,12 +116,12 @@ const FleetMap: React.FC = () => {
   const generateLiveVehicles = (): LiveVehicle[] => {
     const vehicles: LiveVehicle[] = [];
     const center = { lat: 23.8103, lng: 90.4125 }; // Dhaka center
-    
+
     vehicleTypes.forEach((vehicle: VehicleType, index: number) => {
       // Generate random positions around center
       const lat = center.lat + (Math.random() - 0.5) * 0.1;
       const lng = center.lng + (Math.random() - 0.5) * 0.1;
-      
+
       vehicles.push({
         id: `vehicle-${index}`,
         type: vehicle.vehicle_type,
@@ -209,9 +209,9 @@ const FleetMap: React.FC = () => {
     });
 
     // Update last updated time
-    setLastUpdated(new Date().toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    setLastUpdated(new Date().toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
     }));
   };
 
@@ -235,7 +235,7 @@ const FleetMap: React.FC = () => {
   useEffect(() => {
     // Connect to admin socket for real-time updates
     const adminSocket = socketService.connectAdmin(adminToken || '');
-    
+
     if (adminSocket) {
       adminSocket.connect();
 
@@ -271,9 +271,9 @@ const FleetMap: React.FC = () => {
     const newVehicles: LiveVehicle[] = orders.map((order) => {
       const lat = order.lat || order.assign_rider?.locations?.lat || 0;
       const lng = order.lng || order.assign_rider?.locations?.lng || 0;
-      
+
       // Get vehicle type from order
-      const vehicleType = vehicleTypes.find((vt: VehicleType) => 
+      const vehicleType = vehicleTypes.find((vt: VehicleType) =>
         vt.id === order.vehicle_type_id
       )?.vehicle_type || 'CAR';
 
@@ -320,8 +320,7 @@ const FleetMap: React.FC = () => {
   useEffect(() => {
     const loadGoogleMaps = () => {
       const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-        console.log('apikey================', apiKey);
-    
+
       if (!apiKey) {
         console.error('Google Maps API key is missing');
         return;
@@ -331,7 +330,7 @@ const FleetMap: React.FC = () => {
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
       script.async = true;
       script.defer = true;
-      
+
       script.onload = () => {
         const checkGoogleMaps = () => {
           if (window.google && window.google.maps) {
@@ -352,8 +351,9 @@ const FleetMap: React.FC = () => {
       initMap();
     }
   }, []);
-  
 
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  console.log('apikey================', apiKey);
   // Zoom functions
   const handleZoomIn = () => {
     if (mapInstanceRef.current) {
@@ -379,8 +379,8 @@ const FleetMap: React.FC = () => {
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
       >
-        <div 
-          ref={mapRef} 
+        <div
+          ref={mapRef}
           className="w-full h-full"
         ></div>
       </FleetMapHeader>
