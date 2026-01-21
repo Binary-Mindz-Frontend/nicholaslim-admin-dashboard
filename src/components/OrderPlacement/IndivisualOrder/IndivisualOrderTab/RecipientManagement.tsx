@@ -111,8 +111,6 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
           )}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
         );
 
-        console.log("===========mapKey is coming=========", import.meta.env.VITE_GOOGLE_MAPS_API_KEY)
-
         const data: GeocodeResult = await response.json();
 
         if (data.status === "OK" && data.results.length > 0) {
@@ -140,7 +138,8 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
     },
     []
   );
-
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  console.log('apikey================', apiKey);
   // Debounced function to handle postal code changes
   const handlePostalCodeChange = useCallback(
     (
@@ -385,7 +384,7 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
                   className="flex items-center gap-2"
                 >
                   <X size={16} />
-                  
+
                 </Button>
               )}
             </div>
