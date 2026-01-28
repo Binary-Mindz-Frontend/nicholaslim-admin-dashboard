@@ -3,20 +3,21 @@ import { Search, X, User, Package, Bike, Settings, Key } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import logo from "@/assets/images/logo.svg";
-// import { useGetSearchbarQuery } from "@/redux/features/search/searchApi"; // Adjust the import path
 import { useState, useEffect, useRef } from "react";
 import { useGetSearchbarQuery } from "@/redux/features/searchbar/searchbarApi";
-import { Link, useNavigate } from "react-router-dom"; // Add this import at the top
+import { Link, useNavigate } from "react-router-dom";  
 import { useGetUserProfileQuery } from "@/redux/features/usersTypes/usersTypesApi";
 
 const Navbar = () => {
   const { data: user } = useGetUserProfileQuery("");
-  const userName = user?.data?.username;
-  const userRole = user?.data?.role.name;
+ const userName = user?.data?.username || "Guest";
+  const userRole = user?.data?.roles?.[0]?.name || "User";
   const userImage = user?.data?.image;
 
-  console.log("user info", user?.data?.id);
 
+  // console.log("user info", user?.data?.id);
+  // console.log("user", user?.data );
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
