@@ -27,6 +27,7 @@ const userTypesApi = baseApi.injectEndpoints({
       },
       providesTags: ["UserTypes"],
     }),
+    
     getOnlyUserTypes: builder.query({
       query: ({
         status,

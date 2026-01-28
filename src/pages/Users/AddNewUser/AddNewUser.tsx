@@ -17,7 +17,7 @@ const userSchema = z.object({
     .email({ message: "Invalid email format" }),
   phone: z.string().min(1, { message: "Phone is required" }),
   password: z.string().min(1, { message: "Password is required" }),
-  role: z.string().min(1, { message: "Role is required" }),
+  role: z.array(z.string()).min(1, { message: "At least one role is required" }),
 });
 
 type FormData = z.infer<typeof userSchema>;
@@ -25,21 +25,24 @@ type FormData = z.infer<typeof userSchema>;
 export default function AddNewUser() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(userSchema),
+    mode: "onChange",
     defaultValues: {
       fullName: "",
       email: "",
       phone: "",
       password: "",
-      role: "",
+      role: [],
     },
   });
 
@@ -57,12 +60,15 @@ export default function AddNewUser() {
     toast.loading("Creating user...");
     try {
       const newUser = {
-        username: data.fullName.trim().replace(/\s+/g, "_"),
-        email: data.email,
-        phone: data.phone,
-        password: data.password,
-        role_name: data.role,
-      };
+  username: data.fullName.trim().replace(/\s+/g, "_"),
+  email: data.email,
+  phone: data.phone,
+  password: data.password,
+  role_name: data.role[0], // First selected role
+  custom_role_name: data.role.slice(), // Rest of the roles as array
+};
+console.log("Submitting data:", newUser); // Add this line
+console.log("Selected roles:", data.role);
 
       const response = await addUser(newUser).unwrap();
 
@@ -75,7 +81,8 @@ export default function AddNewUser() {
       toast.success("User created successfully!");
       reset();
       setPhoto(null);
-      navigate("/users-app");
+      setSelectedRoles([]);
+      navigate("/users-web-portal");
     } catch (error) {
       toast.dismiss();
       console.error("Failed to create user:", error);
@@ -92,6 +99,22 @@ export default function AddNewUser() {
     const reader = new FileReader();
     reader.onloadend = () => setPhoto(reader.result as string);
     reader.readAsDataURL(file);
+  };
+
+  const handleRoleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedRole = e.target.value;
+    if (selectedRole && !selectedRoles.includes(selectedRole)) {
+      const newRoles = [...selectedRoles, selectedRole];
+      setSelectedRoles(newRoles);
+      setValue("role", newRoles);
+    }
+    e.target.value = ""; // Reset dropdown
+  };
+
+  const handleRemoveRole = (roleToRemove: string) => {
+    const newRoles = selectedRoles.filter(role => role !== roleToRemove);
+    setSelectedRoles(newRoles);
+    setValue("role", newRoles);
   };
 
   return (
@@ -142,11 +165,10 @@ export default function AddNewUser() {
               <input
                 {...register("fullName")}
                 placeholder="Enter full name"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${
-                  errors.fullName
-                    ? "focus:ring-red-400 ring-2 ring-red-400"
-                    : "focus:ring-yellow-200"
-                }`}
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.fullName
+                  ? "focus:ring-red-400 ring-2 ring-red-400"
+                  : "focus:ring-yellow-200"
+                  }`}
               />
               {errors.fullName && (
                 <p className="text-red-500 text-sm mt-1">
@@ -163,11 +185,10 @@ export default function AddNewUser() {
                 {...register("email")}
                 type="email"
                 placeholder="Enter email"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${
-                  errors.email
-                    ? "focus:ring-red-400 ring-2 ring-red-400"
-                    : "focus:ring-yellow-200"
-                }`}
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.email
+                  ? "focus:ring-red-400 ring-2 ring-red-400"
+                  : "focus:ring-yellow-200"
+                  }`}
               />
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1">
@@ -185,11 +206,10 @@ export default function AddNewUser() {
               <input
                 {...register("phone")}
                 placeholder="Enter phone number"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${
-                  errors.phone
-                    ? "focus:ring-red-400 ring-2 ring-red-400"
-                    : "focus:ring-yellow-200"
-                }`}
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.phone
+                  ? "focus:ring-red-400 ring-2 ring-red-400"
+                  : "focus:ring-yellow-200"
+                  }`}
               />
               {errors.phone && (
                 <p className="text-red-500 text-sm mt-1">
@@ -206,11 +226,10 @@ export default function AddNewUser() {
                 {...register("password")}
                 type="password"
                 placeholder="Enter Password"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${
-                  errors.password
-                    ? "focus:ring-red-400 ring-2 ring-red-400"
-                    : "focus:ring-yellow-200"
-                }`}
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.password
+                  ? "focus:ring-red-400 ring-2 ring-red-400"
+                  : "focus:ring-yellow-200"
+                  }`}
               />
               {errors.password && (
                 <p className="text-red-500 text-sm mt-1">
@@ -220,16 +239,14 @@ export default function AddNewUser() {
             </div>
 
             <div>
-              <label className="block text-gray-600 font-medium mb-2">
-                Role
-              </label>
+              <label className="block text-gray-600 font-medium mb-2">Role</label>
+
               <select
-                {...register("role")}
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${
-                  errors.role
+                onChange={handleRoleSelect}
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.role
                     ? "focus:ring-red-400 ring-2 ring-red-400"
                     : "focus:ring-yellow-200"
-                }`}
+                  }`}
                 disabled={rolesLoading}
               >
                 <option value="">Select Role</option>
@@ -239,6 +256,28 @@ export default function AddNewUser() {
                   </option>
                 ))}
               </select>
+
+              {/* Selected roles display */}
+              {selectedRoles.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {selectedRoles.map((role) => (
+                    <div
+                      key={role}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-yellow-100 rounded-full text-sm font-medium text-gray-700"
+                    >
+                      {role}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveRole(role)}
+                        className="hover:text-red-600 font-bold"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {errors.role && (
                 <p className="text-red-500 text-sm mt-1">
                   {errors.role.message}
