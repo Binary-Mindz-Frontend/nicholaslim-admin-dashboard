@@ -540,7 +540,7 @@ export default function AddNewDriver() {
     "Mymensingh",
   ];
   const vehicleTypes = ["Bike", "Car", "Pickup", "CNG", "Truck"];
-  const bankOptions = [""];
+  // const bankOptions = [""];
 
   const allFields = [
     { key: "firstName", label: "Driver Name" },
@@ -635,7 +635,7 @@ export default function AddNewDriver() {
                 <Label className="text-sm font-semibold pb-2">{label}</Label>
 
                 {/* Dropdown Fields */}
-                {["gender", "currentstate", "permanentstate", "vehicleType", "bank"].includes(key) && (
+                {["gender", "currentstate", "permanentstate", "vehicleType"].includes(key) && (
                   <select
                     {...register(key as any, { required: `${label} is required` })}
                     className="w-full border bg-secondary rounded p-2"
@@ -644,7 +644,6 @@ export default function AddNewDriver() {
                     {key === "gender" && genderOptions.map((g) => (<option key={g} value={g}>{g}</option>))}
                     {["currentstate", "permanentstate"].includes(key) && stateOptions.map((s) => (<option key={s} value={s}>{s}</option>))}
                     {key === "vehicleType" && vehicleTypes.map((v) => (<option key={v} value={v}>{v}</option>))}
-                    {key === "bank" && bankOptions.map((b) => (<option key={b} value={b}>{b}</option>))}
                   </select>
                 )}
 
@@ -658,7 +657,7 @@ export default function AddNewDriver() {
                 )}
 
                 {/* Normal Input */}
-                {!["gender", "currentstate", "permanentstate", "vehicleType", "bank"].includes(key) &&
+                {!["gender", "currentstate", "permanentstate", "vehicleType" ].includes(key) &&
                   !isDateField(key) && (
                     // <Input
                     //   className="bg-secondary rounded"
