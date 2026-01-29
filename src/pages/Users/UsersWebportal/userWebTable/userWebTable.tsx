@@ -56,7 +56,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
     }
   }, [usersData]);
 
-  // console.log("web", usersData?.data?.data)
+  console.log("web", usersData?.data?.data)
 
   // Handle toggle active status - now calls the API
   const handleToggleActive = async (userId: string) => {
@@ -111,11 +111,23 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
       ),
     },
     {
-      header: "Role",
-      cell: (row: TUser) => {
-        return <span>{row.role}</span>;
-      },
-    },
+  header: "Role",
+  cell: (row: TUser) => {
+    const roles = Array.isArray(row.role) ? row.role : [row.role];
+    return (
+      <div className="flex flex-wrap gap-1">
+        {roles.map((r, index) => (
+          <span
+            key={index}
+            className="px-2 py-0.5  rounded-full text-xs font-medium text-gray-700"
+          >
+            {r}
+          </span>
+        ))}
+      </div>
+    );
+  },
+},
     {
       header: "Email Address",
       accessor: "contactEmail",
