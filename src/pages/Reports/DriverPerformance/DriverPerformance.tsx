@@ -14,12 +14,14 @@ import {
 } from "@/redux/features/reportAndAnalytics/reportAndAnalyticsApi";
 import { useState } from "react";
 import CustomTable from "./DriverTable/CustomTable";
+import { Button } from "@/components/ui/button";
+import useExportData from "@/hooks/useExportData";
 
 export default function DriverPerformance() {
   const [selectedMonth, setSelectedMonth] = useState("THIS_MONTH");
 
   const {
-    data: performanceData = [],
+    data: performanceData,
     isLoading: isChartLoading,
     isError: isChartError,
     error: chartError,
@@ -29,7 +31,7 @@ export default function DriverPerformance() {
     data: topDriversData = [],
     isLoading: isTableLoading,
     isError: isTableError,
-  } = useGetDriverPerformanceTopQuery(20);
+  } = useGetDriverPerformanceTopQuery(200);
 
   const columns = useDriverColumns();
 
@@ -46,8 +48,8 @@ export default function DriverPerformance() {
         typeof driver.avgRating === "number"
           ? driver.avgRating
           : typeof driver.rating === "number"
-          ? driver.rating
-          : 0,
+            ? driver.rating
+            : 0,
       revenue: driver.revenue
         ? `$${
             typeof driver.revenue === "number"
@@ -65,12 +67,34 @@ export default function DriverPerformance() {
     setSelectedMonth(value);
   };
 
+  const { exportToCSV } = useExportData({
+    fileName: "Driver Performance",
+  });
+
+  const handleExport = () => {
+    const dataToExport = performanceData?.data || [];
+    if (dataToExport.length > 0) {
+      exportToCSV(dataToExport);
+    }
+  };
+
   return (
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
       <div className="w-full mx-auto space-y-4 mb-6">
         {/* Header Section */}
-        <div className="pt-2 sm:py-2">
-          <h1 className="text-black text-2xl font-bold">Reports & Analytics</h1>
+        <div className="flex flex-wrap items-center justify-between">
+          <div className="pt-2 sm:py-2">
+            <h1 className="text-black text-2xl font-bold">
+              Reports & Analytics{" "}
+            </h1>
+          </div>
+
+          <Button
+            onClick={handleExport}
+            className="bg-[#FFCC00] hover:bg-[#E6B800] text-black font-semibold py-2 px-4 rounded flex items-center gap-2 cursor-pointer"
+          >
+            <span className="text-sm">Download Report</span>
+          </Button>
         </div>
 
         {/* Header  */}

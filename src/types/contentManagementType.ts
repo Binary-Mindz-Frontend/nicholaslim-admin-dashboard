@@ -6,6 +6,8 @@ export type ContentType =
   | "Help Articles List"
   | "About Us";
 
+export type TabType = "User" | "Riders";
+
 export type ContentEntityType = "content" | "faq" | "article" | "aboutus";
 
 // Map UI content types to API enum values
@@ -16,6 +18,11 @@ export const CONTENT_TYPE_MAP: Record<ContentType, string> = {
   "FAQ List": "FAQ",
   "Help Articles List": "HELPARTICLES",
   "About Us": "ABOUTUS",
+};
+
+export const CONTENT_TYPE_DISPLAY: Record<TabType, string> = {
+  User: "User",
+  Riders: "Riders",
 };
 
 // Reverse mapping for API to UI
