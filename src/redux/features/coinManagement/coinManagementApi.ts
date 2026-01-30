@@ -62,11 +62,10 @@ const coinManagementApi = baseApi.injectEndpoints({
       invalidatesTags: ["Coins"],
     }),
 
-
     redeemCoin: builder.mutation<
       { success: boolean; message: string },
-      { coin: string }>
-      ({
+      { coin: string }
+    >({
       query: ({ coin }) => ({
         url: "/coin-management/redeem-coin",
         method: "POST",
@@ -77,6 +76,13 @@ const coinManagementApi = baseApi.injectEndpoints({
       invalidatesTags: ["Coins", "UserTypes", "Stripe"],
     }),
 
+    getCoinLogs: builder.query({
+      query: () => ({
+        url: "/coin-management/logs",
+        method: "GET",
+      }),
+      providesTags: ["Coins"],
+    }),
   }),
 });
 
@@ -89,4 +95,5 @@ export const {
   useUpdateCoinMutation,
   useDeleteCoinMutation,
   useRedeemCoinMutation,
+  useGetCoinLogsQuery,
 } = coinManagementApi;

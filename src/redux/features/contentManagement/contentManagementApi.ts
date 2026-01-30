@@ -43,6 +43,14 @@ const contentManagementApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Content"],
     }),
+
+    getAllContentLogs: build.query({
+      query: () => ({
+        url: "/content-management/logs",
+        method: "GET",
+      }),
+      providesTags: ["Content"],
+    })
   }),
 });
 
@@ -52,4 +60,5 @@ export const {
   useAddContentMutation,
   useUpdateContentMutation,
   useDeleteContentMutation,
+  useGetAllContentLogsQuery
 } = contentManagementApi;

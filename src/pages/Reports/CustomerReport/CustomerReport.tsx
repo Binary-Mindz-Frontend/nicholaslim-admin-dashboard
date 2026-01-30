@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // import FilterSection from "@/components/Users/FilterSection/FilterSection";
 // import { useState } from "react";
 // import { Download } from "lucide-react";
@@ -6,6 +7,8 @@ import OrdersByTime from "./CustomerChart/OrdersByTime";
 import OrdersByArea from "./CustomerChart/OrdersByArea";
 import DeliveryHeatmap from "./DeliveryHeatmap/DeliveryHeatmap";
 import { useGetReportAndAnalyticsQuery } from "@/redux/features/reportAndAnalytics/reportAndAnalyticsApi";
+import { Button } from "@/components/ui/button";
+import useExportData from "@/hooks/useExportData";
 
 export default function CustomerReport() {
   // const [dateFilter, setDateFilter] = useState("");
@@ -24,15 +27,63 @@ export default function CustomerReport() {
   const zoneStats = reportData?.data?.zoneStats;
   const heatmapData = reportData?.data?.heatmap;
 
+  const { exportToCSV } = useExportData({
+    fileName: "Customer Report",
+  });
+
+  const handleExport = () => {
+    const rawData = reportData?.data;
+
+    if (!rawData) {
+      alert("No data available to export!");
+      return;
+    }
+
+    const dataToExport: any[] = [];
+
+    Object.entries(rawData).forEach(([key, list]) => {
+      if (Array.isArray(list)) {
+        list.forEach((item) => {
+          dataToExport.push({
+            Category: key,
+            Details: Object.entries(item)
+              .map(
+                ([k, v]) =>
+                  `${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`,
+              )
+              .join(" | "),
+          });
+        });
+      }
+    });
+
+    if (dataToExport.length > 0) {
+      exportToCSV(dataToExport, "Analytics_Full_Report");
+    } else {
+      alert("No data found to export!");
+    }
+  };
+
   return (
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
       <div className="w-full mx-auto space-y-4 mb-6">
         {/* Header Section */}
-        <div className="pt-2 sm:py-2">
-          <h1 className="text-black text-2xl font-bold">
-            Reports & Analytics{" "}
-          </h1>
-          {/* <p className="text-base text-[#6B6B6B]">Overview of daily performance, earnings, and user activity</p> */}
+        <div className="flex flex-wrap items-center justify-between">
+          <div className="pt-2 sm:py-2">
+            <h1 className="text-black text-2xl font-bold">
+              Reports & Analytics{" "}
+            </h1>
+            <p className="text-base text-[#6B6B6B]">
+              Overview of daily performance, earnings, and user activity
+            </p>
+          </div>
+
+          <Button
+            onClick={handleExport}
+            className="bg-[#FFCC00] hover:bg-[#E6B800] text-black font-semibold py-2 px-4 rounded flex items-center gap-2 cursor-pointer"
+          >
+            <span className="text-sm">Download Report</span>
+          </Button>
         </div>
 
         {/* <FilterSection

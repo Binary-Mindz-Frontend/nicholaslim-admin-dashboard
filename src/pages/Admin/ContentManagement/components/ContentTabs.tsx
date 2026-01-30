@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { ContentType, tabItems } from "@/types/contentManagementType";
+import { tabItems } from "@/types/contentManagementType";
 
 interface ContentTabsProps {
-  activeTab: ContentType;
-  setActiveTab: (tab: ContentType) => void;
+  activeTab: string;
+  setActiveTab: (tab: any) => void;
   disabled?: boolean;
 }
 

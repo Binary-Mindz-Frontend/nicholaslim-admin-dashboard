@@ -107,6 +107,14 @@ export const advertiseApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Advertisements"],
     }),
+
+    getAllAdvertisesLogs: builder.query({
+      query: () => ({
+        url: "/advertise/logs",
+        method: "GET",
+      }),
+      providesTags: ["Advertisements"],
+    })
   }),
 });
 
@@ -122,4 +130,5 @@ export const {
   useGetAdvertisementStatsQuery,
   useRecordImpressionMutation,
   useRecordClickMutation,
+  useGetAllAdvertisesLogsQuery
 } = advertiseApi;
