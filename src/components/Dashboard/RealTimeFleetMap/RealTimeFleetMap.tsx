@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-const */
-/* eslint-disable react-hooks/rules-of-hooks */
 import { useGetSingleOrderQuery } from "@/redux/features/orders/ordersApi";
 import { useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
 import { useEffect, useRef, useState } from "react";
@@ -20,7 +19,7 @@ interface Marker {
   setIcon: (icon: google.maps.Icon | google.maps.Symbol | null) => void;
   setVisible: (visible: boolean) => void;
   setPosition: (
-    position: google.maps.LatLng | google.maps.LatLngLiteral
+    position: google.maps.LatLng | google.maps.LatLngLiteral,
   ) => void;
   setTitle: (title: string) => void;
 }
@@ -142,7 +141,7 @@ export default function FleetMapHeader({
     selectedOrderId || "",
     {
       skip: !selectedOrderId,
-    }
+    },
   );
 
   // Get token from localStorage
@@ -153,8 +152,8 @@ export default function FleetMapHeader({
     if (!mapRef.current || !window.google) return;
 
     const map = new google.maps.Map(mapRef.current, {
-      center: { lat: 23.8103, lng: 90.4125 }, // Dhaka coordinates
-      zoom: 12,
+      center: { lat: 1.3521, lng: 103.8198 },
+      zoom: 11,
       disableDefaultUI: true,
       zoomControl: false,
       mapTypeControl: false,
@@ -268,7 +267,7 @@ export default function FleetMapHeader({
 
   // Convert single order API response to vehicle format
   const convertSingleOrderToVehicle = (
-    orderData: SingleOrderResponse
+    orderData: SingleOrderResponse,
   ): Vehicle | null => {
     if (!orderData?.success || !orderData.data) return null;
 
@@ -341,7 +340,7 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
         map: mapInstanceRef.current as any | null,
         icon: {
           url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-            iconSvg
+            iconSvg,
           )}`,
           scaledSize: new google.maps.Size(36, 36),
           anchor: new google.maps.Point(18, 18),
@@ -418,7 +417,7 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
       // Remove old markers that are no longer in the list
       const currentVehicleIds = new Set(newVehicles.map((v) => v.id));
       markersRef.current.forEach((marker, vehicleId) => {
-        console.log(marker)
+        console.log(marker);
         if (!currentVehicleIds.has(vehicleId)) {
           removeVehicleMarker(vehicleId);
         }
@@ -451,9 +450,9 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
               return updatedVehicle;
             }
             return vehicle;
-          })
+          }),
         );
-      }
+      },
     );
   };
 
@@ -512,20 +511,20 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
           config.color === "#F97316"
             ? "bg-orange-500"
             : config.color === "#22C55E"
-            ? "bg-green-500"
-            : config.color === "#10B981"
-            ? "bg-emerald-500"
-            : config.color === "#06B6D4"
-            ? "bg-cyan-500"
-            : config.color === "#EF4444"
-            ? "bg-red-500"
-            : config.color === "#8B5CF6"
-            ? "bg-purple-500"
-            : config.color === "#F59E0B"
-            ? "bg-amber-500"
-            : config.color === "#84CC16"
-            ? "bg-lime-500"
-            : "bg-gray-500",
+              ? "bg-green-500"
+              : config.color === "#10B981"
+                ? "bg-emerald-500"
+                : config.color === "#06B6D4"
+                  ? "bg-cyan-500"
+                  : config.color === "#EF4444"
+                    ? "bg-red-500"
+                    : config.color === "#8B5CF6"
+                      ? "bg-purple-500"
+                      : config.color === "#F59E0B"
+                        ? "bg-amber-500"
+                        : config.color === "#84CC16"
+                          ? "bg-lime-500"
+                          : "bg-gray-500",
         markerColor: config.color,
       });
     });
@@ -615,7 +614,7 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
       if (vehicle) {
         // Check if vehicle already exists
         const existingVehicleIndex = vehicles.findIndex(
-          (v) => v.riderId === vehicle.riderId
+          (v) => v.riderId === vehicle.riderId,
         );
 
         if (existingVehicleIndex === -1) {

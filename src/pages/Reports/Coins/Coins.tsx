@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-case-declarations */
 // import { Download } from "lucide-react";
 // import { Button } from "@/components/ui/button";
 import CoinSummaryChart from "./CoinsChart/CoinSummaryChart";
@@ -6,6 +8,8 @@ import CoinsAnalytics from "./CoinsAnalytics/CoinsAnalytics";
 import FilterSection from "../FilterSection/FilterSection";
 import { useState, useEffect } from "react";
 import { useGetCoinStatsQuery } from "@/redux/features/reportAndAnalytics/reportAndAnalyticsApi";
+import { Button } from "@/components/ui/button";
+import useExportData from "@/hooks/useExportData";
 
 export default function Coins() {
   const [dateFilter, setDateFilter] = useState("last_30_days");
@@ -17,10 +21,10 @@ export default function Coins() {
   // Generate date range based on filter
   const getDateRange = () => {
     const now = new Date();
-    const formatDate = (date: Date) => date.toISOString().split('T')[0];
+    const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
     // If custom date range is selected
-    if (dateFilter === 'custom' && fromDate && toDate) {
+    if (dateFilter === "custom" && fromDate && toDate) {
       return {
         from: `${fromDate}T00:00:00.000Z`,
         to: `${toDate}T23:59:59.999Z`,
@@ -57,7 +61,11 @@ export default function Coins() {
         };
       case "last_month":
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const lastDayOfMonth = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+        );
         return {
           from: `${formatDate(firstDayOfMonth)}T00:00:00.000Z`,
           to: `${formatDate(lastDayOfMonth)}T23:59:59.999Z`,
@@ -71,14 +79,14 @@ export default function Coins() {
   const dateRange = getDateRange();
 
   // Fetch coin stats with date range
-  const { data: coinStatsData, isLoading, refetch } = useGetCoinStatsQuery(
+  const { data: coinStatsData, isLoading } = useGetCoinStatsQuery(
     dateRange || { from: "", to: "" },
-    { skip: !dateRange?.from || !dateRange?.to }
+    { skip: !dateRange?.from || !dateRange?.to },
   );
 
   // Handle date filter change
   useEffect(() => {
-    setShowCustomDateRange(dateFilter === 'custom');
+    setShowCustomDateRange(dateFilter === "custom");
   }, [dateFilter]);
 
   const handleResetFilter = () => {
@@ -90,40 +98,99 @@ export default function Coins() {
 
   // Format date for display
   const formatDisplayDate = (dateString: string) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    if (!dateString) return "";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
+  };
+
+  const { exportToCSV } = useExportData({
+    fileName: "Coin Management Analytics",
+  });
+
+  const handleExport = () => {
+    const rawData = coinStatsData?.data;
+
+    if (!rawData) {
+      alert("No data available to export!");
+      return;
+    }
+
+    const dataToExport = [];
+
+    dataToExport.push({
+      Category: "Overall Stats",
+      Label: "Total Coin Given",
+      Value: rawData.totalCoinGiven || 0,
+    });
+    dataToExport.push({
+      Category: "Overall Stats",
+      Label: "Total Coin Redeem",
+      Value: rawData.totalCoinRedeem || 0,
+    });
+    dataToExport.push({
+      Category: "Overall Stats",
+      Label: "Total Coin Expired",
+      Value: rawData.totalCoinExpired || 0,
+    });
+    dataToExport.push({
+      Category: "Overall Stats",
+      Label: "Total Active Users With Coin",
+      Value: rawData.totalActiveUsersWithCoin || 0,
+    });
+
+    if (rawData.coinSummaryChart?.length > 0) {
+      rawData.coinSummaryChart.forEach((item: { label: any; value: any; }) => {
+        dataToExport.push({
+          Category: "Coin Summary Chart",
+          Label: item.label,
+          Value: item.value,
+        });
+      });
+    }
+
+    if (rawData.coinByActivityChart?.length > 0) {
+      rawData.coinByActivityChart.forEach((item: { event: any; coins: any; }) => {
+        dataToExport.push({
+          Category: "Activity Stats",
+          Label: item.event,
+          Value: item.coins,
+        });
+      });
+    }
+
+    if (dataToExport.length > 0) {
+      exportToCSV(dataToExport, "Coin_Analytics_Report");
+    }
   };
 
   return (
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
       <div className="w-full mx-auto space-y-4 mb-6">
         {/* Header Section */}
-        <div className="pt-2 sm:py-2">
-          <h1 className="text-black text-2xl font-bold">
-            Coin Management Analytics
-          </h1>
-          <div className="text-base text-[#6B6B6B] flex flex-wrap items-center gap-2">
-            {dateRange && (
-              <>
-                <span>Showing coin data from</span>
-                <span className="font-medium">
-                  {formatDisplayDate(dateRange.from)} to {formatDisplayDate(dateRange.to)}
-                </span>
-              </>
-            )}
-            {!isLoading && dateRange && (
-              <button
-                onClick={() => refetch()}
-                className="text-blue-600 hover:text-blue-800 text-sm underline"
-              >
-                Refresh Data
-              </button>
-            )}
+        <div className="flex flex-wrap items-center justify-between">
+          <div className="pt-2 sm:py-2">
+            <h1 className="text-black text-2xl font-bold">
+              Coin Management Analytics
+            </h1>
+            <div className="text-base text-[#6B6B6B] flex flex-wrap items-center gap-2">
+              {dateRange && (
+                <>
+                  <span>Showing coin data from</span>
+                  <span className="font-medium">
+                    {formatDisplayDate(dateRange.from)} to{" "}
+                    {formatDisplayDate(dateRange.to)}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
+
+          <Button onClick={handleExport} className="bg-[#FFCC00] hover:bg-[#E6B800] text-black font-semibold py-2 px-4 rounded flex items-center gap-2 cursor-pointer">
+            <span className="text-sm">Download Report</span>
+          </Button>
         </div>
 
         <FilterSection
@@ -141,18 +208,18 @@ export default function Coins() {
       </div>
 
       {/* Coins Analytics Section */}
-      <CoinsAnalytics 
+      <CoinsAnalytics
         coinStatsData={coinStatsData?.data}
         isLoading={isLoading}
       />
 
       {/* Coins chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CoinSummaryChart 
+        <CoinSummaryChart
           coinSummaryChart={coinStatsData?.data?.coinSummaryChart}
           isLoading={isLoading}
         />
-        <CoinsByActivityChart 
+        <CoinsByActivityChart
           coinByActivityChart={coinStatsData?.data?.coinByActivityChart}
           isLoading={isLoading}
         />

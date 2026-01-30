@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
-import { 
-  useCreateQuizMutation, 
-  useDeleteQuizMutation, 
-  useGetQuizzesQuery, 
-  useUpdateQuizMutation 
+import {
+  useCreateQuizMutation,
+  useDeleteQuizMutation,
+  useGetAllQuizsLogsQuery,
+  useGetQuizzesQuery,
+  useUpdateQuizMutation,
 } from "@/redux/features/quizzes/quizzesApi";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -12,10 +13,13 @@ import { Plus, BookOpen } from "lucide-react";
 import AllQuizShowTable from "./components/AllQuizShowTable";
 import QuizModal from "./components/QuizModal";
 import QuizAttemptsTable from "./components/QuizTable";
+import { DynamicChangeLogTable } from "@/components/Shared/DynamicChangeLogTable/DynamicChangeLogTable";
 
 const Quiz: React.FC = () => {
   const navigate = useNavigate();
   const { data: quizzesResponse, isLoading, refetch } = useGetQuizzesQuery("");
+  const { data: quizLogsResponse, isLoading: isLogsLoading } =
+    useGetAllQuizsLogsQuery("");
   const [createQuiz] = useCreateQuizMutation();
   const [updateQuiz] = useUpdateQuizMutation();
   const [deleteQuiz] = useDeleteQuizMutation();
@@ -26,15 +30,86 @@ const Quiz: React.FC = () => {
 
   const quizzes = quizzesResponse?.data || [];
 
+  const quizLogColumns = [
+    {
+      header: "Date",
+      accessor: "createdAt",
+      render: (row: any, index: number) => (
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-slate-700">
+            {new Date(row.createdAt).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })}
+          </span>
+          {index === 0 && (
+            <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold border border-amber-200">
+              LATEST
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      header: "Quiz Info",
+      accessor: "title",
+      render: (row: any) => (
+        <div className="flex flex-col">
+          <span className="font-bold text-slate-900">{row.title}</span>
+          <span className="text-[11px] text-slate-500">{row.category}</span>
+        </div>
+      ),
+    },
+    {
+      header: "Configuration",
+      accessor: "quizOption",
+      render: (row: any) => (
+        <div className="text-[11px] text-slate-600">
+          <div>Time: {row.quizOption?.timeLimit}m</div>
+          <div className="capitalize">Diff: {row.quizOption?.difficulty}</div>
+        </div>
+      ),
+    },
+    {
+      header: "Changed By",
+      accessor: "changedByRole",
+      render: (row: any) => (
+        <div className="flex items-center gap-2">
+          <div className="h-7 w-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold border border-slate-200">
+            {row.changedByAdminId}
+          </div>
+          <span className="text-xs font-semibold text-slate-500 uppercase">
+            {row.changedByRole}
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: "Status",
+      accessor: "isActive",
+      render: (row: any) => (
+        <span
+          className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+            row.isActive
+              ? "bg-green-50 text-green-700 border-green-200"
+              : "bg-red-50 text-red-600 border-red-200"
+          }`}
+        >
+          {row.isActive ? "ACTIVE" : "INACTIVE"}
+        </span>
+      ),
+    },
+  ];
+
   const handleCreateQuiz = async (quizData: any) => {
     toast.loading("Creating quiz...");
     try {
       const result = await createQuiz(quizData).unwrap();
-
       if (!result.success) {
-          toast.dismiss();
-          toast.error(result.message);
-          return;
+        toast.dismiss();
+        toast.error(result.message);
+        return;
       }
       setIsModalOpen(false);
       toast.dismiss();
@@ -50,32 +125,26 @@ const Quiz: React.FC = () => {
   const handleEditQuiz = async (quizData: any) => {
     if (!editingQuiz?.id) return;
     toast.loading("Updating quiz...");
-
-    // const { created_at, created_by_id, id, createdAt, updatedAt, ...updateFields } = quizData;
     const { ...updateFields } = quizData;
-    
     const payload = {
       ...updateFields,
-      QuizOption: quizData.QuizOption ? {
-        ...quizData.QuizOption
-      } : undefined
+      QuizOption: quizData.QuizOption ? { ...quizData.QuizOption } : undefined,
     };
-
     try {
-      const result = await updateQuiz({ id: editingQuiz.id, ...payload }).unwrap();
-
+      const result = await updateQuiz({
+        id: editingQuiz.id,
+        ...payload,
+      }).unwrap();
       if (!result.success) {
         toast.dismiss();
         toast.error(result.message);
         return;
       }
-      
       setIsModalOpen(false);
       setEditingQuiz(null);
       toast.dismiss();
       toast.success("Quiz updated successfully!");
       refetch();
-      
     } catch (error) {
       console.error("Failed to update quiz:", error);
       toast.dismiss();
@@ -87,7 +156,6 @@ const Quiz: React.FC = () => {
     if (window.confirm("Are you sure you want to delete this quiz?")) {
       try {
         const result = await deleteQuiz(id).unwrap();
-
         if (!result.success) {
           toast.error(result.message);
           return;
@@ -104,17 +172,15 @@ const Quiz: React.FC = () => {
   const handleToggleActive = async (quiz: any) => {
     toast.loading("Toggling active status...");
     try {
-      const result = await updateQuiz({ 
-        id: quiz.id!, 
-        is_active: !quiz.is_active 
+      const result = await updateQuiz({
+        id: quiz.id!,
+        is_active: !quiz.is_active,
       }).unwrap();
-
       if (!result.success) {
         toast.dismiss();
         toast.error(result.message);
         return;
       }
-
       toast.dismiss();
       toast.success("Active status toggled successfully!");
       refetch();
@@ -175,7 +241,7 @@ const Quiz: React.FC = () => {
         />
       </div>
 
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 mb-8">
         <h2 className="md:text-xl font-bold text-gray-800 px-6 py-4 border-b border-gray-200">
           Quiz Results & Attempts
         </h2>
@@ -191,6 +257,12 @@ const Quiz: React.FC = () => {
         onSubmit={isEditMode ? handleEditQuiz : handleCreateQuiz}
         initialData={editingQuiz}
         isEditMode={isEditMode}
+      />
+
+      <DynamicChangeLogTable
+        columns={quizLogColumns}
+        data={quizLogsResponse?.data || []}
+        isLoading={isLogsLoading}
       />
     </div>
   );

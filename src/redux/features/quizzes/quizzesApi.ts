@@ -43,6 +43,14 @@ const quizzesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Quizzes"],
     }),
+
+    getAllQuizsLogs: builder.query({
+      query: () => ({
+        url: "/quizzes/logs",
+        method: "GET",
+      }),
+      providesTags: ["Quizzes"],
+    })
   }),
 });
 
@@ -52,4 +60,5 @@ export const {
   useCreateQuizMutation,
   useUpdateQuizMutation,
   useDeleteQuizMutation,
+  useGetAllQuizsLogsQuery
 } = quizzesApi;
