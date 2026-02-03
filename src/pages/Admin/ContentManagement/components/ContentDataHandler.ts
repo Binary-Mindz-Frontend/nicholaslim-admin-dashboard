@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_TO_UI_MAP, ContentType } from "@/types/contentManagementType";
 import { useState, useEffect } from "react";
 

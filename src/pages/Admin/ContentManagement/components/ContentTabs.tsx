@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { tabItems } from "@/types/contentManagementType";
 
 interface ContentTabsProps {
   activeTab: string;
   setActiveTab: (tab: any) => void;
+  tabs?: string[];
   disabled?: boolean;
 }
 
@@ -16,12 +16,13 @@ const inactiveTabClass =
 const ContentTabs: React.FC<ContentTabsProps> = ({
   activeTab,
   setActiveTab,
+  tabs,
   disabled = false,
 }) => {
   return (
     <div className="flex">
       <span className="flex flex-wrap gap-3 mb-8 rounded-full p-2">
-        {tabItems.map((item) => (
+        {tabs?.map((item) => (
           <button
             key={item}
             onClick={() => setActiveTab(item)}

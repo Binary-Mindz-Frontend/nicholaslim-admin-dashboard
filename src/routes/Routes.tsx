@@ -257,12 +257,16 @@ const routes = createBrowserRouter([
         path: "platform-fee",
         element: <PlatformFeeManagement />,
       },
+      // {
+      //   path: "content-management-user",
+      //   element: <ContentManagementApp />,
+      // },
+      // {
+      //   path: "content-management-driver",
+      //   element: <ContentManagementApp />,
+      // },
       {
-        path: "content-management-user",
-        element: <ContentManagementApp />,
-      },
-      {
-        path: "content-management-driver",
+        path: "content-management",
         element: <ContentManagementApp />,
       },
       {

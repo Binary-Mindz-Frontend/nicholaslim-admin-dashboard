@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo } from "react";
 import VTtablesData from "./_components/VTtablesData";
 import AddVehicleModal from "./_components/AddVehicleModal";
