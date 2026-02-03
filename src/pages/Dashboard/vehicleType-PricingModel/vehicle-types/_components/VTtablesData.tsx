@@ -13,6 +13,7 @@ import {
 } from "@/redux/features/vehicleType/vehicleTypeApi";
 import EditVehicleModal from "./EditVehicleModal";
 import toast from "react-hot-toast";
+import DeleteConfirmationModal from "@/components/Shared/DeleteConfirmationModal/DeleteConfirmationModal";
 
 interface Vehicle {
   id: string;
@@ -38,14 +39,22 @@ interface VTtablesDataProps {
   refetch: () => void;
 }
 
-const VTtablesData: React.FC<VTtablesDataProps> = ({ apiResponse, isLoading, refetch }) => {
+const VTtablesData: React.FC<VTtablesDataProps> = ({
+  apiResponse,
+  isLoading,
+  refetch,
+}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [vehicleToDeleteId, setVehicleToDeleteId] = useState<string | null>(
+    null,
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const itemsPerPage = 10;
 
-  // API hooks
   const [updateVehicleType] = useUpdateVehicleTypeMutation();
   const [deleteVehicleType] = useDeleteVehicleTypeMutation();
 
@@ -61,27 +70,35 @@ const VTtablesData: React.FC<VTtablesDataProps> = ({ apiResponse, isLoading, ref
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteClick = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this vehicle type?")) {
-      try {
-        const res = await deleteVehicleType(id).unwrap();
+  const handleDeleteClick = (id: string) => {
+    setVehicleToDeleteId(id);
+    setIsDeleteModalOpen(true);
+  };
 
-        if (!res.success) {
-          toast.error(res.message);
-          return;
-        }
-        toast.success("Vehicle type deleted successfully!");
-        refetch();
-      } catch (error: any) {
-        console.error("Delete failed:", error);
-        toast.error(error?.data?.message || "Failed to delete vehicle type");
+  const handleConfirmDelete = async () => {
+    if (!vehicleToDeleteId) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await deleteVehicleType(vehicleToDeleteId).unwrap();
+      if (!res.success) {
+        toast.error(res.message);
+        return;
       }
+      toast.success("Vehicle type deleted successfully!");
+      setIsDeleteModalOpen(false);
+      setVehicleToDeleteId(null);
+      refetch();
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to delete vehicle type");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const handleStatusChange = async (
     id: string,
-    newStatus: "Active" | "Inactive"
+    newStatus: "Active" | "Inactive",
   ) => {
     try {
       const vehicle = vehicleTypes.find((v) => v.id === id);
@@ -99,16 +116,13 @@ const VTtablesData: React.FC<VTtablesDataProps> = ({ apiResponse, isLoading, ref
       };
 
       const res = await updateVehicleType(updateData).unwrap();
-
       if (!res.success) {
         toast.error(res.message);
         return;
       }
-
       toast.success(`Vehicle status updated to ${newStatus}`);
       refetch();
     } catch (error: any) {
-      console.error("Status update failed:", error);
       toast.error(error?.data?.message || "Failed to update status");
     }
   };
@@ -141,11 +155,7 @@ const VTtablesData: React.FC<VTtablesDataProps> = ({ apiResponse, isLoading, ref
         isActive: isActiveBoolean,
       };
 
-      console.log("Full update data:", updateData);
-
-      // Pass the complete data object
       const result = await updateVehicleType(updateData).unwrap();
-
       if (!result.success) {
         toast.dismiss(toastId);
         toast.error(result.message, { id: toastId });
@@ -158,26 +168,19 @@ const VTtablesData: React.FC<VTtablesDataProps> = ({ apiResponse, isLoading, ref
       setSelectedVehicle(null);
       refetch();
     } catch (error: any) {
-      console.error("Update failed:", error);
       toast.dismiss(toastId);
       toast.error(error?.data?.message || "Failed to update vehicle type");
     }
   };
 
   const columns = [
-    {
-      key: "vehicle_type" as const,
-      label: "Vehicle Type",
-    },
+    { key: "vehicle_type" as const, label: "Vehicle Type" },
     {
       key: "max_load" as const,
       label: "Max Load",
       render: (max_load: string) => `${max_load} KG`,
     },
-    {
-      key: "dimension" as const,
-      label: "Dimensions",
-    },
+    { key: "dimension" as const, label: "Dimensions" },
     {
       key: "base_price" as const,
       label: "Base Price",
@@ -221,15 +224,12 @@ const VTtablesData: React.FC<VTtablesDataProps> = ({ apiResponse, isLoading, ref
     {
       key: "isActive" as const,
       label: "Status",
-      render: (isActive: boolean, row: Vehicle) => {
-        const status = isActive ? "Active" : "Inactive";
-        return (
-          <StatusSwitch
-            status={status}
-            onChange={(newStatus) => handleStatusChange(row.id, newStatus)}
-          />
-        );
-      },
+      render: (isActive: boolean, row: Vehicle) => (
+        <StatusSwitch
+          status={isActive ? "Active" : "Inactive"}
+          onChange={(newStatus) => handleStatusChange(row.id, newStatus)}
+        />
+      ),
     },
   ];
 
@@ -263,6 +263,18 @@ const VTtablesData: React.FC<VTtablesDataProps> = ({ apiResponse, isLoading, ref
           initialData={selectedVehicle}
         />
       )}
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        isLoading={isDeleting}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setVehicleToDeleteId(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Delete Vehicle Type"
+        description="Are you sure you want to delete this vehicle type? This action cannot be undone."
+      />
     </div>
   );
 };
