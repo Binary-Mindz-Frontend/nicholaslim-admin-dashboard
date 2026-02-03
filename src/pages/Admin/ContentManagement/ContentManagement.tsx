@@ -7,6 +7,8 @@ import {
   CONTENT_TYPE_MAP,
   ContentEntityType,
   ContentType,
+  CorrectContentType,
+  tabs,
 } from "@/types/contentManagementType";
 import { useContentApiHooks } from "./components/ContentApiHooks";
 import { useContentDataHandler } from "./components/ContentDataHandler";
@@ -15,9 +17,12 @@ import ContentSection from "./components/ContentSection";
 import ContentModals from "./components/ContentModals";
 import { DynamicChangeLogTable } from "@/components/Shared/DynamicChangeLogTable/DynamicChangeLogTable";
 import { contentLogColumns } from "./components/contentLogColumns";
+import { tabItems } from "@/types/contentManagementType";
 
 export default function ContentManagementApp() {
   const [activeTab, setActiveTab] = useState<ContentType>("Terms & Conditions");
+  const [activeTabByRoute, setActiveTabByRoute] =
+    useState<CorrectContentType>("User");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editContentModalOpen, setEditContentModalOpen] = useState(false);
   const [editFAQModalOpen, setEditFAQModalOpen] = useState(false);
@@ -37,10 +42,17 @@ export default function ContentManagementApp() {
     apiHooks.contentResponse,
   );
 
-  const route = window.location.pathname;
-  const faq_for = route.includes("content-management-driver")
-    ? "RAIDER"
-    : "USER";
+  // const route = window.location.pathname;
+  // const faq_for = route.includes("content-management-driver")
+  //   ? "RAIDER"
+  //   : "USER";
+
+  const faq_for = activeTabByRoute === "User" ? "USER" : "RAIDER";
+
+  // const faq_for_1 =
+  //   tabs.find((item: CorrectContentType) => item === activeTabByRoute) ||
+  //   "USER";
+  //   console.log(faq_for_1, "faq_for_1")
 
   const handlePublish = async (newContent: string) => {
     toast.loading("Publishing content...");
@@ -429,13 +441,21 @@ export default function ContentManagementApp() {
 
   return (
     <div className="p-4 md:p-8 bg-white min-h-screen">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">
+      <h1 className="text-lg md:text-2xl lg:text-3xl font-bold text-gray-900 mb-6">
         Content Management
       </h1>
+
+      <ContentTabs
+        activeTab={activeTabByRoute}
+        setActiveTab={setActiveTabByRoute}
+        tabs={tabs}
+      />
+
       <ContentTabs
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         disabled={apiHooks.isAddingContent || apiHooks.isUpdatingContent}
+        tabs={tabItems}
       />
       <div className="py-4">
         <ContentSection
@@ -554,15 +574,17 @@ export default function ContentManagementApp() {
         onEditSave={handleEditSave}
       />
 
-      <DynamicChangeLogTable
-        columns={contentLogColumns}
-        data={
-          apiHooks.contentLogs?.data?.filter(
-            (item: any) => item.faqFor === faq_for,
-          ) || []
-        }
-        isLoading={apiHooks.isLoading}
-      />
+      <div className="mt-6">
+        <DynamicChangeLogTable
+          columns={contentLogColumns}
+          data={
+            apiHooks.contentLogs?.data?.filter(
+              (item: any) => item.faqFor === faq_for,
+            ) || []
+          }
+          isLoading={apiHooks.isLoading}
+        />
+      </div>
     </div>
   );
 }

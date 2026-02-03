@@ -6,7 +6,7 @@ export type ContentType =
   | "Help Articles List"
   | "About Us";
 
-export type TabType = "User" | "Riders";
+export type CorrectContentType = "User" | "Driver";
 
 export type ContentEntityType = "content" | "faq" | "article" | "aboutus";
 
@@ -20,10 +20,17 @@ export const CONTENT_TYPE_MAP: Record<ContentType, string> = {
   "About Us": "ABOUTUS",
 };
 
-export const CONTENT_TYPE_DISPLAY: Record<TabType, string> = {
-  User: "User",
-  Riders: "Riders",
+export const CONTENT_TYPE_DISPLAY: Record<CorrectContentType, string> = {
+  User: "USER",
+  Driver: "RAIDER",
 };
+
+export const API_TO_UI_MAP_TAB: Record<string, CorrectContentType> = {
+  USER: "User",
+  RAIDER: "Driver",
+};
+
+export const tabs = ["User", "Driver"];
 
 // Reverse mapping for API to UI
 export const API_TO_UI_MAP: Record<string, ContentType> = {
