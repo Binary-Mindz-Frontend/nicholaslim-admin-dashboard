@@ -19,6 +19,7 @@ import {
   Bell,
   Map,
   LogOut,
+  PlusCircle,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -228,6 +229,15 @@ export const menuItems: MenuItem[] = [
     id: "customer-order-confirmation",
     label: "Customer Order Confirmation",
     icon: <CheckCircle className="w-5 h-5" />,
+  },
+  {
+    id: "additional",
+    label: "Additional Services",
+    icon: <PlusCircle className="w-5 h-5" />,
+    children: [
+      { id: "additional-service", label: "Additional Service", icon: null },
+      { id: "dashboard-popup", label: "Dashboard Popup", icon: null },
+    ],
   },
   {
     id: "order-placement",

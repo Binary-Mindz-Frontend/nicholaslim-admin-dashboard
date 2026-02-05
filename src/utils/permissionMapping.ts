@@ -28,6 +28,9 @@ export const menuToPermissionMapping: PermissionMapping = {
   "customer-order-confirmation": ["customer_order_confirmation"],
   "order-placement": ["order_placement"],
   user_profile: ["user_profile"],
+  "dashboard-popup": ["admin"],
+  "additional-services": ["admin"],
+  "additional-service": ["admin"],
 };
 
 // Map child routes to their parent menu IDs
@@ -82,6 +85,9 @@ export const childRouteToParentMapping: Record<string, string> = {
   "content-management": "content-management",
   "customize-profile": "user_profile",
   "change-password": "user_profile",
+  "additional-service": "additional-services",
+  "dashboard-popup": "additional-services",
+  "additional-services": "additional-services",
 };
 
 // Extract base route from dynamic route
