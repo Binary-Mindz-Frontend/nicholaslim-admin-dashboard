@@ -12,6 +12,7 @@ interface CreateNewCampaignProps {
 
 export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps) {
   const [campaignTitle, setCampaignTitle] = useState("");
+  const [redirectLink, setRedirectLink] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -82,11 +83,12 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
         ad_image: uploadedUrl,
         start_date: new Date(startDate).toISOString(),
         end_date: new Date(endDate).toISOString(),
+        redirect_link: redirectLink
       };
 
       // 3️⃣ Create advertisement
       const result: any = await createAdvertisement(payload);
-      console.log(result, "result");
+      console.log(result, "advertisment result");
 
       if (result?.data?.success) {
         toast.success(result.data.message);
@@ -97,6 +99,7 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
         setUploadedFile(null);
         setFilePreview(null);
         setFileType(null);
+        setRedirectLink("");
       } else {
         toast.error(result?.data.error?.message);
       }
@@ -249,6 +252,23 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
               required
             />
           </div>
+          <div>
+            <label
+              htmlFor="campaign-title"
+              className="block text-xl font-medium text-gray-800 mb-4"
+            >
+              Redirect link
+            </label>
+            <input
+              id="redirect_link"
+              type="text"
+              value={redirectLink}
+              onChange={(e) => setRedirectLink(e.target.value)}
+              placeholder="Enter title for campaign"
+              className="w-full px-5 py-4 border border-gray-300 rounded-xl text-lg focus:ring-yellow-500 focus:border-yellow-500"
+              required
+            />
+          </div>
 
           {/* Upload Box or Preview */}
           <div className="pt-4">
@@ -287,10 +307,10 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
                 >
                   <X className="w-4 h-4" />
                 </button>
-                
+
                 {/* File Preview */}
                 <div className="flex flex-col items-center">
-                  {fileType === 'image' ? (
+                  {fileType === "image" ? (
                     <div className="relative w-full max-w-md h-64 md:h-80 rounded-xl overflow-hidden">
                       <img
                         src={filePreview}
@@ -307,11 +327,11 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
                       />
                     </div>
                   )}
-                  
+
                   {/* File Info */}
                   <div className="mt-4 text-center">
                     <div className="flex items-center justify-center gap-2 text-gray-700">
-                      {fileType === 'image' ? (
+                      {fileType === "image" ? (
                         <ImageIcon className="w-4 h-4" />
                       ) : (
                         <div className="w-4 h-4 bg-blue-500 rounded" />
@@ -321,7 +341,11 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
                       </p>
                     </div>
                     <p className="text-sm text-gray-500 mt-1">
-                      {(uploadedFile?.size ? uploadedFile.size / (1024 * 1024) : 0).toFixed(2)} MB
+                      {(uploadedFile?.size
+                        ? uploadedFile.size / (1024 * 1024)
+                        : 0
+                      ).toFixed(2)}{" "}
+                      MB
                     </p>
                     <button
                       type="button"
