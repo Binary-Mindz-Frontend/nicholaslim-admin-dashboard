@@ -97,6 +97,7 @@ export default function AdvertisementsTable({
           <tr>
             <th className="px-4 py-2 border border-[#FFD52B]">ID</th>
             <th className="px-4 py-2 border border-[#FFD52B]">Title</th>
+            <th className="px-4 py-2 border border-[#FFD52B]">Redirect Link</th>
             <th className="px-4 py-2 border border-[#FFD52B]">Start Date</th>
             <th className="px-4 py-2 border border-[#FFD52B]">End Date</th>
             <th className="px-4 py-2 border border-[#FFD52B]">Status</th>
@@ -108,6 +109,7 @@ export default function AdvertisementsTable({
             <tr key={ad.id} className="text-center">
               <td className="px-4 py-2 border border-[#FF7A00]">{ad.id}</td>
               <td className="px-4 py-2 border">{ad.ad_title}</td>
+              <td className="px-4 py-2 border">{ad.redirect_link || "-"}</td>
               <td className="px-4 py-2 border">
                 {new Date(ad.start_date).toLocaleDateString()}
               </td>

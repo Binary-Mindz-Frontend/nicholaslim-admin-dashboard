@@ -64,6 +64,10 @@ import StripeWrapper from "@/pages/Orders/PaymentOptions/StripeWrapper";
 import DashboardLayoutWrapper from "@/Layouts/DashboardLayoutWrapper";
 import CustomizeProfile from "@/components/Users/Profile/CustomizeProfile";
 import ChangePassword from "@/components/Users/Profile/ChangePassword";
+import DashboardPopup from "@/pages/Admin/AdditionalServices/DashboardPopup";
+import AdditionalService from "@/pages/Admin/AdditionalServices/AdditionalService";
+import ContactInfo from "@/pages/Admin/AdditionalServices/ContactInfo";
+import PromoCode from "@/pages/Admin/AdditionalServices/PromoCode";
 
 const routes = createBrowserRouter([
   {
@@ -89,7 +93,7 @@ const routes = createBrowserRouter([
       },
       {
         path: "customize-profile",
-        element: <CustomizeProfile/>,
+        element: <CustomizeProfile />,
       },
       {
         path: "change-password",
@@ -390,6 +394,22 @@ const routes = createBrowserRouter([
       {
         path: "add-funds",
         element: <StripeWrapper />,
+      },
+      {
+        path: "additional-service",
+        element: <AdditionalService />,
+      },
+      {
+        path: "dashboard-popup",
+        element: <DashboardPopup />,
+      },
+      {
+        path: "contectinfo",
+        element: <ContactInfo />,
+      },
+      {
+        path: "promocode",
+        element: <PromoCode />,
       },
     ],
   },
