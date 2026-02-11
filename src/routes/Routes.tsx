@@ -66,6 +66,7 @@ import CustomizeProfile from "@/components/Users/Profile/CustomizeProfile";
 import ChangePassword from "@/components/Users/Profile/ChangePassword";
 import DashboardPopup from "@/pages/Admin/AdditionalServices/DashboardPopup";
 import AdditionalService from "@/pages/Admin/AdditionalServices/AdditionalService";
+import ContactInfo from "@/pages/Admin/AdditionalServices/ContactInfo";
 
 const routes = createBrowserRouter([
   {
@@ -400,6 +401,10 @@ const routes = createBrowserRouter([
       {
         path: "dashboard-popup",
         element: <DashboardPopup />,
+      },
+      {
+        path: "contectinfo",
+        element: <ContactInfo />,
       },
     ],
   },

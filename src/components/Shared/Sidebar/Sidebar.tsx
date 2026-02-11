@@ -38,7 +38,10 @@ export function Sidebar() {
    if (roleBasedAccessControlData?.permissions) {
 
      const filteredItems = menuItems.filter((item) => {
-       if (item.id === "login") return true;
+       if (item.id === "login") {
+        localStorage.clear();
+        return true
+       };
 
        if (item.id === "additional") {
          return true;
@@ -112,6 +115,7 @@ export function Sidebar() {
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
+    localStorage.clear();
 
     if (window.innerWidth < 1024) {
       setIsSidebarOpen(false);
