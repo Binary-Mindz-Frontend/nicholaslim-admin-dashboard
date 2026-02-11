@@ -28,6 +28,7 @@ export const menuToPermissionMapping: PermissionMapping = {
   "customer-order-confirmation": ["customer_order_confirmation"],
   "order-placement": ["order_placement"],
   user_profile: ["user_profile"],
+  additional: ["admin"],
 };
 
 // Map child routes to their parent menu IDs
@@ -82,6 +83,9 @@ export const childRouteToParentMapping: Record<string, string> = {
   "content-management": "content-management",
   "customize-profile": "user_profile",
   "change-password": "user_profile",
+  "additional-service": "admin",
+  "dashboard-popup": "admin",
+  "dashboard-chat": "admin",
 };
 
 // Extract base route from dynamic route
@@ -110,6 +114,9 @@ export const extractBaseRoute = (route: string): string => {
     /^join-request\/\d+$/,
     /^raider-details\/\d+$/, // ADDED: for raider-details
     /^support\/view\/\d+$/,
+    /^additional-service\/\d+$/,
+    /^dashboard-popup\/\d+$/,
+    /^dashboard-chat\/\d+$/,
   ];
 
   for (const pattern of dynamicPatterns) {
@@ -183,6 +190,40 @@ export const isDynamicRoute = (route: string): boolean => {
 //   return false;
 // };
 
+// export const hasPermissionForMenu = (
+//   menuId: string,
+//   permissionsData: any,
+// ): boolean => {
+//   if (menuId === "login") return true;
+
+//   const baseMenuId = extractBaseRoute(menuId);
+
+//   const parentMenuId =
+//     childRouteToParentMapping[baseMenuId] || childRouteToParentMapping[menuId];
+//   const finalMenuId = parentMenuId || baseMenuId;
+
+//   const permissionModules = menuToPermissionMapping[finalMenuId];
+
+//   if (!permissionModules) {
+//     return false;
+//   }
+
+//   if (!permissionsData?.permissions) {
+//     return false;
+//   }
+
+//   for (const module of permissionModules) {
+//     const modulePermissions = permissionsData.permissions[module];
+
+//     // Check if user has ANY permission for this module (not just "read")
+//     if (modulePermissions && modulePermissions.length > 0) {
+//       return true;
+//     }
+//   }
+
+//   return false;
+// };
+
 export const hasPermissionForMenu = (
   menuId: string,
   permissionsData: any,
@@ -190,7 +231,6 @@ export const hasPermissionForMenu = (
   if (menuId === "login") return true;
 
   const baseMenuId = extractBaseRoute(menuId);
-
   const parentMenuId =
     childRouteToParentMapping[baseMenuId] || childRouteToParentMapping[menuId];
   const finalMenuId = parentMenuId || baseMenuId;
@@ -208,7 +248,6 @@ export const hasPermissionForMenu = (
   for (const module of permissionModules) {
     const modulePermissions = permissionsData.permissions[module];
 
-    // Check if user has ANY permission for this module (not just "read")
     if (modulePermissions && modulePermissions.length > 0) {
       return true;
     }
