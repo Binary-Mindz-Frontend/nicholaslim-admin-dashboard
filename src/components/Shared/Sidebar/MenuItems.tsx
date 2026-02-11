@@ -235,9 +235,10 @@ export const menuItems: MenuItem[] = [
     label: "Additional Services",
     icon: <PlusCircle className="w-5 h-5" />,
     children: [
-      { id: "additional-service", label: "Additional Service", icon: null },
+      { id: "additional-service", label: "Additional Service (Order)", icon: null },
       { id: "dashboard-popup", label: "Dashboard Popup", icon: null },
-      { id: "dashboard-chat", label: "Chat", icon: null },
+      { id: "contectinfo", label: "Contect Info", icon: null },
+      { id: "dashboard-chat", label: "Srevice Chat", icon: null },
     ],
   },
   {
