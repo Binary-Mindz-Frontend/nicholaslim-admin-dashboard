@@ -39,7 +39,7 @@ export function Sidebar() {
 
      const filteredItems = menuItems.filter((item) => {
        if (item.id === "login") {
-        localStorage.clear();
+        // localStorage.clear();
         return true
        };
 
@@ -115,7 +115,7 @@ export function Sidebar() {
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
-    localStorage.clear();
+    // localStorage.clear();
 
     if (window.innerWidth < 1024) {
       setIsSidebarOpen(false);

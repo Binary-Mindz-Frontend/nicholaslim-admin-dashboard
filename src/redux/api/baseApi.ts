@@ -101,7 +101,8 @@ export const baseApi = createApi({
     "BulkOrders",
     "AdditionalServices",
     "ServiceEmailNumber",
-    "DashboardPopup"
+    "DashboardPopup",
+    "PromoCodes"
   ],
   endpoints: () => ({}),
 });

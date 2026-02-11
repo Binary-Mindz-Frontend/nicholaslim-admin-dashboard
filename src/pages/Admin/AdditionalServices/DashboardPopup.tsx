@@ -59,12 +59,22 @@ const DashboardPopup = () => {
       }
 
       if (dialogMode === "add") {
-        await addPopup(payload).unwrap()
-        toast.success("Popup created successfully!")
+        const res = await addPopup(payload).unwrap()
+        if (!res.success) {
+          toast.error(res.message)
+          return
+        }
+        toast.success(res.message || "Popup created successfully!")
       } else {
         if (!selectedId) return
-        await updatePopup({ id: selectedId, ...payload }).unwrap()
-        toast.success("Popup updated successfully!")
+        const res = await updatePopup({ id: selectedId, ...payload }).unwrap()
+
+        if (!res.message) {
+          toast.error(res.message)
+          return
+        }
+
+        toast.success(res.message || "Popup updated successfully!")
       }
       setOpenDialog(false)
     } catch (error: any) {
@@ -75,8 +85,12 @@ const DashboardPopup = () => {
   const handleDeleteConfirm = async () => {
     if (!selectedId) return
     try {
-      await deletePopup(selectedId).unwrap()
-      toast.success("Popup deleted successfully!")
+      const res = await deletePopup(selectedId).unwrap()
+      if (!res.success) {
+        toast.error(res.message)
+        return
+      }
+      toast.success(res.message || "Popup deleted successfully!")
       setOpenDeleteModal(false)
     } catch (error: any) {
       toast.error(error?.data?.message || "Delete failed")

@@ -238,6 +238,7 @@ export const menuItems: MenuItem[] = [
       { id: "additional-service", label: "Additional Service (Order)", icon: null },
       { id: "dashboard-popup", label: "Dashboard Popup", icon: null },
       { id: "contectinfo", label: "Contect Info", icon: null },
+      { id: "promocode", label: "Promo Code", icon: null },
       { id: "dashboard-chat", label: "Srevice Chat", icon: null },
     ],
   },
