@@ -67,7 +67,7 @@ const AdditionalService = () => {
       if (dialogMode === "add") {
         const result = await addService(payload).unwrap();
         if (result.success) {
-          toast.success("Service added successfully!");
+          toast.success(result.message);
           setOpenDialog(false);
         }
       } else {
@@ -77,7 +77,7 @@ const AdditionalService = () => {
           ...payload,
         }).unwrap();
         if (result.success) {
-          toast.success("Service updated successfully!");
+          toast.success(result.message);
           setOpenDialog(false);
         }
       }
@@ -91,7 +91,7 @@ const AdditionalService = () => {
     try {
       const result = await deleteService(selectedId).unwrap();
       if (result.success) {
-        toast.success("Service deleted successfully!");
+        toast.success(result.message);
         setOpenDeleteModal(false);
         setSelectedId(null);
       }

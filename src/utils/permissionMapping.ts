@@ -87,6 +87,7 @@ export const childRouteToParentMapping: Record<string, string> = {
   "dashboard-popup": "admin",
   "dashboard-chat": "admin",
   "contectinfo": "admin",
+  "promocode": "admin"
 };
 
 // Extract base route from dynamic route
@@ -118,7 +119,8 @@ export const extractBaseRoute = (route: string): string => {
     /^additional-service\/\d+$/,
     /^dashboard-popup\/\d+$/,
     /^dashboard-chat\/\d+$/,
-    // /^contectinfo\/\d+$/,
+    /^contectinfo\/\d+$/,
+    /^promocode\/\d+$/,
   ];
 
   for (const pattern of dynamicPatterns) {

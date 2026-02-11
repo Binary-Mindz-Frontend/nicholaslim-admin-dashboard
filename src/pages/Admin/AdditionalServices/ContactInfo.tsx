@@ -11,7 +11,7 @@ import { Edit, Mail, Phone } from "lucide-react"
 
 const ContactInfo = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const { data: response, isLoading } = useGetServiceEmailNumberQuery({})
+  const { data: response } = useGetServiceEmailNumberQuery({})
   const [updateContact, { isLoading: isUpdating }] = useUpdateServiceEmailNumberMutation()
 
   const contactData = response?.data
@@ -20,19 +20,22 @@ const ContactInfo = () => {
     try {
       if (!contactData?.id) return
 
-      await updateContact({
+      const res = await updateContact({
         id: contactData.id,
         ...formData
       }).unwrap()
 
-      toast.success("Contact information updated successfully!")
+      if (!res.success) {
+        toast.error(res.message)
+        return
+      }
+
+      toast.success(res.message || "Contact information updated successfully!")
       setIsDialogOpen(false)
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to update contact info")
     }
   }
-
-  if (isLoading) return <div className="p-10 text-center">Loading contact info...</div>
 
   return (
     <div className="mx-6 sm:mx-12 my-10">
@@ -41,7 +44,7 @@ const ContactInfo = () => {
           <CardTitle className="text-2xl font-bold">Service Contact Information</CardTitle>
           <Button 
             onClick={() => setIsDialogOpen(true)}
-            className="bg-[#FFCC00] text-black hover:bg-yellow-500 flex gap-2"
+            className="bg-[#FFCC00] text-black hover:bg-yellow-500 flex gap-2 cursor-pointer"
           >
             <Edit className="w-4 h-4" /> Edit Info
           </Button>

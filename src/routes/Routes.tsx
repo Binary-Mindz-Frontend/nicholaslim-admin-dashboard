@@ -67,6 +67,7 @@ import ChangePassword from "@/components/Users/Profile/ChangePassword";
 import DashboardPopup from "@/pages/Admin/AdditionalServices/DashboardPopup";
 import AdditionalService from "@/pages/Admin/AdditionalServices/AdditionalService";
 import ContactInfo from "@/pages/Admin/AdditionalServices/ContactInfo";
+import PromoCode from "@/pages/Admin/AdditionalServices/PromoCode";
 
 const routes = createBrowserRouter([
   {
@@ -405,6 +406,10 @@ const routes = createBrowserRouter([
       {
         path: "contectinfo",
         element: <ContactInfo />,
+      },
+      {
+        path: "promocode",
+        element: <PromoCode />,
       },
     ],
   },
