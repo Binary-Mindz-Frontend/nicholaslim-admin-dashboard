@@ -237,6 +237,7 @@ export const menuItems: MenuItem[] = [
     children: [
       { id: "additional-service", label: "Additional Service", icon: null },
       { id: "dashboard-popup", label: "Dashboard Popup", icon: null },
+      { id: "dashboard-chat", label: "Chat", icon: null },
     ],
   },
   {
