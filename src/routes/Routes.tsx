@@ -68,6 +68,7 @@ import DashboardPopup from "@/pages/Admin/AdditionalServices/DashboardPopup";
 import AdditionalService from "@/pages/Admin/AdditionalServices/AdditionalService";
 import ContactInfo from "@/pages/Admin/AdditionalServices/ContactInfo";
 import PromoCode from "@/pages/Admin/AdditionalServices/PromoCode";
+import DashboardChat from "@/pages/Admin/AdditionalServices/DashboardChat";
 
 const routes = createBrowserRouter([
   {
@@ -410,6 +411,10 @@ const routes = createBrowserRouter([
       {
         path: "promocode",
         element: <PromoCode />,
+      },
+      {
+        path: "dashboard-chat",
+        element: <DashboardChat />,
       },
     ],
   },
