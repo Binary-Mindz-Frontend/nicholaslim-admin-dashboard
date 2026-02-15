@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef } from "react";
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
@@ -18,20 +19,10 @@ import {
   FiSearch,
 } from "react-icons/fi";
 
+// const SOCKET_URL = "https://api.zipbee.sg/api/v1/messages";
 const SOCKET_URL = "https://api.zipbee.sg";
 
-interface ApiMessage {
-  id: string;
-  content: string;
-  messageType: "TEXT" | "IMAGE" | "PDF";
-  fileUrl: string | null;
-  isRead: boolean;
-  createdAt: string;
-  senderId: number;
-  receiverId: number;
-}
-
-const CURRENT_USER_ID = "1";
+const CURRENT_USER_ID = "2";
 
 const DashboardChat: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -50,22 +41,29 @@ const DashboardChat: React.FC = () => {
     refetch: refetchConversations,
   } = useGetConversationsQuery(undefined, { pollingInterval: 10000 });
 
-  const {
-    data: messagesResponse,
-    refetch: refetchMessages,
-  } = useGetMessagesQuery(
-    { otherUserId: activeConversation || "" },
-    { skip: !activeConversation, pollingInterval: 3000 },
-  );
+  const { data: messagesResponse, refetch: refetchMessages } =
+    useGetMessagesQuery(
+      { otherUserId: activeConversation || "" },
+      { skip: !activeConversation, pollingInterval: 3000 },
+    );
 
   const [createConversation] = useCreateConversationMutation();
   const { connect, disconnect, sendMessage } = useChatSocket(SOCKET_URL);
   const [uploadFile] = useUploadBulkOrderFileMutation();
 
+  // Connect to WebSocket when component mounts
   useEffect(() => {
-    connect();
-    return () => disconnect();
+    const timer = setTimeout(() => {
+      connect();
+    }, 500);
+
+    return () => {
+      clearTimeout(timer);
+      disconnect();
+    };
   }, [connect, disconnect]);
+
+  // Scroll to the bottom when new messages are received
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messagesResponse]);
@@ -83,17 +81,27 @@ const DashboardChat: React.FC = () => {
 
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !selectedReceiver || sending) return;
+
     setSending(true);
+    const messageContent = messageInput;
+
     try {
       await createConversation({ otherUserId: selectedReceiver }).unwrap();
-      sendMessage({
+
+      const sent = sendMessage({
         receiverId: selectedReceiver,
-        content: messageInput,
+        content: messageContent,
         messageType: "TEXT",
       });
-      setMessageInput("");
-      setTimeout(() => refetchMessages(), 500);
+
+      if (sent) {
+        setMessageInput("");
+        setTimeout(() => {
+          refetchMessages();
+        }, 1000);
+      }
     } catch (error) {
+      console.error(error);
       toast.error("Message failed");
     } finally {
       setSending(false);
@@ -118,6 +126,7 @@ const DashboardChat: React.FC = () => {
         setTimeout(() => refetchMessages(), 500);
       }
     } catch (err) {
+      console.error(err);
       toast.error("Upload failed");
     } finally {
       setSending(false);
@@ -126,7 +135,7 @@ const DashboardChat: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-[#F8F9FB] text-slate-800 font-sans antialiased overflow-hidden">
+    <div className="flex h-screen bg-[#F8F9FB] text-slate-800 font-sans antialiased overflow-hidden md:my-20 lg:my-0">
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden"
@@ -135,10 +144,9 @@ const DashboardChat: React.FC = () => {
       )}
 
       <aside
-        className={`
-        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        fixed lg:relative z-10 w-[320px] h-full bg-white border-r border-slate-200 transition-transform duration-300 ease-out lg:translate-x-0 flex flex-col
-      `}
+        className={`${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } fixed lg:relative z-50 lg:z-10 w-[320px] h-full bg-white border-r border-slate-200 transition-transform duration-300 ease-out lg:translate-x-0 flex flex-col no-scrollbar`}
       >
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-900">Messages</h2>
@@ -180,14 +188,22 @@ const DashboardChat: React.FC = () => {
               }`}
             >
               <div
-                className={`w-12 h-12 rounded-xl shrink-0 flex items-center justify-center font-bold text-sm ${activeConversation === user.id ? "bg-[#ff4c00] text-white" : "bg-slate-100 text-slate-500"}`}
+                className={`w-12 h-12 rounded-xl shrink-0 flex items-center justify-center font-bold text-sm ${
+                  activeConversation === user.id
+                    ? "bg-[#ff4c00] text-white"
+                    : "bg-slate-100 text-slate-500"
+                }`}
               >
                 {user.email.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-baseline mb-0.5">
                   <h4
-                    className={`text-sm font-bold truncate ${activeConversation === user.id ? "text-slate-900" : "text-slate-700"}`}
+                    className={`text-sm font-bold truncate ${
+                      activeConversation === user.id
+                        ? "text-slate-900"
+                        : "text-slate-700"
+                    }`}
                   >
                     {user.email.split("@")[0]}
                   </h4>
@@ -220,29 +236,25 @@ const DashboardChat: React.FC = () => {
               <FiMenu size={20} />
             </button>
             <div className="relative">
-                {
-                    currentMessages.length > 0 ? (
-                        <div className="flex items-center gap-4">
-
-                        <div className="w-11 h-11 rounded-2xl bg-[#ff4c00] text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-slate-200">
-                            {selectedUser?.email.charAt(0).toUpperCase() || "Z"}
-                        </div>
-                         <h3 className="font-bold text-slate-900 text-[15px] leading-tight">
-                {selectedUser?.email || "ZipBee Support"}
-              </h3>
-                        </div>
-                    ) : (
-                        <div></div>
-                    )
-                }
+              {currentMessages.length > 0 ? (
+                <div className="flex items-center gap-4">
+                  <div className="w-11 h-11 rounded-2xl bg-[#ff4c00] text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-slate-200">
+                    {selectedUser?.email.charAt(0).toUpperCase() || "Z"}
+                  </div>
+                  <h3 className="font-bold text-slate-900 text-[15px] leading-tight">
+                    {selectedUser?.email || "ZipBee Support"}
+                  </h3>
+                </div>
+              ) : (
+                <div></div>
+              )}
             </div>
-            <div>
-            </div>
+            <div></div>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[url('https://www.toptal.com/designers/subtlepatterns/patterns/double-bubble-outline.png')] bg-fixed opacity-[0.98]">
-          {currentMessages.map((msg: ApiMessage) => {
+        <div className="flex-1 overflow-y-auto p-6 no-scrollbar space-y-6 bg-[url('https://www.toptal.com/designers/subtlepatterns/patterns/double-bubble-outline.png')] bg-fixed opacity-[0.98]">
+          {currentMessages.map((msg: any) => {
             const isOwn = msg.senderId.toString() === CURRENT_USER_ID;
             return (
               <div
@@ -251,14 +263,12 @@ const DashboardChat: React.FC = () => {
               >
                 <div className={`max-w-[80%] lg:max-w-[65%] group`}>
                   <div
-                    className={`
-                    relative px-4 py-3 rounded-2xl text-[14px] leading-relaxed shadow-sm
+                    className={`relative px-4 py-3 rounded-2xl text-[14px] leading-relaxed shadow-sm
                     ${
                       isOwn
                         ? "bg-[#ff4c00] text-white rounded-br-none shadow-orange-100"
                         : "bg-white text-slate-800 border border-slate-100 rounded-bl-none"
-                    }
-                  `}
+                    }`}
                   >
                     {msg.messageType === "IMAGE" ? (
                       <div className="rounded-lg overflow-hidden border border-black/5">
@@ -292,8 +302,10 @@ const DashboardChat: React.FC = () => {
                     </span>
                     {isOwn && (
                       <div
-                        className={`w-1.5 h-1.5 rounded-full ${msg.isRead ? "bg-blue-400" : "bg-slate-200"}`}
-                      />
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          msg.isRead ? "bg-blue-400" : "bg-slate-200"
+                        }`}
+                      ></div>
                     )}
                   </div>
                 </div>
@@ -338,13 +350,6 @@ const DashboardChat: React.FC = () => {
           </div>
         </footer>
       </main>
-
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
-      `}</style>
     </div>
   );
 };
