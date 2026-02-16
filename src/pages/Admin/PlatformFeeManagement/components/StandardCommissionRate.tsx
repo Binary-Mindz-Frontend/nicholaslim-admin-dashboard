@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
 import toast from "react-hot-toast";

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // new code
-
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { io, Socket } from "socket.io-client";
 import { Message, MessageType } from "@/types/chat";
 import { useAppDispatch } from "@/redux/hook";
@@ -11,9 +10,10 @@ interface SendMessageParams {
   receiverId: string;
   content: string;
   messageType: MessageType;
+  fileUrl?: string;
 }
 
-const CURRENT_USER_ID = "1";
+const CURRENT_USER_ID = "2"; // Make sure this matches your actual user ID
 
 export const useChatSocket = (url: string) => {
   const socketRef = useRef<Socket | null>(null);
@@ -27,20 +27,18 @@ export const useChatSocket = (url: string) => {
     }
 
     if (!accessToken) {
-      console.error("❌ ERROR: No access token in localStorage!");
-      console.log("Attempting to get token from localStorage:");
-      console.log("Keys:", Object.keys(localStorage));
+      console.error("❌ No access token in localStorage!");
       dispatch(addEvent("❌ No access token found"));
       return;
     }
 
     try {
-      const socketUrl = url.replace(/\/+$/, "");
-      console.log("🔌 Connecting to socket URL:", socketUrl);
-      console.log("🔑 Access Token Length:", accessToken.length);
-      console.log("🔑 Token First 50 chars:", accessToken.substring(0, 50));
+      // Extract base URL (remove /api/v1/messages if present)
+      const baseUrl = url
+        .replace(/\/+$/, "");
+      console.log("🔌 Connecting to base URL:", baseUrl);
 
-      socketRef.current = io(socketUrl, {
+      socketRef.current = io(baseUrl, {
         transports: ["websocket", "polling"],
         withCredentials: true,
         reconnection: true,
@@ -52,6 +50,7 @@ export const useChatSocket = (url: string) => {
         auth: {
           token: accessToken,
         },
+        path: "/socket.io", // Default socket.io path
       });
 
       socketRef.current.on("connect", () => {
@@ -61,12 +60,13 @@ export const useChatSocket = (url: string) => {
         dispatch(addEvent("✅ Socket connected to server"));
       });
 
-      socketRef.current.on("connected", (data: any) => {
-        console.log("✅ Server confirmed connection:", data);
+      socketRef.current.on("authenticated", (data: any) => {
+        console.log("✅ Authentication successful:", data);
         dispatch(addEvent(`✅ Authenticated as User ${data.userId}`));
       });
 
-      socketRef.current.on("receive_message", (data: any) => {
+      // Listen for incoming messages
+      socketRef.current.on("message", (data: any) => {
         console.log("📨 Received message:", data);
 
         const messageData = data.data || data;
@@ -99,6 +99,17 @@ export const useChatSocket = (url: string) => {
         dispatch(addEvent(`📩 New message from User ${incomingMsg.senderId}`));
       });
 
+      // Listen for message acknowledgments
+      socketRef.current.on("message_sent", (data: any) => {
+        console.log("✅ Message sent confirmation:", data);
+        dispatch(addEvent("✅ Message delivered to server"));
+
+        // Update temporary message with real ID if needed
+        if (data.messageId && data.tempId) {
+          // You can implement message update logic here
+        }
+      });
+
       socketRef.current.on("error", (error: any) => {
         console.error("❌ Socket error:", error);
         dispatch(
@@ -113,10 +124,7 @@ export const useChatSocket = (url: string) => {
       });
 
       socketRef.current.on("connect_error", (err) => {
-        console.error("❌ Connection error details:");
-        console.error("- Message:", err.message);
-        // console.error("- Data:", err.data);
-        console.error("- Full Error:", err);
+        console.error("❌ Connection error:", err.message);
         dispatch(setConnected(false));
         dispatch(addEvent(`❌ Connection error: ${err.message}`));
       });
@@ -141,14 +149,24 @@ export const useChatSocket = (url: string) => {
         console.log("Socket not connected, attempting to connect...");
         connect();
 
-        setTimeout(() => {
-          if (socketRef.current?.connected) {
-            sendMessage(params);
-          } else {
-            dispatch(addEvent("❌ Cannot send: Still not connected"));
-          }
-        }, 1500);
-        return false;
+        // Return promise instead of using setTimeout
+        return new Promise((resolve, reject) => {
+          const checkConnection = setInterval(() => {
+            if (socketRef.current?.connected) {
+              clearInterval(checkConnection);
+              // Retry sending
+              const result = sendMessage(params);
+              resolve(result);
+            }
+          }, 100);
+
+          // Timeout after 5 seconds
+          setTimeout(() => {
+            clearInterval(checkConnection);
+            dispatch(addEvent("❌ Cannot send: Connection timeout"));
+            reject(new Error("Connection timeout"));
+          }, 5000);
+        });
       }
 
       try {
@@ -156,19 +174,18 @@ export const useChatSocket = (url: string) => {
           receiverId: String(params.receiverId),
           content: params.content,
           messageType: params.messageType,
+          fileUrl: params.fileUrl,
+          timestamp: new Date().toISOString(),
         };
 
         console.log("📤 Sending message payload:", payload);
 
+        // Emit with acknowledgment
         socketRef.current.emit("send_message", payload, (response: any) => {
-          console.log("Server acknowledgement:", response);
+          console.log("Server acknowledgment:", response);
 
           if (response && response.success) {
             dispatch(addEvent("✅ Message delivered to server"));
-
-            if (response.data) {
-              dispatch(addEvent(`📋 Message ID: ${response.data.id}`));
-            }
           } else {
             dispatch(
               addEvent(
@@ -178,6 +195,7 @@ export const useChatSocket = (url: string) => {
           }
         });
 
+        // Create local message
         const localMsg: Message = {
           id: `temp-${Date.now()}`,
           receiverId: String(params.receiverId),
@@ -186,6 +204,7 @@ export const useChatSocket = (url: string) => {
           messageType: params.messageType,
           timestamp: new Date().toISOString(),
           status: "sending",
+          fileUrl: params.fileUrl,
         };
 
         dispatch(
@@ -206,6 +225,14 @@ export const useChatSocket = (url: string) => {
     [dispatch, connect],
   );
 
+  // Auto-connect on hook mount
+  useEffect(() => {
+    connect();
+    return () => {
+      disconnect();
+    };
+  }, [connect, disconnect]);
+
   return {
     connect,
     disconnect,
@@ -214,7 +241,6 @@ export const useChatSocket = (url: string) => {
     isConnected: socketRef.current?.connected || false,
   };
 };
-
 // old code
 
 // /* eslint-disable @typescript-eslint/no-explicit-any */
