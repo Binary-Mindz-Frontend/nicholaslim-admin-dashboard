@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { useState, useEffect } from "react";
 import { ChevronDown, Layout, Menu, X } from "lucide-react";
 import { menuItems } from "./MenuItems";
