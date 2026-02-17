@@ -50,7 +50,8 @@ export default function PlatformFeeManagement() {
   const [deleteStandardCommissionRate] =
     useDeleteStandardCommissionRateMutation();
 
-    const { data: standardCommissionRateLogs, isLoading } = useGetAllStandardCommissionRateLogsQuery("");
+  const { data: standardCommissionRateLogs, isLoading } =
+    useGetAllStandardCommissionRateLogsQuery("");
 
   const standardCommissionRateData = standardCommissionRate?.data;
 
@@ -111,79 +112,79 @@ export default function PlatformFeeManagement() {
         : "text-gray-600 bg-white hover:bg-gray-50 border border-border"
     }`;
 
-    const feeLogColumns = [
-      {
-        header: "Date",
-        accessor: "created_at",
-        render: (row: any, index: number) => (
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-slate-700">
-              {new Date(row.created_at).toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })}
+  const feeLogColumns = [
+    {
+      header: "Date",
+      accessor: "created_at",
+      render: (row: any, index: number) => (
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-slate-700">
+            {new Date(row.created_at).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })}
+          </span>
+          {index === 0 && (
+            <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold border border-amber-200">
+              LATEST
             </span>
-            {index === 0 && (
-              <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold border border-amber-200">
-                LATEST
-              </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      header: "Log Type & Area",
+      accessor: "log_type",
+      render: (row: any) => (
+        <div className="flex flex-col">
+          <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded w-fit mb-1 leading-none uppercase">
+            {row.log_type.replace(/_/g, " ")}
+          </span>
+          <span className="text-sm font-semibold text-slate-900">
+            {row.service_area} Area
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: "Snapshot Info",
+      accessor: "snapshot",
+      render: (row: any) => {
+        const s = row.snapshot;
+        return (
+          <div className="text-[11px] text-slate-600 space-y-0.5">
+            <div className="font-bold text-slate-800">
+              {s.fee_name || s.deduction_name || s.role_name || "N/A"}
+            </div>
+            <div>
+              {s.amount !== undefined ? `Amt: ${s.amount}` : ""}
+              {s.commission_rate_delivery_fee
+                ? `Rate: ${s.commission_rate_delivery_fee}%`
+                : ""}
+            </div>
+            {s.applies_to && (
+              <div className="italic">Applies: {s.applies_to}</div>
             )}
           </div>
-        ),
+        );
       },
-      {
-        header: "Log Type & Area",
-        accessor: "log_type",
-        render: (row: any) => (
-          <div className="flex flex-col">
-            <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded w-fit mb-1 leading-none uppercase">
-              {row.log_type.replace(/_/g, " ")}
-            </span>
-            <span className="text-sm font-semibold text-slate-900">
-              {row.service_area} Area
-            </span>
+    },
+    {
+      header: "Changed By",
+      accessor: "changed_by_role",
+      render: (row: any) => (
+        <div className="flex items-center gap-2">
+          <div className="h-7 w-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold border border-slate-200">
+            ID:{row.changed_by_id}
           </div>
-        ),
-      },
-      {
-        header: "Snapshot Info",
-        accessor: "snapshot",
-        render: (row: any) => {
-          const s = row.snapshot;
-          return (
-            <div className="text-[11px] text-slate-600 space-y-0.5">
-              <div className="font-bold text-slate-800">
-                {s.fee_name || s.deduction_name || s.role_name || "N/A"}
-              </div>
-              <div>
-                {s.amount !== undefined ? `Amt: ${s.amount}` : ""}
-                {s.commission_rate_delivery_fee
-                  ? `Rate: ${s.commission_rate_delivery_fee}%`
-                  : ""}
-              </div>
-              {s.applies_to && (
-                <div className="italic">Applies: {s.applies_to}</div>
-              )}
-            </div>
-          );
-        },
-      },
-      {
-        header: "Changed By",
-        accessor: "changed_by_role",
-        render: (row: any) => (
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold border border-slate-200">
-              ID:{row.changed_by_id}
-            </div>
-            <span className="text-xs font-semibold text-slate-500 uppercase">
-              {row.changed_by_role}
-            </span>
-          </div>
-        ),
-      },
-    ];
+          <span className="text-xs font-semibold text-slate-500 uppercase">
+            {row.changed_by_role}
+          </span>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div>
@@ -235,7 +236,7 @@ export default function PlatformFeeManagement() {
                       applicable_user: activeTab,
                       role_name: data.ruleName,
                       commission_rate_delivery_fee: data.percentage,
-                      service_area: data.serviceArea,
+                      service_area_id: data.serviceAreaId,
                     }).unwrap();
                     if (response?.success) standardRefetch();
                     return response;
@@ -251,7 +252,7 @@ export default function PlatformFeeManagement() {
                       applicable_user: activeTab,
                       role_name: data.ruleName,
                       commission_rate_delivery_fee: data.percentage,
-                      service_area: data.serviceArea,
+                      service_area_id: data.serviceAreaId,
                     }).unwrap();
                     if (response?.success) standardRefetch();
                     return response;
@@ -277,7 +278,7 @@ export default function PlatformFeeManagement() {
                       applicable_user: data.applicableUser,
                       scenario: data.scenario,
                       commission_rate_delivery_fee: data.percentage,
-                      service_area: data.serviceArea,
+                      service_area_id: data.serviceAreaId,
                     }).unwrap();
                     if (response?.success) raiderRefetch();
                     return response;
@@ -293,7 +294,7 @@ export default function PlatformFeeManagement() {
                       applicable_user: data.applicableUser,
                       scenario: data.scenario,
                       commission_rate_delivery_fee: data.percentage,
-                      service_area: data.serviceArea,
+                      service_area_id: data.serviceAreaId,
                     }).unwrap();
                     if (response?.success) raiderRefetch();
                     return response;
@@ -379,16 +380,16 @@ export default function PlatformFeeManagement() {
                       applicable_user: data.applicableUser,
                       fee_name: data.feeName,
                       amount: data.amount,
-                      service_area: data.serviceArea,
+                      service_area_id: data.serviceAreaId,
                       applies_to: data.appliesTo,
                     };
 
-                    // Add condition_value only if it exists and appliesTo is ORDER_LESS
                     if (
                       data.appliesTo === "ORDER_LESS" &&
                       data.conditionValue
                     ) {
                       requestData.condition_value = data.conditionValue;
+                      requestData.condition_unit = "ORDER_AMOUNT";
                     }
 
                     const response =
@@ -407,16 +408,16 @@ export default function PlatformFeeManagement() {
                       applicable_user: data.applicableUser,
                       fee_name: data.feeName,
                       amount: data.amount,
-                      service_area: data.serviceArea,
+                      service_area_id: data.serviceAreaId,
                       applies_to: data.appliesTo,
                     };
 
-                    // Add condition_value only if it exists and appliesTo is ORDER_LESS
                     if (
                       data.appliesTo === "ORDER_LESS" &&
                       data.conditionValue
                     ) {
                       requestData.condition_value = data.conditionValue;
+                      requestData.condition_unit = "ORDER_AMOUNT";
                     }
 
                     const response =
