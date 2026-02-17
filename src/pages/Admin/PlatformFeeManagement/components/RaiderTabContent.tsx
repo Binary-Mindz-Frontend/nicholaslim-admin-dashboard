@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import StandardCommissionRate from "./StandardCommissionRate";
 import DriverCompensationRules from "./DriverCompensationRules";
 import DeductionFees from "./DeductionFees";
@@ -10,26 +11,26 @@ interface RaiderTabContentProps {
   onAddCommissionRate: (data: {
     ruleName: string;
     percentage: number;
-    serviceArea: string;
+    serviceAreaId: number;
   }) => Promise<any>;
   onUpdateCommissionRate: (data: {
     id: number;
     ruleName: string;
     percentage: number;
-    serviceArea: string;
+    serviceAreaId: number;
   }) => Promise<any>;
   onDeleteCommissionRate: (id: number) => Promise<any>;
   onAddCompensationRule: (data: {
     scenario: string;
     percentage: number;
-    serviceArea: string;
+    serviceAreaId: number;
     applicableUser: "USER" | "RAIDER";
   }) => Promise<any>;
   onUpdateCompensationRule: (data: {
     id: number;
     scenario: string;
     percentage: number;
-    serviceArea: string;
+    serviceAreaId: number;
     applicableUser: "USER" | "RAIDER";
   }) => Promise<any>;
   onDeleteCompensationRule: (id: number) => Promise<any>;

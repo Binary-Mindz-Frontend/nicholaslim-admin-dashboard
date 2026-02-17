@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import UserFeeStructure from "./UserFeeStructure";
 import DynamicSurgePricing from "./DynamicSurgePricing";
 
@@ -8,17 +9,31 @@ interface UserTabContentProps {
   onAddFeeStructure: (data: {
     feeName: string;
     amount: number;
-    serviceArea: string;
-    appliesTo: "ALL_ORDERS" | "ORDERLESS15" | "EXPRESS_ORDERS";
+    serviceAreaId: number;
+    appliesTo:
+      | "ALL_ORDERS"
+      | "ORDER_LESS"
+      | "EXPRESS_ORDERS"
+      | "SCHEDULED_ORDERS"
+      | "STACKED_ORDERS"
+      | "STANDARD_ORDERS";
     applicableUser: "USER" | "RAIDER";
+    conditionValue?: number;
   }) => Promise<any>;
   onUpdateFeeStructure: (data: {
     id: number;
     feeName: string;
     amount: number;
-    serviceArea: string;
-    appliesTo: "ALL_ORDERS" | "ORDERLESS15" | "EXPRESS_ORDERS";
+    serviceAreaId: number;
+    appliesTo:
+      | "ALL_ORDERS"
+      | "ORDER_LESS"
+      | "EXPRESS_ORDERS"
+      | "SCHEDULED_ORDERS"
+      | "STACKED_ORDERS"
+      | "STANDARD_ORDERS";
     applicableUser: "USER" | "RAIDER";
+    conditionValue?: number;
   }) => Promise<any>;
   onDeleteFeeStructure: (id: number) => Promise<any>;
   onAddSurgeRule: (data: {
