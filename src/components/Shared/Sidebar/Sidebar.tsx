@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { useState, useEffect } from "react";
 import { ChevronDown, Layout, Menu, X } from "lucide-react";
 import { menuItems } from "./MenuItems";
@@ -10,14 +9,15 @@ import { hasPermissionForMenu } from "@/utils/permissionMapping";
 
 export function Sidebar() {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(
-    new Set(["dashboard"])
+    new Set(["dashboard"]),
   );
   const [activeItem, setActiveItem] = useState<string>("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [filteredMenuItems, setFilteredMenuItems] = useState(menuItems);
 
-  const { data: roleBasedAccessControlData } = useGetRoleUserPermissionsQuery(undefined);
-  
+  const { data: roleBasedAccessControlData } =
+    useGetRoleUserPermissionsQuery(undefined);
+
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -28,40 +28,50 @@ export function Sidebar() {
       setActiveItem(currentPath);
       const parentItem = findParentItem(currentPath);
       if (parentItem && parentItem !== currentPath) {
-        setExpandedItems(prev => new Set(prev).add(parentItem));
+        setExpandedItems((prev) => new Set(prev).add(parentItem));
       }
     }
   }, [location.pathname]);
 
-  useEffect(() => {
-    if (roleBasedAccessControlData?.permissions) {
-      const filteredItems = menuItems.filter(item => {
-        if (item.id === "login") return true;
-        
-        const hasPermission = hasPermissionForMenu(item.id, roleBasedAccessControlData);
-        
-        if (!hasPermission) return false;
-        
-        if (item.children && item.children.length > 0) {
-          item.children = item.children.filter(child => {
-            child
-            return hasPermissionForMenu(item.id, roleBasedAccessControlData);
-          });
-          
-          return item.children.length > 0;
-        }
-        
-        return true;
-      });
-      
-      setFilteredMenuItems(filteredItems);
-    }
-  }, [roleBasedAccessControlData]);
+ useEffect(() => {
+   if (roleBasedAccessControlData?.permissions) {
+
+     const filteredItems = menuItems.filter((item) => {
+       if (item.id === "login") {
+        // localStorage.clear();
+        return true
+       };
+
+       if (item.id === "additional") {
+         return true;
+       }
+
+       const hasPermission = hasPermissionForMenu(
+         item.id,
+         roleBasedAccessControlData,
+       );
+
+       if (!hasPermission) return false;
+
+       if (item.children && item.children.length > 0) {
+         const filteredChildren = item.children.filter((child) =>
+           hasPermissionForMenu(child.id, roleBasedAccessControlData),
+         );
+         item.children = filteredChildren;
+         return filteredChildren.length > 0;
+       }
+
+       return true;
+     });
+
+     setFilteredMenuItems(filteredItems);
+   }
+ }, [roleBasedAccessControlData]);
 
   const findParentItem = (childId: string): string | null => {
     for (const item of menuItems) {
       if (item.children) {
-        const child = item.children.find(child => child.id === childId);
+        const child = item.children.find((child) => child.id === childId);
         if (child) return item.id;
       }
     }
@@ -78,20 +88,24 @@ export function Sidebar() {
     setExpandedItems(newExpanded);
   };
 
-  const handleItemClick = (id: string, hasChildren: boolean, isChild: boolean = false) => {
+  const handleItemClick = (
+    id: string,
+    hasChildren: boolean,
+    isChild: boolean = false,
+  ) => {
     setActiveItem(id);
-    
+
     if (id === "login") {
       handleLogout();
       return;
     }
-    
+
     if (hasChildren && !isChild) {
       toggleExpand(id);
     } else {
       navigateToPage(id);
     }
-    
+
     if (window.innerWidth < 1024) {
       setIsSidebarOpen(false);
     }
@@ -100,7 +114,8 @@ export function Sidebar() {
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
-    
+    // localStorage.clear();
+
     if (window.innerWidth < 1024) {
       setIsSidebarOpen(false);
     }
@@ -108,9 +123,9 @@ export function Sidebar() {
 
   const navigateToPage = (pageId: string) => {
     if (pageId === "login") return;
-    
+
     // Check if this is a parent menu without children navigation
-    const menuItem = menuItems.find(item => item.id === pageId);
+    const menuItem = menuItems.find((item) => item.id === pageId);
     if (menuItem?.children && menuItem.children.length > 0) {
       // Navigate to first child
       navigate(`/${menuItem.children[0].id}`);
@@ -132,7 +147,8 @@ export function Sidebar() {
       const isExpanded = expandedItems.has(item.id);
       const hasChildren = !!(item.children && item.children.length > 0);
       const isItemActive = item.id === activeItem;
-      const isChildActive = hasChildren && item.children?.some(child => child.id === activeItem);
+      const isChildActive =
+        hasChildren && item.children?.some((child) => child.id === activeItem);
       const isLogoutButton = item.id === "login";
 
       return (
@@ -140,25 +156,31 @@ export function Sidebar() {
           <button
             onClick={() => handleItemClick(item.id, hasChildren, level > 0)}
             className={`w-full flex items-center cursor-pointer gap-3 px-4 py-2.5 rounded-lg font-medium transition-colors relative group ${
-              isLogoutButton 
-                ? "bg-red-50 hover:bg-red-100 text-red-600" 
+              isLogoutButton
+                ? "bg-red-50 hover:bg-red-100 text-red-600"
                 : isItemActive || isChildActive
-                  ? "bg-primary text-slate-900" 
+                  ? "bg-primary text-slate-900"
                   : "text-slate-700 hover:bg-slate-100"
-            } ${level > 0 ? 'ml-4' : ''}`}
+            } ${level > 0 ? "ml-4" : ""}`}
           >
-            {(isItemActive || isChildActive) && level === 0 && !isLogoutButton && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-lg" />
-            )}
-            
+            {(isItemActive || isChildActive) &&
+              level === 0 &&
+              !isLogoutButton && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-lg" />
+              )}
+
             {isLogoutButton && level === 0 && (
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500 rounded-l-lg" />
             )}
 
-            <span className={`shrink-0 ${isLogoutButton ? 'text-red-600' : ''}`}>
+            <span
+              className={`shrink-0 ${isLogoutButton ? "text-red-600" : ""}`}
+            >
               {item.icon}
             </span>
-            <span className={`flex-1 text-left ${isLogoutButton ? 'text-red-600 font-semibold' : ''}`}>
+            <span
+              className={`flex-1 text-left ${isLogoutButton ? "text-red-600 font-semibold" : ""}`}
+            >
               {item.label}
             </span>
 
@@ -172,10 +194,12 @@ export function Sidebar() {
           </button>
 
           {hasChildren && isExpanded && !isLogoutButton && (
-            <div className={`mt-1 space-y-1 ${level === 0 ? 'ml-4 border-l border-slate-200 pl-4' : 'ml-2 pl-2'}`}>
+            <div
+              className={`mt-1 space-y-1 ${level === 0 ? "ml-4 border-l border-slate-200 pl-4" : "ml-2 pl-2"}`}
+            >
               {item.children?.map((child) => {
                 const isChildItemActive = child.id === activeItem;
-                
+
                 return (
                   <button
                     key={child.id}
@@ -213,9 +237,7 @@ export function Sidebar() {
         </button>
       </div>
 
-      <nav className="space-y-1">
-        {renderMenuItems(filteredMenuItems)}
-      </nav>
+      <nav className="space-y-1">{renderMenuItems(filteredMenuItems)}</nav>
     </>
   );
 
@@ -238,7 +260,7 @@ export function Sidebar() {
       </div>
 
       {isSidebarOpen && (
-        <div 
+        <div
           className="lg:hidden fixed inset-0 bg-black/90 bg-opacity-50 z-40"
           onClick={closeSidebar}
         />

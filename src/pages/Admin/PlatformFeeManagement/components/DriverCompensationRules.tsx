@@ -1,9 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import LoadingSpinner from "@/components/Shared/LoadingSpinner/LoadingSpinner";
 import DeleteConfirmationModal from "@/components/Shared/DeleteConfirmationModal/DeleteConfirmationModal";
-import { CompensationRule, DriverCompensationRulesProps } from "@/types/raiderCompensationRoleType";
+import {
+  CompensationRule,
+  DriverCompensationRulesProps,
+} from "@/types/raiderCompensationRoleType";
+import { useGetServiceZonesQuery } from "@/redux/features/serviceZone/serviceZoneApi";
 
 export default function DriverCompensationRules({
   compensationRulesData,
@@ -26,6 +31,9 @@ export default function DriverCompensationRules({
     ruleName: "",
   });
 
+  const { data: serviceZonesData } = useGetServiceZonesQuery({});
+  const serviceZones = serviceZonesData?.data?.data?.data || [];
+
   // Transform API data to match component state
   useEffect(() => {
     if (compensationRulesData) {
@@ -36,7 +44,7 @@ export default function DriverCompensationRules({
           id: rate.id,
           scenario: rate.scenario,
           percentage: rate.commission_rate_delivery_fee,
-          serviceArea: rate.service_area,
+          serviceAreaId: rate.service_area_id,
           applicableUser: rate.applicable_user,
         }));
 
@@ -48,7 +56,12 @@ export default function DriverCompensationRules({
   const handleAddRule = () => {
     setRules([
       ...rules,
-      { scenario: "", percentage: 0, serviceArea: "", applicableUser: "RAIDER" },
+      {
+        scenario: "",
+        percentage: 0,
+        serviceAreaId: null,
+        applicableUser: "RAIDER",
+      },
     ]);
   };
 
@@ -62,7 +75,6 @@ export default function DriverCompensationRules({
         ruleName: rule.scenario || "Unnamed Rule",
       });
     } else {
-      // If no ID, just remove from UI
       const newRules = rules.filter((_, i) => i !== index);
       setRules(newRules);
       toast.success("Rule removed");
@@ -70,7 +82,10 @@ export default function DriverCompensationRules({
   };
 
   const handleDeleteRule = async () => {
-    if (deleteModal.ruleId === undefined || deleteModal.ruleIndex === undefined) {
+    if (
+      deleteModal.ruleId === undefined ||
+      deleteModal.ruleIndex === undefined
+    ) {
       toast.error("Invalid rule data");
       return;
     }
@@ -78,7 +93,7 @@ export default function DriverCompensationRules({
     setIsLoading(true);
     try {
       const response = await onDeleteCompensationRule(deleteModal.ruleId);
-      
+
       if (response?.success) {
         toast.success(response.message || "Rule deleted successfully");
         const newRules = rules.filter((_, i) => i !== deleteModal.ruleIndex);
@@ -103,16 +118,18 @@ export default function DriverCompensationRules({
   const handleRuleChange = (
     index: number,
     field: keyof CompensationRule,
-    value: string | number
+    value: string | number | null,
   ) => {
     const newRules = [...rules];
 
     if (field === "percentage") {
-      const numValue = typeof value === "string" ? parseFloat(value) : value;
+      const numValue = typeof value === "string" ? parseFloat(value) : value as number;
       newRules[index] = {
         ...newRules[index],
-        [field]: isNaN(numValue) ? 0 : numValue,
+        [field]: isNaN(numValue as number) ? 0 : numValue,
       };
+    } else if (field === "serviceAreaId") {
+      newRules[index] = { ...newRules[index], [field]: Number(value) };
     } else {
       newRules[index] = { ...newRules[index], [field]: value };
     }
@@ -127,7 +144,7 @@ export default function DriverCompensationRules({
     try {
       const newRules = rules.filter((rule) => !rule.id);
       const existingRules = rules.filter((rule) => rule.id);
-      
+
       let newSuccessCount = 0;
       let newErrorCount = 0;
       let updateSuccessCount = 0;
@@ -135,12 +152,12 @@ export default function DriverCompensationRules({
 
       // Save new rules (without ID)
       for (const rule of newRules) {
-        if (rule.scenario.trim() && rule.percentage > 0 && rule.serviceArea.trim()) {
+        if (rule.scenario.trim() && rule.percentage > 0 && rule.serviceAreaId) {
           try {
             await onAddCompensationRule({
               scenario: rule.scenario,
               percentage: rule.percentage,
-              serviceArea: rule.serviceArea,
+              serviceAreaId: rule.serviceAreaId,
               applicableUser: rule.applicableUser,
             });
             newSuccessCount++;
@@ -153,13 +170,18 @@ export default function DriverCompensationRules({
 
       // Update existing rules (with ID)
       for (const rule of existingRules) {
-        if (rule.id && rule.scenario.trim() && rule.percentage > 0 && rule.serviceArea.trim()) {
+        if (
+          rule.id &&
+          rule.scenario.trim() &&
+          rule.percentage > 0 &&
+          rule.serviceAreaId
+        ) {
           try {
             await onUpdateCompensationRule({
               id: rule.id,
               scenario: rule.scenario,
               percentage: rule.percentage,
-              serviceArea: rule.serviceArea,
+              serviceAreaId: rule.serviceAreaId,
               applicableUser: rule.applicableUser,
             });
             updateSuccessCount++;
@@ -170,12 +192,15 @@ export default function DriverCompensationRules({
         }
       }
 
-      // Show success/error messages
       const messages = [];
-      if (newSuccessCount > 0) messages.push(`${newSuccessCount} new rule(s) created`);
-      if (updateSuccessCount > 0) messages.push(`${updateSuccessCount} rule(s) updated`);
-      if (newErrorCount > 0) messages.push(`Failed to create ${newErrorCount} rule(s)`);
-      if (updateErrorCount > 0) messages.push(`Failed to update ${updateErrorCount} rule(s)`);
+      if (newSuccessCount > 0)
+        messages.push(`${newSuccessCount} new rule(s) created`);
+      if (updateSuccessCount > 0)
+        messages.push(`${updateSuccessCount} rule(s) updated`);
+      if (newErrorCount > 0)
+        messages.push(`Failed to create ${newErrorCount} rule(s)`);
+      if (updateErrorCount > 0)
+        messages.push(`Failed to update ${updateErrorCount} rule(s)`);
 
       if (messages.length > 0) {
         const summary = messages.join(", ");
@@ -185,7 +210,6 @@ export default function DriverCompensationRules({
           toast.error(summary);
         }
       }
-      
     } catch (error) {
       console.error("Failed to save rules:", error);
       toast.error("Failed to save compensation rules. Please try again.");
@@ -198,6 +222,9 @@ export default function DriverCompensationRules({
     "w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:ring-yellow-500 focus:border-yellow-500 disabled:bg-gray-100 disabled:cursor-not-allowed";
 
   const numberInputClasses = `${inputClasses} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`;
+
+  const selectClasses =
+    "w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:ring-yellow-500 focus:border-yellow-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none bg-white";
 
   if (isDataLoading) {
     return (
@@ -236,7 +263,8 @@ export default function DriverCompensationRules({
           {/* Dynamic Rules Rows */}
           {rules.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              No compensation rules found. Click "Add New Compensation Rule" to create one.
+              No compensation rules found. Click "Add New Compensation Rule" to
+              create one.
             </div>
           ) : (
             rules.map((rule, index) => (
@@ -265,19 +293,31 @@ export default function DriverCompensationRules({
                   className={numberInputClasses}
                   required
                   disabled={isLoading}
+                  min="0"
+                  max="100"
+                  step="0.01"
                 />
-                <input
-                  type="text"
-                  className={inputClasses}
-                  value={rule.serviceArea || ""}
-                  placeholder="Enter Service Area"
+                <select
+                  value={rule.serviceAreaId || ""}
                   onChange={(e) =>
-                    handleRuleChange(index, "serviceArea", e.target.value)
+                    handleRuleChange(
+                      index,
+                      "serviceAreaId",
+                      e.target.value ? Number(e.target.value) : null,
+                    )
                   }
+                  className={selectClasses}
                   required
                   disabled={isLoading}
-                />
-                
+                >
+                  <option value="">Select Service Area</option>
+                  {serviceZones.map((zone: any) => (
+                    <option key={zone.id} value={zone.id}>
+                      {zone.name}
+                    </option>
+                  ))}
+                </select>
+
                 {/* Delete Button Only */}
                 <button
                   type="button"
@@ -301,9 +341,25 @@ export default function DriverCompensationRules({
               >
                 {isLoading ? (
                   <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-900"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Saving...
                   </span>

@@ -1,3 +1,5 @@
+/* eslint-disable no-useless-escape */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -7,6 +9,7 @@ import {
   FeeStructure,
   UserFeeStructureProps,
 } from "@/types/userFeeStructureType";
+import { useGetServiceZonesQuery } from "@/redux/features/serviceZone/serviceZoneApi";
 
 // Define all order types as a constant for reuse
 const ORDER_TYPES = [
@@ -42,17 +45,14 @@ export default function UserFeeStructure({
     feeName: "",
   });
 
+  const { data: serviceZonesData } = useGetServiceZonesQuery({});
+  const serviceZones = serviceZonesData?.data?.data?.data || [];
+
   // Function to parse amount string to number
   const parseAmountToNumber = (amountStr: string): number => {
     if (!amountStr) return 0;
-
-    // Remove any $, % signs and trim whitespace
     const cleaned = amountStr.replace(/[$,%]/g, "").trim();
-
-    // Convert to number
     const num = parseFloat(cleaned);
-
-    // Return 0 if not a valid number
     return isNaN(num) ? 0 : num;
   };
 
@@ -67,10 +67,10 @@ export default function UserFeeStructure({
           feeName: fee.fee_name,
           amount: fee.amount,
           displayAmount: fee.amount.toString(),
-          serviceArea: fee.service_area,
+          serviceAreaId: fee.service_area_id,
           appliesTo: fee.applies_to as OrderType,
           applicableUser: fee.applicable_user,
-          conditionValue: fee.condition_value || "", // Get condition value from API
+          conditionValue: fee.condition_value || 0,
         }));
 
       setFees(filteredFees);
@@ -85,7 +85,7 @@ export default function UserFeeStructure({
         feeName: "",
         amount: 0,
         displayAmount: "",
-        serviceArea: "",
+        serviceAreaId: null,
         appliesTo: "ALL_ORDERS",
         applicableUser: applicableUser,
         conditionValue: 0,
@@ -103,7 +103,6 @@ export default function UserFeeStructure({
         feeName: fee.feeName || "Unnamed Fee",
       });
     } else {
-      // If no ID, just remove from UI
       const newFees = fees.filter((_, i) => i !== index);
       setFees(newFees);
       toast.success("Fee removed");
@@ -144,33 +143,30 @@ export default function UserFeeStructure({
   const handleFeeChange = (
     index: number,
     field: keyof FeeStructure,
-    value: string | number | OrderType
+    value: string | number | null | OrderType,
   ) => {
     const newFees = [...fees];
 
     if (field === "amount") {
-      // Parse string to number
       const numValue =
-        typeof value === "string" ? parseAmountToNumber(value) : value;
+        typeof value === "string"
+          ? parseAmountToNumber(value)
+          : (value as number);
       newFees[index] = {
         ...newFees[index],
         amount: numValue,
-        displayAmount: typeof value === "string" ? value : value.toString(),
+        displayAmount:
+          typeof value === "string" ? value : (value?.toString() ?? ""),
       };
     } else if (field === "appliesTo") {
-      // When order type changes, reset condition value if not ORDER_LESS
       newFees[index] = {
         ...newFees[index],
-        [field]: value as
-          | "ORDER_LESS"
-          | "ALL_ORDERS"
-          | "EXPRESS_ORDERS"
-          | "SCHEDULED_ORDERS"
-          | "STACKED_ORDERS"
-          | "STANDARD_ORDERS",
+        [field]: value as OrderType,
         conditionValue:
           value === "ORDER_LESS" ? newFees[index].conditionValue : 0,
       };
+    } else if (field === "serviceAreaId") {
+      newFees[index] = { ...newFees[index], [field]: value as number | null };
     } else {
       newFees[index] = { ...newFees[index], [field]: value };
     }
@@ -180,8 +176,6 @@ export default function UserFeeStructure({
 
   const handleDisplayAmountChange = (index: number, value: string) => {
     const newFees = [...fees];
-
-    // Validate input (allow numbers, decimals, $, %)
     const isValid = /^[\$]?\d*(\.\d+)?[%]?$/.test(value);
 
     if (isValid || value === "") {
@@ -196,14 +190,12 @@ export default function UserFeeStructure({
 
   const handleConditionValueChange = (index: number, value: string) => {
     const newFees = [...fees];
-
-    // Validate condition value (allow numbers, decimals, $)
     const isValid = /^[\$]?\d*(\.\d+)?$/.test(value) || value === "";
 
     if (isValid) {
       newFees[index] = {
         ...newFees[index],
-        conditionValue: parseInt(value),
+        conditionValue: parseFloat(value) || 0,
       };
       setFees(newFees);
     }
@@ -222,19 +214,16 @@ export default function UserFeeStructure({
       let updateSuccessCount = 0;
       let updateErrorCount = 0;
 
-      // Save new fees (without ID)
       for (const fee of newFees) {
-        if (fee.feeName.trim() && fee.amount > 0 && fee.serviceArea.trim()) {
-          // Only include conditionValue if ORDER_LESS is selected
+        if (fee.feeName.trim() && fee.amount > 0 && fee.serviceAreaId) {
           const requestData: any = {
             feeName: fee.feeName,
             amount: fee.amount,
-            serviceArea: fee.serviceArea,
+            serviceAreaId: fee.serviceAreaId,
             appliesTo: fee.appliesTo,
             applicableUser: fee.applicableUser,
           };
 
-          // Add conditionValue only for ORDER_LESS
           if (fee.appliesTo === "ORDER_LESS" && fee.conditionValue) {
             requestData.conditionValue = fee.conditionValue;
           }
@@ -249,25 +238,22 @@ export default function UserFeeStructure({
         }
       }
 
-      // Update existing fees (with ID)
       for (const fee of existingFees) {
         if (
           fee.id &&
           fee.feeName.trim() &&
           fee.amount > 0 &&
-          fee.serviceArea.trim()
+          fee.serviceAreaId
         ) {
-          // Only include conditionValue if ORDER_LESS is selected
           const requestData: any = {
             id: fee.id,
             feeName: fee.feeName,
             amount: fee.amount,
-            serviceArea: fee.serviceArea,
+            serviceAreaId: fee.serviceAreaId,
             appliesTo: fee.appliesTo,
             applicableUser: fee.applicableUser,
           };
 
-          // Add conditionValue only for ORDER_LESS
           if (fee.appliesTo === "ORDER_LESS" && fee.conditionValue) {
             requestData.conditionValue = fee.conditionValue;
           }
@@ -282,7 +268,6 @@ export default function UserFeeStructure({
         }
       }
 
-      // Show success/error messages
       const messages = [];
       if (newSuccessCount > 0)
         messages.push(`${newSuccessCount} new fee(s) created`);
@@ -341,7 +326,6 @@ export default function UserFeeStructure({
         </div>
 
         <form onSubmit={handleSaveAll} className="space-y-4">
-          {/* Header Row - Updated for dynamic columns */}
           <div className="hidden md:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_40px] gap-4 mb-2 text-sm font-semibold text-gray-600">
             <div>Fee Name</div>
             <div>Amount</div>
@@ -351,7 +335,6 @@ export default function UserFeeStructure({
             <div className="w-10"></div>
           </div>
 
-          {/* Dynamic Fees Rows */}
           {fees.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No fee structure found. Click "Add Fee" to create one.
@@ -362,7 +345,6 @@ export default function UserFeeStructure({
                 key={fee.id || `new-${index}`}
                 className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1fr_1fr_40px] gap-4 items-center"
               >
-                {/* Fee Name */}
                 <input
                   type="text"
                   value={fee.feeName}
@@ -375,7 +357,6 @@ export default function UserFeeStructure({
                   disabled={isLoading}
                 />
 
-                {/* Amount */}
                 <input
                   type="text"
                   value={fee.displayAmount || ""}
@@ -386,31 +367,36 @@ export default function UserFeeStructure({
                   className={inputClasses}
                   required
                   disabled={isLoading}
-                  pattern="^[\$]?\d+(\.\d+)?[%]?$"
-                  title="Enter a valid amount (e.g., 3.99, 10%, $2.5)"
                 />
 
-                {/* Service Area */}
-                <input
-                  type="text"
-                  className={inputClasses}
-                  value={fee.serviceArea || ""}
-                  placeholder="Enter Service Area"
+                <select
+                  value={fee.serviceAreaId || ""}
                   onChange={(e) =>
-                    handleFeeChange(index, "serviceArea", e.target.value)
+                    handleFeeChange(
+                      index,
+                      "serviceAreaId",
+                      e.target.value ? Number(e.target.value) : null,
+                    )
                   }
+                  className={selectClasses}
                   required
                   disabled={isLoading}
-                />
+                >
+                  <option value="">Select Service Area</option>
+                  {serviceZones.map((zone: any) => (
+                    <option key={zone.id} value={zone.id}>
+                      {zone.name}
+                    </option>
+                  ))}
+                </select>
 
-                {/* Applies To */}
                 <select
                   value={fee.appliesTo}
                   onChange={(e) =>
                     handleFeeChange(
                       index,
                       "appliesTo",
-                      e.target.value as OrderType
+                      e.target.value as OrderType,
                     )
                   }
                   className={selectClasses}
@@ -423,7 +409,6 @@ export default function UserFeeStructure({
                   ))}
                 </select>
 
-                {/* Condition Value (only for ORDER_LESS) */}
                 <div>
                   {fee.appliesTo === "ORDER_LESS" ? (
                     <input
@@ -435,8 +420,6 @@ export default function UserFeeStructure({
                       placeholder="e.g., $15"
                       className={inputClasses}
                       disabled={isLoading}
-                      pattern="^[\$]?\d+(\.\d+)?$"
-                      title="Enter a dollar amount (e.g., $15, 10.5)"
                     />
                   ) : (
                     <div className="px-4 py-3 text-gray-400 text-base">
@@ -445,7 +428,6 @@ export default function UserFeeStructure({
                   )}
                 </div>
 
-                {/* Delete Button */}
                 <button
                   type="button"
                   onClick={() => openDeleteModal(index)}

@@ -1,6 +1,7 @@
 import {
   useAddContentMutation,
   useDeleteContentMutation,
+  useGetAllContentLogsQuery,
   useGetContentQuery,
   useUpdateContentMutation,
 } from "@/redux/features/contentManagement/contentManagementApi";
@@ -54,6 +55,8 @@ export const useContentApiHooks = () => {
   const [updateAboutUsStatus] = useUpdateAboutUsStatusMutation();
   const [deleteAboutUs, { isLoading: isDeletingAboutUs }] = useDeleteAboutUsMutation();
 
+  const { data: contentLogs, isLoading } = useGetAllContentLogsQuery("");
+
   return {
     // Content
     addContent,
@@ -64,7 +67,7 @@ export const useContentApiHooks = () => {
     isAddingContent,
     isUpdatingContent,
     isDeletingContent,
-    
+
     // FAQ
     faqResponse,
     refetchFAQ,
@@ -75,7 +78,7 @@ export const useContentApiHooks = () => {
     isAddingFAQ,
     isUpdatingFAQ,
     isDeletingFAQ,
-    
+
     // Articles
     articleResponse,
     refetchArticles,
@@ -86,7 +89,7 @@ export const useContentApiHooks = () => {
     isAddingArticle,
     isUpdatingArticle,
     isDeletingArticle,
-    
+
     // About Us
     aboutUsResponse,
     refetchAboutUs,
@@ -97,5 +100,8 @@ export const useContentApiHooks = () => {
     isAddingAboutUs,
     isUpdatingAboutUs,
     isDeletingAboutUs,
+
+    contentLogs,
+    isLoading,
   };
 };

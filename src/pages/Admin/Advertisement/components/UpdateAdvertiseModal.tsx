@@ -21,12 +21,13 @@ const UpdateAdvertiseModal: React.FC<UpdateAdvertiseModalProps> = ({
   ad,
 }) => {
   const [campaignTitle, setCampaignTitle] = useState("");
+  const [redirectLink, setRedirectLink] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const startDateRef = useRef<HTMLInputElement>(null);
-const endDateRef = useRef<HTMLInputElement>(null);
+  const endDateRef = useRef<HTMLInputElement>(null);
 
   const [uploadFile] = useUploadFileMutation();
   const [updateAdvertisement] = useUpdateAdvertisementMutation();
@@ -35,6 +36,7 @@ const endDateRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (ad) {
       setCampaignTitle(ad.ad_title);
+      setRedirectLink(ad.redirect_link);
       setStartDate(ad.start_date.slice(0, 16));
       setEndDate(ad.end_date.slice(0, 16));
     }
@@ -76,6 +78,7 @@ const endDateRef = useRef<HTMLInputElement>(null);
       const payload = {
         id: ad.id,
         ad_title: campaignTitle,
+        redirect_link: redirectLink,
         ad_image: imageUrl,
         start_date: new Date(startDate).toISOString(),
         end_date: new Date(endDate).toISOString(),
@@ -124,6 +127,19 @@ const endDateRef = useRef<HTMLInputElement>(null);
               onChange={(e) => setCampaignTitle(e.target.value)}
               className="w-full px-4 py-3 border rounded-xl"
               required
+            />
+          </div>
+
+          {/* Redirect Link */}
+          <div>
+            <label className="block text-lg font-medium mb-2">
+              Redirect Link
+            </label>
+            <input
+              type="text"
+              value={redirectLink}
+              onChange={(e) => setRedirectLink(e.target.value)}
+              className="w-full px-4 py-3 border rounded-xl"
             />
           </div>
 

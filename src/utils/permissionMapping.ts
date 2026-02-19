@@ -7,37 +7,39 @@ interface PermissionMapping {
 
 // Map menu IDs to backend permission modules
 export const menuToPermissionMapping: PermissionMapping = {
-  "": ["dashboard"], // Dashboard
-  "admin": ["rbac"],
-  "users": ["user"],
-  "drivers": ["raider"],
-  "orders": ["order"],
-  "support": ["support_dispute"],
-  "payments": ["payment_transaction"],
+  "": ["dashboard"],
+  admin: ["rbac"],
+  users: ["user"],
+  drivers: ["raider"],
+  orders: ["order"],
+  support: ["support_dispute"],
+  payments: ["payment_transaction"],
   "live-map": ["live_map"],
-  "notifications": ["notification"],
-  "reports": ["report_analytics"],
+  notifications: ["notification"],
+  reports: ["report_analytics"],
   "vehicle-management": ["vechicle_pricing", "destination"],
-  "wallet": ["wallet"],
+  wallet: ["wallet"],
   "coin-system": ["coin"],
-  "quiz": ["quiz"],
-  "advertisement": ["advertisement"],
+  quiz: ["quiz"],
+  advertisement: ["advertisement"],
   "platform-fee": ["platform_fee"],
   "content-management": ["content_management"],
   "driver-order-competition": ["driver_order_competition"],
   "customer-order-confirmation": ["customer_order_confirmation"],
-  "order-placement": ["order_placement"]
+  "order-placement": ["order_placement"],
+  user_profile: ["user_profile"],
+  additional: ["admin"],
 };
 
 // Map child routes to their parent menu IDs
 export const childRouteToParentMapping: Record<string, string> = {
+  dashboard: "admin",
   "create-edit-role": "admin",
   "add-remove-permission": "admin",
   "users-app": "users",
   "users-web-portal": "users",
   "add-new-user": "users",
   "favourite-drivers": "users",
-  "": "users",
   "driver-list": "drivers",
   "add-new-driver": "drivers",
   "new-join-request": "drivers",
@@ -65,8 +67,8 @@ export const childRouteToParentMapping: Record<string, string> = {
   "join-request": "drivers",
   "driver-list/:id": "drivers",
   "join-request/:id": "drivers",
-  "raider-details": "driver-order-competition", // CHANGED: from "driver" to "driver-order-competition"
-  "raider-details/:id": "driver-order-competition", // CHANGED: from "driver" to "driver-order-competition"
+  "raider-details": "driver-order-competition",
+  "raider-details/:id": "driver-order-competition",
   "wallet-user/:id": "wallet",
   "wallet-driver/:id": "wallet",
   "favourite-drivers/:id": "users",
@@ -76,23 +78,29 @@ export const childRouteToParentMapping: Record<string, string> = {
   "assign-driver/:id": "orders",
   "live-order-tracking/:id": "order-placement",
   "support/view/:id": "support",
-  "content-management-user": "content-management",
-  "content-management-driver": "content-management",
-  "customize-profile": "admin",
-  "change-password": "admin"
+  // "content-management-user": "content-management",
+  // "content-management-driver": "content-management",
+  "content-management": "content-management",
+  "customize-profile": "user_profile",
+  "change-password": "user_profile",
+  "additional-service": "admin",
+  "dashboard-popup": "admin",
+  "dashboard-chat": "admin",
+  "contectinfo": "admin",
+  "promocode": "admin"
 };
 
 // Extract base route from dynamic route
 export const extractBaseRoute = (route: string): string => {
   // Remove query parameters if any
-  const cleanRoute = route.split('?')[0];
-  
+  const cleanRoute = route.split("?")[0];
+
   // Handle dynamic routes with parameters
-  if (cleanRoute.includes('/:')) {
-    const parts = cleanRoute.split('/:');
+  if (cleanRoute.includes("/:")) {
+    const parts = cleanRoute.split("/:");
     return parts[0];
   }
-  
+
   // Handle specific known dynamic patterns
   const dynamicPatterns = [
     /^users-app\/\d+$/,
@@ -107,15 +115,20 @@ export const extractBaseRoute = (route: string): string => {
     /^quiz-create-edit\/\d+$/,
     /^join-request\/\d+$/,
     /^raider-details\/\d+$/, // ADDED: for raider-details
-    /^support\/view\/\d+$/
+    /^support\/view\/\d+$/,
+    /^additional-service\/\d+$/,
+    /^dashboard-popup\/\d+$/,
+    /^dashboard-chat\/\d+$/,
+    /^contectinfo\/\d+$/,
+    /^promocode\/\d+$/,
   ];
-  
+
   for (const pattern of dynamicPatterns) {
     if (pattern.test(cleanRoute)) {
-      return cleanRoute.split('/')[0];
+      return cleanRoute.split("/")[0];
     }
   }
-  
+
   return cleanRoute;
 };
 
@@ -136,97 +149,131 @@ export const isDynamicRoute = (route: string): boolean => {
     "order-history/:id",
     "order/:id",
     "assign-driver/:id",
-    "live-order-tracking/:id"
+    "live-order-tracking/:id",
   ];
-  
-  const cleanRoute = route.split('?')[0];
-  
-  return dynamicRoutes.some(dynamicRoute => {
-    const dynamicPattern = dynamicRoute.replace(':id', '\\d+').replace(/\//g, '\\/');
+
+  const cleanRoute = route.split("?")[0];
+
+  return dynamicRoutes.some((dynamicRoute) => {
+    const dynamicPattern = dynamicRoute
+      .replace(":id", "\\d+")
+      .replace(/\//g, "\\/");
     return new RegExp(`^${dynamicPattern}$`).test(cleanRoute);
   });
 };
 
 // export const hasPermissionForMenu = (
-//   menuId: string, 
+//   menuId: string,
 //   permissionsData: any
 // ): boolean => {
 //   if (menuId === "login") return true;
-  
+
 //   const baseMenuId = extractBaseRoute(menuId);
-  
+
 //   const parentMenuId = childRouteToParentMapping[baseMenuId] || childRouteToParentMapping[menuId];
 //   const finalMenuId = parentMenuId || baseMenuId;
-  
+
 //   const permissionModules = menuToPermissionMapping[finalMenuId];
-  
+
 //   if (!permissionModules) {
 //     return false;
 //   }
-  
+
 //   if (!permissionsData?.permissions) {
 //     return false;
 //   }
-  
+
 //   for (const module of permissionModules) {
 //     const modulePermissions = permissionsData.permissions[module];
-    
+
 //     if (modulePermissions?.includes("read")) {
 //       return true;
 //     }
 //   }
-  
+
 //   return false;
 // };
 
+// export const hasPermissionForMenu = (
+//   menuId: string,
+//   permissionsData: any,
+// ): boolean => {
+//   if (menuId === "login") return true;
+
+//   const baseMenuId = extractBaseRoute(menuId);
+
+//   const parentMenuId =
+//     childRouteToParentMapping[baseMenuId] || childRouteToParentMapping[menuId];
+//   const finalMenuId = parentMenuId || baseMenuId;
+
+//   const permissionModules = menuToPermissionMapping[finalMenuId];
+
+//   if (!permissionModules) {
+//     return false;
+//   }
+
+//   if (!permissionsData?.permissions) {
+//     return false;
+//   }
+
+//   for (const module of permissionModules) {
+//     const modulePermissions = permissionsData.permissions[module];
+
+//     // Check if user has ANY permission for this module (not just "read")
+//     if (modulePermissions && modulePermissions.length > 0) {
+//       return true;
+//     }
+//   }
+
+//   return false;
+// };
 
 export const hasPermissionForMenu = (
-  menuId: string, 
-  permissionsData: any
+  menuId: string,
+  permissionsData: any,
 ): boolean => {
   if (menuId === "login") return true;
-  
+
   const baseMenuId = extractBaseRoute(menuId);
-  
-  const parentMenuId = childRouteToParentMapping[baseMenuId] || childRouteToParentMapping[menuId];
+  const parentMenuId =
+    childRouteToParentMapping[baseMenuId] || childRouteToParentMapping[menuId];
   const finalMenuId = parentMenuId || baseMenuId;
-  
+
   const permissionModules = menuToPermissionMapping[finalMenuId];
-  
+
   if (!permissionModules) {
     return false;
   }
-  
+
   if (!permissionsData?.permissions) {
     return false;
   }
-  
+
   for (const module of permissionModules) {
     const modulePermissions = permissionsData.permissions[module];
-    
-    // Check if user has ANY permission for this module (not just "read")
+
     if (modulePermissions && modulePermissions.length > 0) {
       return true;
     }
   }
-  
+
   return false;
 };
 
 // Get all available menu IDs (parent + child)
 export const getAllAvailableRoutes = (permissionsData: any): string[] => {
   const availableRoutes: string[] = [];
-  
+
   if (!permissionsData?.permissions) return availableRoutes;
-  
+
   // Add root routes
-  Object.keys(menuToPermissionMapping).forEach(menuId => {
+  Object.keys(menuToPermissionMapping).forEach((menuId) => {
     if (menuId === "login") return;
-    
+
     const hasPermission = hasPermissionForMenu(menuId, permissionsData);
     if (hasPermission) {
       // Check if this menu has children
-      const menuItem = menuItems.find(item => item.id === menuId);
+      const menuItem = menuItems.find((item) => item.id === menuId);
       if (menuItem?.children && menuItem.children.length > 0) {
         // Add first child route
         if (menuItem.children[0]?.id) {
@@ -238,6 +285,6 @@ export const getAllAvailableRoutes = (permissionsData: any): string[] => {
       }
     }
   });
-  
+
   return availableRoutes;
 };

@@ -17,26 +17,13 @@ interface VehicleTypeData {
   isActive: boolean;
 }
 
-enum VehicleTypeEnum {
-  CAR = "CAR",
-  TRUCK = "TRUCK",
-  MOTORCYCLE = "MOTORCYCLE",
-  BUS = "BUS",
-  VAN = "VAN",
-  BICYCLE = "BICYCLE",
-  SUV = "SUV",
-  TRACTOR = "TRACTOR",
-  ELECTRIC_SCOOTER = "ELECTRIC_SCOOTER",
-  OTHER = "OTHER",
-}
-
 const AddVehicleModal = ({
   isOpen,
   onClose,
   onSubmit,
 }: AddVehicleModalProps) => {
   const [formData, setFormData] = useState<VehicleTypeData>({
-    vehicle_type: "CAR",
+    vehicle_type: "",
     base_price: 0,
     per_km_price: 0,
     peak_pricing: true,
@@ -49,13 +36,6 @@ const AddVehicleModal = ({
     height: "",
     weight: "",
   });
-
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      vehicle_type: e.target.value,
-    }));
-  };
 
   const handleNumberInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -156,19 +136,15 @@ const AddVehicleModal = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Vehicle Type
               </label>
-              <select
+              <input
+                type="text"
                 name="vehicle_type"
                 value={formData.vehicle_type}
-                onChange={handleSelectChange}
+                onChange={(e) => setFormData({ ...formData, vehicle_type: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                placeholder="Vehicle Type"
                 required
-              >
-                {Object.values(VehicleTypeEnum).map((type) => (
-                  <option key={type} value={type}>
-                    {type.replace(/_/g, " ")}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
             {/* Base Fare */}

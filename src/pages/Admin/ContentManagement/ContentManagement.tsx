@@ -7,22 +7,29 @@ import {
   CONTENT_TYPE_MAP,
   ContentEntityType,
   ContentType,
+  CorrectContentType,
+  tabs,
 } from "@/types/contentManagementType";
 import { useContentApiHooks } from "./components/ContentApiHooks";
 import { useContentDataHandler } from "./components/ContentDataHandler";
 import ContentTabs from "./components/ContentTabs";
 import ContentSection from "./components/ContentSection";
 import ContentModals from "./components/ContentModals";
+import { DynamicChangeLogTable } from "@/components/Shared/DynamicChangeLogTable/DynamicChangeLogTable";
+import { contentLogColumns } from "./components/contentLogColumns";
+import { tabItems } from "@/types/contentManagementType";
 
 export default function ContentManagementApp() {
   const [activeTab, setActiveTab] = useState<ContentType>("Terms & Conditions");
+  const [activeTabByRoute, setActiveTabByRoute] =
+    useState<CorrectContentType>("User");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editContentModalOpen, setEditContentModalOpen] = useState(false);
   const [editFAQModalOpen, setEditFAQModalOpen] = useState(false);
   const [editArticleModalOpen, setEditArticleModalOpen] = useState(false);
   const [editAboutUsModalOpen, setEditAboutUsModalOpen] = useState(false);
   const [selectedContentId, setSelectedContentId] = useState<number | null>(
-    null
+    null,
   );
   const [selectedContentData, setSelectedContentData] = useState<any>(null);
   const [selectedFAQData, setSelectedFAQData] = useState<any>(null);
@@ -32,19 +39,26 @@ export default function ContentManagementApp() {
     useState<ContentEntityType>("content");
   const apiHooks = useContentApiHooks();
   const { contentData, setContentData } = useContentDataHandler(
-    apiHooks.contentResponse
+    apiHooks.contentResponse,
   );
 
-  const route = window.location.pathname;
-  const faq_for = route.includes("content-management-driver")
-    ? "RAIDER"
-    : "USER";
+  // const route = window.location.pathname;
+  // const faq_for = route.includes("content-management-driver")
+  //   ? "RAIDER"
+  //   : "USER";
+
+  const faq_for = activeTabByRoute === "User" ? "USER" : "RAIDER";
+
+  // const faq_for_1 =
+  //   tabs.find((item: CorrectContentType) => item === activeTabByRoute) ||
+  //   "USER";
+  //   console.log(faq_for_1, "faq_for_1")
 
   const handlePublish = async (newContent: string) => {
     toast.loading("Publishing content...");
     try {
       const existingContent = apiHooks.contentResponse?.data?.find(
-        (item: any) => CONTENT_TYPE_MAP[activeTab] === item.contenttype
+        (item: any) => CONTENT_TYPE_MAP[activeTab] === item.contenttype,
       );
 
       if (existingContent) {
@@ -102,7 +116,7 @@ export default function ContentManagementApp() {
   const handleDeleteClick = (
     id: number,
     type: ContentEntityType,
-    data?: any
+    data?: any,
   ) => {
     setSelectedContentId(id);
     setSelectedContentType(type);
@@ -252,7 +266,7 @@ export default function ContentManagementApp() {
         return (
           apiHooks.contentResponse?.data?.filter(
             (item: any) =>
-              item.contenttype === apiType && item.faq_for === faq_for
+              item.contenttype === apiType && item.faq_for === faq_for,
           ) || []
         );
 
@@ -290,18 +304,18 @@ export default function ContentManagementApp() {
         );
       case "About Us":
         return (
-          apiHooks.aboutUsResponse?.data?.
-          filter((item: any) => item.faq_for === faq_for)
-          ?.map((item: any) => ({
-            id: item.id,
-            contenttype: "ABOUTUS",
-            description: item.title,
-            content: item.content,
-            isPublished: item.isActive,
-            version: null,
-            title: item.title,
-            isActive: item.isActive,
-          })) || []
+          apiHooks.aboutUsResponse?.data
+            ?.filter((item: any) => item.faq_for === faq_for)
+            ?.map((item: any) => ({
+              id: item.id,
+              contenttype: "ABOUTUS",
+              description: item.title,
+              content: item.content,
+              isPublished: item.isActive,
+              version: null,
+              title: item.title,
+              isActive: item.isActive,
+            })) || []
         );
 
       default:
@@ -315,7 +329,7 @@ export default function ContentManagementApp() {
         case "Privacy Policy":
         case "Cancellation & Waiting Policy":
           const content = apiHooks.contentResponse?.data?.find(
-            (item: any) => item.id === id
+            (item: any) => item.id === id,
           );
           if (content) {
             const updateData = {
@@ -329,7 +343,7 @@ export default function ContentManagementApp() {
             toast.success(
               `Content ${
                 isPublished ? "activated" : "deactivated"
-              } successfully!`
+              } successfully!`,
             );
           }
           break;
@@ -358,7 +372,7 @@ export default function ContentManagementApp() {
     }
   };
   const handlePublishFAQ = async (
-    faqData: { question: string; answer: string }[]
+    faqData: { question: string; answer: string }[],
   ) => {
     try {
       const promises = faqData.map(async (faq) => {
@@ -420,20 +434,28 @@ export default function ContentManagementApp() {
     } catch (error: any) {
       console.error("Failed to publish About Us content:", error);
       toast.error(
-        error?.data?.message || "Failed to publish About Us content."
+        error?.data?.message || "Failed to publish About Us content.",
       );
     }
   };
 
   return (
     <div className="p-4 md:p-8 bg-white min-h-screen">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">
+      <h1 className="text-lg md:text-2xl lg:text-3xl font-bold text-gray-900 mb-6">
         Content Management
       </h1>
+
+      <ContentTabs
+        activeTab={activeTabByRoute}
+        setActiveTab={setActiveTabByRoute}
+        tabs={tabs}
+      />
+
       <ContentTabs
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         disabled={apiHooks.isAddingContent || apiHooks.isUpdatingContent}
+        tabs={tabItems}
       />
       <div className="py-4">
         <ContentSection
@@ -551,6 +573,18 @@ export default function ContentManagementApp() {
         onDeleteConfirm={handleDeleteConfirm}
         onEditSave={handleEditSave}
       />
+
+      <div className="mt-6">
+        <DynamicChangeLogTable
+          columns={contentLogColumns}
+          data={
+            apiHooks.contentLogs?.data?.filter(
+              (item: any) => item.faqFor === faq_for,
+            ) || []
+          }
+          isLoading={apiHooks.isLoading}
+        />
+      </div>
     </div>
   );
 }

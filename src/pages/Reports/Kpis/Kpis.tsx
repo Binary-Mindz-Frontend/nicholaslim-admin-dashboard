@@ -1,9 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-case-declarations */
 import { useState, useEffect } from "react";
 import EarningsOverTime from "./KpiChart/EarningsOverTime";
 import TopPerformingDrivers from "./KpiChart/TopPerformingDrivers";
 import KpiStats from "./KpiStats/KpiStats";
 import { useGetKpiStatsQuery } from "@/redux/features/reportAndAnalytics/reportAndAnalyticsApi";
 import FilterSection from "../FilterSection/FilterSection";
+import { Button } from "@/components/ui/button";
+import useExportData from "@/hooks/useExportData";
 
 export default function Kpis() {
   const [dateFilter, setDateFilter] = useState("last_30_days");
@@ -96,14 +100,79 @@ export default function Kpis() {
 //     });
 //   };
 
+
+  const { exportToCSV } = useExportData({
+    fileName: "KPI Report",
+  });
+
+  const handleExport = () => {
+    const rawData = kpiStatsData?.data;
+
+    if (!rawData) {
+      alert("No data available to export!");
+      return;
+    }
+
+    const dataToExport = [];
+
+    dataToExport.push({
+      Section: "KPI Metrics",
+      Key: "Average Order Value",
+      Value: rawData.avgOrderValue || 0,
+    });
+    dataToExport.push({
+      Section: "KPI Metrics",
+      Key: "Completion Rate (%)",
+      Value: rawData.completionRate || 0,
+    });
+    dataToExport.push({
+      Section: "KPI Metrics",
+      Key: "Cancellation Rate (%)",
+      Value: rawData.cancellationRate || 0,
+    });
+    dataToExport.push({
+      Section: "KPI Metrics",
+      Key: "Average Delivery Time (min)",
+      Value: rawData.avgDeliveryTime || 0,
+    });
+
+    if (rawData.topDrivers && rawData.topDrivers.length > 0) {
+      rawData.topDrivers.forEach((driver: { driverName: any; driverId: any; revenue: any; }) => {
+        dataToExport.push({
+          Section: "Top Drivers",
+          Key: `${driver.driverName} (ID: ${driver.driverId})`,
+          Value: driver.revenue || 0,
+        });
+      });
+    }
+
+    if (rawData.revenueByDay && rawData.revenueByDay.length > 0) {
+      rawData.revenueByDay.forEach((dayData: { date: any; revenue: any; }) => {
+        dataToExport.push({
+          Section: "Revenue By Day",
+          Key: dayData.date || "N/A",
+          Value: dayData.revenue || 0,
+        });
+      });
+    }
+
+    exportToCSV(dataToExport, "KPI_Analytics_Report");
+  };
+
   return (
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
       <div className="w-full mx-auto space-y-4 mb-6">
         {/* Header Section */}
-        <div className="pt-2 sm:py-2">
-          <h1 className="text-black text-2xl font-bold">
-            Reports & Analytics
-          </h1>
+        <div className="flex flex-wrap items-center justify-between">
+          <div className="pt-2 sm:py-2">
+            <h1 className="text-black text-2xl font-bold">
+              Reports & Analytics
+            </h1>
+          </div>
+
+          <Button onClick={handleExport} className="bg-[#FFCC00] hover:bg-[#E6B800] text-black font-semibold py-2 px-4 rounded flex items-center gap-2 cursor-pointer">
+            <span className="text-sm">Download Report</span>
+          </Button>
         </div>
 
         <FilterSection
@@ -127,11 +196,11 @@ export default function Kpis() {
         </h2>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <EarningsOverTime 
+          <EarningsOverTime
             revenueByDay={kpiStatsData?.data?.revenueByDay || []}
             isLoading={isLoading}
           />
-          <TopPerformingDrivers 
+          <TopPerformingDrivers
             topDrivers={kpiStatsData?.data?.topDrivers || []}
             isLoading={isLoading}
           />
@@ -139,7 +208,7 @@ export default function Kpis() {
       </div>
 
       {/* KPI stats */}
-      <KpiStats 
+      <KpiStats
         avgDeliveryTime={kpiStatsData?.data?.avgDeliveryTime || 0}
         avgOrderValue={kpiStatsData?.data?.avgOrderValue || 0}
         completionRate={kpiStatsData?.data?.completionRate || 0}

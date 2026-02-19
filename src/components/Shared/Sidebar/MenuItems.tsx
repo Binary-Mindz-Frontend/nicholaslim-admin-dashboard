@@ -19,6 +19,7 @@ import {
   Bell,
   Map,
   LogOut,
+  PlusCircle,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -214,10 +215,10 @@ export const menuItems: MenuItem[] = [
     id: "content-management",
     label: "Content Management",
     icon: <FileText className="w-5 h-5" />,
-    children: [
-      { id: "content-management-user", label: "User", icon: null },
-      { id: "content-management-driver", label: "Driver", icon: null },
-    ],
+    // children: [
+    //   { id: "content-management-user", label: "User", icon: null },
+    //   { id: "content-management-driver", label: "Driver", icon: null },
+    // ],
   },
   {
     id: "driver-order-competition",
@@ -228,6 +229,18 @@ export const menuItems: MenuItem[] = [
     id: "customer-order-confirmation",
     label: "Customer Order Confirmation",
     icon: <CheckCircle className="w-5 h-5" />,
+  },
+  {
+    id: "additional",
+    label: "Additional Services",
+    icon: <PlusCircle className="w-5 h-5" />,
+    children: [
+      { id: "additional-service", label: "Additional Service (Order)", icon: null },
+      { id: "dashboard-popup", label: "Dashboard Popup", icon: null },
+      { id: "contectinfo", label: "Contect Info", icon: null },
+      { id: "promocode", label: "Promo Code", icon: null },
+      { id: "dashboard-chat", label: "Srevice Chat", icon: null },
+    ],
   },
   {
     id: "order-placement",

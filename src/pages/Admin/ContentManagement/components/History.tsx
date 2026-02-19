@@ -7,12 +7,12 @@ interface HistoryItem {
   description: string;
   isPublished: boolean;
   version?: string | null;
-  answer?: string; // For FAQ
-  content?: string; // For articles and about us
-  title?: string; // For articles and about us
-  question?: string; // For FAQ
-  published?: boolean; // For articles
-  isActive?: boolean; // For FAQ and About Us
+  answer?: string;
+  content?: string;
+  title?: string;
+  question?: string;
+  published?: boolean;
+  isActive?: boolean;
 }
 
 interface ContentHistoryTableProps {

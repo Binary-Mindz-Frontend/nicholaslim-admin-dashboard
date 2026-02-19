@@ -18,8 +18,8 @@ export const incentivesApi = baseApi.injectEndpoints({
       providesTags: ["Incentives"],
     }),
 
-    getAllIncentiveStats:builder.query({
-      query:() => "/incentive/stats",
+    getAllIncentiveStats: builder.query({
+      query: () => "/incentive/stats",
       providesTags: ["Incentives"],
     }),
 
@@ -58,7 +58,14 @@ export const incentivesApi = baseApi.injectEndpoints({
       invalidatesTags: ["Incentives"],
     }),
 
-    
+    getAllIncentiveLogs: builder.query({
+      query: (params) => ({
+        url: "/incentive/logs",
+        method: "GET",
+        params,
+      }),
+      providesTags: ["Incentives"],
+    }),
   }),
 });
 
@@ -70,4 +77,5 @@ export const {
   useUpdateIncentiveMutation,
   useDeleteIncentiveMutation,
   useUpdateIncentiveStatusMutation,
+  useGetAllIncentiveLogsQuery,
 } = incentivesApi;

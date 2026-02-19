@@ -19,19 +19,6 @@ interface VehicleTypeData {
   isActive: boolean;
 }
 
-enum VehicleTypeEnum {
-  CAR = "CAR",
-  TRUCK = "TRUCK",
-  MOTORCYCLE = "MOTORCYCLE",
-  BUS = "BUS",
-  VAN = "VAN",
-  BICYCLE = "BICYCLE",
-  SUV = "SUV",
-  TRACTOR = "TRACTOR",
-  ELECTRIC_SCOOTER = "ELECTRIC_SCOOTER",
-  OTHER = "OTHER",
-}
-
 const EditVehicleModal = ({
   isOpen,
   onClose,
@@ -79,13 +66,6 @@ const EditVehicleModal = ({
       setDimensionInputs({ height, width });
     }
   }, [initialData]);
-
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      vehicle_type: e.target.value,
-    }));
-  };
 
   const handleNumberInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -181,19 +161,14 @@ const EditVehicleModal = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Vehicle Type
               </label>
-              <select
-                name="vehicle_type"
+              <input
+                type="text"
                 value={formData.vehicle_type}
-                onChange={handleSelectChange}
+                onChange={(e) => setFormData({ ...formData, vehicle_type: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                placeholder="Vehicle Type"
                 required
-              >
-                {Object.values(VehicleTypeEnum).map((type) => (
-                  <option key={type} value={type}>
-                    {type.replace(/_/g, " ")}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
             {/* Base Fare */}

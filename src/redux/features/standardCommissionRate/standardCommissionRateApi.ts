@@ -43,6 +43,14 @@ const standardCommissionRateApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["StandardCommissionRate"],
     }),
+
+    getAllStandardCommissionRateLogs: builder.query({
+      query: () => ({
+        url: "/standard-commission-rate/logs",
+        method: "GET",
+      }),
+      providesTags: ["StandardCommissionRate"],
+    }),
   }),
 });
 
@@ -52,4 +60,5 @@ export const {
   useAddStandardCommissionRateMutation,
   useUpdateStandardCommissionRateMutation,
   useDeleteStandardCommissionRateMutation,
+  useGetAllStandardCommissionRateLogsQuery,
 } = standardCommissionRateApi;

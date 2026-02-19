@@ -1,8 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/rules-of-hooks */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-case-declarations */
 import IncentivesChart from "./IncentivesChart/IncentivesChart";
 import IncentiveAnalytics from "./IncentiveAnalytics/IncentiveAnalytics";
 import FilterSection from "../FilterSection/FilterSection";
 import { useGetIncentiveStatsQuery } from "@/redux/features/reportAndAnalytics/reportAndAnalyticsApi";
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import useExportData from "@/hooks/useExportData";
 
 export default function Incentive() {
   const [dateFilter, setDateFilter] = useState("");
@@ -10,15 +16,18 @@ export default function Incentive() {
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
   const [showCustomDateRange, setShowCustomDateRange] = useState(true);
-  const [queryParams, setQueryParams] = useState<{ from?: string; to?: string } | null>(null);
+  const [queryParams, setQueryParams] = useState<{
+    from?: string;
+    to?: string;
+  } | null>(null);
 
   // Generate date range based on filter
   const getDateRange = () => {
     const now = new Date();
-    const formatDate = (date: Date) => date.toISOString().split('T')[0];
+    const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
     // If custom date range is selected
-    if (dateFilter === 'custom' && fromDate && toDate) {
+    if (dateFilter === "custom" && fromDate && toDate) {
       return {
         from: `${fromDate}T00:00:00.000Z`,
         to: `${toDate}T23:59:59.999Z`,
@@ -54,7 +63,11 @@ export default function Incentive() {
           to: `${formatDate(now)}T23:59:59.999Z`,
         };
       case "last_month":
-        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const firstDayOfMonth = new Date(
+          now.getFullYear(),
+          now.getMonth() - 1,
+          1,
+        );
         const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 0);
         return {
           from: `${formatDate(firstDayOfMonth)}T00:00:00.000Z`,
@@ -85,37 +98,90 @@ export default function Incentive() {
   }, [dateFilter, fromDate, toDate]);
 
   // Use the query hook with parameters
-  const { data: reportStatsData, isLoading, isFetching, error } = useGetIncentiveStatsQuery(
-    queryParams || ""
-  );
+  const {
+    data: reportStatsData,
+    isLoading,
+    isFetching,
+    error,
+  } = useGetIncentiveStatsQuery(queryParams || "");
 
   // Handle error state
   if (error) {
     return (
       <div className="px-8 sm:p-6 bg-[#F5F7FA] min-h-screen">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <h2 className="text-xl font-semibold text-red-700">Error Loading Data</h2>
-          <p className="text-red-600 mt-2">Failed to fetch incentive statistics. Please try again.</p>
+          <h2 className="text-xl font-semibold text-red-700">
+            Error Loading Data
+          </h2>
+          <p className="text-red-600 mt-2">
+            Failed to fetch incentive statistics. Please try again.
+          </p>
         </div>
       </div>
     );
   }
 
-  // Extract data from API response or use defaults
   const incentiveData = reportStatsData?.data || {
     totalGiven: 0,
     totalCollected: 0,
-    weeklyGraph: []
+    weeklyGraph: [],
+  };
+
+  const { exportToCSV } = useExportData({
+    fileName: "Incentive Report",
+  });
+
+  const handleExport = () => {
+    const rawData = reportStatsData?.data;
+
+    if (!rawData) {
+      alert("No data available to export!");
+      return;
+    }
+
+    const dataToExport = [
+      {
+        Type: "Summary",
+        Label: "Total Given",
+        Value: rawData.totalGiven || 0,
+        Date: "-",
+      },
+      {
+        Type: "Summary",
+        Label: "Total Collected",
+        Value: rawData.totalCollected || 0,
+        Date: "-",
+      },
+    ];
+
+    if (rawData.weeklyGraph && rawData.weeklyGraph.length > 0) {
+      rawData.weeklyGraph.forEach((item: { day: any; amount: any; date: any; }) => {
+        dataToExport.push({
+          Type: "Weekly Graph",
+          Label: item.day || "N/A",
+          Value: item.amount || 0,
+          Date: item.date || "-",
+        });
+      });
+    }
+
+    exportToCSV(dataToExport);
   };
 
   return (
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
       <div className="w-full mx-auto space-y-4 mb-6">
         {/* Header Section */}
-        <div className="pt-2 sm:py-2">
-          <h1 className="text-black text-2xl font-bold">
-            Reports & Analytics
-          </h1>
+        <div className="flex flex-wrap items-center justify-between">
+          <div className="pt-2 sm:py-2">
+            <h1 className="text-black text-2xl font-bold">
+              Reports & Analytics{" "}
+            </h1>
+          </div>
+
+          <Button onClick={handleExport} className="bg-[#FFCC00] hover:bg-[#E6B800] text-black font-semibold py-2 px-4 rounded flex items-center gap-2 cursor-pointer">
+            <span className="text-sm">Download Report</span>
+          </Button>
         </div>
 
         <FilterSection
@@ -133,15 +199,15 @@ export default function Incentive() {
       </div>
 
       {/* Incentive Analytics Section - Pass API data */}
-      <IncentiveAnalytics 
-        totalGiven={incentiveData.totalGiven} 
-        totalCollected={incentiveData.totalCollected} 
+      <IncentiveAnalytics
+        totalGiven={incentiveData.totalGiven}
+        totalCollected={incentiveData.totalCollected}
         isLoading={isLoading || isFetching}
       />
 
       {/* Incentives chart - Pass API data */}
-      <IncentivesChart 
-        weeklyData={incentiveData.weeklyGraph} 
+      <IncentivesChart
+        weeklyData={incentiveData.weeklyGraph}
         isLoading={isLoading || isFetching}
       />
     </div>
