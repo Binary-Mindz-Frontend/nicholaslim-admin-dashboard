@@ -4,13 +4,13 @@ import { Camera } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAddUserTypeMutation } from "@/redux/features/usersTypes/usersTypesApi";
+import { useAddUserTypeMutation, useLazyCheckUsernameQuery } from "@/redux/features/usersTypes/usersTypesApi";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useGetRoleBasedAccessControlQuery } from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
 
 const userSchema = z.object({
-  fullName: z.string().min(1, { message: "Full name is required" }),
+  fullName: z.string().min(1, { message: "Username is required" }),
   email: z
     .string()
     .min(1, { message: "Email is required" })
@@ -27,6 +27,57 @@ export default function AddNewUser() {
   const [photo, setPhoto] = useState<string | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const navigate = useNavigate();
+  const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "taken" | "available">("idle");
+  const [checkUsername] = useLazyCheckUsernameQuery();
+
+  const [usernameFormatError, setUsernameFormatError] = useState<string | null>(null);
+
+  const handleUsernameChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setValue("fullName", value);
+
+    if (!value.trim()) {
+      setUsernameStatus("idle");
+      setUsernameSuggestions([]);
+      setUsernameFormatError(null);
+      return;
+    }
+
+    // Validate: only letters and numbers allowed
+    const validPattern = /^[a-zA-Z0-9]+$/;
+    if (!validPattern.test(value.trim())) {
+      setUsernameFormatError("Username must contain only letters and numbers");
+      setUsernameStatus("idle");
+      setUsernameSuggestions([]);
+      return;
+    }
+
+    setUsernameFormatError(null);
+    const formatted = value.trim().replace(/\s+/g, "_");
+
+    try {
+      const result = await checkUsername(formatted).unwrap();
+      if (result?.data?.available === false) {
+        setUsernameStatus("taken");
+        setUsernameSuggestions(result.data.suggestions || []);
+      } else {
+        setUsernameStatus("available");
+        setUsernameSuggestions([]);
+      }
+    } catch {
+      setUsernameStatus("idle");
+      setUsernameSuggestions([]);
+    }
+  };
+
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setValue("fullName", suggestion);
+    setUsernameStatus("available");
+    setUsernameSuggestions([]);
+    setUsernameFormatError(null);
+  };
 
   const {
     register,
@@ -60,15 +111,15 @@ export default function AddNewUser() {
     toast.loading("Creating user...");
     try {
       const newUser = {
-  username: data.fullName.trim().replace(/\s+/g, "_"),
-  email: data.email,
-  phone: data.phone,
-  password: data.password,
-  role_name: data.role[0], // First selected role
-  custom_role_name: data.role.slice(), // Rest of the roles as array
-};
-console.log("Submitting data:", newUser); // Add this line
-console.log("Selected roles:", data.role);
+        username: data.fullName.trim().replace(/\s+/g, "_"),
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+        role_name: data.role[0], // First selected role
+        custom_role_name: data.role.slice(), // Rest of the roles as array
+      };
+      console.log("Submitting data:", newUser); // Add this line
+      console.log("Selected roles:", data.role);
 
       const response = await addUser(newUser).unwrap();
 
@@ -158,13 +209,13 @@ console.log("Selected roles:", data.role);
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 gap-8 mb-8">
-            <div>
+            {/* <div>
               <label className="block text-gray-600 font-medium mb-2">
-                Full Name
+                Username
               </label>
               <input
                 {...register("fullName")}
-                placeholder="Enter full name"
+                placeholder="Enter username"
                 className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.fullName
                   ? "focus:ring-red-400 ring-2 ring-red-400"
                   : "focus:ring-yellow-200"
@@ -174,6 +225,54 @@ console.log("Selected roles:", data.role);
                 <p className="text-red-500 text-sm mt-1">
                   {errors.fullName.message}
                 </p>
+              )}
+            </div> */}
+
+            <div>
+              <label className="block text-gray-600 font-medium mb-2">
+                Username
+              </label>
+              <input
+                {...register("fullName")}
+                onChange={handleUsernameChange}
+                placeholder="Enter username"
+                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.fullName || usernameStatus === "taken" || usernameFormatError
+                  ? "focus:ring-red-400 ring-2 ring-red-400"
+                  : "focus:ring-yellow-200"
+                  }`}
+              />
+
+              {/* Format error */}
+              {usernameFormatError && (
+                <p className="text-red-500 text-sm mt-1">{usernameFormatError}</p>
+              )}
+
+              {/* Username availability feedback */}
+              {usernameStatus === "taken" && (
+                <p className="text-red-500 text-sm mt-1">Username already exists.</p>
+              )}
+
+              {errors.fullName && (
+                <p className="text-red-500 text-sm mt-1">{errors.fullName.message}</p>
+              )}
+
+              {/* Suggestions */}
+              {usernameSuggestions.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-gray-500 text-sm mb-2">Suggestions:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {usernameSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="px-3 py-1.5 bg-yellow-100 rounded-full text-sm font-medium text-gray-700 hover:bg-yellow-300 transition-colors"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
 
@@ -244,8 +343,8 @@ console.log("Selected roles:", data.role);
               <select
                 onChange={handleRoleSelect}
                 className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.role
-                    ? "focus:ring-red-400 ring-2 ring-red-400"
-                    : "focus:ring-yellow-200"
+                  ? "focus:ring-red-400 ring-2 ring-red-400"
+                  : "focus:ring-yellow-200"
                   }`}
                 disabled={rolesLoading}
               >
