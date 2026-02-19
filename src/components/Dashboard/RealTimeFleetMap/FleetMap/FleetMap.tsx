@@ -352,8 +352,8 @@ const FleetMap: React.FC = () => {
     }
   }, []);
 
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-  console.log('apikey================', apiKey);
+  // const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  // // console.log('apikey================', apiKey);
   // Zoom functions
   const handleZoomIn = () => {
     if (mapInstanceRef.current) {
