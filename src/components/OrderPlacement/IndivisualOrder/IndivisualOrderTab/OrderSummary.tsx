@@ -65,7 +65,8 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="cash">COD</SelectItem>
+            {/* <SelectItem value="cash">COD</SelectItem> */}
+            <SelectItem value="cash">CASH</SelectItem>
             <SelectItem value="stripe">Stripe</SelectItem>
             <SelectItem value="wallet">Wallet</SelectItem>
           </SelectContent>
@@ -81,8 +82,8 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
           {isSubmitting
             ? "Creating Order..."
             : orderCreated
-            ? "Order Created"
-            : "Create Order"}
+              ? "Order Created"
+              : "Create Order"}
         </Button>
 
         {orderCreated && orderTotalCost !== null && (
@@ -94,8 +95,8 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             {isSubmitting
               ? "Confirming..."
               : payType === "ONLINE_PAY"
-              ? "Proceed to Payment"
-              : "Confirm Order"}
+                ? "Proceed to Payment"
+                : "Confirm Order"}
           </Button>
         )}
       </div>

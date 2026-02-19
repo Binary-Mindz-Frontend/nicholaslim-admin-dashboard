@@ -496,8 +496,8 @@ const BulkOrderTab = () => {
               {isUploading
                 ? "Uploading CSV..."
                 : isCreatingBulkOrder
-                ? "Creating Orders..."
-                : "Drop your spreadsheet here"}
+                  ? "Creating Orders..."
+                  : "Drop your spreadsheet here"}
             </p>
 
             <p className="text-gray-600 text-sm mb-1">
@@ -616,7 +616,8 @@ const BulkOrderTab = () => {
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="cash">COD</SelectItem>
+              {/* <SelectItem value="cash">COD</SelectItem> */}
+              <SelectItem value="cash">CASH</SelectItem>
               <SelectItem value="stripe">Stripe</SelectItem>
               <SelectItem value="wallet">Wallet</SelectItem>
             </SelectContent>
@@ -634,8 +635,8 @@ const BulkOrderTab = () => {
         {isUpdatingStatus
           ? "Updating Status..."
           : selectedPaymentMethod === PaymentMethod.ONLINE_PAY
-          ? "Proceed to Payment"
-          : "Confirm Order"}
+            ? "Proceed to Payment"
+            : "Confirm Order"}
       </Button>
 
       {/* Stripe Checkout Modal */}

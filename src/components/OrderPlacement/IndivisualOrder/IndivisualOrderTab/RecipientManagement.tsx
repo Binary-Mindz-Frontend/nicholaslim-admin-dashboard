@@ -113,11 +113,22 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
 
         const data: GeocodeResult = await response.json();
 
+        console.log(data, "postaldata");
+
         if (data.status === "OK" && data.results.length > 0) {
           const suggestions = data.results.map((result) => ({
-            formatted_address: result.formatted_address,
+            // formatted_address: result.formatted_address,
             place_id: result.place_id,
+            formatted_address:
+              [
+                result.address_components?.[1]?.long_name,
+                result.address_components?.[3]?.long_name,
+              ]
+                .filter(Boolean)
+                .join(", ") || "",
           }));
+
+
 
           setAddressSuggestions((prev) => ({
             ...prev,
@@ -138,8 +149,8 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
     },
     []
   );
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-  console.log('apikey================', apiKey);
+  // const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  // console.log('apikey================', apiKey);
   // Debounced function to handle postal code changes
   const handlePostalCodeChange = useCallback(
     (
