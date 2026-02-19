@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { hasPermissionForMenu } from "@/utils/permissionMapping";
 import { MenuItem, menuItems } from "@/components/Shared/Sidebar/MenuItems";
