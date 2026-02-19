@@ -84,7 +84,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
     },
 
     {
-      header: "FullName",
+      header: "Username",
       accessor: "name",
       cell: (row: TUser) => (
         <p>
