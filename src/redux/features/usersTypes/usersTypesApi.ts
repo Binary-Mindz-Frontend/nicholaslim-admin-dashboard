@@ -11,7 +11,7 @@ const userTypesApi = baseApi.injectEndpoints({
         sortBy = "createdAt",
         sortOrder = "asc",
       }) => {
-         
+
         let url = `/users?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
 
         if (status) url += `&status=${status}`;
@@ -27,7 +27,7 @@ const userTypesApi = baseApi.injectEndpoints({
       },
       providesTags: ["UserTypes"],
     }),
-    
+
     getOnlyUserTypes: builder.query({
       query: ({
         status,
@@ -37,7 +37,7 @@ const userTypesApi = baseApi.injectEndpoints({
         sortBy = "createdAt",
         sortOrder = "asc",
       }) => {
-         
+
         let url = `/users/only-users?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
 
         if (status) url += `&status=${status}`;
@@ -53,7 +53,7 @@ const userTypesApi = baseApi.injectEndpoints({
       },
       providesTags: ["UserTypes"],
     }),
-    
+
     getWebUserTypes: builder.query({
       query: ({
         status,
@@ -63,7 +63,7 @@ const userTypesApi = baseApi.injectEndpoints({
         sortBy = "createdAt",
         sortOrder = "asc",
       }) => {
-         
+
         let url = `/users/web-portal?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
 
         if (status) url += `&status=${status}`;
@@ -92,9 +92,9 @@ const userTypesApi = baseApi.injectEndpoints({
     // Mutation to permanently delete user(s) by ID(s)
     deleteUserType: builder.mutation({
       query: (ids) => ({
-        url: `/users/permanent`, 
+        url: `/users/permanent`,
         method: "DELETE",
-        body: { ids }, 
+        body: { ids },
       }),
       invalidatesTags: ["UserTypes"],
     }),
@@ -103,7 +103,7 @@ const userTypesApi = baseApi.injectEndpoints({
     toggleUserActiveStatus: builder.mutation({
       query: (id) => ({
         url: `/users/active/${id}`,
-        method: "PATCH", 
+        method: "PATCH",
       }),
       invalidatesTags: ["UserTypes"],
     }),
@@ -113,9 +113,9 @@ const userTypesApi = baseApi.injectEndpoints({
       query: ({ id, updatedData }) => ({
         url: `/users/${id}`,
         method: "PATCH",
-        body: updatedData, 
+        body: updatedData,
       }),
-     
+
       invalidatesTags: (_, __, { id }) => [
         "UserTypes",
         { type: "UserTypes", id },
@@ -127,15 +127,15 @@ const userTypesApi = baseApi.injectEndpoints({
       query: (newUser) => ({
         url: `/users/admin/create-user`,
         method: "POST",
-        body: newUser, 
+        body: newUser,
       }),
-      
+
       invalidatesTags: ["UserTypes"],
     }),
 
     getUserProfile: builder.query({
       query: () => ({
-        url: `users/me`, 
+        url: `users/me`,
         method: "GET",
       }),
       providesTags: ["UserTypes", "Stripe"],
@@ -151,7 +151,7 @@ const userTypesApi = baseApi.injectEndpoints({
     }),
 
     // Image upload mutation
-       uploadFile: builder.mutation({
+    uploadFile: builder.mutation({
       query: (file) => {
         const formData = new FormData();
         formData.append("images", file); // MUST be "images"
@@ -164,6 +164,14 @@ const userTypesApi = baseApi.injectEndpoints({
       },
       invalidatesTags: ["UserTypes"],
     }),
+
+    checkUsername: builder.query({
+      query: (username) => ({
+        url: `/users/check-username?username=${username}`,
+        method: "GET",
+      }),
+    }),
+
   }),
 });
 
@@ -179,4 +187,5 @@ export const {
   useGetUserProfileQuery,
   useUpdateUserProfileMutation,
   useUploadFileMutation,
+  useLazyCheckUsernameQuery,
 } = userTypesApi;
