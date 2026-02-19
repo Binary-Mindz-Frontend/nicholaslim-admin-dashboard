@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useGetRoleBasedAccessControlQuery } from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
 
 const userSchema = z.object({
-  fullName: z.string().min(1, { message: "Full name is required" }),
+  fullName: z.string().min(1, { message: "Username is required" }),
   email: z
     .string()
     .min(1, { message: "Email is required" })
@@ -160,11 +160,11 @@ console.log("Selected roles:", data.role);
           <div className="grid grid-cols-1 gap-8 mb-8">
             <div>
               <label className="block text-gray-600 font-medium mb-2">
-                Full Name
+                Username
               </label>
               <input
                 {...register("fullName")}
-                placeholder="Enter full name"
+                placeholder="Enter username"
                 className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.fullName
                   ? "focus:ring-red-400 ring-2 ring-red-400"
                   : "focus:ring-yellow-200"
