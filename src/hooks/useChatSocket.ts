@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// new code
 import { useRef, useCallback, useEffect } from "react";
 import { io, Socket } from "socket.io-client";
 import { Message, MessageType } from "@/types/chat";
@@ -13,12 +12,21 @@ interface SendMessageParams {
   fileUrl?: string;
 }
 
-const CURRENT_USER_ID = "2"; // Make sure this matches your actual user ID
+// Get current user ID from localStorage or auth state
+const getCurrentUserId = (): string => {
+  // Try to get from localStorage first
+  const userId = localStorage.getItem("userId");
+  if (userId) return userId;
+
+  // Default fallback - but you should get this from your auth system
+  return "1"; // Change this based on who is logged in
+};
 
 export const useChatSocket = (url: string) => {
   const socketRef = useRef<Socket | null>(null);
   const dispatch = useAppDispatch();
   const accessToken = localStorage.getItem("accessToken");
+  const CURRENT_USER_ID = getCurrentUserId();
 
   const connect = useCallback(() => {
     if (socketRef.current?.connected) {
@@ -33,10 +41,9 @@ export const useChatSocket = (url: string) => {
     }
 
     try {
-      // Extract base URL (remove /api/v1/messages if present)
-      const baseUrl = url
-        .replace(/\/+$/, "");
+      const baseUrl = url.replace(/\/+$/, "");
       console.log("🔌 Connecting to base URL:", baseUrl);
+      console.log("👤 Current User ID:", CURRENT_USER_ID);
 
       socketRef.current = io(baseUrl, {
         transports: ["websocket", "polling"],
@@ -50,7 +57,7 @@ export const useChatSocket = (url: string) => {
         auth: {
           token: accessToken,
         },
-        path: "/socket.io", // Default socket.io path
+        path: "/socket.io",
       });
 
       socketRef.current.on("connect", () => {
@@ -78,20 +85,23 @@ export const useChatSocket = (url: string) => {
           content: messageData.content,
           messageType: messageData.messageType || "TEXT",
           timestamp:
-            messageData.timestamp ||
             messageData.createdAt ||
+            messageData.timestamp ||
             new Date().toISOString(),
           status: "delivered",
           fileUrl: messageData.fileUrl,
           isRead: messageData.isRead || false,
         };
 
+        // Store message with the other user's ID as the key
+        const otherUserId =
+          incomingMsg.senderId === CURRENT_USER_ID
+            ? incomingMsg.receiverId // If we sent it, other user is receiver
+            : incomingMsg.senderId; // If we received it, other user is sender
+
         dispatch(
           addMessage({
-            receiverId:
-              incomingMsg.senderId === CURRENT_USER_ID
-                ? incomingMsg.receiverId
-                : incomingMsg.senderId,
+            receiverId: otherUserId,
             message: incomingMsg,
           }),
         );
@@ -104,7 +114,6 @@ export const useChatSocket = (url: string) => {
         console.log("✅ Message sent confirmation:", data);
         dispatch(addEvent("✅ Message delivered to server"));
 
-        // Update temporary message with real ID if needed
         if (data.messageId && data.tempId) {
           // You can implement message update logic here
         }
@@ -132,7 +141,7 @@ export const useChatSocket = (url: string) => {
       console.error("Failed to create socket connection:", error);
       dispatch(addEvent(`❌ Failed to connect: ${error}`));
     }
-  }, [dispatch, url, accessToken]);
+  }, [dispatch, url, accessToken, CURRENT_USER_ID]);
 
   const disconnect = useCallback(() => {
     if (socketRef.current) {
@@ -149,18 +158,15 @@ export const useChatSocket = (url: string) => {
         console.log("Socket not connected, attempting to connect...");
         connect();
 
-        // Return promise instead of using setTimeout
         return new Promise((resolve, reject) => {
           const checkConnection = setInterval(() => {
             if (socketRef.current?.connected) {
               clearInterval(checkConnection);
-              // Retry sending
               const result = sendMessage(params);
               resolve(result);
             }
           }, 100);
 
-          // Timeout after 5 seconds
           setTimeout(() => {
             clearInterval(checkConnection);
             dispatch(addEvent("❌ Cannot send: Connection timeout"));
@@ -180,7 +186,6 @@ export const useChatSocket = (url: string) => {
 
         console.log("📤 Sending message payload:", payload);
 
-        // Emit with acknowledgment
         socketRef.current.emit("send_message", payload, (response: any) => {
           console.log("Server acknowledgment:", response);
 
@@ -195,7 +200,6 @@ export const useChatSocket = (url: string) => {
           }
         });
 
-        // Create local message
         const localMsg: Message = {
           id: `temp-${Date.now()}`,
           receiverId: String(params.receiverId),
@@ -222,10 +226,9 @@ export const useChatSocket = (url: string) => {
         return false;
       }
     },
-    [dispatch, connect],
+    [dispatch, connect, CURRENT_USER_ID],
   );
 
-  // Auto-connect on hook mount
   useEffect(() => {
     connect();
     return () => {
@@ -239,6 +242,7 @@ export const useChatSocket = (url: string) => {
     sendMessage,
     socket: socketRef.current,
     isConnected: socketRef.current?.connected || false,
+    currentUserId: CURRENT_USER_ID,
   };
 };
 // old code

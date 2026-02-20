@@ -14,7 +14,6 @@ import { FiSend, FiPaperclip, FiFileText, FiMenu } from "react-icons/fi";
 import { toast } from "sonner";
 
 const SOCKET_URL = "https://api.zipbee.sg/api/v1/messages";
-const CURRENT_USER_ID = "2";
 
 const DashboardChat: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -34,6 +33,7 @@ const DashboardChat: React.FC = () => {
     disconnect,
     sendMessage,
     isConnected: socketConnected,
+    currentUserId,
   } = useChatSocket(SOCKET_URL);
 
   const { data: conversationsResponse, refetch: refetchConversations } =
@@ -72,6 +72,25 @@ const DashboardChat: React.FC = () => {
   }, [conversationsResponse]);
 
   const currentMessages = (messagesResponse?.data as any)?.messages || [];
+
+  // Debug: Log messages to check sender IDs
+  useEffect(() => {
+    if (currentMessages.length > 0) {
+      console.log("Current User ID:", currentUserId);
+      console.log(
+        "Current messages:",
+        currentMessages.map((msg: any) => ({
+          id: msg.id,
+          senderId: msg.senderId,
+          receiverId: msg.receiverId,
+          isOwn: msg.senderId?.toString() === currentUserId,
+          content: msg.content?.substring(0, 30),
+          createdAt: new Date(msg.createdAt).toLocaleString(),
+        })),
+      );
+    }
+  }, [currentMessages, currentUserId]);
+
   const users =
     conversationsResponse?.data?.map((conv: any) => ({
       id: conv.otherUser.id.toString(),
@@ -153,10 +172,11 @@ const DashboardChat: React.FC = () => {
       formData.append("images", file);
       const res = await uploadFile(formData).unwrap();
       if (res.success) {
-        sendMessage({
+        await sendMessage({
           receiverId: selectedReceiver,
           content: res.data[0],
           messageType: file.type.startsWith("image/") ? "IMAGE" : "PDF",
+          fileUrl: res.data[0],
         });
         setTimeout(() => refetchMessages(), 500);
       }
@@ -189,6 +209,60 @@ const DashboardChat: React.FC = () => {
       return date.toLocaleDateString([], { month: "short", day: "numeric" });
     }
   };
+
+  const formatDate = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return "Today";
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString([], {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    }
+  };
+
+  // Function to determine if message is from current user
+  const isOwnMessage = (msg: any) => {
+    if (!currentUserId) return false;
+
+    // Convert both to strings for comparison
+    const senderId = msg.senderId?.toString();
+    const currentId = currentUserId.toString();
+
+    // Also check if this is a temporary message we just sent
+    const isTempMessage = msg.id?.toString().startsWith("temp-");
+
+    // If it's a temp message, it's definitely ours
+    if (isTempMessage) return true;
+
+    // Otherwise compare sender ID with current user ID
+    return senderId === currentId;
+  };
+
+  // Group messages by date
+  const groupMessagesByDate = (messages: any[]) => {
+    const groups: { [key: string]: any[] } = {};
+
+    messages.forEach((msg) => {
+      const date = formatDate(msg.createdAt || msg.timestamp);
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(msg);
+    });
+
+    return groups;
+  };
+
+  const messageGroups = groupMessagesByDate(currentMessages);
 
   return (
     <div className="flex h-[90vh] bg-[#F8F9FB] text-slate-800 font-sans antialiased overflow-hidden">
@@ -256,7 +330,7 @@ const DashboardChat: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="">
                     <p className="text-xs text-slate-500 truncate">
                       {user.lastMessage?.content || "No messages yet"}
                     </p>
@@ -269,143 +343,157 @@ const DashboardChat: React.FC = () => {
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0 bg-white lg:m-4 lg:rounded-3xl lg:shadow-xl lg:border lg:border-slate-100 overflow-hidden pt-6">
-        {selectedUser && (
-          <header className="h-20 px-6 border-b border-slate-50 flex items-center bg-white/80 backdrop-blur-md">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 bg-slate-50 rounded-lg mr-4"
-            >
-              <FiMenu size={20} />
-            </button>
-            <div className="flex items-center gap-4 no-scrollbar">
-              <div className="w-11 h-11 rounded-2xl bg-[#ff4c00] text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-slate-200">
-                {selectedUser.name.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-[15px]">
-                  {selectedUser.name}
-                </h3>
-                <p className="text-xs text-slate-400">{selectedUser.email}</p>
-              </div>
-            </div>
-          </header>
-        )}
-
-        <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6 bg-[url('https://www.toptal.com/designers/subtlepatterns/patterns/double-bubble-outline.png')] bg-fixed opacity-[0.98]">
-          {!selectedUser ? (
-            <div className="h-full flex items-center justify-center text-slate-400">
-              Select a conversation to start chatting
-            </div>
-          ) : currentMessages.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-slate-400">
-              No messages yet. Say hello!
-            </div>
-          ) : (
-            currentMessages.map((msg: any) => {
-              const isOwn = msg.senderId.toString() === CURRENT_USER_ID;
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
-                >
-                  <div className={`max-w-[80%] lg:max-w-[65%] group`}>
-                    <div
-                      className={`relative px-4 py-3 rounded-2xl text-[14px] leading-relaxed shadow-sm
-                      ${
-                        isOwn
-                          ? "bg-[#ff4c00] text-white rounded-br-none shadow-orange-100"
-                          : "bg-white text-slate-800 border border-slate-100 rounded-bl-none"
-                      }`}
-                    >
-                      {msg.messageType === "IMAGE" ? (
-                        <div className="rounded-lg overflow-hidden border border-black/5">
-                          <img
-                            src={msg.fileUrl || msg.content}
-                            alt="Shared"
-                            className="max-h-72 w-full object-cover cursor-pointer hover:opacity-90 transition"
-                            onClick={() =>
-                              window.open(msg.fileUrl || msg.content, "_blank")
-                            }
-                          />
-                        </div>
-                      ) : msg.messageType === "PDF" ? (
-                        <a
-                          href={msg.fileUrl || msg.content}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-3 font-medium hover:underline"
-                        >
-                          <FiFileText size={20} />
-                          <span className="truncate">Document.pdf</span>
-                        </a>
-                      ) : (
-                        <p className="whitespace-pre-wrap wrap-break-word">
-                          {msg.content}
-                        </p>
-                      )}
-                    </div>
-                    <div
-                      className={`mt-1.5 flex items-center gap-2 ${isOwn ? "justify-end" : "justify-start"}`}
-                    >
-                      <span className="text-[10px] font-bold text-slate-400 tracking-wide uppercase">
-                        {new Date(msg.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                      {isOwn && msg.status === "sending" && (
-                        <span className="text-[10px] text-slate-400">
-                          Sending...
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {selectedUser && (
-          <footer className="p-6 bg-white border-t border-slate-50">
-            <div className="max-w-4xl mx-auto flex items-end gap-3 bg-slate-50 rounded-3xl p-2 pr-3 border border-slate-100 focus-within:bg-white focus-within:shadow-xl focus-within:shadow-slate-100 transition-all duration-300">
-              <label className="p-3 cursor-pointer text-slate-400 hover:text-[#ff4c00] transition-colors rounded-full hover:bg-white">
-                <FiPaperclip size={22} />
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={handleSendFile}
-                  className="hidden"
-                  disabled={!socketConnected || sending}
-                />
-              </label>
-              <textarea
-                rows={1}
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                placeholder={
-                  socketConnected ? "Type your message..." : "Connecting..."
-                }
-                disabled={!socketConnected || sending}
-                className="flex-1 bg-transparent py-3 px-1 outline-none text-[14px] text-slate-800 placeholder:text-slate-400 resize-none max-h-32 disabled:opacity-50"
-              />
+        {selectedUser ? (
+          <>
+            <header className="h-20 px-6 border-b border-slate-50 flex items-center bg-white/80 backdrop-blur-md">
               <button
-                onClick={handleSendMessage}
-                disabled={!messageInput.trim() || sending || !socketConnected}
-                className="mb-1 p-3 bg-[#ff4c00] text-white rounded-full disabled:bg-slate-200 disabled:shadow-none shadow-lg shadow-orange-200 hover:scale-105 transition-all active:scale-95 disabled:cursor-not-allowed"
+                onClick={() => setIsSidebarOpen(true)}
+                className="lg:hidden p-2 bg-slate-50 rounded-lg mr-4"
               >
-                <FiSend size={20} />
+                <FiMenu size={20} />
               </button>
+              <div className="flex items-center gap-4 no-scrollbar">
+                <div className="w-11 h-11 rounded-2xl bg-[#ff4c00] text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-slate-200">
+                  {selectedUser.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-[15px]">
+                    {selectedUser.name}
+                  </h3>
+                  <p className="text-xs text-slate-400">{selectedUser.email}</p>
+                </div>
+              </div>
+            </header>
+
+            <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6 bg-[url('https://www.toptal.com/designers/subtlepatterns/patterns/double-bubble-outline.png')] bg-fixed opacity-[0.98]">
+              {currentMessages.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-slate-400">
+                  No messages yet. Say hello!
+                </div>
+              ) : (
+                Object.entries(messageGroups).map(([date, messages]) => (
+                  <div key={date} className="space-y-4">
+                    <div className="flex justify-center">
+                      <span className="text-xs bg-slate-200 text-slate-600 px-3 py-1 rounded-full">
+                        {date}
+                      </span>
+                    </div>
+                    {messages.map((msg: any) => {
+                      const isOwn = isOwnMessage(msg);
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+                        >
+                          <div className={`max-w-[80%] lg:max-w-[65%] group`}>
+                            <div
+                              className={`relative px-4 py-3 rounded-2xl text-[14px] leading-relaxed shadow-sm
+                              ${
+                                isOwn
+                                  ? "bg-[#ff4c00] text-white rounded-br-none shadow-orange-100"
+                                  : "bg-white text-slate-800 border border-slate-100 rounded-bl-none"
+                              }`}
+                            >
+                              {msg.messageType === "IMAGE" ? (
+                                <div className="rounded-lg overflow-hidden border border-black/5">
+                                  <img
+                                    src={msg.fileUrl || msg.content}
+                                    alt="Shared"
+                                    className="max-h-72 w-full object-cover cursor-pointer hover:opacity-90 transition"
+                                    onClick={() =>
+                                      window.open(
+                                        msg.fileUrl || msg.content,
+                                        "_blank",
+                                      )
+                                    }
+                                  />
+                                </div>
+                              ) : msg.messageType === "PDF" ? (
+                                <a
+                                  href={msg.fileUrl || msg.content}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-3 font-medium hover:underline"
+                                >
+                                  <FiFileText size={20} />
+                                  <span className="truncate">Document.pdf</span>
+                                </a>
+                              ) : (
+                                <p className="whitespace-pre-wrap wrap-break-word">
+                                  {msg.content}
+                                </p>
+                              )}
+                            </div>
+                            <div
+                              className={`mt-1.5 flex items-center gap-2 ${isOwn ? "justify-end" : "justify-start"}`}
+                            >
+                              <span className="text-[10px] font-bold text-slate-400 tracking-wide uppercase">
+                                {new Date(
+                                  msg.createdAt || msg.timestamp,
+                                ).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                              {isOwn && msg.status === "sending" && (
+                                <span className="text-[10px] text-slate-400">
+                                  Sending...
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))
+              )}
+              <div ref={messagesEndRef} />
             </div>
-          </footer>
+
+            <footer className="p-6 bg-white border-t border-slate-50">
+              <div className="max-w-4xl mx-auto flex items-end gap-3 bg-slate-50 rounded-3xl p-2 pr-3 border border-slate-100 focus-within:bg-white focus-within:shadow-xl focus-within:shadow-slate-100 transition-all duration-300">
+                <label className="p-3 cursor-pointer text-slate-400 hover:text-[#ff4c00] transition-colors rounded-full hover:bg-white">
+                  <FiPaperclip size={22} />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={handleSendFile}
+                    className="hidden"
+                    disabled={!socketConnected || sending}
+                  />
+                </label>
+                <textarea
+                  rows={1}
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  placeholder={
+                    socketConnected ? "Type your message..." : "Connecting..."
+                  }
+                  disabled={!socketConnected || sending}
+                  className="flex-1 bg-transparent py-3 px-1 outline-none text-[14px] text-slate-800 placeholder:text-slate-400 resize-none max-h-32 disabled:opacity-50"
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!messageInput.trim() || sending || !socketConnected}
+                  className="mb-1 p-3 bg-[#ff4c00] text-white rounded-full disabled:bg-slate-200 disabled:shadow-none shadow-lg shadow-orange-200 hover:scale-105 transition-all active:scale-95 disabled:cursor-not-allowed"
+                >
+                  <FiSend size={20} />
+                </button>
+              </div>
+            </footer>
+          </>
+        ) : (
+          <div className="h-full flex items-center justify-center text-slate-400">
+            Select a conversation to start chatting
+          </div>
         )}
       </main>
     </div>
