@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,7 +72,8 @@ const ServiceAreaModal = ({
       if (!mapRef.current || !window.google) return;
 
       const map = new window.google.maps.Map(mapRef.current, {
-        center: { lat: 23.8103, lng: 90.4125 },
+        // center: { lat: 23.8103, lng: 90.4125 },
+        center: { lat: 1.3521, lng: 103.8198 },
         zoom: 12,
         mapTypeControl: true,
       });
@@ -109,35 +111,55 @@ const ServiceAreaModal = ({
 
         currentPolygonRef.current = polygon;
 
-        window.google.maps.event.addListener(polygon.getPath(), "set_at", () => {
-          updateCoordinates(polygon);
-        });
-        window.google.maps.event.addListener(polygon.getPath(), "insert_at", () => {
-          updateCoordinates(polygon);
-        });
+        window.google.maps.event.addListener(
+          polygon.getPath(),
+          "set_at",
+          () => {
+            updateCoordinates(polygon);
+          },
+        );
+        window.google.maps.event.addListener(
+          polygon.getPath(),
+          "insert_at",
+          () => {
+            updateCoordinates(polygon);
+          },
+        );
 
         const bounds = new window.google.maps.LatLngBounds();
         editData.coordinates.forEach((coordL: any) => bounds.extend(coordL));
         map.fitBounds(bounds);
       }
 
-      window.google.maps.event.addListener(drawingManager, "polygoncomplete", (polygon: any) => {
-        if (currentPolygonRef.current) {
-          currentPolygonRef.current.setMap(null);
-        }
+      window.google.maps.event.addListener(
+        drawingManager,
+        "polygoncomplete",
+        (polygon: any) => {
+          if (currentPolygonRef.current) {
+            currentPolygonRef.current.setMap(null);
+          }
 
-        currentPolygonRef.current = polygon;
-        drawingManager.setDrawingMode(null);
+          currentPolygonRef.current = polygon;
+          drawingManager.setDrawingMode(null);
 
-        updateCoordinates(polygon);
-
-        window.google.maps.event.addListener(polygon.getPath(), "set_at", () => {
           updateCoordinates(polygon);
-        });
-        window.google.maps.event.addListener(polygon.getPath(), "insert_at", () => {
-          updateCoordinates(polygon);
-        });
-      });
+
+          window.google.maps.event.addListener(
+            polygon.getPath(),
+            "set_at",
+            () => {
+              updateCoordinates(polygon);
+            },
+          );
+          window.google.maps.event.addListener(
+            polygon.getPath(),
+            "insert_at",
+            () => {
+              updateCoordinates(polygon);
+            },
+          );
+        },
+      );
     };
 
     if (window.google) {
@@ -179,7 +201,12 @@ const ServiceAreaModal = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.cityZone || !formData.coordinates || formData.coordinates.length === 0) {
+    if (
+      !formData.name ||
+      !formData.cityZone ||
+      !formData.coordinates ||
+      formData.coordinates.length === 0
+    ) {
       return;
     }
 
@@ -193,9 +220,15 @@ const ServiceAreaModal = ({
       <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-2xl font-bold">
-            {editData ? `Edit Service Area (ID: ${editData.id})` : "Create New Service Area"}
+            {editData
+              ? `Edit Service Area (ID: ${editData.id})`
+              : "Create New Service Area"}
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 cursor-pointer" disabled={isLoading}>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 cursor-pointer"
+            disabled={isLoading}
+          >
             <X size={24} />
           </button>
         </div>
@@ -210,7 +243,9 @@ const ServiceAreaModal = ({
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   required
                   disabled={isLoading}
                   placeholder="Enter internal name for the zone"
@@ -224,7 +259,9 @@ const ServiceAreaModal = ({
                 <Input
                   id="cityZone"
                   value={formData.cityZone}
-                  onChange={(e) => setFormData({ ...formData, cityZone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, cityZone: e.target.value })
+                  }
                   required
                   disabled={isLoading}
                   placeholder="Enter display name for the zone"
@@ -234,7 +271,8 @@ const ServiceAreaModal = ({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="deliveryFee" className="flex items-center">
-                    Delivery Fee ($) <span className="text-red-500 ml-1">*</span>
+                    Delivery Fee ($){" "}
+                    <span className="text-red-500 ml-1">*</span>
                   </Label>
                   <Input
                     id="deliveryFee"
@@ -300,11 +338,15 @@ const ServiceAreaModal = ({
                       id="color"
                       type="color"
                       value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, color: e.target.value })
+                      }
                       disabled={isLoading}
                       className="w-12 h-10 p-1"
                     />
-                    <span className="text-sm text-gray-600">{formData.color}</span>
+                    <span className="text-sm text-gray-600">
+                      {formData.color}
+                    </span>
                   </div>
                 </div>
 
@@ -333,7 +375,9 @@ const ServiceAreaModal = ({
                 <textarea
                   id="notes"
                   value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, notes: e.target.value })
+                  }
                   className="w-full p-2 border rounded"
                   rows={3}
                   disabled={isLoading}
@@ -355,24 +399,45 @@ const ServiceAreaModal = ({
 
             <div>
               <Label className="flex items-center">
-                Draw Service Area on Map <span className="text-red-500 ml-1">*</span>
+                Draw Service Area on Map{" "}
+                <span className="text-red-500 ml-1">*</span>
               </Label>
-              <div ref={mapRef} className="w-full h-[500px] rounded-lg border mt-2" />
+              <div
+                ref={mapRef}
+                className="w-full h-[500px] rounded-lg border mt-2"
+              />
               <div className="mt-2 space-y-1">
-                <p className="text-sm text-gray-600">• Click the polygon tool (✓) in the top center of the map</p>
-                <p className="text-sm text-gray-600">• Click on the map to create polygon points</p>
-                <p className="text-sm text-gray-600">• Complete the polygon by clicking on the first point</p>
-                <p className="text-sm text-gray-600">• Drag points to adjust the shape</p>
+                <p className="text-sm text-gray-600">
+                  • Click the polygon tool (✓) in the top center of the map
+                </p>
+                <p className="text-sm text-gray-600">
+                  • Click on the map to create polygon points
+                </p>
+                <p className="text-sm text-gray-600">
+                  • Complete the polygon by clicking on the first point
+                </p>
+                <p className="text-sm text-gray-600">
+                  • Drag points to adjust the shape
+                </p>
               </div>
             </div>
           </div>
         </div>
 
         <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
-          <Button variant="outline" onClick={onClose} disabled={isLoading} className="px-6 cursor-pointer">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={isLoading}
+            className="px-6 cursor-pointer"
+          >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700 px-6 cursor-pointer" disabled={isLoading}>
+          <Button
+            onClick={handleSubmit}
+            className="bg-blue-600 hover:bg-blue-700 px-6 cursor-pointer"
+            disabled={isLoading}
+          >
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
