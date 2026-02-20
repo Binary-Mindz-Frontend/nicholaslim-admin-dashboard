@@ -782,7 +782,14 @@ export default function AddNewDriver() {
                       className="bg-secondary rounded"
                       {...register(key as any, key === "email"
                         ? {}
-                        : { required: `${label} is required` }
+                        : key === "phone" || key === "emergencyContactNumber"
+                          ? {
+                            required: `${label} is required`,
+                            validate: (value: string) =>
+                              /^\+65/.test(value.replace(/\s/g, "")) ||
+"Must be a Singapore number starting with +65",
+                          }
+                          : { required: `${label} is required` }
                       )}
                     />
                   )}
