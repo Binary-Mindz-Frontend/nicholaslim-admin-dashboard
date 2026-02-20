@@ -111,6 +111,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
     }
   }, [data]);
 
+  console.log("Driver data:", data?.data?.data);
   // Define columns for the driver data
   const driverColumns: Column<TDriver>[] = [
     {
@@ -171,7 +172,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
         const contact = row.registrations?.[0]?.contact_number || "";
         return (
           <span>
-            {contact ? contact.slice(0, 2) + "******" + contact.slice(-2) : "N/A"}
+            {contact ? contact : "N/A"}
           </span>
         );
       },

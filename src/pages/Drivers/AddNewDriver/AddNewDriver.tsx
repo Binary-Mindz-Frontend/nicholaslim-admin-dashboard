@@ -55,41 +55,77 @@ interface UploadBoxProps {
 const UploadBox = ({ label, onChange, error, isUploading, currentPreviewUrl }: UploadBoxProps) => {
 
   const [localFileUrl, setLocalFileUrl] = useState<string | null>(null);
+const [isPdf, setIsPdf] = useState(false);
+const [fileName, setFileName] = useState<string | null>(null);
 
   const preview = currentPreviewUrl || localFileUrl;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    if (!file) return;
+  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0] || null;
+  //   if (!file) return;
 
-    // 1. Update local preview URL
-    if (file.type.startsWith("image/")) {
-      if (localFileUrl) URL.revokeObjectURL(localFileUrl);
-      setLocalFileUrl(URL.createObjectURL(file));
-    } else {
-      setLocalFileUrl(null);
-    }
-    onChange(file);
+  //   // 1. Update local preview URL
+  //   if (file.type.startsWith("image/")) {
+  //     if (localFileUrl) URL.revokeObjectURL(localFileUrl);
+  //     setLocalFileUrl(URL.createObjectURL(file));
+  //   } else {
+  //     setLocalFileUrl(null);
+  //   }
+  //   onChange(file);
 
-  };
+  // };
+const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0] || null;
+  if (!file) return;
+
+  if (file.type === "application/pdf") {
+    if (localFileUrl) URL.revokeObjectURL(localFileUrl);
+    setLocalFileUrl(null);
+    setIsPdf(true);
+    setFileName(file.name);
+  } else if (file.type.startsWith("image/")) {
+    if (localFileUrl) URL.revokeObjectURL(localFileUrl);
+    setLocalFileUrl(URL.createObjectURL(file));
+    setIsPdf(false);
+    setFileName(null);
+  }
+  onChange(file);
+};
+
+
+  // const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+
+  //   if (localFileUrl) {
+  //     URL.revokeObjectURL(localFileUrl);
+  //     setLocalFileUrl(null);
+  //   }
+
+  //   onChange(null);
+
+  //   // Force clear the input element (optional, but good practice)
+  //   const inputElement = document.getElementById(`upload-${label.replace(/\s+/g, "-")}`) as HTMLInputElement;
+  //   if (inputElement) {
+  //     inputElement.value = "";
+  //   }
+  // };
 
   const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
+  e.preventDefault();
+  e.stopPropagation();
 
-    if (localFileUrl) {
-      URL.revokeObjectURL(localFileUrl);
-      setLocalFileUrl(null);
-    }
+  if (localFileUrl) {
+    URL.revokeObjectURL(localFileUrl);
+    setLocalFileUrl(null);
+  }
+  setIsPdf(false);
+  setFileName(null);
+  onChange(null);
 
-    onChange(null);
-
-    // Force clear the input element (optional, but good practice)
-    const inputElement = document.getElementById(`upload-${label.replace(/\s+/g, "-")}`) as HTMLInputElement;
-    if (inputElement) {
-      inputElement.value = "";
-    }
-  };
+  const inputElement = document.getElementById(`upload-${label.replace(/\s+/g, "-")}`) as HTMLInputElement;
+  if (inputElement) inputElement.value = "";
+};
 
   return (
     <div>
@@ -112,7 +148,24 @@ const UploadBox = ({ label, onChange, error, isUploading, currentPreviewUrl }: U
               <Upload size={24} className="text-green-600 animate-pulse" />
               <p className="text-sm text-gray-700">Uploading...</p>
             </div>
-          ) : preview ? ( // Use the determined preview URL
+          ) : isPdf ? (
+            <>
+              <div className="flex flex-col items-center gap-2 p-4">
+                <div className="bg-red-100 rounded-lg p-3">
+                  <Upload size={32} className="text-red-500" />
+                </div>
+                <p className="text-sm font-medium text-gray-800 break-all text-center">{fileName}</p>
+                {/* <p className="text-xs text-green-600 font-semibold">✓ Uploaded successfully</p> */}
+              </div>
+              <button
+                type="button"
+                onClick={handleClear}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 z-10 shadow-lg"
+              >
+                <X size={16} />
+              </button>
+            </>
+          ) : preview ? (
             <>
               <img
                 src={preview}
@@ -234,19 +287,19 @@ export default function AddNewDriver() {
       currentaddress: "",
       currentapartment: "",
       currentcity: "",
-      currentstate: "",
+      currentstate: "NA",
       currentpostal: "",
       permanentaddress: "",
       permanentapartment: "",
       permanentcity: "",
-      permanentstate: "",
+      permanentstate: "NA",
       permanentpostal: "",
       drivingLicense: "",
       dlIssueDate: "",
       dlExpiryDate: "",
       vehiclePlate1: "",
       vehicleType: "",
-      vehiclePlate2: "",
+      vehiclePlate2: "NA",
       model: "",
       registrationDate: "",
       vehicleLog: "",
@@ -555,18 +608,18 @@ export default function AddNewDriver() {
     { key: "currentaddress", label: "Current Address" },
     { key: "currentapartment", label: "Current Apartment" },
     { key: "currentcity", label: "Current City" },
-    { key: "currentstate", label: "Current State" },
+    // { key: "currentstate", label: "Current State" },
     { key: "currentpostal", label: "Current Postal Code" },
     { key: "permanentaddress", label: "Permanent Address" },
     { key: "permanentapartment", label: "Permanent Apartment" },
     { key: "permanentcity", label: "Permanent City" },
-    { key: "permanentstate", label: "Permanent State" },
+    // { key: "permanentstate", label: "Permanent State" },
     { key: "permanentpostal", label: "Permanent Postal Code" },
     { key: "drivingLicense", label: "Driving License Number" },
     { key: "dlIssueDate", label: "License Issue Date" },
     { key: "dlExpiryDate", label: "License Expiry Date" },
     { key: "vehiclePlate1", label: "Vehicle Number Plate 1" },
-    { key: "vehiclePlate2", label: "Vehicle Number Plate 2" },
+    // { key: "vehiclePlate2", label: "Vehicle Number Plate 2" },
     { key: "vehicleType", label: "Vehicle Type" },
     { key: "model", label: "Vehicle Model" },
     { key: "registrationDate", label: "Registration Date" },
@@ -635,7 +688,7 @@ export default function AddNewDriver() {
                 <Label className="text-sm font-semibold pb-2">{label}</Label>
 
                 {/* Dropdown Fields */}
-                {["gender", "currentstate", "permanentstate", "vehicleType"].includes(key) && (
+                {["gender", "vehicleType"].includes(key) && (
                   <select
                     {...register(key as any, { required: `${label} is required` })}
                     className="w-full border bg-secondary rounded p-2"
@@ -657,7 +710,7 @@ export default function AddNewDriver() {
                 )}
 
                 {/* Normal Input */}
-                {!["gender", "currentstate", "permanentstate", "vehicleType" ].includes(key) &&
+                {!["gender","vehicleType" ].includes(key) &&
                   !isDateField(key) && (
                     // <Input
                     //   className="bg-secondary rounded"
