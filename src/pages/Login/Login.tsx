@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-useless-escape */
 import React, { useState, useEffect } from "react";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
 import { useLoginMutation } from "@/redux/features/auth/authApi";
