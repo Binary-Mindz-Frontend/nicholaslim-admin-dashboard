@@ -12,7 +12,7 @@ const Login: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  const [loginInput, setLoginInput] = useState("");
   const [password, setPassword] = useState("");
   const [rememberPassword, setRememberPassword] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -26,11 +26,40 @@ const Login: React.FC = () => {
       skip: !shouldFetchPermissions,
     });
 
+  const prepareLoginCredentials = (input: string, password: string) => {
+    const trimmedInput = input.trim();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    const phoneRegex = /^[\+\d\s\(\)\-]+$/;
+
+    if (emailRegex.test(trimmedInput)) {
+      // It's an email - send as is
+      return {
+        email: trimmedInput,
+        password: password,
+      };
+    } else if (
+      phoneRegex.test(trimmedInput) &&
+      trimmedInput.replace(/[^0-9]/g, "").length >= 10
+    ) {
+      return {
+        phone: trimmedInput,
+        password: password,
+      };
+    } else {
+      return {
+        username: trimmedInput,
+        password: password,
+      };
+    }
+  };
+
   useEffect(() => {
     if (errorMessage) {
       setErrorMessage("");
     }
-  }, [email, password]);
+  }, [loginInput, password]);
 
   useEffect(() => {
     if (permissionsData && !isLoadingPermissions) {
@@ -43,9 +72,9 @@ const Login: React.FC = () => {
       navigate("/");
       return;
     }
-    
+
     const availableRoutes = getAllAvailableRoutes(permissionsData);
-    
+
     if (availableRoutes.length > 0) {
       navigate(`/${availableRoutes[0]}`);
     } else {
@@ -57,13 +86,22 @@ const Login: React.FC = () => {
     e.preventDefault();
     setErrorMessage("");
 
+    if (!loginInput.trim()) {
+      setErrorMessage("Please enter your mobile number, email, or username");
+      return;
+    }
+
+    if (!password) {
+      setErrorMessage("Please enter your password");
+      return;
+    }
+
     const loginToast = toast.loading("Signing in...");
 
     try {
-      const credentials = {
-        email: email.trim(),
-        password: password,
-      };
+      const credentials = prepareLoginCredentials(loginInput, password);
+
+      console.log("Sending credentials:", credentials);
 
       const result = await login(credentials).unwrap();
 
@@ -71,7 +109,7 @@ const Login: React.FC = () => {
         dispatch(
           setCredentials({
             accessToken: result.access_token,
-          })
+          }),
         );
 
         toast.success("Login successful!", { id: loginToast });
@@ -86,7 +124,7 @@ const Login: React.FC = () => {
       let errorMsg = "Login failed. Please try again.";
 
       if (err.status === 401) {
-        errorMsg = "Invalid email or password. Please try again.";
+        errorMsg = "Invalid credentials. Please try again.";
       } else if (err.status === 400) {
         errorMsg = "Invalid request format. Please check your input.";
       } else if (err.status === 500) {
@@ -106,6 +144,25 @@ const Login: React.FC = () => {
     setShowPassword(!showPassword);
   };
 
+  const getInputType = (input: string) => {
+    if (!input) return null;
+
+    const trimmedInput = input.trim();
+
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedInput)) {
+      return "email";
+    } else if (
+      /^[\+\d\s\(\)\-]+$/.test(trimmedInput) &&
+      trimmedInput.replace(/[^0-9]/g, "").length >= 10
+    ) {
+      return "phone";
+    } else {
+      return "username";
+    }
+  };
+
+  const detectedType = getInputType(loginInput);
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-lg py-10 px-4 md:py-18 md:px-10 w-full max-w-lg">
@@ -114,33 +171,43 @@ const Login: React.FC = () => {
             Login to Account
           </h1>
           <p className="text-sm text-gray-500">
-           Please enter your mobile number, email address, or login ID along with your password to continue.
+            Please enter your mobile number, email address, or username along
+            with your password to continue.
           </p>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label
-              htmlFor="email"
+              htmlFor="loginInput"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Mobile Number / Email / Login ID
+              Mobile Number / Email / Username
             </label>
             <div className="relative">
               <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                id="loginInput"
+                value={loginInput}
+                onChange={(e) => setLoginInput(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-gray-700 pl-11"
-                placeholder="mobile / email / login id"
+                placeholder="Enter mobile / email / username"
                 required
                 disabled={isLoading}
+                autoComplete="username"
               />
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
                 <User size={20} />
               </div>
             </div>
+            {/* Show detected input type */}
+            {loginInput && detectedType && (
+              <p className="text-xs text-gray-500 mt-1">
+                {detectedType === "email" && "📧 Email detected"}
+                {detectedType === "phone" && "📱 Phone number detected"}
+                {detectedType === "username" && "👤 Username detected"}
+              </p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -165,9 +232,10 @@ const Login: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-gray-700 pl-11 pr-12"
-                placeholder="password"
+                placeholder="Enter your password"
                 required
                 disabled={isLoading}
+                autoComplete="current-password"
               />
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
                 <Lock size={20} />
