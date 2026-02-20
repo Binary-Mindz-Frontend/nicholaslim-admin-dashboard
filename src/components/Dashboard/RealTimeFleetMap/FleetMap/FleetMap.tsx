@@ -115,7 +115,8 @@ const FleetMap: React.FC = () => {
   // Generate mock live vehicles (replace with socket data)
   const generateLiveVehicles = (): LiveVehicle[] => {
     const vehicles: LiveVehicle[] = [];
-    const center = { lat: 23.8103, lng: 90.4125 }; // Dhaka center
+    // const center = { lat: 23.8103, lng: 90.4125 }; // Dhaka center
+    const center = { lat: 1.3521, lng: 103.8198 }; // Singapore
 
     vehicleTypes.forEach((vehicle: VehicleType, index: number) => {
       // Generate random positions around center
@@ -145,7 +146,8 @@ const FleetMap: React.FC = () => {
     if (!mapRef.current || !window.google) return;
 
     const map = new google.maps.Map(mapRef.current, {
-      center: { lat: 23.8103, lng: 90.4125 },
+      // center: { lat: 23.8103, lng: 90.4125 },
+      center: { lat: 1.3521, lng: 103.8198 },
       zoom: 12,
       disableDefaultUI: true,
       zoomControl: false,
@@ -154,11 +156,11 @@ const FleetMap: React.FC = () => {
       fullscreenControl: false,
       styles: [
         {
-          featureType: 'poi',
-          elementType: 'labels',
-          stylers: [{ visibility: 'off' }]
-        }
-      ]
+          featureType: "poi",
+          elementType: "labels",
+          stylers: [{ visibility: "off" }],
+        },
+      ],
     });
 
     mapInstanceRef.current = map;

@@ -405,7 +405,7 @@ const routes = createBrowserRouter([
         element: <DashboardPopup />,
       },
       {
-        path: "contectinfo",
+        path: "contactinfo",
         element: <ContactInfo />,
       },
       {

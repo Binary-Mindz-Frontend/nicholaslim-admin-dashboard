@@ -1,14 +1,14 @@
-
 import { useState } from "react";
 import FilterSection from "@/components/Users/FilterSection/FilterSection";
 import { useUserColumns } from "./userWebTable/userWebTable";
 import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 import TablePagination from "@/pages/Dashboard/_components/TablePagination";
+import { Link } from "react-router-dom";
 
 export default function UsersPage() {
   const [dateFilter, setDateFilter] = useState("");
   const [allFilter, setAllFilter] = useState("");
-  
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -21,14 +21,16 @@ export default function UsersPage() {
   };
 
   // Get columns and users from the custom hook WITH pagination params
-  const { userColumns, users, isLoading, isError, totalItems } = useUserColumns({
-    status: allFilter,
-    dateFilter: dateFilter,
-    page: currentPage,
-    limit: itemsPerPage,
-    sortBy: "createdAt",
-    sortOrder: "desc",
-  });
+  const { userColumns, users, isLoading, isError, totalItems } = useUserColumns(
+    {
+      status: allFilter,
+      dateFilter: dateFilter,
+      page: currentPage,
+      limit: itemsPerPage,
+      sortBy: "createdAt",
+      sortOrder: "desc",
+    },
+  );
 
   // Check if data is still loading or if there was an error
   if (isLoading) return <p>Loading...</p>;
@@ -39,13 +41,17 @@ export default function UsersPage() {
       <div className="w-full mx-auto space-y-4 mb-6">
         {/* Header Section */}
         <div className="pt-2 sm:py-2">
-          <h1 className="text-black text-2xl font-bold">User List (Web Portal)</h1>
+          <h1 className="text-black text-2xl font-bold">
+            User List (Web Portal)
+          </h1>
         </div>
 
         {/* Category List Section */}
         <div className="sm:py-3">
           <div className="flex items-center gap-2">
-            <span className="text-[#6B6B6B] text-xl font-semibold">Category List</span>
+            <span className="text-[#6B6B6B] text-xl font-semibold">
+              Category List
+            </span>
             <span className="bg-secondary text-gray-700 px-3 py-1 rounded-full text-base font-medium border border-[#969696]">
               {totalItems}
             </span>
@@ -75,11 +81,12 @@ export default function UsersPage() {
 
       {/* Add New User Button */}
       <div className="flex justify-center my-6">
-        <button
+        <Link
+          to="/add-new-user"
           className="px-3 sm:px-6 py-3 bg-yellow-400 cursor-pointer sm:font-bold hover:bg-yellow-500 text-black rounded transition-colors"
         >
           Add new user
-        </button>
+        </Link>
       </div>
     </div>
   );
