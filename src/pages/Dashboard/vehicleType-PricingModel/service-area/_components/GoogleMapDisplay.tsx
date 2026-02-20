@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GoogleMapDisplayProps } from '@/types/serviceAreaType';
 import { useRef, useEffect } from 'react';
 
@@ -17,7 +18,8 @@ const GoogleMapDisplay = ({ serviceAreas, selectedArea, onAreaClick }: GoogleMap
 
     // Initialize map
     const map = new window.google.maps.Map(mapRef.current, {
-      center: { lat: 23.8103, lng: 90.4125 },
+      // center: { lat: 23.8103, lng: 90.4125 },
+      center: { lat: 1.3521, lng: 103.8198 },
       zoom: 12,
       mapTypeControl: true,
       streetViewControl: false,
