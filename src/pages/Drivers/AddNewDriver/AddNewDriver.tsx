@@ -1,6 +1,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Camera, Upload, X } from "lucide-react";
 import toast from "react-hot-toast";
@@ -50,82 +50,53 @@ interface UploadBoxProps {
   error?: string | null;
   isUploading?: boolean;
   currentPreviewUrl?: string | null;
+  buttonText?: string;
 }
 
-const UploadBox = ({ label, onChange, error, isUploading, currentPreviewUrl }: UploadBoxProps) => {
+const UploadBox = ({ label, onChange, error, isUploading, currentPreviewUrl, buttonText = "Upload Photo" }: UploadBoxProps) => {
+
 
   const [localFileUrl, setLocalFileUrl] = useState<string | null>(null);
-const [isPdf, setIsPdf] = useState(false);
-const [fileName, setFileName] = useState<string | null>(null);
+  const [isPdf, setIsPdf] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
 
   const preview = currentPreviewUrl || localFileUrl;
 
-  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0] || null;
-  //   if (!file) return;
 
-  //   // 1. Update local preview URL
-  //   if (file.type.startsWith("image/")) {
-  //     if (localFileUrl) URL.revokeObjectURL(localFileUrl);
-  //     setLocalFileUrl(URL.createObjectURL(file));
-  //   } else {
-  //     setLocalFileUrl(null);
-  //   }
-  //   onChange(file);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (!file) return;
 
-  // };
-const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0] || null;
-  if (!file) return;
+    if (file.type === "application/pdf") {
+      if (localFileUrl) URL.revokeObjectURL(localFileUrl);
+      setLocalFileUrl(null);
+      setIsPdf(true);
+      setFileName(file.name);
+    } else if (file.type.startsWith("image/")) {
+      if (localFileUrl) URL.revokeObjectURL(localFileUrl);
+      setLocalFileUrl(URL.createObjectURL(file));
+      setIsPdf(false);
+      setFileName(null);
+    }
+    onChange(file);
+  };
 
-  if (file.type === "application/pdf") {
-    if (localFileUrl) URL.revokeObjectURL(localFileUrl);
-    setLocalFileUrl(null);
-    setIsPdf(true);
-    setFileName(file.name);
-  } else if (file.type.startsWith("image/")) {
-    if (localFileUrl) URL.revokeObjectURL(localFileUrl);
-    setLocalFileUrl(URL.createObjectURL(file));
-    setIsPdf(false);
-    setFileName(null);
-  }
-  onChange(file);
-};
-
-
-  // const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-
-  //   if (localFileUrl) {
-  //     URL.revokeObjectURL(localFileUrl);
-  //     setLocalFileUrl(null);
-  //   }
-
-  //   onChange(null);
-
-  //   // Force clear the input element (optional, but good practice)
-  //   const inputElement = document.getElementById(`upload-${label.replace(/\s+/g, "-")}`) as HTMLInputElement;
-  //   if (inputElement) {
-  //     inputElement.value = "";
-  //   }
-  // };
 
   const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
-  e.preventDefault();
-  e.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
 
-  if (localFileUrl) {
-    URL.revokeObjectURL(localFileUrl);
-    setLocalFileUrl(null);
-  }
-  setIsPdf(false);
-  setFileName(null);
-  onChange(null);
+    if (localFileUrl) {
+      URL.revokeObjectURL(localFileUrl);
+      setLocalFileUrl(null);
+    }
+    setIsPdf(false);
+    setFileName(null);
+    onChange(null);
 
-  const inputElement = document.getElementById(`upload-${label.replace(/\s+/g, "-")}`) as HTMLInputElement;
-  if (inputElement) inputElement.value = "";
-};
+    const inputElement = document.getElementById(`upload-${label.replace(/\s+/g, "-")}`) as HTMLInputElement;
+    if (inputElement) inputElement.value = "";
+  };
 
   return (
     <div>
@@ -185,7 +156,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               <p className="text-sm text-gray-700 mb-2">{label}</p>
               <span className="flex items-center gap-0.5 justify-center border border-green-500 rounded-md px-2 py-1">
                 <Camera className="text-green-600" size={22} />
-                <span className="text-xs sm:text-sm text-gray-700">Upload Photo</span>
+                <span className="text-xs sm:text-sm text-gray-700">{buttonText}</span>
               </span>
               <p className="text-xs text-gray-400 mt-2">PNG, JPG or PDF</p>
             </>
@@ -205,6 +176,10 @@ export default function AddNewDriver() {
   const [profileImageUrls, setProfileImageUrls] = useState<string[]>([]); // To store the uploaded URL(s)
   const [isProfileUploading, setIsProfileUploading] = useState(false);
   const navigate = useNavigate();
+  const [isLoadingPostal, setIsLoadingPostal] = useState<string | null>(null);
+  const [postalSuggestions, setPostalSuggestions] = useState<{ [key: string]: Array<{ address: string }> }>({});
+  const [showPostalSuggestions, setShowPostalSuggestions] = useState<{ [key: string]: boolean }>({});
+  const debounceTimers = useRef<{ [key: string]: ReturnType<typeof setTimeout> }>({});
 
   // Type for document state for clarity
   type DocumentKey =
@@ -268,9 +243,11 @@ export default function AddNewDriver() {
     vehiclePolicy: null,
   });
 
+
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm({
     mode: "onSubmit",
@@ -479,6 +456,38 @@ export default function AddNewDriver() {
     return vehicleMap[vehicleType] || vehicleType.toUpperCase();
   };
 
+  const fetchAddressFromPostal = useCallback(async (postalCode: string, context: "current" | "permanent") => {
+    if (!postalCode || postalCode.length < 3) return;
+
+    const fieldKey = context === "current" ? "currentpostal" : "permanentpostal";
+    setIsLoadingPostal(context);
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(postalCode)}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
+      );
+      const data = await response.json();
+
+      if (data.status === "OK" && data.results.length > 0) {
+        const suggestions = data.results.map((result: any) => ({
+          address: [
+            result.address_components?.[1]?.long_name,
+            result.address_components?.[3]?.long_name,
+          ].filter(Boolean).join(", ") || result.formatted_address,
+        }));
+
+        setPostalSuggestions((prev) => ({ ...prev, [fieldKey]: suggestions }));
+        setShowPostalSuggestions((prev) => ({ ...prev, [fieldKey]: true }));
+      } else {
+        setPostalSuggestions((prev) => ({ ...prev, [fieldKey]: [] }));
+        setShowPostalSuggestions((prev) => ({ ...prev, [fieldKey]: false }));
+      }
+    } catch (error) {
+      console.error("Error fetching address:", error);
+    } finally {
+      setIsLoadingPostal(null);
+    }
+  }, []);
+
   const onSubmit = async (data: any) => {
     // 1. Check for ongoing uploads
     if (uploadingDocs.size > 0) {
@@ -522,7 +531,7 @@ export default function AddNewDriver() {
       const formData = {
         raider_name: data.firstName + " " + data.lastName,
         contact_number: data.phone,
-        email_address:  data.email || undefined,
+        email_address: data.email || undefined,
         dob: formatDateToISO(data.dob),
         gender: mapGender(data.gender),
         driver_photos: profileImageUrls,
@@ -570,9 +579,14 @@ export default function AddNewDriver() {
 
       // Added console log
 
-      await addRiderProfile(formData).unwrap();
+      const result = await addRiderProfile(formData).unwrap();
 
-      toast.success("Rider profile created successfully!");
+      if (!result.success) {
+        toast.error(result.message || "Failed to create rider profile");
+        return;
+      }
+
+      toast.success(result.message || "Rider profile created successfully!");
       navigate("/driver-list");
     } catch (error: any) {
       console.error("API Submission Error:", error);
@@ -594,6 +608,7 @@ export default function AddNewDriver() {
   ];
   const vehicleTypes = ["Bike", "Car", "Pickup", "CNG", "Truck"];
   // const bankOptions = [""];
+  const isPostalField = (field: string) => ["currentpostal", "permanentpostal"].includes(field);
 
   const allFields = [
     { key: "firstName", label: "Driver Name" },
@@ -605,16 +620,16 @@ export default function AddNewDriver() {
     { key: "emergencyContact", label: "Emergency Contact Name" },
     { key: "emergencyContactNumber", label: "Emergency Contact Number" },
     { key: "driverId", label: "Identity Card Number" },
+    { key: "currentpostal", label: "Current Postal Code" },
     { key: "currentaddress", label: "Current Address" },
     { key: "currentapartment", label: "Current Apartment" },
     { key: "currentcity", label: "Current City" },
     // { key: "currentstate", label: "Current State" },
-    { key: "currentpostal", label: "Current Postal Code" },
+    { key: "permanentpostal", label: "Permanent Postal Code" },
     { key: "permanentaddress", label: "Permanent Address" },
     { key: "permanentapartment", label: "Permanent Apartment" },
     { key: "permanentcity", label: "Permanent City" },
     // { key: "permanentstate", label: "Permanent State" },
-    { key: "permanentpostal", label: "Permanent Postal Code" },
     { key: "drivingLicense", label: "Driving License Number" },
     { key: "dlIssueDate", label: "License Issue Date" },
     { key: "dlExpiryDate", label: "License Expiry Date" },
@@ -631,6 +646,7 @@ export default function AddNewDriver() {
     { key: "policyExpiry", label: "Policy Expiry Date" },
     { key: "bank", label: "Bank Name" },
     { key: "accountNumber", label: "Account Number" },
+
   ];
 
   const isDateField = (field: string) => {
@@ -709,9 +725,55 @@ export default function AddNewDriver() {
                   />
                 )}
 
+                {/* Postal Code Fields with auto-fill */}
+                {isPostalField(key) && (
+                  <div className="relative">
+                    <Input
+                      className="bg-secondary rounded pr-8"
+                      {...register(key as any, { required: `${label} is required` })}
+                      onChange={(e) => {
+                        register(key as any).onChange(e);
+                        const context = key === "currentpostal" ? "current" : "permanent";
+                        if (debounceTimers.current[key]) clearTimeout(debounceTimers.current[key]);
+                        setShowPostalSuggestions((prev) => ({ ...prev, [key]: false }));
+                        debounceTimers.current[key] = setTimeout(() => {
+                          if (e.target.value.trim().length >= 3) {
+                            fetchAddressFromPostal(e.target.value, context);
+                          }
+                        }, 500);
+                      }}
+                    />
+                    {isLoadingPostal === (key === "currentpostal" ? "current" : "permanent") && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500"></div>
+                      </div>
+                    )}
+                    {showPostalSuggestions[key] && postalSuggestions[key]?.length > 0 && (
+                      <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        <div className="p-2 text-xs text-gray-500 border-b">Suggested addresses:</div>
+                        {postalSuggestions[key].map((suggestion, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-sm text-gray-800"
+                            onClick={() => {
+                              const addressField = key === "currentpostal" ? "currentaddress" : "permanentaddress";
+                              setValue(addressField as any, suggestion.address);
+                              setShowPostalSuggestions((prev) => ({ ...prev, [key]: false }));
+                            }}
+                          >
+                            {suggestion.address}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Normal Input */}
-                {!["gender","vehicleType" ].includes(key) &&
-                  !isDateField(key) && (
+                {!["gender", "vehicleType"].includes(key) &&
+                  !isDateField(key) &&
+                  !isPostalField(key) && (
                     // <Input
                     //   className="bg-secondary rounded"
                     //   {...register(key as any, { required: `${label} is required` })}
@@ -720,7 +782,14 @@ export default function AddNewDriver() {
                       className="bg-secondary rounded"
                       {...register(key as any, key === "email"
                         ? {}
-                        : { required: `${label} is required` }
+                        : key === "phone" || key === "emergencyContactNumber"
+                          ? {
+                            required: `${label} is required`,
+                            validate: (value: string) =>
+                              /^\+65/.test(value.replace(/\s/g, "")) ||
+"Must be a Singapore number starting with +65",
+                          }
+                          : { required: `${label} is required` }
                       )}
                     />
                   )}
@@ -829,18 +898,20 @@ export default function AddNewDriver() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
               <UploadBox
-                label="Vehicle Log Photo"
+                label="Vehicle Log"
                 onChange={(file) => handleDocumentChange("vehicleLog", file)}
                 error={documentErrors.vehicleLog}
                 isUploading={uploadingDocs.has("vehicleLog")}
-              //        currentPreviewUrl={documentUrls.vehicleLog} // **FIX: Pass the uploaded URL**
+                //        currentPreviewUrl={documentUrls.vehicleLog} 
+                buttonText="Upload"
               />
               <UploadBox
-                label="Vehicle Policy Photo"
+                label="Vehicle Policy"
                 onChange={(file) => handleDocumentChange("vehiclePolicy", file)}
                 error={documentErrors.vehiclePolicy}
                 isUploading={uploadingDocs.has("vehiclePolicy")}
-              //        currentPreviewUrl={documentUrls.vehiclePolicy} // **FIX: Pass the uploaded URL**
+                //        currentPreviewUrl={documentUrls.vehiclePolicy} 
+                buttonText="Upload"
               />
             </div>
           </div>
