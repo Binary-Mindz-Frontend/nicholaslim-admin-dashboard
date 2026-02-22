@@ -1,5 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-refresh/only-export-components */
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  // AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import React, { useState, useEffect } from "react";
 import { X, UserMinus, Save } from "lucide-react";
 import toast from "react-hot-toast";
@@ -50,6 +61,11 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
   const [activeTab, setActiveTab] = useState<"permissions" | "users">(
     "permissions",
   );
+  const [pendingRemove, setPendingRemove] = useState<{
+    userId: number;
+    username: string;
+  } | null>(null);
+
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -177,9 +193,10 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
     setIsEditing(false);
   };
 
-  const handleRemoveUser = async (userId: number, username: string) => {
-    if (!roleId) return;
+  const handleRemoveUser = async () => {
+    if (!roleId || !pendingRemove) return;
 
+    const { userId, username } = pendingRemove;
     toast.loading(`Removing ${username} from role...`);
 
     try {
@@ -191,257 +208,293 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
       if (response.success) {
         toast.dismiss();
         toast.success(response.message || `User removed successfully!`);
-        refetchUsers(); // Refresh the users list
+        refetchUsers();
       }
     } catch (error) {
       toast.dismiss();
       console.error("Failed to remove user:", error);
       toast.error("Failed to remove user from role");
+    } finally {
+      setPendingRemove(null); // always clear after attempt
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        <div className="flex justify-between items-center p-6 border-b">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-800">
-              Role Details - {roleName}
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {activeTab === "permissions"
-                ? `${getSelectedModuleCount()} modules selected ${isEditing ? "(Editing)" : ""}`
-                : `${roleUsersData?.users?.length || 0} users assigned`}
-            </p>
+    <>
+      <AlertDialog
+        open={!!pendingRemove}
+        onOpenChange={(open) => !open && setPendingRemove(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove{" "}
+              <span className="font-semibold text-foreground">
+                {pendingRemove?.username}
+              </span>{" "}
+              from this role?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={handleRemoveUser}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+          <div className="flex justify-between items-center p-6 border-b">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800">
+                Role Details - {roleName}
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                {activeTab === "permissions"
+                  ? `${getSelectedModuleCount()} modules selected ${isEditing ? "(Editing)" : ""}`
+                  : `${roleUsersData?.users?.length || 0} users assigned`}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+              disabled={isLoading || isSaving || isUpdating}
+            >
+              <X size={24} />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
-            disabled={isLoading || isSaving || isUpdating}
-          >
-            <X size={24} />
-          </button>
-        </div>
 
-        {/* Tabs */}
-        <div className="flex border-b px-6">
-          <button
-            onClick={() => setActiveTab("permissions")}
-            className={`py-3 px-4 font-medium text-sm border-b-2 transition-colors cursor-pointer ${
-              activeTab === "permissions"
-                ? "border-yellow-400 text-yellow-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Permissions
-          </button>
-          <button
-            onClick={() => setActiveTab("users")}
-            className={`py-3 px-4 font-medium text-sm border-b-2 transition-colors cursor-pointer ${
-              activeTab === "users"
-                ? "border-yellow-400 text-yellow-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Assigned Users ({roleUsersData?.users?.length || 0})
-          </button>
-        </div>
+          {/* Tabs */}
+          <div className="flex border-b px-6">
+            <button
+              onClick={() => setActiveTab("permissions")}
+              className={`py-3 px-4 font-medium text-sm border-b-2 transition-colors cursor-pointer ${
+                activeTab === "permissions"
+                  ? "border-yellow-400 text-yellow-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Permissions
+            </button>
+            <button
+              onClick={() => setActiveTab("users")}
+              className={`py-3 px-4 font-medium text-sm border-b-2 transition-colors cursor-pointer ${
+                activeTab === "users"
+                  ? "border-yellow-400 text-yellow-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Assigned Users ({roleUsersData?.users?.length || 0})
+            </button>
+          </div>
 
-        <div className="p-6 overflow-y-auto max-h-[70vh] no-scrollbar">
-          {activeTab === "permissions" ? (
-            // Permissions View
-            <>
-              {/* Edit/Save Controls */}
-              <div className="flex justify-end mb-4 space-x-2">
-                {!isEditing ? (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors cursor-pointer text-sm font-medium"
-                    disabled={isUpdating || isSaving}
-                  >
-                    Edit Permissions
-                  </button>
+          <div className="p-6 overflow-y-auto max-h-[70vh] no-scrollbar">
+            {activeTab === "permissions" ? (
+              // Permissions View
+              <>
+                {/* Edit/Save Controls */}
+                <div className="flex justify-end mb-4 space-x-2">
+                  {!isEditing ? (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors cursor-pointer text-sm font-medium"
+                      disabled={isUpdating || isSaving}
+                    >
+                      Edit Permissions
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors cursor-pointer text-sm font-medium"
+                        disabled={isSaving || isUpdating}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSavePermissions}
+                        disabled={isSaving || isUpdating}
+                        className="px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors cursor-pointer text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                      >
+                        {isSaving || isUpdating ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save size={16} className="mr-1" />
+                            Save Changes
+                          </>
+                        )}
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Permissions Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {ALL_PERMISSIONS.map((permission) => {
+                    const isSelected = isModuleSelected(permission);
+                    const isPartial = isModulePartiallySelected(permission);
+
+                    let bgColor = "bg-gray-50";
+                    let borderColor = "border-gray-200";
+                    let textColor = "text-gray-800";
+                    let hoverEffect = "";
+
+                    if (isSelected) {
+                      bgColor = "bg-yellow-50";
+                      borderColor = "border-yellow-300";
+                      textColor = "text-yellow-800";
+                    } else if (isPartial) {
+                      bgColor = "bg-yellow-50";
+                      borderColor = "border-yellow-300";
+                      textColor = "text-yellow-800";
+                    }
+
+                    if (isEditing) {
+                      hoverEffect =
+                        "hover:shadow-md cursor-pointer hover:border-yellow-400";
+                    }
+
+                    return (
+                      <div
+                        key={permission}
+                        onClick={() =>
+                          isEditing && handlePermissionToggle(permission)
+                        }
+                        className={`border rounded-lg p-4 transition-all duration-200 ${bgColor} ${borderColor} ${hoverEffect}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <h3 className={`font-medium ${textColor}`}>
+                            {permission}
+                          </h3>
+                          <div className="flex items-center">
+                            <div
+                              className={`w-5 h-5 rounded-full flex items-center justify-center border ${
+                                isSelected
+                                  ? "bg-yellow-400 border-yellow-400"
+                                  : isPartial
+                                    ? "bg-yellow-500 border-yellow-500"
+                                    : "bg-white border-gray-300"
+                              }`}
+                            >
+                              {isSelected ? (
+                                <svg
+                                  className="w-3 h-3 text-white"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={3}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              ) : (
+                                isPartial && (
+                                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              // Users View
+              <div className="space-y-4">
+                {isLoadingUsers ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
+                  </div>
+                ) : roleUsersData?.users && roleUsersData.users.length > 0 ? (
+                  <div className="divide-y">
+                    {roleUsersData.users.map((user: User) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between py-3"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                              <span className="text-yellow-600 font-medium">
+                                {user.username.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-800">
+                                {user.username}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {user.email}
+                              </p>
+                              {user.phone && (
+                                <p className="text-xs text-gray-400">
+                                  {user.phone}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      
+                        <button
+                          onClick={() =>
+                            setPendingRemove({
+                              userId: user.id,
+                              username: user.username,
+                            })
+                          }
+                          disabled={isRemovingUser}
+                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Remove user from role"
+                        >
+                          <UserMinus size={18} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                  <>
-                    <button
-                      onClick={handleCancelEdit}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors cursor-pointer text-sm font-medium"
-                      disabled={isSaving || isUpdating}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSavePermissions}
-                      disabled={isSaving || isUpdating}
-                      className="px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors cursor-pointer text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                    >
-                      {isSaving || isUpdating ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save size={16} className="mr-1" />
-                          Save Changes
-                        </>
-                      )}
-                    </button>
-                  </>
+                  <div className="text-center py-8">
+                    <div className="text-gray-400 mb-2">
+                      <svg
+                        className="w-12 h-12 mx-auto"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500">
+                      No users assigned to this role
+                    </p>
+                  </div>
                 )}
               </div>
-
-              {/* Permissions Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {ALL_PERMISSIONS.map((permission) => {
-                  const isSelected = isModuleSelected(permission);
-                  const isPartial = isModulePartiallySelected(permission);
-
-                  let bgColor = "bg-gray-50";
-                  let borderColor = "border-gray-200";
-                  let textColor = "text-gray-800";
-                  let hoverEffect = "";
-
-                  if (isSelected) {
-                    bgColor = "bg-yellow-50";
-                    borderColor = "border-yellow-300";
-                    textColor = "text-yellow-800";
-                  } else if (isPartial) {
-                    bgColor = "bg-yellow-50";
-                    borderColor = "border-yellow-300";
-                    textColor = "text-yellow-800";
-                  }
-
-                  if (isEditing) {
-                    hoverEffect =
-                      "hover:shadow-md cursor-pointer hover:border-yellow-400";
-                  }
-
-                  return (
-                    <div
-                      key={permission}
-                      onClick={() =>
-                        isEditing && handlePermissionToggle(permission)
-                      }
-                      className={`border rounded-lg p-4 transition-all duration-200 ${bgColor} ${borderColor} ${hoverEffect}`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <h3 className={`font-medium ${textColor}`}>
-                          {permission}
-                        </h3>
-                        <div className="flex items-center">
-                          <div
-                            className={`w-5 h-5 rounded-full flex items-center justify-center border ${
-                              isSelected
-                                ? "bg-yellow-400 border-yellow-400"
-                                : isPartial
-                                  ? "bg-yellow-500 border-yellow-500"
-                                  : "bg-white border-gray-300"
-                            }`}
-                          >
-                            {isSelected ? (
-                              <svg
-                                className="w-3 h-3 text-white"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={3}
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            ) : (
-                              isPartial && (
-                                <div className="w-2 h-2 bg-white rounded-full"></div>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            // Users View
-            <div className="space-y-4">
-              {isLoadingUsers ? (
-                <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
-                </div>
-              ) : roleUsersData?.users && roleUsersData.users.length > 0 ? (
-                <div className="divide-y">
-                  {roleUsersData.users.map((user: User) => (
-                    <div
-                      key={user.id}
-                      className="flex items-center justify-between py-3"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                            <span className="text-yellow-600 font-medium">
-                              {user.username.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-800">
-                              {user.username}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {user.email}
-                            </p>
-                            {user.phone && (
-                              <p className="text-xs text-gray-400">
-                                {user.phone}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveUser(user.id, user.username)}
-                        disabled={isRemovingUser}
-                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Remove user from role"
-                      >
-                        <UserMinus size={18} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-2">
-                    <svg
-                      className="w-12 h-12 mx-auto"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-gray-500">
-                    No users assigned to this role
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
