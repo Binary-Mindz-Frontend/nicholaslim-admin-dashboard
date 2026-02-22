@@ -69,6 +69,7 @@ import AdditionalService from "@/pages/Admin/AdditionalServices/AdditionalServic
 import ContactInfo from "@/pages/Admin/AdditionalServices/ContactInfo";
 import PromoCode from "@/pages/Admin/AdditionalServices/PromoCode";
 import DashboardChat from "@/pages/Admin/AdditionalServices/DashboardChat";
+import NotFound404 from "@/pages/NotFound404/NotFound404";
 
 const routes = createBrowserRouter([
   {
@@ -434,6 +435,10 @@ const routes = createBrowserRouter([
   {
     path: "/reset-password",
     element: <ResetPassword />,
+  },
+  {
+    path: "*",
+    element: <NotFound404/>,
   },
 ]);
 
