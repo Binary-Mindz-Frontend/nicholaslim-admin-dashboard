@@ -84,6 +84,13 @@ const roleBasedAccessControlApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["RoleBasedAccessControl", "Users"],
     }),
+    addaddUserToRole: builder.mutation({
+      query: ({ roleId, userId }) => ({
+        url: `/roles/${roleId}/users/${userId}`,
+        method: "POST",
+      }),
+      invalidatesTags: ["RoleBasedAccessControl", "Users"],
+    }),
   }),
 });
 
@@ -98,4 +105,5 @@ export const {
   useDeleteRoleBasedAccessControlMutation,
   useGetRoleUsersQuery,
   useRemoveUserFromRoleMutation,
+  useAddaddUserToRoleMutation,
 } = roleBasedAccessControlApi;
