@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // import { useState, useEffect } from "react";
 // import { Switch } from "@/components/ui/switch";
 
@@ -324,7 +325,7 @@ interface EditVehicleModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: VehicleTypeData) => void;
-  initialData: VehicleTypeData | null;
+  initialData:any
 }
 
 interface VehicleTypeData {
