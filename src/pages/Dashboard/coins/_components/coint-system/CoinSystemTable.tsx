@@ -111,7 +111,7 @@ const CoinSystemTable: React.FC<CoinSystemTableProps> = ({
                 Coin Amount
               </TableHead>
               <TableHead className="font-semibold text-gray-900 min-w-[120px]">
-                Value (USD)
+                Value (SGD)
               </TableHead>
               <TableHead className="font-semibold text-gray-900 min-w-[120px]">
                 Expiry Days
@@ -133,7 +133,10 @@ const CoinSystemTable: React.FC<CoinSystemTableProps> = ({
           <TableBody>
             {data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-12 text-gray-500">
+                <TableCell
+                  colSpan={8}
+                  className="text-center py-12 text-gray-500"
+                >
                   <div className="flex flex-col items-center">
                     <div className="text-lg mb-2">No coin rewards found</div>
                     <p className="text-sm text-gray-400">
