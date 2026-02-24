@@ -6,6 +6,7 @@ import { Camera, Upload, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAddRiderProfileMutation, useUploadImageMutation } from "@/redux/features/drivers/driversApi";
 import { useNavigate } from "react-router-dom";
+import { useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
 
 // --- START: Component Interfaces (for all components) ---
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -291,7 +292,8 @@ export default function AddNewDriver() {
   });
 
   const [addRiderProfile, { isLoading }] = useAddRiderProfileMutation();
-
+const { data: vehicleTypesResponse } = useGetVehicleTypesQuery({});
+const vehicleTypes = [...new Set((vehicleTypesResponse?.data || []).map((v: any) => v.vehicle_type))];
   // Handler for Profile Image (single)
   const handleProfileImageChange = (file: File | null) => {
     // 1. Set local file and preview immediately
@@ -445,16 +447,7 @@ export default function AddNewDriver() {
     return genderMap[gender] || gender.toUpperCase();
   };
 
-  const mapVehicleType = (vehicleType: string) => {
-    const vehicleMap: { [key: string]: string } = {
-      Bike: "MOTORCYCLE",
-      Car: "CAR",
-      Pickup: "PICKUP",
-      CNG: "CNG",
-      Truck: "TRUCK",
-    };
-    return vehicleMap[vehicleType] || vehicleType.toUpperCase();
-  };
+
 
   const fetchAddressFromPostal = useCallback(async (postalCode: string, context: "current" | "permanent") => {
     if (!postalCode || postalCode.length < 3) return;
@@ -606,7 +599,7 @@ export default function AddNewDriver() {
     "Rangpur",
     "Mymensingh",
   ];
-  const vehicleTypes = ["Bike", "Car", "Pickup", "CNG", "Truck"];
+  const mapVehicleType = (vehicleType: string) => vehicleType;
   // const bankOptions = [""];
   const isPostalField = (field: string) => ["currentpostal", "permanentpostal"].includes(field);
 
@@ -712,7 +705,7 @@ export default function AddNewDriver() {
                     <option value="">Select {label.split(' ').slice(-1).join(' ')}</option>
                     {key === "gender" && genderOptions.map((g) => (<option key={g} value={g}>{g}</option>))}
                     {["currentstate", "permanentstate"].includes(key) && stateOptions.map((s) => (<option key={s} value={s}>{s}</option>))}
-                    {key === "vehicleType" && vehicleTypes.map((v) => (<option key={v} value={v}>{v}</option>))}
+                   {key === "vehicleType" && (vehicleTypes as string[]).map((v) => (<option key={v} value={v}>{v}</option>))}
                   </select>
                 )}
 
