@@ -82,8 +82,6 @@ const AddVehicleModal = ({
       return;
     }
 
-    console.log(formData, "formdata");
-
     onSubmit(formData);
     onClose();
 
