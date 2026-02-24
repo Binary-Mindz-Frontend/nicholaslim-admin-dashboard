@@ -15,9 +15,11 @@ const userSchema = z.object({
     .string()
     .min(1, { message: "Email is required" })
     .email({ message: "Invalid email format" }),
-  phone: z.string().min(1, { message: "Phone is required" }),
+  phone: z.string().min(1, { message: "Phone is required" }).refine((val) => val.startsWith("+65"), {
+    message: "Phone number must start with +65",
+  }),
   password: z.string().min(1, { message: "Password is required" }),
-  role: z.array(z.string()).min(1, { message: "At least one role is required" }),
+  role: z.array(z.string()).default([]),
 });
 
 type FormData = z.infer<typeof userSchema>;
@@ -86,7 +88,7 @@ export default function AddNewUser() {
     setValue,
     formState: { errors },
   } = useForm<FormData>({
-    resolver: zodResolver(userSchema),
+    resolver: zodResolver(userSchema) as any,
     mode: "onChange",
     defaultValues: {
       fullName: "",
@@ -110,13 +112,14 @@ export default function AddNewUser() {
 
     toast.loading("Creating user...");
     try {
-      const newUser = {
+      const newUser: any = {
         username: data.fullName.trim().replace(/\s+/g, "_"),
         email: data.email,
         phone: data.phone,
         password: data.password,
-        role_name: data.role[0], // First selected role
-        custom_role_name: data.role.slice(), // Rest of the roles as array
+        ...(data.role && data.role.length > 0
+          ? { custom_role_name: data.role }
+          : { role_name: "USER" }),
       };
       console.log("Submitting data:", newUser); // Add this line
       console.log("Selected roles:", data.role);
