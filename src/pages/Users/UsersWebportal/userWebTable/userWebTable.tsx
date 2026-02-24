@@ -119,7 +119,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
         {roles.map((r, index) => (
           <span
             key={index}
-            className="px-2 py-0.5  rounded-full text-xs font-medium text-gray-700"
+            className="px-2 py-0.5 uppercase rounded-full text-xs font-medium text-gray-700"
           >
             {r}
           </span>
