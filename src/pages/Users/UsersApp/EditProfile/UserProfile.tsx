@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // import { useEffect, useState } from "react";
-// import { useParams } from "react-router-dom"; 
+// import { useParams } from "react-router-dom";
 
 // import { Button } from "@/components/ui/button";
 // import { Input } from "@/components/ui/input";
@@ -55,7 +56,6 @@
 //   const { data: userData, isLoading, isError } = useGetUserTypeByIdQuery(id); // Fetch user data by ID
 //   const [formData, setFormData] = useState<UserProfileType | null>(null);
 //   const [profileImage, setProfileImage] = useState<string | null>(null); // Profile image state
-
 
 // console.log("Fetched user data:", userData); // Check the structure of the response
 
@@ -284,219 +284,318 @@
 import toast from "react-hot-toast";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Camera, ArrowLeft } from "lucide-react";
 // Import the update mutation
-import { useGetUserTypeByIdQuery, useUpdateUserTypeMutation } from "@/redux/features/usersTypes/usersTypesApi";
+import {
+  useGetUserTypeByIdQuery,
+  useUpdateUserTypeMutation,
+} from "@/redux/features/usersTypes/usersTypesApi";
+import {
+  useAddaddUserToRoleMutation,
+  useGetRoleBasedAccessControlQuery,
+} from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
+
 
 // ------------------ API RESPONSE TYPE ------------------
 interface ApiUserData {
-    id: number;
-    username: string;
-    email: string;
+  id: number;
+  username: string;
+  email: string;
     phone: string;
+    
+    
 }
 
 // ------------------ COMPONENT STATE TYPE ------------------
 export interface UserProfileType {
-    id: string;
-    username: string;
-    email: string;
-    phone: string;
+  id: string;
+  username: string;
+  email: string;
+  phone: string;
 }
 
 // ------------------ COMPONENT LOGIC ------------------
 export default function UserProfile() {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const location = useLocation();
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    // Determine mode from URL (e.g., /users-app/1?mode=view)
-    const searchParams = new URLSearchParams(location.search);
-    const isEditMode = searchParams.get("mode") === "edit";
+  // Determine mode from URL (e.g., /users-app/1?mode=view)
+  const searchParams = new URLSearchParams(location.search);
+  const isEditMode = searchParams.get("mode") === "edit";
 
     const { data: userData, isLoading, isError } = useGetUserTypeByIdQuery(id);
-    const [updateUser, { isLoading: isUpdating }] = useUpdateUserTypeMutation();
-    
-    const [formData, setFormData] = useState<Partial<UserProfileType>>({});
-    const [profileImage, setProfileImage] = useState<string | null>(null);
+    console.log(userData, "userData");
+  const [updateUser, { isLoading: isUpdating }] = useUpdateUserTypeMutation();
 
-    console.log("Fetched user data:", userData); 
-    
-    useEffect(() => {
-        if (userData && userData.data) {
-            const apiData = userData.data as ApiUserData;
+  const [formData, setFormData] = useState<Partial<UserProfileType>>({});
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  // console.log("Fetched user data:", userData);
+  const { data: roleData = [] } = useGetRoleBasedAccessControlQuery({});
+  const [addUserToRole, { isLoading: isChangingRole }] =
+    useAddaddUserToRoleMutation();
+  console.log(roleData, "roleData");
 
-            const initialFormData: UserProfileType = {
-                id: String(apiData.id), 
-                username: apiData.username,
-                email: apiData.email,
-                phone: apiData.phone,
-            };
 
-            setFormData(initialFormData);
-        }
-    }, [userData]);
+  useEffect(() => {
+    if (userData && userData.data) {
+      const apiData = userData.data as ApiUserData;
 
-    if (isLoading) return <p className="text-center p-10">Loading user data...</p>;
-    if (isError || !formData.id) return <p className="text-center p-10 text-red-500">Error fetching user data.</p>;
+      const initialFormData: UserProfileType = {
+        id: String(apiData.id),
+        username: apiData.username,
+        email: apiData.email,
+        phone: apiData.phone,
+      };
 
-    const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (!isEditMode) return;
-        const file = event.target.files?.[0];
-        if (!file) return;
+      setFormData(initialFormData);
+    }
+  }, [userData]);
 
-        const imageURL = URL.createObjectURL(file);
-        setProfileImage(imageURL);
-    };
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!isEditMode) return; // Prevent changes in view mode
-        const name = e.target.name as keyof UserProfileType;
-        const value = e.target.value;
-
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
-
-    const handleEdit = async () => {
-        if (!formData.id || !formData.username || !formData.email || !formData.phone) {
-            toast.error("Please fill in all required fields.");
-            return;
-        }
-
-        const updatePayload = {
-            username: formData.username.trim(),
-            email: formData.email,
-            phone: formData.phone,
-        };
-
-        try {
-            const response = await updateUser({ id: formData.id, updatedData: updatePayload }).unwrap();
-            toast.success(response?.message || "User updated successfully! 🎉");
-            navigate(-1); 
-        } catch (error) {
-            const apiError = error as { data?: { message?: string } };
-            const errorMessage = apiError?.data?.message || "Failed to update user profile.";
-            toast.error(errorMessage);
-        }
-    };
-
-    const getStringValue = (key: keyof UserProfileType): string =>
-        String(formData[key] ?? "");
-
-    const baseFields = [
-        ["username", "Full Name"],
-        ["email", "Email Address"],
-        ["phone", "Phone Number"],
-    ] as Array<[keyof UserProfileType, string]>;
-
+  if (isLoading)
+    return <p className="text-center p-10">Loading user data...</p>;
+  if (isError || !formData.id)
     return (
-        <div className="sm:p-6 mx-auto space-y-6 bg-[#F5F7FA]">
-            <h1 className="text-2xl font-semibold text-gray-900">
-                {isEditMode ? "Edit User Profile" : "User Profile"}
-            </h1>
+      <p className="text-center p-10 text-red-500">Error fetching user data.</p>
+    );
 
-            <div className="border rounded-xl py-10 px-6 lg:px-32 bg-white shadow-sm relative">
-                <div className="absolute top-6 left-6">
-                    <Button 
-                        variant="ghost"
-                        className="bg-white cursor-pointer rounded-full" 
-                        onClick={() => navigate(-1)}
-                    >
-                        <ArrowLeft className="text-black" size={20} />
-                    </Button>
-                </div>
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isEditMode) return;
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-                {/* <div className="absolute top-6 right-6 flex gap-3"> 
+    const imageURL = URL.createObjectURL(file);
+    setProfileImage(imageURL);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isEditMode) return; // Prevent changes in view mode
+    const name = e.target.name as keyof UserProfileType;
+    const value = e.target.value;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleEdit = async () => {
+    if (
+      !formData.id ||
+      !formData.username ||
+      !formData.email ||
+      !formData.phone
+    ) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    const updatePayload = {
+      username: formData.username.trim(),
+      email: formData.email,
+      phone: formData.phone,
+    };
+
+    try {
+      const response = await updateUser({
+        id: formData.id,
+        updatedData: updatePayload,
+      }).unwrap();
+      toast.success(response?.message || "User updated successfully! 🎉");
+      navigate(-1);
+    } catch (error) {
+      const apiError = error as { data?: { message?: string } };
+      const errorMessage =
+        apiError?.data?.message || "Failed to update user profile.";
+      toast.error(errorMessage);
+    }
+  };
+
+  const getStringValue = (key: keyof UserProfileType): string =>
+    String(formData[key] ?? "");
+
+  const baseFields = [
+    ["username", "Full Name"],
+    ["email", "Email Address"],
+    ["phone", "Phone Number"],
+  ] as Array<[keyof UserProfileType, string]>;
+
+  const handleRoleChange = async (value: string) => {
+    const previousRole = selectedRole;
+    setSelectedRole(value); // ✅ sets it
+
+    const role = roleData.find((r: { id: number }) => r.id === Number(value));
+    toast.loading(`Assigning role ${role?.name}...`);
+
+    try {
+      const response = await addUserToRole({
+        roleId: Number(value),
+        userId: Number(id),
+      }).unwrap();
+
+      if (response.success) {
+        // ❌ remove this → setSelectedRole("") ← this was clearing the display
+        toast.dismiss();
+        toast.success(response.message || "Role assigned successfully!");
+      }
+    } catch (error: any) {
+      toast.dismiss();
+      toast.error(error?.data?.message || "Failed to assign role");
+      setSelectedRole(previousRole); // rollback on error
+    }
+  };
+
+  return (
+    <div className="sm:p-6 mx-auto space-y-6 bg-[#F5F7FA]">
+      <h1 className="text-2xl font-semibold text-gray-900">
+        {isEditMode ? "Edit User Profile" : "User Profile"}
+      </h1>
+
+      <div className="border rounded-xl py-10 px-6 lg:px-32 bg-white shadow-sm relative">
+        <div className="absolute top-6 left-6">
+          <Button
+            variant="ghost"
+            className="bg-white cursor-pointer rounded-full"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="text-black" size={20} />
+          </Button>
+        </div>
+
+        {/* <div className="absolute top-6 right-6 flex gap-3"> 
                     <Button variant="outline" className="flex gap-2 text-black border border-blue-500 hover:bg-blue-50">
                         <Files size={16} /> Download
                     </Button>
                 </div> */}
 
-                {/* PROFILE IMAGE SECTION */}
-                <div className="flex flex-col items-center justify-center">
-                    <label className={`${isEditMode ? "cursor-pointer" : "cursor-default"} mt-8 sm:mt-0`}>
-                        <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border overflow-hidden">
-                            {profileImage ? (
-                                <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
-                            ) : (
-                                <Camera className="text-gray-500" size={32} />
-                            )}
-                        </div>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleImageUpload}
-                            disabled={!isEditMode}
-                        />
-                    </label>
-
-                </div>
-
-                {/* RATING & STATS */}
-                <div className="text-center mt-4">
-                    <p className="flex justify-center items-center gap-2 text-lg font-medium">
-                        {/* <Star className="text-yellow-500" size={20} />
-                         {userData?.data?.avg_customerRating} /5  */}
-                        {/* <span className="text-gray-700"> Followers</span> */}
-                    </p>
-                    <div className="mt-2 space-y-1">
-                        <p className="text-gray-800 font-medium">Total Complete : </p>
-                        <p className="text-red-500 font-medium">Total Cancellations : </p>
-                        {/* <p className="text-gray-800 font-medium">Total Incentives : </p> */}
-                    </div>
-                       {/* EXTRA BUTTONS (ONLY IN VIEW MODE) */}
-                    {!isEditMode && (
-                        <div className="flex justify-center gap-3 mt-6">
-                            <Button 
-                            onClick={() => navigate(`/favourite-drivers/${id}`)}
-                            variant="outline" className="flex gap-2 text-black bg-[#FFEA96] hover:bg-[#FFEA96] cursor-pointer">
-                                 Favourite Drivers
-                            </Button>
-                            <Button onClick={() => navigate(`/order-history/${id}`)}
-                             variant="outline" className="flex gap-2 text-black bg-[#FFEA96] hover:bg-[#FFEA96] cursor-pointer">
-                                 Orders History
-                            </Button>
-                        </div>
-                    )}
-                </div>
-
-                {/* MAIN FORM */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-10">
-                    {baseFields.map(([key, label]) => (
-                        <div key={key}>
-                            <Label className="text-sm font-semibold pb-2">{label}</Label>
-                            <Input 
-                                name={key} 
-                                value={getStringValue(key)} 
-                                onChange={handleChange}
-                                readOnly={!isEditMode}
-                                className={!isEditMode ? "bg-gray-50 border-gray-200 cursor-default focus:ring-0" : "focus:ring-orange-500 outline-none transition-all focus:ring-2"}
-                            />
-                        </div>
-                    ))}
-                </div>
-
-                {/* ACTION BUTTONS (ONLY IN EDIT MODE) */}
-                {isEditMode && (
-                    <div className="flex flex-col justify-center gap-4 mt-10">
-                        <Button
-                            className="w-full cursor-pointer sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-8 py-3 text-lg rounded-lg self-center"
-                            onClick={handleEdit}
-                            disabled={isUpdating} 
-                        >
-                            {isUpdating ? 'Updating...' : 'Update Profile'} 
-                        </Button>
-                    </div>
-                )}
+        {/* PROFILE IMAGE SECTION */}
+        <div className="flex flex-col items-center justify-center">
+          <label
+            className={`${isEditMode ? "cursor-pointer" : "cursor-default"} mt-8 sm:mt-0`}
+          >
+            <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border overflow-hidden">
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Camera className="text-gray-500" size={32} />
+              )}
             </div>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageUpload}
+              disabled={!isEditMode}
+            />
+          </label>
         </div>
-    );
+
+        {/* RATING & STATS */}
+        <div className="text-center mt-4">
+          <p className="flex justify-center items-center gap-2 text-lg font-medium">
+            {/* <Star className="text-yellow-500" size={20} />
+                         {userData?.data?.avg_customerRating} /5  */}
+            {/* <span className="text-gray-700"> Followers</span> */}
+          </p>
+          <div className="mt-2 space-y-1">
+            <p className="text-gray-800 font-medium">Total Complete : </p>
+            <p className="text-red-500 font-medium">Total Cancellations : </p>
+            {/* <p className="text-gray-800 font-medium">Total Incentives : </p> */}
+          </div>
+          {/* EXTRA BUTTONS (ONLY IN VIEW MODE) */}
+          {!isEditMode && (
+            <div className="flex justify-center gap-3 mt-6">
+              <Button
+                onClick={() => navigate(`/favourite-drivers/${id}`)}
+                variant="outline"
+                className="flex gap-2 text-black bg-[#FFEA96] hover:bg-[#FFEA96] cursor-pointer"
+              >
+                Favourite Drivers
+              </Button>
+              <Button
+                onClick={() => navigate(`/order-history/${id}`)}
+                variant="outline"
+                className="flex gap-2 text-black bg-[#FFEA96] hover:bg-[#FFEA96] cursor-pointer"
+              >
+                Orders History
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* MAIN FORM */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-10">
+          {baseFields.map(([key, label]) => (
+            <div key={key}>
+              <Label className="text-sm font-semibold pb-2">{label}</Label>
+              <Input
+                name={key}
+                value={getStringValue(key)}
+                onChange={handleChange}
+                readOnly={!isEditMode}
+                className={
+                  !isEditMode
+                    ? "bg-gray-50 border-gray-200 cursor-default focus:ring-0"
+                    : "focus:ring-orange-500 outline-none transition-all focus:ring-2"
+                }
+              />
+            </div>
+          ))}
+          <Select
+            value={selectedRole}
+            onValueChange={handleRoleChange}
+            disabled={isChangingRole}
+          >
+            <SelectTrigger className="w-full mt-7">
+              <div className="flex items-center gap-2">
+                {isChangingRole && (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-yellow-400 border-t-transparent shrink-0" />
+                )}
+                {/* shadcn needs SelectValue mounted to display selected label */}
+                <SelectValue placeholder="Select a role" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              {roleData.map(
+                (role: { id: number; name: string; isActive: boolean }) => (
+                  <SelectItem key={role.id} value={String(role.id)}>
+                    {role.name}
+                  </SelectItem>
+                ),
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* ACTION BUTTONS (ONLY IN EDIT MODE) */}
+        {isEditMode && (
+          <div className="flex flex-col justify-center gap-4 mt-10">
+            <Button
+              className="w-full cursor-pointer sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-8 py-3 text-lg rounded-lg self-center"
+              onClick={handleEdit}
+              disabled={isUpdating}
+            >
+              {isUpdating ? "Updating..." : "Update Profile"}
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

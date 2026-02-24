@@ -102,7 +102,7 @@ const Login: React.FC = () => {
     const loginToast = toast.loading("Signing in...");
 
     try {
-      const credentials = prepareLoginCredentials(loginInput, password);
+      const credentials = prepareLoginCredentials(loginInput.toLocaleLowerCase(), password);
 
       console.log("Sending credentials:", credentials);
 

@@ -9,6 +9,7 @@ interface AddVehicleModalProps {
 
 interface VehicleTypeData {
   vehicle_type: string;
+  vehicle_name: string;
   base_price: number;
   per_km_price: number;
   peak_pricing: boolean;
@@ -22,8 +23,11 @@ const AddVehicleModal = ({
   onClose,
   onSubmit,
 }: AddVehicleModalProps) => {
+  // const { data: vehicleTypesData = [] } = useGetVehicleTypesQuery({});
+
   const [formData, setFormData] = useState<VehicleTypeData>({
     vehicle_type: "",
+    vehicle_name: "",
     base_price: 0,
     per_km_price: 0,
     peak_pricing: true,
@@ -39,8 +43,6 @@ const AddVehicleModal = ({
 
   const handleNumberInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-
-    // Only allow numbers and decimal point
     const regex = /^[0-9]*\.?[0-9]*$/;
     if (regex.test(value) || value === "") {
       setFormData((prev) => ({
@@ -52,16 +54,10 @@ const AddVehicleModal = ({
 
   const handleDimensionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-
-    // Only allow numbers and decimal point
     const regex = /^[0-9]*\.?[0-9]*$/;
     if (regex.test(value) || value === "") {
-      setDimensionInputs((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      setDimensionInputs((prev) => ({ ...prev, [name]: value }));
 
-      // Update dimension string
       const newHeight = name === "height" ? value : dimensionInputs.height;
       const newWeight = name === "weight" ? value : dimensionInputs.weight;
 
@@ -75,27 +71,23 @@ const AddVehicleModal = ({
   };
 
   const handleSwitchChange = (name: string, checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: checked,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: checked }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate that dimension is set
     if (!dimensionInputs.height || !dimensionInputs.weight) {
-      alert("Please enter both height and weight for dimension");
+      alert("Please enter both height and width for dimension");
       return;
     }
 
     onSubmit(formData);
     onClose();
 
-    // Reset form
     setFormData({
-      vehicle_type: "CAR",
+      vehicle_type: "",
+      vehicle_name: "",
       base_price: 0,
       per_km_price: 0,
       peak_pricing: true,
@@ -131,18 +123,45 @@ const AddVehicleModal = ({
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Vehicle Type */}
+            {/* Vehicle Category (previously Vehicle Type) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Vehicle Category
+              </label>
+              <select
+                name="vehicle_type"
+                value={formData.vehicle_type}
+                onChange={(e) =>
+                  setFormData({ ...formData, vehicle_type: e.target.value })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white"
+                required
+              >
+                <option value="" disabled>
+                  Select vehicle category
+                </option>
+                <option value="BICYCLE">Bicycle</option>
+                <option value="MOTORCYCLE">Motorcycle</option>
+                <option value="CAR">Car</option>
+                <option value="Van">Van</option>
+                <option value="TRUCK">Truck</option>
+              </select>
+            </div>
+
+            {/* Vehicle Type (previously Vehicle Name) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Vehicle Type
               </label>
               <input
                 type="text"
-                name="vehicle_type"
-                value={formData.vehicle_type}
-                onChange={(e) => setFormData({ ...formData, vehicle_type: e.target.value })}
+                name="vehicle_name"
+                value={formData.vehicle_name}
+                onChange={(e) =>
+                  setFormData({ ...formData, vehicle_name: e.target.value })
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                placeholder="Vehicle Type"
+                placeholder="e.g. Car, Car (MPV), Truck (6 ft)"
                 required
               />
             </div>
@@ -211,7 +230,7 @@ const AddVehicleModal = ({
               />
             </div>
 
-            {/* Dimension Weight */}
+            {/* Dimension Width */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Dimension - Width (ft)
@@ -228,8 +247,8 @@ const AddVehicleModal = ({
             </div>
           </div>
 
-          {/* Status Switches at Top */}
-          <div className="mb-6 flex flex-wrap gap-6 p-4 rounded-lg">
+          {/* Switches */}
+          <div className="mb-6 flex flex-wrap gap-6 p-4 rounded-lg mt-4">
             <div className="flex items-center gap-2">
               <Switch
                 checked={formData.isActive}
