@@ -187,7 +187,7 @@ export default function EditDriverProfile() {
         { key: "current_address", label: "Current Address" },
         { key: "current_apartment", label: "Current Apartment" },
         { key: "current_city", label: "Current City" },
-        { key: "current_state_province", label: "Current State/Province" },
+        // { key: "current_state_province", label: "Current State/Province" },
         { key: "current_country", label: "Current Country" },
         { key: "current_zip_post_code", label: "Current Postal Code" },
 
@@ -195,7 +195,7 @@ export default function EditDriverProfile() {
         { key: "permanent_address", label: "Permanent Address" },
         { key: "permanent_apartment", label: "Permanent Apartment" },
         { key: "permanent_city", label: "Permanent City" },
-        { key: "permanent_state_province", label: "Permanent State/Province" },
+        // { key: "permanent_state_province", label: "Permanent State/Province" },
         { key: "permanent_country", label: "Permanent Country" },
         { key: "permanent_zip_post_code", label: "Permanent Postal Code" },
 

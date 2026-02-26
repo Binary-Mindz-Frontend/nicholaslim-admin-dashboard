@@ -629,7 +629,7 @@ const vehicleTypes = [...new Set((vehicleTypesResponse?.data || []).map((v: any)
     { key: "drivingLicense", label: "Driving License Number" },
     { key: "dlIssueDate", label: "License Issue Date" },
     { key: "dlExpiryDate", label: "License Expiry Date" },
-    { key: "vehiclePlate1", label: "Vehicle Number Plate 1" },
+    { key: "vehiclePlate1", label: "Vehicle Number Plate" },
     // { key: "vehiclePlate2", label: "Vehicle Number Plate 2" },
     { key: "vehicleType", label: "Vehicle Type" },
     { key: "model", label: "Vehicle Model" },
