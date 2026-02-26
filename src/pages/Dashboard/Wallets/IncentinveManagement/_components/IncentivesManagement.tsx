@@ -14,11 +14,11 @@ const IncentivesManagement: React.FC<IncentivesManagementProps> = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      {/* <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">
           Incentives Management
         </h2>
-      </div>
+      </div> */}
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

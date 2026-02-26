@@ -101,10 +101,10 @@ const IncentiveManagementPage: React.FC = () => {
           <h3 className="text-lg font-bold text-gray-900">Incentives List</h3>
           <Button
             onClick={() => setOpenCreate(true)}
-            className="bg-[#0088FF] hover:bg-[#FFCC00] cursor-pointer hover:text-black text-white font-semibold gap-2"
+            className="cursor-pointer  text-white font-semibold gap-2 mt-4 sm:mt-0 flex items-center px-4 py-2 bg-yellow-400 rounded-lg hover:bg-yellow-500 text-black transition-colors cursor-pointer"
           >
             <Plus className="w-5 h-5" />
-            Create New Incentive
+            Add Incentive
           </Button>
         </div>
 
