@@ -174,7 +174,7 @@ export default function AddNewUser() {
   return (
     <div className="px-8 min-h-screen bg-gray-50 lg:p-8">
       <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 mb-8 pt-4 sm:pt-0">
-        Add New User
+        Add User
       </h1>
 
       <div className="bg-white rounded-lg shadow-sm p-4 lg:p-32">
