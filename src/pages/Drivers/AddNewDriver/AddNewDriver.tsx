@@ -256,6 +256,7 @@ export default function AddNewDriver() {
       firstName: "",
       lastName: "",
       email: "",
+      password: "",
       phone: "",
       dob: "",
       gender: "",
@@ -525,6 +526,7 @@ const vehicleTypes = [...new Set((vehicleTypesResponse?.data || []).map((v: any)
         raider_name: data.firstName + " " + data.lastName,
         contact_number: data.phone,
         email_address: data.email || undefined,
+        password: data.password,
         dob: formatDateToISO(data.dob),
         gender: mapGender(data.gender),
         driver_photos: profileImageUrls,
@@ -607,6 +609,7 @@ const vehicleTypes = [...new Set((vehicleTypesResponse?.data || []).map((v: any)
     { key: "firstName", label: "Driver Name" },
     // { key: "lastName", label: "Last Name" },
     { key: "email", label: "Email Address" },
+    { key: "password", label: "Password" },
     { key: "phone", label: "Contact Number" },
     { key: "dob", label: "Date of Birth" },
     { key: "gender", label: "Select Gender" },
@@ -772,19 +775,20 @@ const vehicleTypes = [...new Set((vehicleTypesResponse?.data || []).map((v: any)
                     //   {...register(key as any, { required: `${label} is required` })}
                     // />
                     <Input
-                      className="bg-secondary rounded"
-                      {...register(key as any, key === "email"
-                        ? {}
-                        : key === "phone" || key === "emergencyContactNumber"
-                          ? {
-                            required: `${label} is required`,
-                            validate: (value: string) =>
-                              /^\+65/.test(value.replace(/\s/g, "")) ||
-"Must be a Singapore number starting with +65",
-                          }
-                          : { required: `${label} is required` }
-                      )}
-                    />
+  type={key === "password" ? "password" : "text"}
+  className="bg-secondary rounded"
+  {...register(key as any, key === "email"
+    ? {}
+    : key === "phone" || key === "emergencyContactNumber"
+      ? {
+        required: `${label} is required`,
+        validate: (value: string) =>
+          /^\+65/.test(value.replace(/\s/g, "")) ||
+       "Must be a Singapore number starting with +65",
+      }
+      : { required: `${label} is required` }
+  )}
+/>
                   )}
 
                 {errors[key as keyof typeof errors] && (
