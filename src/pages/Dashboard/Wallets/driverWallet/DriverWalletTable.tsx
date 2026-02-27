@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type React from "react";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { LuScanEye } from "react-icons/lu";
-import TablePagination from "@/pages/Dashboard/_components/TablePagination";
+import { LuScanEye, LuArrowUpDown, LuX } from "react-icons/lu";
 import SCustomTable from "@/pages/Dashboard/_components/CutomTable";
 import { useNavigate } from "react-router-dom";
 import { useGetWalletQuery } from "@/redux/features/wallet/walletApi";

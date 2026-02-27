@@ -175,7 +175,7 @@ const IncentivesList: React.FC = () => {
       case "COMPLETED":
         return "bg-[#CAE2B6] text-[#32620B]";
       case "ONGOING":
-        return "bg-[#FFFAE6] text-[#FFCC00]";
+        return "bg-yellow-100 text-black";
       case "ENDED":
         return "bg-[#FF4D4F40] text-[#FF4D4F]";
       default:
@@ -573,6 +573,19 @@ const IncentivesList: React.FC = () => {
         )}
       </div>
 
+      {/* ── Pagination ── */}
+      <CustomPagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(items) => {
+          setItemsPerPage(items);
+          resetPage();
+        }}
+      />
+
+      {/* ── Update Modal ── */}
       {selectedIncentive && (
         <UpdateIncentiveModal
           incentive={selectedIncentive}

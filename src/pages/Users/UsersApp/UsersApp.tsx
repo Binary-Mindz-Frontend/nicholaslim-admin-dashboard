@@ -78,7 +78,7 @@ export default function UsersPage() {
         <Link to="/add-new-user"
           className="px-3 sm:px-6 py-3 bg-yellow-400 cursor-pointer sm:font-bold hover:bg-yellow-500 text-black rounded transition-colors"
         >
-          Add new user
+          Add User
         </Link>
       </div>
     </div>
