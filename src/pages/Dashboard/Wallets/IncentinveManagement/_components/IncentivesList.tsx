@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LuPencil } from "react-icons/lu";
 import { FiTrash } from "react-icons/fi";
-import { FiSearch } from "react-icons/fi";
+// import { FiSearch } from "react-icons/fi";
 import {
   useGetAllIncentivesQuery,
   useDeleteIncentiveMutation,
@@ -21,7 +21,7 @@ const IncentivesList: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Filters
-  const [searchQuery, setSearchQuery] = useState("");
+  // const [searchQuery, setSearchQuery] = useState("");
 
   const { data, isLoading, refetch } = useGetAllIncentivesQuery({
     // search: searchQuery || undefined,
@@ -42,10 +42,10 @@ const IncentivesList: React.FC = () => {
 
   const resetPage = () => setCurrentPage(1);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    resetPage();
-  };
+  // const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setSearchQuery(e.target.value);
+  //   resetPage();
+  // };
 
   const getStatusColor = (status: string) => {
     switch (status) {
