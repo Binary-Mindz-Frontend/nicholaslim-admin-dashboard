@@ -13,8 +13,15 @@ export const incentivesApi = baseApi.injectEndpoints({
     }),
 
     // Get all incentives
+    // getAllIncentives: builder.query({
+    //   query: () => "/incentive/admin",
+    //   providesTags: ["Incentives"],
+    // }),
     getAllIncentives: builder.query({
-      query: () => "/incentive",
+      query: ({ page, limit }) => ({
+        url: "/incentive/admin",
+        params: { page, limit },
+      }),
       providesTags: ["Incentives"],
     }),
 

@@ -8,7 +8,9 @@ const DriverWallet = () => {
   return (
     <div className="mx-6 sm:mx-12">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 my-6">Driver Wallet</h1>
+        <h1 className="text-3xl font-bold text-gray-900 my-6">
+          Driver Wallet Management
+        </h1>
       </div>
       <section className="mb-8 ">
         {/* <CustomFilterBar
