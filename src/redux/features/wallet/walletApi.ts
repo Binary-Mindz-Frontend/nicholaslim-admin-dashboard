@@ -4,10 +4,10 @@ export const walletApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get Wallet with search and pagination
     getWallet: builder.query({
-      query: ({ role, search, page = 1, limit = 20 }) => ({
+      query: ({ role, search, page, limit, balanceSort }) => ({
         url: `/wallet/user/wallet`,
         method: "GET",
-        params: { role, search, page, limit },
+        params: { role, search, page, limit, balanceSort },
       }),
       providesTags: ["Wallets"],
     }),

@@ -116,7 +116,9 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
     {
       header: "ORDER ID",
       accessor: "orderId",
-      cell: (row) => <span className="text-gray-700 font-medium">#{row.orderId}</span>,
+      cell: (row) => (
+        <span className="text-gray-700 font-medium">#{row.orderId}</span>
+      ),
     },
     {
       header: "NAME",
@@ -124,49 +126,71 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
       cell: (row) => <span className="text-blue-600">{row.customerName}</span>,
     },
     {
-  header: "ADDRESS",
-  accessor: "address",
-  cell: (row) => (
-    <span className="text-gray-700 truncate max-w-[200px]" title={row.address}>
-      {row.address}
-    </span>
-  ),
-},
+      header: "ADDRESS",
+      accessor: "address",
+      cell: (row) => (
+        <span
+          className="text-gray-700 truncate max-w-[200px]"
+          title={row.address}
+        >
+          {row.address}
+        </span>
+      ),
+    },
     { header: "DATE", accessor: "date" },
     {
       header: "DELIVERY TYPE",
       accessor: "delivery_type",
       cell: (row) => {
-        const style = row.delivery_type === "EXPRESS" ? "bg-green-200 text-green-800" : "bg-gray-200 text-gray-800";
-        return <span className={`px-3 py-1 rounded-full text-xs font-semibold ${style}`}>{row.delivery_type}</span>;
+        const style =
+          row.delivery_type === "EXPRESS"
+            ? "bg-green-200 text-green-800"
+            : "bg-gray-200 text-gray-800";
+        return (
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${style}`}
+          >
+            {row.delivery_type}
+          </span>
+        );
       },
+    },
+    {
+      header: "ORDER STATUS",
+      accessor: "order_status",
+      cell: (row) => (
+        <span className="px-4 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+          {row.order_status}
+        </span>
+      ),
     },
     {
       header: "ACTION",
       cell: (row) => (
         <div className="flex items-center gap-2">
-          <button onClick={() => navigate(`/order/${row.orderId}`)} className="bg-blue-200 p-1.5 rounded hover:bg-blue-300">
+          <button
+            onClick={() => navigate(`/order/${row.orderId}`)}
+            className="bg-blue-200 p-1.5 rounded hover:bg-blue-300"
+          >
             <Eye size={16} className="text-blue-700" />
           </button>
-          <button onClick={() => navigate(`/order/${row.orderId}?edit=true`)} className="bg-green-200 p-1.5 rounded hover:bg-green-300">
+          <button
+            onClick={() => navigate(`/order/${row.orderId}?edit=true`)}
+            className="bg-green-200 p-1.5 rounded hover:bg-green-300"
+          >
             <Pencil size={16} className="text-green-700" />
           </button>
-          <button 
+          <button
             onClick={() => {
               setSelectedOrderId(row.orderId);
               setIsDeleteDialogOpen(true);
-            }} 
+            }}
             className="bg-red-200 p-1.5 rounded hover:bg-red-300 transition-colors"
           >
             <Trash2 size={16} className="text-red-700" />
           </button>
         </div>
       ),
-    },
-    {
-      header: "ORDER STATUS",
-      accessor: "order_status",
-      cell: (row) => <span className="px-4 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">{row.order_status}</span>,
     },
   ];
 
