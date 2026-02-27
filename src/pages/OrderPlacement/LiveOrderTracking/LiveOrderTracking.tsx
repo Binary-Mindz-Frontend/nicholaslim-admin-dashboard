@@ -10,13 +10,13 @@ export default function LiveOrderTracking() {
   // Direct filter states (Following DriverList structure)
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState<string | undefined>();
-  const [startDate, setStartDate] = useState<string | undefined>();
-  const [endDate, setEndDate] = useState<string | undefined>();
+  const [startDate, setStartDate] = useState<Date | undefined>(); // Changed to Date
+  const [endDate, setEndDate] = useState<Date | undefined>(); // Changed to Date
   const [search, setSearch] = useState("");
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Filter reset function
   const handleResetFilter = () => {
@@ -42,35 +42,49 @@ export default function LiveOrderTracking() {
   // Add this function here
   const handleTrackOrder = (value: string) => {
     setSearch(value);
-    setCurrentPage(1); 
+    setCurrentPage(1);
+  };
+
+  // Convert Date objects to strings for the API
+  const formatDateForApi = (date: Date | undefined): string | undefined => {
+    return date ? date.toISOString() : undefined;
   };
 
   // Get the order columns and data with pagination support
-  const { orderColumns, orders, isLoading, isError, totalItems, DeleteConfirmDialog } = useOrderColumns({
+  const {
+    orderColumns,
+    orders,
+    isLoading,
+    isError,
+    totalItems,
+    DeleteConfirmDialog,
+  } = useOrderColumns({
     category,
     status,
-    startDate,
-    endDate,
+    startDate: formatDateForApi(startDate), // Convert Date to string for API
+    endDate: formatDateForApi(endDate), // Convert Date to string for API
     search,
     page: currentPage,
     limit: itemsPerPage,
   });
 
   // Handle loading state
-  if (isLoading) return (
-    <div className="flex justify-center items-center h-64">
-      <p className="text-lg">Loading orders...</p>
-    </div>
-  );
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-lg">Loading orders...</p>
+      </div>
+    );
 
   // Handle error state
-  if (isError) return (
-    <div className="flex justify-center items-center h-64">
-      <p className="text-lg text-red-600">Error loading orders. Please try again.</p>
-    </div>
-  );
-
-  // console.log(orders, "orders");
+  if (isError)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-lg text-red-600">
+          Error loading orders. Please try again.
+        </p>
+      </div>
+    );
 
   return (
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
@@ -78,18 +92,20 @@ export default function LiveOrderTracking() {
         {/* Header Section */}
         <div className="py-2">
           <h1 className="text-black text-2xl font-bold">Order Tracking</h1>
-          <p className="text-[#6B6B6B]">Monitor and manage all active shipments in real-time</p>
+          <p className="text-[#6B6B6B]">
+            Monitor and manage all active shipments in real-time
+          </p>
         </div>
 
         {/* Track Order Section */}
-        {/* <TrackOrderSection onTrack={handleTrackOrder} /> */}
-
         <LiveTrackOrderSection onTrack={handleTrackOrder} />
 
         {/* Category List Section */}
         <div className="sm:py-3">
           <div className="flex items-center gap-2">
-            <span className="text-[#6B6B6B] text-xl font-semibold">Order List</span>
+            <span className="text-[#6B6B6B] text-xl font-semibold">
+              Order List
+            </span>
             <span className="bg-secondary text-gray-700 px-3 py-1 rounded-full text-base font-medium border border-[#969696]">
               {totalItems}
             </span>
@@ -102,6 +118,14 @@ export default function LiveOrderTracking() {
           setCategory={handleCategoryChange}
           status={status}
           setStatus={handleStatusChange}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          search={search}
+          setSearch={setSearch}
+          itemsPerPage={itemsPerPage}
+          setItemsPerPage={setItemsPerPage}
           handleResetFilter={handleResetFilter}
         />
       </div>
@@ -110,7 +134,7 @@ export default function LiveOrderTracking() {
       {orders.length > 0 ? (
         <>
           <CustomTable columns={orderColumns} data={orders} />
-            
+
           {/* Pagination Component */}
           <TablePagination
             currentPage={currentPage}
