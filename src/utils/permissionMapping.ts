@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @types/typescript-eslint/no-explicit-any */
 import { menuItems } from "@/components/Shared/Sidebar/MenuItems";
 
 interface PermissionMapping {
@@ -29,6 +29,28 @@ export const menuToPermissionMapping: PermissionMapping = {
   "order-placement": ["order_placement"],
   user_profile: ["user_profile"],
   additional: ["admin"],
+
+  // NEW DATA - Add these mappings for the new menu structure
+  "system-configuration": [
+    "vechicle_pricing",
+    "destination",
+    "platform_fee",
+    "driver_order_competition",
+    "quiz",
+    "customer_order_confirmation",
+    "coin",
+  ],
+  "service-area": ["vechicle_pricing", "destination"],
+  "vehicle-types": ["vechicle_pricing", "destination"],
+  "types-of-delivery": ["vechicle_pricing", "destination"],
+  "policy-management": ["vechicle_pricing", "destination"],
+  "revenue-configuration": ["platform_fee"],
+  "driver-configuration": ["driver_order_competition", "quiz"],
+  "customer-configuration": ["customer_order_confirmation"],
+  "incentive-rewards-configuration": ["coin"],
+  "incentive-management": ["coin"],
+  promocode: ["coin"],
+  "create-edit-role": ["rbac"],
 };
 
 // Map child routes to their parent menu IDs
@@ -78,16 +100,35 @@ export const childRouteToParentMapping: Record<string, string> = {
   "assign-driver/:id": "orders",
   "live-order-tracking/:id": "order-placement",
   "support/view/:id": "support",
-  // "content-management-user": "content-management",
-  // "content-management-driver": "content-management",
   "content-management": "content-management",
   "customize-profile": "user_profile",
   "change-password": "user_profile",
   "additional-service": "admin",
   "dashboard-popup": "admin",
   "dashboard-chat": "admin",
-  "contectinfo": "admin",
-  "promocode": "admin"
+  contectinfo: "admin",
+  promocode: "admin",
+
+  // NEW DATA - Add these mappings for the new menu structure
+  "system-configuration": "system-configuration",
+  "service-configuration": "system-configuration",
+  // "service-area": "system-configuration",
+  // "vehicle-types": "system-configuration",
+  // "types-of-delivery": "system-configuration",
+  // "policy-management": "system-configuration",
+  "revenue-configuration": "system-configuration",
+  "platform-fee": "system-configuration",
+  "driver-configuration": "system-configuration",
+  "driver-order-competition": "system-configuration",
+  quiz: "system-configuration",
+  "customer-configuration": "system-configuration",
+  "customer-order-confirmation": "system-configuration",
+  "incentive-rewards-configuration": "system-configuration",
+  // "incentive-management": "system-configuration",
+  "coin-system": "system-configuration",
+  // promocode: "system-configuration",
+  admin: "admin",
+  // "create-edit-role": "admin",
 };
 
 // Extract base route from dynamic route
@@ -114,12 +155,22 @@ export const extractBaseRoute = (route: string): string => {
     /^live-order-tracking\/\d+$/,
     /^quiz-create-edit\/\d+$/,
     /^join-request\/\d+$/,
-    /^raider-details\/\d+$/, // ADDED: for raider-details
+    /^raider-details\/\d+$/,
     /^support\/view\/\d+$/,
     /^additional-service\/\d+$/,
     /^dashboard-popup\/\d+$/,
     /^dashboard-chat\/\d+$/,
     /^contectinfo\/\d+$/,
+    /^promocode\/\d+$/,
+    // Add new dynamic patterns if needed
+    /^service-area\/\d+$/,
+    /^vehicle-types\/\d+$/,
+    /^platform-fee\/\d+$/,
+    /^quiz\/\d+$/,
+    /^driver-order-competition\/\d+$/,
+    /^customer-order-confirmation\/\d+$/,
+    /^incentive-management\/\d+$/,
+    /^coin-system\/\d+$/,
     /^promocode\/\d+$/,
   ];
 
@@ -141,8 +192,8 @@ export const isDynamicRoute = (route: string): boolean => {
     "driver-list/:id",
     "join-request/:id",
     "join-request",
-    "raider-details/:id", // ADDED
-    "raider-details", // ADDED
+    "raider-details/:id",
+    "raider-details",
     "wallet-user/:id",
     "wallet-driver/:id",
     "favourite-drivers/:id",
@@ -150,6 +201,16 @@ export const isDynamicRoute = (route: string): boolean => {
     "order/:id",
     "assign-driver/:id",
     "live-order-tracking/:id",
+    // Add new dynamic routes
+    "service-area/:id",
+    "vehicle-types/:id",
+    "platform-fee/:id",
+    "quiz/:id",
+    "driver-order-competition/:id",
+    "customer-order-confirmation/:id",
+    "incentive-management/:id",
+    "coin-system/:id",
+    "promocode/:id",
   ];
 
   const cleanRoute = route.split("?")[0];
@@ -161,72 +222,6 @@ export const isDynamicRoute = (route: string): boolean => {
     return new RegExp(`^${dynamicPattern}$`).test(cleanRoute);
   });
 };
-
-// export const hasPermissionForMenu = (
-//   menuId: string,
-//   permissionsData: any
-// ): boolean => {
-//   if (menuId === "login") return true;
-
-//   const baseMenuId = extractBaseRoute(menuId);
-
-//   const parentMenuId = childRouteToParentMapping[baseMenuId] || childRouteToParentMapping[menuId];
-//   const finalMenuId = parentMenuId || baseMenuId;
-
-//   const permissionModules = menuToPermissionMapping[finalMenuId];
-
-//   if (!permissionModules) {
-//     return false;
-//   }
-
-//   if (!permissionsData?.permissions) {
-//     return false;
-//   }
-
-//   for (const module of permissionModules) {
-//     const modulePermissions = permissionsData.permissions[module];
-
-//     if (modulePermissions?.includes("read")) {
-//       return true;
-//     }
-//   }
-
-//   return false;
-// };
-
-// export const hasPermissionForMenu = (
-//   menuId: string,
-//   permissionsData: any,
-// ): boolean => {
-//   if (menuId === "login") return true;
-
-//   const baseMenuId = extractBaseRoute(menuId);
-
-//   const parentMenuId =
-//     childRouteToParentMapping[baseMenuId] || childRouteToParentMapping[menuId];
-//   const finalMenuId = parentMenuId || baseMenuId;
-
-//   const permissionModules = menuToPermissionMapping[finalMenuId];
-
-//   if (!permissionModules) {
-//     return false;
-//   }
-
-//   if (!permissionsData?.permissions) {
-//     return false;
-//   }
-
-//   for (const module of permissionModules) {
-//     const modulePermissions = permissionsData.permissions[module];
-
-//     // Check if user has ANY permission for this module (not just "read")
-//     if (modulePermissions && modulePermissions.length > 0) {
-//       return true;
-//     }
-//   }
-
-//   return false;
-// };
 
 export const hasPermissionForMenu = (
   menuId: string,
@@ -275,9 +270,24 @@ export const getAllAvailableRoutes = (permissionsData: any): string[] => {
       // Check if this menu has children
       const menuItem = menuItems.find((item) => item.id === menuId);
       if (menuItem?.children && menuItem.children.length > 0) {
-        // Add first child route
-        if (menuItem.children[0]?.id) {
-          availableRoutes.push(menuItem.children[0].id);
+        // For the new structure, we need to find the first leaf child (grandchild)
+        const findFirstLeafChild = (item: any): string | null => {
+          if (item.children && item.children.length > 0) {
+            // Check if grandchildren exist
+            if (
+              item.children[0].children &&
+              item.children[0].children.length > 0
+            ) {
+              return item.children[0].children[0].id;
+            }
+            return item.children[0].id;
+          }
+          return item.id;
+        };
+
+        const firstRoute = findFirstLeafChild(menuItem);
+        if (firstRoute) {
+          availableRoutes.push(firstRoute);
         }
       } else if (menuId !== "") {
         // Add the menu itself if it has no children
@@ -287,4 +297,32 @@ export const getAllAvailableRoutes = (permissionsData: any): string[] => {
   });
 
   return availableRoutes;
+};
+
+// Helper function to check if a parent menu should be shown
+export const shouldShowParentMenu = (
+  menuItem: any,
+  permissionsData: any,
+): boolean => {
+  // If no children, check permission directly
+  if (!menuItem.children || menuItem.children.length === 0) {
+    return hasPermissionForMenu(menuItem.id, permissionsData);
+  }
+
+  // Check if any child has permission (recursively)
+  const checkChildren = (children: any[]): boolean => {
+    for (const child of children) {
+      if (hasPermissionForMenu(child.id, permissionsData)) {
+        return true;
+      }
+      if (child.children && child.children.length > 0) {
+        if (checkChildren(child.children)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  return checkChildren(menuItem.children);
 };

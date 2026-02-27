@@ -239,7 +239,7 @@ const VTPMServiceArea = () => {
                 setEditData(null);
                 setIsModalOpen(true);
               }}
-              className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
+              className="bg-[#FFCC00] hover:bg-[#E6B800] text-black font-semibold py-2 px-4 rounded flex items-center gap-2 disabled:bg-[#FFCC00] cursor-pointer"
               disabled={isCreating || isUpdating}
             >
               <Plus size={20} className="mr-2" />
