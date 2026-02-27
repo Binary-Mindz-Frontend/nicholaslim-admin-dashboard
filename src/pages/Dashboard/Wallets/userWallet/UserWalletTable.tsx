@@ -1,30 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type React from "react";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LuScanEye, LuArrowUpDown, LuX } from "react-icons/lu";
 import SCustomTable from "@/pages/Dashboard/_components/CutomTable";
 import { useNavigate } from "react-router-dom";
 import { useGetWalletQuery } from "@/redux/features/wallet/walletApi";
 import { FiSearch } from "react-icons/fi";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { CalendarIcon, FilterX } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import CustomPagination from "@/components/Shared/CustomPagination/CustomPagination";
 
 interface Wallet {
   id: number;
@@ -32,182 +15,85 @@ interface Wallet {
   email: string;
   totalWalletBalance: number;
   currentWalletBalance: number;
-  created_at?: string;
-}
-
-interface SortConfig {
-  key: keyof Wallet | null;
-  direction: "asc" | "desc";
 }
 
 const UserWalletTable: React.FC = () => {
   const navigate = useNavigate();
 
-  // State for pagination
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // State for search and filters
+  // Filters
   const [searchQuery, setSearchQuery] = useState("");
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [balanceSort, setBalanceSort] = useState<"asc" | "desc">("desc");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  // State for sorting
-  const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: null,
-    direction: "asc",
-  });
-
-  const queryParams = {
+  const { data, isLoading, error } = useGetWalletQuery({
     role: "USER",
+    search: searchQuery || undefined,
     page: currentPage,
     limit: itemsPerPage,
-    balanceSort: "desc",
-    ...(searchQuery && { search: searchQuery }),
-    ...(startDate && { startDate: startDate.toISOString() }),
-    ...(endDate && { endDate: endDate.toISOString() }),
-  };
+    balanceSort: balanceSort,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+  });
 
-  // Query for fetching wallet data
-  const { data, isLoading, error } = useGetWalletQuery(queryParams);
+  const totalItems = data?.total || 0;
+  const displayData = data?.data || [];
 
-  // Handle sorting
-  const handleSort = (key: keyof Wallet) => {
-    let direction: "asc" | "desc" = "asc";
+  const resetPage = () => setCurrentPage(1);
 
-    if (sortConfig.key === key) {
-      direction = sortConfig.direction === "asc" ? "desc" : "asc";
-    }
-
-    setSortConfig({ key, direction });
-
-    if (key === "currentWalletBalance") {
-    } else if (key === "totalWalletBalance") {
-      setCurrentPage(1);
-    }
-  };
-
-  // Clear all filters
-  const clearFilters = () => {
-    setSearchQuery("");
-    setStartDate(undefined);
-    setEndDate(undefined);
-    setCurrentPage(1);
-    setSortConfig({ key: null, direction: "asc" });
-  };
-
-  // Handle items per page change
-  const handleItemsPerPageChange = (value: string) => {
-    setItemsPerPage(Number(value));
-    setCurrentPage(1); // Reset to first page
-  };
-
-  // Handle search change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page when searching
+    resetPage();
   };
 
-  // Sort data locally for fields that don't have API sorting
-  const sortedData = useMemo(() => {
-    if (!data?.data) return [];
+  const handleBalanceSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setBalanceSort(e.target.value as "asc" | "desc");
+    resetPage();
+  };
 
-    // If sorting by current balance, data is already sorted by API
-    if (sortConfig.key === "currentWalletBalance") {
-      return data.data;
-    }
+  // const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setStartDate(e.target.value);
+  //   resetPage();
+  // };
 
-    if (!sortConfig.key) return data.data;
+  // const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setEndDate(e.target.value);
+  //   resetPage();
+  // };
 
-    return [...data.data].sort((a, b) => {
-      const aValue = a[sortConfig.key!];
-      const bValue = b[sortConfig.key!];
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setBalanceSort("asc");
+    setStartDate("");
+    setEndDate("");
+    resetPage();
+  };
 
-      // Handle undefined values
-      if (aValue === undefined) return 1;
-      if (bValue === undefined) return -1;
+  const hasActiveFilters = searchQuery || startDate || endDate;
 
-      if (aValue < bValue) {
-        return sortConfig.direction === "asc" ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return sortConfig.direction === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
-  }, [data?.data, sortConfig]);
-
-  // Define table columns with sortable headers
   const columns = [
-    {
-      key: "id" as const,
-      label: "User ID",
-      sortable: true,
-      onSort: () => handleSort("id"),
-      sortDirection: sortConfig.key === "id" ? sortConfig.direction : undefined,
-    },
-    {
-      key: "username" as const,
-      label: "Username",
-      sortable: true,
-      onSort: () => handleSort("username"),
-      sortDirection:
-        sortConfig.key === "username" ? sortConfig.direction : undefined,
-    },
-    {
-      key: "email" as const,
-      label: "Email",
-      sortable: true,
-      onSort: () => handleSort("email"),
-      sortDirection:
-        sortConfig.key === "email" ? sortConfig.direction : undefined,
-    },
+    { key: "id" as const, label: "User Id" },
+    { key: "username" as const, label: "Username" },
+    { key: "email" as const, label: "Email" },
     {
       key: "currentWalletBalance" as const,
       label: "Current Wallet Balance",
-      sortable: true,
-      onSort: () => handleSort("currentWalletBalance"),
-      sortDirection:
-        sortConfig.key === "currentWalletBalance"
-          ? sortConfig.direction
-          : undefined,
-      render: (value: number) => `$${(value || 0).toFixed(2)}`,
+      render: (value: number) => `$${value}`,
     },
     {
       key: "totalWalletBalance" as const,
       label: "Total Wallet Balance",
-      sortable: true,
-      onSort: () => handleSort("totalWalletBalance"),
-      sortDirection:
-        sortConfig.key === "totalWalletBalance"
-          ? sortConfig.direction
-          : undefined,
-      render: (value: number) => `$${(value || 0).toFixed(2)}`,
+      render: (value: number) => `$${value}`,
     },
     {
       key: "totalBalanceUsed" as const,
       label: "Total Balance Used",
-      sortable: true,
-      onSort: () => handleSort("totalWalletBalance"), // Using total as proxy
-      sortDirection:
-        sortConfig.key === "totalWalletBalance"
-          ? sortConfig.direction
-          : undefined,
-      render: (_: any, row: Wallet) => {
-        const totalBalanceUsed =
-          (row.totalWalletBalance || 0) - (row.currentWalletBalance || 0);
-        return `$${totalBalanceUsed.toFixed(2)}`;
-      },
-    },
-    {
-      key: "created_at" as const,
-      label: "Created Date",
-      sortable: true,
-      onSort: () => handleSort("created_at"),
-      sortDirection:
-        sortConfig.key === "created_at" ? sortConfig.direction : undefined,
-      render: (value: string) =>
-        value ? format(new Date(value), "dd/MM/yyyy") : "-",
+      render: (_: any, row: Wallet) =>
+        `$${row.totalWalletBalance - row.currentWalletBalance}`,
     },
     {
       label: "Action",
@@ -224,196 +110,94 @@ const UserWalletTable: React.FC = () => {
     },
   ];
 
-  const totalItems = data?.total || 0;
-
   return (
     <div className="space-y-6">
-      {/* Header with Title */}
-      <div className="flex justify-between items-center">
-        {(searchQuery || startDate || endDate) && (
-          <Button
-            variant="outline"
-            onClick={clearFilters}
-            className="flex items-center gap-2"
+      {/* ── Filter Bar ── */}
+      <div className="flex justify-between flex-wrap  gap-3">
+        {/* Search */}
+        <div className="relative flex-1 max-w-xl">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            placeholder="Search by username, email or phone..."
+            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BFFF]"
+          />
+        </div>
+
+        {/* Balance Sort */}
+        <div className="flex items-center gap-1.5">
+          <LuArrowUpDown className="text-gray-400 shrink-0" size={15} />
+          <select
+            value={balanceSort}
+            onChange={handleBalanceSortChange}
+            className="text-sm border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-[#00BFFF] cursor-pointer"
           >
-            <FilterX size={16} />
-            Clear Filters
-          </Button>
+            <option value="desc">Balance: High → Low</option>
+            <option value="asc">Balance: Low → High</option>
+          </select>
+        </div>
+
+        {/* Start Date */}
+        {/* <div className="flex items-center gap-1.5">
+          <LuCalendar className="text-gray-400 shrink-0" size={15} />
+          <input
+            type="date"
+            value={startDate}
+            onChange={handleStartDateChange}
+            className="text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#00BFFF]"
+          />
+        </div> */}
+
+        {/* End Date */}
+        {/* <div className="flex items-center gap-1.5">
+          <LuCalendar className="text-gray-400 shrink-0" size={15} />
+          <input
+            type="date"
+            value={endDate}
+            onChange={handleEndDateChange}
+            min={startDate}
+            className="text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#00BFFF]"
+          />
+        </div> */}
+
+        {/* Clear Filters — only shows when search or date is active */}
+        {hasActiveFilters && (
+          <button
+            onClick={handleClearFilters}
+            className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700 border border-red-300 rounded-md px-3 py-2 transition-colors"
+          >
+            <LuX size={14} />
+            Clear
+          </button>
         )}
       </div>
 
-      {/* Filter Section */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Search Input */}
-          <div className="relative">
-            <Label htmlFor="search">Search</Label>
-            <div className="relative mt-1">
-              <Input
-                id="search"
-                type="text"
-                placeholder="Username or Email"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="pl-10"
-              />
-              <FiSearch
-                size={18}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              />
-            </div>
-          </div>
-
-          {/* Date Range Filter */}
-          <div>
-            <Label>Start Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full mt-1 justify-start text-left font-normal",
-                    !startDate && "text-muted-foreground",
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? (
-                    format(startDate, "PPP")
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={startDate}
-                  onSelect={setStartDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div>
-            <Label>End Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full mt-1 justify-start text-left font-normal",
-                    !endDate && "text-muted-foreground",
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={endDate}
-                  onSelect={setEndDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Items Per Page Selector */}
-          <div>
-            <Label>Items per page</Label>
-            <Select
-              value={itemsPerPage.toString()}
-              onValueChange={handleItemsPerPageChange}
-            >
-              <SelectTrigger className="w-full mt-1">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Active Filters Display */}
-        {(searchQuery || startDate || endDate) && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {searchQuery && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
-                Search: {searchQuery}
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="hover:text-blue-900"
-                >
-                  ×
-                </button>
-              </span>
-            )}
-            {startDate && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm">
-                From: {format(startDate, "dd/MM/yyyy")}
-                <button
-                  onClick={() => setStartDate(undefined)}
-                  className="hover:text-green-900"
-                >
-                  ×
-                </button>
-              </span>
-            )}
-            {endDate && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm">
-                To: {format(endDate, "dd/MM/yyyy")}
-                <button
-                  onClick={() => setEndDate(undefined)}
-                  className="hover:text-green-900"
-                >
-                  ×
-                </button>
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Table Section */}
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        </div>
-      ) : error ? (
-        <div className="bg-red-50 text-red-600 p-4 rounded-lg text-center">
-          Error loading wallet data. Please try again.
-        </div>
-      ) : (
-        <>
-          <SCustomTable data={sortedData} columns={columns} />
-
-          {/* Pagination */}
-          {totalItems > 0 && (
-            <div className="flex justify-between items-center mt-4">
-              <div className="text-sm text-gray-500">
-                Showing{" "}
-                {data?.data?.length ? (currentPage - 1) * itemsPerPage + 1 : 0}{" "}
-                to {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
-                {totalItems} entries
-              </div>
-
-              <TablePagination
-                currentPage={currentPage}
-                totalItems={totalItems}
-                itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-              />
-            </div>
-          )}
-        </>
+      {/* ── Status ── */}
+      {isLoading && (
+        <div className="text-center py-6 text-gray-500">Loading...</div>
       )}
+      {error && (
+        <div className="text-center py-6 text-red-500">
+          Error loading wallet data
+        </div>
+      )}
+
+      {/* ── Table ── */}
+      <SCustomTable columns={columns} data={displayData} />
+
+      {/* ── Pagination ── */}
+      <CustomPagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(items) => {
+          setItemsPerPage(items);
+          resetPage();
+        }}
+      />
     </div>
   );
 };
