@@ -24,7 +24,7 @@ export default function NewJoinRequest() {
       <div className="w-full mx-auto space-y-4 mb-6">
         {/* Header Section */}
         <div className="pt-2 sm:py-2">
-          <h1 className="text-black text-2xl font-bold">New Delivery Man Join Request</h1>
+          <h1 className="text-black text-2xl font-bold">Driver Join Requests</h1>
         </div>
 
         {/* Category List Section */}
