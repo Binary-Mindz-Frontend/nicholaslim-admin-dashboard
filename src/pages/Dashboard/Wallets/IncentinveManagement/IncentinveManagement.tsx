@@ -16,8 +16,6 @@ const IncentiveManagementPage: React.FC = () => {
 
   const { data: incentiveLogs, isLoading } = useGetAllIncentiveLogsQuery(undefined);
 
-  if (isLoading) return <p>Loading...</p>;
-
   const incentiveColumns = [
     {
       header: "Date",
@@ -103,7 +101,7 @@ const IncentiveManagementPage: React.FC = () => {
           <h3 className="text-lg font-bold text-gray-900">Incentives List</h3>
           <Button
             onClick={() => setOpenCreate(true)}
-            className="cursor-pointerfont-semibold gap-2 mt-4 sm:mt-0 flex items-center px-4 py-2 bg-yellow-400 rounded-lg hover:bg-yellow-500 text-black transition-colors"
+            className="cursor-pointer font-semibold gap-2 mt-4 sm:mt-0 flex items-center px-4 py-2 bg-yellow-400 rounded-lg hover:bg-yellow-500 text-black transition-colors"
           >
             <Plus className="w-5 h-5" />
             Add Incentive

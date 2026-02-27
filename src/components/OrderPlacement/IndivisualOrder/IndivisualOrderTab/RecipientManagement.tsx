@@ -226,6 +226,7 @@ const MapModal: React.FC<MapModalProps> = ({
       mapRef.current = null;
     };
   }, [isOpen]);
+  
 
   // ── Init map once SDK is ready AND container div is mounted ──
   useEffect(() => {
@@ -521,6 +522,8 @@ const PostalCodeField: React.FC<{
   isDetecting: boolean;
   onChangeRequest: () => void;
 }> = ({ postalCode, address, isDetecting, onChangeRequest }) => (
+  
+ 
   <div>
     <Label className="mb-2">Postal Code</Label>
     <div className="flex items-center gap-2">
@@ -557,7 +560,9 @@ const PostalCodeField: React.FC<{
       </p>
     )}
   </div>
-);
+  );
+
+
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
