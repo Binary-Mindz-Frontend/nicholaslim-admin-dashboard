@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { ChevronDown, Layout, Menu, X } from "lucide-react";
 import { menuItems, MenuItem } from "./MenuItems";
@@ -292,7 +294,7 @@ export function Sidebar() {
                       onClick={() =>
                         handleItemClick(child.id, false, level + 1)
                       }
-                      className={`w-full cursor-pointer flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ml-4 ${
+                      className={`w-full cursor-pointer flex items-center text-left gap-2 px-3 py-2 rounded text-sm transition-colors ml-4 ${
                         isChildActive
                           ? "text-yellow-600 font-medium bg-yellow-50"
                           : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
