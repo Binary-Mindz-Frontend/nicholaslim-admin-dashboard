@@ -129,10 +129,7 @@ export default function OrderList() {
           setEndDate={handleEndDateChange}
           search={search}
           setSearch={handleSearchChange}
-          itemsPerPage={itemsPerPage}
-          setItemsPerPage={handleItemsPerPageChange}
           handleResetFilter={handleResetFilter}
-          totalItems={totalItems}
         />
       </div>
 
