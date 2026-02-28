@@ -42,12 +42,12 @@ export default function UsersPage() {
         {/* Header Section */}
         <div className="pt-2 sm:py-2">
           <h1 className="text-black text-2xl font-bold">
-            User List (Web Portal)
+            Web User Management
           </h1>
         </div>
 
         {/* Category List Section */}
-        <div className="sm:py-3">
+        {/* <div className="sm:py-3">
           <div className="flex items-center gap-2">
             <span className="text-[#6B6B6B] text-xl font-semibold">
               Category List
@@ -56,7 +56,7 @@ export default function UsersPage() {
               {totalItems}
             </span>
           </div>
-        </div>
+        </div> */}
 
         {/* Filter Section */}
         <FilterSection
