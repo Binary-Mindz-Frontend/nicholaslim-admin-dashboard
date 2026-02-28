@@ -15,6 +15,9 @@ interface FilterSectionProps {
   allFilter: string;
   setAllFilter: (value: string) => void;
 
+  search: string;
+  setSearch: (value: string) => void;
+
   handleResetFilter: () => void;
 }
 
@@ -23,11 +26,23 @@ export default function FilterSection({
   setDateFilter,
   allFilter,
   setAllFilter,
+  search,
+  setSearch,
   handleResetFilter,
 }: FilterSectionProps) {
   return (
     <div className="w-full bg-white rounded-md px-1 py-1">
       <div className="flex flex-wrap items-center gap-3">
+        {/* Search Field */}
+        <div className="flex items-center gap-2 px-4 py-1.5 border border-yellow-400 rounded-md w-full sm:w-[48%] md:w-[250px]">
+          <input
+            type="text"
+            placeholder="Name, Email, Phone..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full text-sm outline-none bg-transparent"
+          />
+        </div>
 
         {/* Filter By */}
         <div

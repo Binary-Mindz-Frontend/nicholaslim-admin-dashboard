@@ -32,6 +32,7 @@ const userTypesApi = baseApi.injectEndpoints({
       query: ({
         status,
         dateFilter,
+        search,
         page = 1,
         limit = 10,
         sortBy = "createdAt",
@@ -46,6 +47,10 @@ const userTypesApi = baseApi.injectEndpoints({
           url += `&dateFilter=${dateFilter}`;
         }
 
+        if (search) {
+          url += `&search=${search}`;
+        }
+
         return {
           url,
           method: "GET",
@@ -58,6 +63,7 @@ const userTypesApi = baseApi.injectEndpoints({
       query: ({
         status,
         dateFilter,
+        search,
         page = 1,
         limit = 10,
         sortBy = "createdAt",
@@ -70,6 +76,10 @@ const userTypesApi = baseApi.injectEndpoints({
 
         if (dateFilter) {
           url += `&dateFilter=${dateFilter}`;
+        }
+
+        if (search) {
+          url += `&search=${search}`;
         }
 
         return {
