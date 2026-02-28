@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useOrderColumns } from "./OrderTable/OrderTable";
 import TrackOrderSection from "./TrackOrderSection/TrackOrderSection";
 import OrderFilter from "@/components/Orders/OrderFilter/OrderFilter";
-import TablePagination from "@/pages/Dashboard/_components/TablePagination";
+import AdminTablePagination from "@/components/Shared/CustomPagination/AdminTablePagination";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { format } from "date-fns";
@@ -145,13 +145,12 @@ export default function OrderList() {
           <CustomTable columns={orderColumns} data={orders} />
 
           {/* Pagination Component */}
-          <TablePagination
+          <AdminTablePagination
             currentPage={currentPage}
             totalItems={totalItems}
             itemsPerPage={itemsPerPage}
-            onPageChange={(page) => {
-              setCurrentPage(page);
-            }}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={handleItemsPerPageChange}
           />
         </>
       ) : (

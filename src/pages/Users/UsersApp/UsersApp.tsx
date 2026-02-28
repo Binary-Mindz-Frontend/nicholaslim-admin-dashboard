@@ -2,7 +2,7 @@ import { useState } from "react";
 import FilterSection from "@/components/Users/FilterSection/FilterSection";
 import { useUserColumns } from "./userTable/userTable";
 import CustomTable from "@/components/Dashboard/DataTable/DataTable";
-import UsersTablePagination from "../_components/UsersTablePagination";
+import AdminTablePagination from "@/components/Shared/CustomPagination/AdminTablePagination";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 
@@ -79,7 +79,7 @@ export default function UsersPage() {
       <CustomTable columns={userColumns} data={users} />
 
       {/* Pagination Component */}
-      <UsersTablePagination
+      <AdminTablePagination
         currentPage={currentPage}
         totalItems={totalItems}
         itemsPerPage={itemsPerPage}

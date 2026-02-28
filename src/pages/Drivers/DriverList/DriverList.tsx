@@ -2,8 +2,9 @@ import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 import { useState } from 'react';
 import { useDriverColumns } from "./DriverTable/DriverTable";
 import DriverFilter from "@/components/Drivers/DriverFilter/DriverFilter";
-import TablePagination from "@/pages/Dashboard/_components/TablePagination";
+import AdminTablePagination from "@/components/Shared/CustomPagination/AdminTablePagination";
 import { Link } from "react-router-dom";
+import { Plus } from "lucide-react";
 
 export default function DriverList() {
   // Direct filter states (no temporary states needed)
@@ -13,7 +14,13 @@ export default function DriverList() {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Reset to page 1 when items per page changes
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   // Filter reset function
   const handleResetFilter = () => {
@@ -68,8 +75,15 @@ export default function DriverList() {
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
       <div className="w-full mx-auto space-y-4 mb-6">
         {/* Header Section */}
-        <div className="py-2">
+        <div className="pt-2 sm:py-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h1 className="text-black text-2xl font-bold">Driver Management</h1>
+          <Link
+            to="/add-new-driver"
+            className="flex items-center gap-2 px-3 sm:px-6 py-3 bg-yellow-400 cursor-pointer sm:font-bold hover:bg-yellow-500 text-black rounded transition-colors"
+          >
+            <Plus size={18} />
+            Add Driver
+          </Link>
         </div>
 
         {/* Category List Section */}
@@ -100,14 +114,12 @@ export default function DriverList() {
           <CustomTable columns={driverColumns} data={drivers} />
 
           {/* Pagination Component */}
-          <TablePagination
+          <AdminTablePagination
             currentPage={currentPage}
             totalItems={totalItems}
             itemsPerPage={itemsPerPage}
-            onPageChange={(page) => {
-              console.log("Page changed to:", page); // Add this
-              setCurrentPage(page);
-            }}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={handleItemsPerPageChange}
           />
         </>
       ) : (
@@ -116,14 +128,6 @@ export default function DriverList() {
         </div>
       )}
 
-      <div className="flex justify-center my-6">
-        <Link
-          to="/add-new-driver"
-          className="px-3 sm:px-6 py-3 bg-yellow-400 cursor-pointer sm:font-bold hover:bg-yellow-500 text-black rounded transition-colors"
-        >
-          Add Driver
-        </Link>
-      </div>
     </div>
   );
 }
