@@ -94,7 +94,7 @@ export const menuItems: MenuItem[] = [
           },
           {
             id: "quiz",
-            label: "Quiz",
+            label: "Quizzes",
             icon: null,
             route: "/quiz",
           },
@@ -110,6 +110,12 @@ export const menuItems: MenuItem[] = [
             label: "Order Confirmation Rules",
             icon: null,
             route: "/customer-order-confirmation",
+          },
+          {
+            id: "additional-service",
+            label: "Additional Services",
+            icon: null,
+            route: "/additional-service",
           },
         ],
       },
@@ -161,16 +167,16 @@ export const menuItems: MenuItem[] = [
     icon: <Users className="w-5 h-5" />,
     children: [
       {
-        id: "users-app",
+        id: "users-web-portal",
         label: "Web Users",
         icon: null,
-        route: "/users-app",
+        route: "/users-web-portal",
       },
       {
-        id: "users-web-portal",
+        id: "users-app",
         label: "Mobile Users",
         icon: null,
-        route: "/users-web-portal",
+        route: "/users-app",
       },
     ],
   },
@@ -313,10 +319,10 @@ export const menuItems: MenuItem[] = [
         route: "/contactinfo",
       },
       {
-        id: "support-dispute",
+        id: "support",
         label: "Support & Dispute",
         icon: null,
-        route: "/support-dispute",
+        route: "/support",
       },
       {
         id: "dashboard-chat",
@@ -326,7 +332,7 @@ export const menuItems: MenuItem[] = [
       },
       {
         id: "notifications",
-        label: "Notifications & Communication",
+        label: "Push Notification",
         icon: null,
         route: "/notifications",
       },
@@ -354,15 +360,15 @@ export const menuItems: MenuItem[] = [
   },
 
   {
-    id: "content-management",
+    id: "content",
     label: "Content Management",
     icon: <FileText className="w-5 h-5" />,
     children: [
       {
-        id: "content-management-user",
+        id: "content-management",
         label: "Mobile Content",
         icon: null,
-        route: "/content-management-user",
+        route: "/content-management",
       },
     ],
   },
