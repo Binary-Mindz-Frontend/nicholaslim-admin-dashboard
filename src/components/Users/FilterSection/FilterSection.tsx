@@ -34,7 +34,7 @@ export default function FilterSection({
     <div className="w-full bg-white rounded-md px-1 py-1">
       <div className="flex flex-wrap items-center gap-3">
         {/* Search Field */}
-        <div className="flex items-center gap-2 px-4 py-1.5 border border-yellow-400 rounded-md w-full sm:w-[48%] md:w-[250px]">
+        <div className="flex items-center gap-2 px-4 py-3 border border-yellow-400 rounded-md w-full sm:w-[48%] md:w-[250px]">
           <input
             type="text"
             placeholder="Name, Email, Phone..."
