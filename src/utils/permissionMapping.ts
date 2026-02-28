@@ -1,4 +1,4 @@
-/* eslint-disable @types/typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { menuItems } from "@/components/Shared/Sidebar/MenuItems";
 
 interface PermissionMapping {
@@ -129,11 +129,14 @@ export const childRouteToParentMapping: Record<string, string> = {
   // promocode: "system-configuration",
   admin: "admin",
   // "create-edit-role": "admin",
+  contactinfo: "admin",
+  "support-dispute": "support",
+  "content": "content-management",
+  "content-management-user": "content-management",
 };
 
 // Extract base route from dynamic route
 export const extractBaseRoute = (route: string): string => {
-  // Remove query parameters if any
   const cleanRoute = route.split("?")[0];
 
   // Handle dynamic routes with parameters
