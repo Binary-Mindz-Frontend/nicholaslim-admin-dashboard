@@ -137,7 +137,6 @@ export const childRouteToParentMapping: Record<string, string> = {
 
 // Extract base route from dynamic route
 export const extractBaseRoute = (route: string): string => {
-  // Remove query parameters if any
   const cleanRoute = route.split("?")[0];
 
   // Handle dynamic routes with parameters
