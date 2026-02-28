@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { ChevronDown, Layout, Menu, X } from "lucide-react";
-import { menuItems } from "./MenuItems";
+import { menuItems, MenuItem } from "./MenuItems";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout } from "@/redux/features/auth/authSlice";
 import { useGetRoleUserPermissionsQuery } from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
-import { hasPermissionForMenu } from "@/utils/permissionMapping";
+import {
+  hasPermissionForMenu,
+  shouldShowParentMenu,
+} from "@/utils/permissionMapping";
 
 export function Sidebar() {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(
@@ -13,7 +16,7 @@ export function Sidebar() {
   );
   const [activeItem, setActiveItem] = useState<string>("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [filteredMenuItems, setFilteredMenuItems] = useState(menuItems);
+  const [filteredMenuItems, setFilteredMenuItems] = useState<MenuItem[]>([]);
 
   const { data: roleBasedAccessControlData } =
     useGetRoleUserPermissionsQuery(undefined);
@@ -26,56 +29,125 @@ export function Sidebar() {
     const currentPath = location.pathname.substring(1);
     if (currentPath) {
       setActiveItem(currentPath);
-      const parentItem = findParentItem(currentPath);
-      if (parentItem && parentItem !== currentPath) {
-        setExpandedItems((prev) => new Set(prev).add(parentItem));
-      }
+
+      // Find and expand parent menus of the current active item
+      const findAndExpandParents = (
+        items: MenuItem[],
+        targetId: string,
+      ): boolean => {
+        for (const item of items) {
+          if (item.children) {
+            // Check if target is a direct child
+            const directChild = item.children.find(
+              (child) => child.id === targetId,
+            );
+            if (directChild) {
+              setExpandedItems((prev) => new Set(prev).add(item.id));
+              return true;
+            }
+
+            // Check nested children
+            for (const child of item.children) {
+              if (child.children) {
+                const nestedChild = child.children.find(
+                  (nested) => nested.id === targetId,
+                );
+                if (nestedChild) {
+                  setExpandedItems((prev) => {
+                    const newSet = new Set(prev);
+                    newSet.add(item.id);
+                    newSet.add(child.id);
+                    return newSet;
+                  });
+                  return true;
+                }
+              }
+            }
+          }
+        }
+        return false;
+      };
+
+      findAndExpandParents(menuItems, currentPath);
     }
   }, [location.pathname]);
 
- useEffect(() => {
-   if (roleBasedAccessControlData?.permissions) {
-
-     const filteredItems = menuItems.filter((item) => {
-       if (item.id === "login") {
-        // localStorage.clear();
-        return true
-       };
-
-       if (item.id === "additional") {
-         return true;
-       }
-
-       const hasPermission = hasPermissionForMenu(
-         item.id,
-         roleBasedAccessControlData,
-       );
-
-       if (!hasPermission) return false;
-
-       if (item.children && item.children.length > 0) {
-         const filteredChildren = item.children.filter((child) =>
-           hasPermissionForMenu(child.id, roleBasedAccessControlData),
-         );
-         item.children = filteredChildren;
-         return filteredChildren.length > 0;
-       }
-
-       return true;
-     });
-
-     setFilteredMenuItems(filteredItems);
-   }
- }, [roleBasedAccessControlData]);
-
-  const findParentItem = (childId: string): string | null => {
-    for (const item of menuItems) {
-      if (item.children) {
-        const child = item.children.find((child) => child.id === childId);
-        if (child) return item.id;
-      }
+  // Filter menu items based on permissions
+  useEffect(() => {
+    if (roleBasedAccessControlData?.permissions) {
+      const filteredItems = filterMenuItems(
+        menuItems,
+        roleBasedAccessControlData,
+      );
+      setFilteredMenuItems(filteredItems);
+    } else {
+      // If no permissions data, show empty menu
+      setFilteredMenuItems([]);
     }
-    return null;
+  }, [roleBasedAccessControlData]);
+
+  // Recursive function to filter menu items based on permissions
+  const filterMenuItems = (
+    items: MenuItem[],
+    permissionsData: any,
+  ): MenuItem[] => {
+    return items.reduce((acc: MenuItem[], item) => {
+      // Always show logout
+      if (item.id === "login") {
+        acc.push(item);
+        return acc;
+      }
+
+      // Check if this item or any of its children should be shown
+      if (!shouldShowParentMenu(item, permissionsData)) {
+        return acc;
+      }
+
+      // Create a copy of the item
+      const filteredItem: MenuItem = {
+        ...item,
+        children: [],
+      };
+
+      // Filter children if they exist
+      if (item.children && item.children.length > 0) {
+        const filteredChildren = item.children
+          .map((child) => {
+            // Check if child itself has permission
+            if (hasPermissionForMenu(child.id, permissionsData)) {
+              return child;
+            }
+
+            // Check nested children
+            if (child.children && child.children.length > 0) {
+              const filteredNestedChildren = child.children.filter(
+                (nestedChild) =>
+                  hasPermissionForMenu(nestedChild.id, permissionsData),
+              );
+
+              if (filteredNestedChildren.length > 0) {
+                return {
+                  ...child,
+                  children: filteredNestedChildren,
+                };
+              }
+            }
+
+            return null;
+          })
+          .filter((child): child is MenuItem => child !== null);
+
+        if (filteredChildren.length > 0) {
+          filteredItem.children = filteredChildren;
+        } else {
+          // If no children have permission, don't include this parent
+          return acc;
+        }
+      }
+
+      acc.push(filteredItem);
+      return acc;
+    }, []);
   };
 
   const toggleExpand = (id: string) => {
@@ -91,7 +163,7 @@ export function Sidebar() {
   const handleItemClick = (
     id: string,
     hasChildren: boolean,
-    isChild: boolean = false,
+    _level: number = 0,
   ) => {
     setActiveItem(id);
 
@@ -100,9 +172,11 @@ export function Sidebar() {
       return;
     }
 
-    if (hasChildren && !isChild) {
+    // If item has children, just toggle expansion
+    if (hasChildren) {
       toggleExpand(id);
     } else {
+      // Only navigate if it's a leaf node (no children)
       navigateToPage(id);
     }
 
@@ -114,7 +188,6 @@ export function Sidebar() {
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
-    // localStorage.clear();
 
     if (window.innerWidth < 1024) {
       setIsSidebarOpen(false);
@@ -123,15 +196,7 @@ export function Sidebar() {
 
   const navigateToPage = (pageId: string) => {
     if (pageId === "login") return;
-
-    // Check if this is a parent menu without children navigation
-    const menuItem = menuItems.find((item) => item.id === pageId);
-    if (menuItem?.children && menuItem.children.length > 0) {
-      // Navigate to first child
-      navigate(`/${menuItem.children[0].id}`);
-    } else {
-      navigate(`/${pageId}`);
-    }
+    navigate(`/${pageId}`);
   };
 
   const toggleSidebar = () => {
@@ -142,19 +207,30 @@ export function Sidebar() {
     setIsSidebarOpen(false);
   };
 
-  const renderMenuItems = (items: typeof menuItems, level: number = 0) => {
+  // Recursive function to render menu items with proper nesting
+  const renderMenuItems = (items: MenuItem[], level: number = 0) => {
     return items.map((item) => {
       const isExpanded = expandedItems.has(item.id);
       const hasChildren = !!(item.children && item.children.length > 0);
       const isItemActive = item.id === activeItem;
-      const isChildActive =
-        hasChildren && item.children?.some((child) => child.id === activeItem);
       const isLogoutButton = item.id === "login";
 
+      // Check if any child is active (for highlighting parent)
+      const isChildActive =
+        hasChildren &&
+        item.children?.some((child) => {
+          if (child.id === activeItem) return true;
+          if (child.children) {
+            return child.children.some((nested) => nested.id === activeItem);
+          }
+          return false;
+        });
+
       return (
-        <div key={item.id} className="">
+        <div key={item.id} className="mb-1">
+          {/* Parent Menu Item */}
           <button
-            onClick={() => handleItemClick(item.id, hasChildren, level > 0)}
+            onClick={() => handleItemClick(item.id, hasChildren, level)}
             className={`w-full flex items-center cursor-pointer gap-3 px-4 py-2.5 rounded-lg font-medium transition-colors relative group ${
               isLogoutButton
                 ? "bg-red-50 hover:bg-red-100 text-red-600"
@@ -193,31 +269,44 @@ export function Sidebar() {
             )}
           </button>
 
+          {/* Children Menu Items */}
           {hasChildren && isExpanded && !isLogoutButton && (
             <div
               className={`mt-1 space-y-1 ${level === 0 ? "ml-4 border-l border-slate-200 pl-4" : "ml-2 pl-2"}`}
             >
               {item.children?.map((child) => {
-                const isChildItemActive = child.id === activeItem;
-
-                return (
-                  <button
-                    key={child.id}
-                    onClick={() => handleItemClick(child.id, false, true)}
-                    className={`w-full cursor-pointer flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                      isChildItemActive
-                        ? "text-yellow-600 font-medium bg-yellow-50"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                    }`}
-                  >
-                    {child.icon ? (
-                      <span className="shrink-0">{child.icon}</span>
-                    ) : (
-                      <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                    )}
-                    <span>{child.label}</span>
-                  </button>
+                const childHasChildren = !!(
+                  child.children && child.children.length > 0
                 );
+
+                if (childHasChildren) {
+                  // Render nested parent (like service-configuration, revenue-configuration, etc.)
+                  return renderMenuItems([child], level + 1);
+                } else {
+                  // Render leaf node (actual route)
+                  const isChildActive = child.id === activeItem;
+
+                  return (
+                    <button
+                      key={child.id}
+                      onClick={() =>
+                        handleItemClick(child.id, false, level + 1)
+                      }
+                      className={`w-full cursor-pointer flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ml-4 ${
+                        isChildActive
+                          ? "text-yellow-600 font-medium bg-yellow-50"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                      }`}
+                    >
+                      {child.icon ? (
+                        <span className="shrink-0">{child.icon}</span>
+                      ) : (
+                        <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                      )}
+                      <span>{child.label}</span>
+                    </button>
+                  );
+                }
               })}
             </div>
           )}
@@ -237,7 +326,15 @@ export function Sidebar() {
         </button>
       </div>
 
-      <nav className="space-y-1">{renderMenuItems(filteredMenuItems)}</nav>
+      <nav className="space-y-1">
+        {filteredMenuItems.length > 0 ? (
+          renderMenuItems(filteredMenuItems)
+        ) : (
+          <div className="text-center text-slate-500 py-4">
+            No menu items available
+          </div>
+        )}
+      </nav>
     </>
   );
 

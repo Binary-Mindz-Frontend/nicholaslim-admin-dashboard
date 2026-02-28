@@ -3,23 +3,16 @@ import {
   Users,
   Truck,
   Package,
-  Heart,
-  DollarSign,
   Layout,
-  CheckCircle,
   LayoutGrid,
   FileText,
   Tag,
-  Tv,
   HelpCircle,
-  CircleDollarSign,
   Wallet,
-  Bike,
   BarChart,
-  Bell,
   Map,
   LogOut,
-  PlusCircle,
+  MonitorCog,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -28,6 +21,7 @@ export interface MenuItem {
   icon: React.ReactNode;
   children?: MenuItem[];
   isExpanded?: boolean;
+  route?: string;
 }
 
 export const menuItems: MenuItem[] = [
@@ -35,24 +29,132 @@ export const menuItems: MenuItem[] = [
     id: "",
     label: "Dashboard",
     icon: <Layout className="w-5 h-5" />,
+    route: "/dashboard",
   },
+
+  {
+    id: "system-configuration",
+    label: "System Configuration",
+    icon: <MonitorCog className="w-5 h-5" />,
+    children: [
+      {
+        id: "service-configuration",
+        label: "Service Configuration",
+        icon: null,
+        children: [
+          {
+            id: "service-area",
+            label: "Service Areas",
+            icon: null,
+            route: "/service-area",
+          },
+          {
+            id: "vehicle-types",
+            label: "Vehicle Types",
+            icon: null,
+            route: "/vehicle-types",
+          },
+          {
+            id: "types-of-delivery",
+            label: "Delivery Types",
+            icon: null,
+            route: "/types-of-delivery",
+          },
+          {
+            id: "policy-management",
+            label: "Policies",
+            icon: null,
+            route: "/policy-management",
+          },
+        ],
+      },
+      {
+        id: "revenue-configuration",
+        label: "Revenue Configuration",
+        icon: null,
+        children: [
+          {
+            id: "platform-fee",
+            label: "Commission Rules (platform fees)",
+            icon: null,
+            route: "/platform-fee",
+          },
+        ],
+      },
+      {
+        id: "driver-configuration",
+        label: "Driver Configuration",
+        icon: null,
+        children: [
+          {
+            id: "driver-order-competition",
+            label: "Driver Competition Rules",
+            icon: null,
+            route: "/driver-order-competition",
+          },
+          {
+            id: "quiz",
+            label: "Quiz",
+            icon: null,
+            route: "/quiz",
+          },
+        ],
+      },
+      {
+        id: "customer-configuration",
+        label: "Customer Configuration",
+        icon: null,
+        children: [
+          {
+            id: "customer-order-confirmation",
+            label: "Order Confirmation Rules",
+            icon: null,
+            route: "/customer-order-confirmation",
+          },
+        ],
+      },
+      {
+        id: "incentive-rewards-configuration",
+        label: "Incentive & Rewards Configuration",
+        icon: null,
+        children: [
+          {
+            id: "incentive-management",
+            label: "Driver Incentives (performance bonus rules)",
+            icon: null,
+            route: "/incentive-management",
+          },
+          {
+            id: "coin-system",
+            label: "Customer Rewards (coins management)",
+            icon: null,
+            route: "/coin-system",
+          },
+          {
+            id: "promocode",
+            label: "Promo Codes",
+            icon: null,
+            route: "/promocode",
+          },
+        ],
+      },
+    ],
+  },
+
   {
     id: "admin",
-    label: "Admin",
+    label: "Administration",
     icon: <Shield className="w-5 h-5" />,
     children: [
       {
         id: "create-edit-role",
-        label: "Create/Edit & Delete Role",
+        label: "Roles & Permissions",
         icon: null,
-      },
-      {
-        id: "add-remove-permission",
-        label: "Add/Remove Permission",
-        icon: null,
+        route: "/create-edit-role",
       },
     ],
   },
+
   {
     id: "users",
     label: "Users",
@@ -60,21 +162,19 @@ export const menuItems: MenuItem[] = [
     children: [
       {
         id: "users-app",
-        label: "User List (Mobile App)",
+        label: "Web Users",
         icon: null,
+        route: "/users-app",
       },
       {
         id: "users-web-portal",
-        label: "User List (Web Portal)",
+        label: "Mobile Users",
         icon: null,
-      },
-      {
-        id: "add-new-user",
-        label: "Add new User",
-        icon: null,
+        route: "/users-web-portal",
       },
     ],
   },
+
   {
     id: "drivers",
     label: "Drivers",
@@ -82,21 +182,19 @@ export const menuItems: MenuItem[] = [
     children: [
       {
         id: "driver-list",
-        label: "Driver list",
+        label: "Driver",
         icon: null,
-      },
-      {
-        id: "add-new-driver",
-        label: "Add new Driver",
-        icon: null,
+        route: "/driver-list",
       },
       {
         id: "new-join-request",
-        label: "New Join Request",
+        label: "Join Requests",
         icon: null,
+        route: "/new-join-request",
       },
     ],
   },
+
   {
     id: "orders",
     label: "Order",
@@ -104,31 +202,65 @@ export const menuItems: MenuItem[] = [
     children: [
       {
         id: "order-list",
-        label: "Order list",
+        label: "Orders",
         icon: null,
+        route: "/order-list",
       },
     ],
   },
+
   {
-    id: "support",
-    label: "Support & Dispute",
-    icon: <Heart className="w-5 h-5" />,
+    id: "wallet",
+    label: "Wallets & Payments",
+    icon: <Wallet className="w-5 h-5" />,
+    children: [
+      {
+        id: "wallet-user",
+        label: "User wallets",
+        icon: null,
+        route: "/wallet-user",
+      },
+      {
+        id: "wallet-driver",
+        label: "Driver wallets",
+        icon: null,
+        route: "/wallet-driver",
+      },
+    ],
   },
+
   {
-    id: "payments",
-    label: "Payments & Transactions",
-    icon: <DollarSign className="w-5 h-5" />,
+    id: "finance-reporting",
+    label: "Finance Reporting",
+    icon: <BarChart className="w-5 h-5" />,
+    children: [
+      {
+        id: "coins",
+        label: "Customer Rewards & Redemptions",
+        icon: null,
+        route: "/coins",
+      },
+      {
+        id: "incentives",
+        label: "Driver Incentive Tracking",
+        icon: null,
+        route: "/incentives",
+      },
+      {
+        id: "kpi",
+        label: "Revenue & Driver Performance",
+        icon: null,
+        route: "/kpi",
+      },
+      {
+        id: "payments",
+        label: "Transactions (revenue, commissions, refunds)",
+        icon: null,
+        route: "/payments",
+      },
+    ],
   },
-  {
-    id: "live-map",
-    label: "Live Map / Fleet Tracking",
-    icon: <Map className="w-5 h-5" />,
-  },
-  {
-    id: "notifications",
-    label: "Notifications & Communication",
-    icon: <Bell className="w-5 h-5" />,
-  },
+
   {
     id: "reports",
     label: "Reports & Analytics",
@@ -138,128 +270,139 @@ export const menuItems: MenuItem[] = [
         id: "report-orders",
         label: "Orders",
         icon: null,
+        route: "/report-orders",
+      },
+      {
+        id: "customer-report",
+        label: "Customer Reports",
+        icon: null,
+        route: "/customer-report",
       },
       {
         id: "driver-performance",
         label: "Driver Performance",
         icon: null,
-      },
-      {
-        id: "customer-report",
-        label: "Customer Report",
-        icon: null,
-      },
-      {
-        id: "kpi",
-        label: "KPI's",
-        icon: null,
-      },
-      {
-        id: "coins",
-        label: "Coins",
-        icon: null,
-      },
-      {
-        id: "incentives",
-        label: "Incentives",
-        icon: null,
+        route: "/driver-performance",
       },
     ],
   },
+
   {
-    id: "vehicle-management",
-    label: "Vehicle Type & Pricing Model Management",
-    icon: <Bike className="w-5 h-5" />,
+    id: "live-fleet-tracking",
+    label: "Live Fleet Tracking",
+    icon: <Map className="w-5 h-5" />,
     children: [
-      { id: "service-area", label: "Service area", icon: null },
-      { id: "vehicle-types", label: "Vehicle types", icon: null },
-      { id: "policy-management", label: "Policy Management", icon: null },
-      { id: "types-of-delivery", label: "Types of Delivery", icon: null },
-    ],
-  },
-  {
-    id: "wallet",
-    label: "Wallet",
-    icon: <Wallet className="w-5 h-5" />,
-    children: [
-      { id: "wallet-user", label: "User", icon: null },
-      { id: "wallet-driver", label: "Driver", icon: null },
       {
-        id: "incentive-management",
-        label: "Incentive Management",
+        id: "live-map",
+        label: "Live Map",
         icon: null,
+        route: "/live-map",
       },
     ],
   },
+
   {
-    id: "coin-system",
-    label: "Coin System",
-    icon: <CircleDollarSign className="w-5 h-5" />,
-  },
-  {
-    id: "quiz",
-    label: "Quiz",
+    id: "support",
+    label: "Support & Communication",
     icon: <HelpCircle className="w-5 h-5" />,
+    children: [
+      {
+        id: "contactinfo",
+        label: "Contact Info",
+        icon: null,
+        route: "/contactinfo",
+      },
+      {
+        id: "support-dispute",
+        label: "Support & Dispute",
+        icon: null,
+        route: "/support-dispute",
+      },
+      {
+        id: "dashboard-chat",
+        label: "Service Chat",
+        icon: null,
+        route: "/dashboard-chat",
+      },
+      {
+        id: "notifications",
+        label: "Notifications & Communication",
+        icon: null,
+        route: "/notifications",
+      },
+    ],
   },
+
   {
-    id: "advertisement",
-    label: "Advertisement",
-    icon: <Tv className="w-5 h-5" />,
-  },
-  {
-    id: "platform-fee",
-    label: "Platform fee",
+    id: "marketing",
+    label: "Marketing & Engagement",
     icon: <Tag className="w-5 h-5" />,
+    children: [
+      {
+        id: "advertisement",
+        label: "Advertisements",
+        icon: null,
+        route: "/advertisement",
+      },
+      {
+        id: "dashboard-popup",
+        label: "Dashboard Popups",
+        icon: null,
+        route: "/dashboard-popup",
+      },
+    ],
   },
+
   {
     id: "content-management",
     label: "Content Management",
     icon: <FileText className="w-5 h-5" />,
-    // children: [
-    //   { id: "content-management-user", label: "User", icon: null },
-    //   { id: "content-management-driver", label: "Driver", icon: null },
-    // ],
-  },
-  {
-    id: "driver-order-competition",
-    label: "Driver Order Competition",
-    icon: <Users className="w-5 h-5" />,
-  },
-  {
-    id: "customer-order-confirmation",
-    label: "Customer Order Confirmation",
-    icon: <CheckCircle className="w-5 h-5" />,
-  },
-  {
-    id: "additional",
-    label: "Additional Services",
-    icon: <PlusCircle className="w-5 h-5" />,
     children: [
       {
-        id: "additional-service",
-        label: "Additional Service (Order)",
+        id: "content-management-user",
+        label: "Mobile Content",
         icon: null,
+        route: "/content-management-user",
       },
-      { id: "dashboard-popup", label: "Dashboard Popup", icon: null },
-      { id: "contactinfo", label: "Contact Info", icon: null },
-      { id: "promocode", label: "Promo Code", icon: null },
-      { id: "dashboard-chat", label: "Service Chat", icon: null },
     ],
   },
+
   {
     id: "order-placement",
-    label: "Order Placement",
+    label: "Order Management",
     icon: <LayoutGrid className="w-5 h-5" />,
     children: [
-      { id: "order", label: "Order", icon: null },
-      { id: "live-order-tracking", label: "Live Order Tracking", icon: null },
-      { id: "order-history", label: "Order History", icon: null },
-      { id: "payment-options", label: "Payment Options", icon: null },
+      {
+        id: "order",
+        label: "Order Placement",
+        icon: null,
+        route: "/order",
+      },
+      {
+        id: "live-order-tracking",
+        label: "Live Order Tracking",
+        icon: null,
+        route: "/live-order-tracking",
+      },
+      {
+        id: "order-history",
+        label: "Order History",
+        icon: null,
+        route: "/order-history",
+      },
+      {
+        id: "payment-options",
+        label: "Payment Options",
+        icon: null,
+        route: "/payment-options",
+      },
     ],
   },
+
   {
     id: "login",
     label: "Logout",
     icon: <LogOut className="w-5 h-5" />,
+    route: "/login",
   },
 ];
