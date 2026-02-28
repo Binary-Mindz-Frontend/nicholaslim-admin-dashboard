@@ -207,28 +207,24 @@ export function Sidebar() {
     setIsSidebarOpen(false);
   };
 
-  // Recursive function to check if any descendant is active
-  const hasActiveDescendant = (item: MenuItem): boolean => {
-    if (item.id === activeItem) return true;
-    if (item.children) {
-      return item.children.some((child) => {
-        if (child.id === activeItem) return true;
-        if (child.children) {
-          return child.children.some((nested) => nested.id === activeItem);
-        }
-        return false;
-      });
-    }
-    return false;
-  };
-
+  // Recursive function to render menu items with proper nesting
   const renderMenuItems = (items: MenuItem[], level: number = 0) => {
     return items.map((item) => {
       const isExpanded = expandedItems.has(item.id);
       const hasChildren = !!(item.children && item.children.length > 0);
+      const isItemActive = item.id === activeItem;
       const isLogoutButton = item.id === "login";
 
-      const isActiveOrHasActiveDescendant = hasActiveDescendant(item);
+      // Check if any child is active (for highlighting parent)
+      const isChildActive =
+        hasChildren &&
+        item.children?.some((child) => {
+          if (child.id === activeItem) return true;
+          if (child.children) {
+            return child.children.some((nested) => nested.id === activeItem);
+          }
+          return false;
+        });
 
       return (
         <div key={item.id} className="mb-1">
@@ -238,15 +234,15 @@ export function Sidebar() {
             className={`w-full flex items-center cursor-pointer gap-3 px-4 py-2.5 rounded-lg font-medium transition-colors relative group ${
               isLogoutButton
                 ? "bg-red-50 hover:bg-red-100 text-red-600"
-                : isActiveOrHasActiveDescendant
-                  ? "bg-green-600 text-white hover:bg-green-700" // Green highlight for active items and their parents
+                : isItemActive || isChildActive
+                  ? "bg-primary text-slate-900"
                   : "text-slate-700 hover:bg-slate-100"
             } ${level > 0 ? "ml-4" : ""}`}
           >
-            {isActiveOrHasActiveDescendant &&
+            {(isItemActive || isChildActive) &&
               level === 0 &&
               !isLogoutButton && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-700 rounded-l-lg" />
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-lg" />
               )}
 
             {isLogoutButton && level === 0 && (
@@ -254,7 +250,7 @@ export function Sidebar() {
             )}
 
             <span
-              className={`shrink-0 ${isLogoutButton ? "text-red-600" : isActiveOrHasActiveDescendant ? "text-white" : ""}`}
+              className={`shrink-0 ${isLogoutButton ? "text-red-600" : ""}`}
             >
               {item.icon}
             </span>
@@ -268,7 +264,7 @@ export function Sidebar() {
               <ChevronDown
                 className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
                   isExpanded ? "rotate-180" : ""
-                } ${isActiveOrHasActiveDescendant ? "text-white" : ""}`}
+                }`}
               />
             )}
           </button>
@@ -298,16 +294,14 @@ export function Sidebar() {
                       }
                       className={`w-full cursor-pointer flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ml-4 ${
                         isChildActive
-                          ? "bg-green-100 text-green-700 font-medium border-l-2 border-green-600" // Light green for active leaf
+                          ? "text-yellow-600 font-medium bg-yellow-50"
                           : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                       }`}
                     >
                       {child.icon ? (
                         <span className="shrink-0">{child.icon}</span>
                       ) : (
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${isChildActive ? "bg-green-600" : "bg-current"}`}
-                        ></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                       )}
                       <span>{child.label}</span>
                     </button>
