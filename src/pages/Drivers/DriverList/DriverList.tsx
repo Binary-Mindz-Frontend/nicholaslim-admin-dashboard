@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useDriverColumns } from "./DriverTable/DriverTable";
 import DriverFilter from "@/components/Drivers/DriverFilter/DriverFilter";
 import TablePagination from "@/pages/Dashboard/_components/TablePagination";
+import { Link } from "react-router-dom";
 
 export default function DriverList() {
   // Direct filter states (no temporary states needed)
@@ -114,6 +115,15 @@ export default function DriverList() {
           <p className="text-lg text-gray-500">No drivers found</p>
         </div>
       )}
+
+      <div className="flex justify-center my-6">
+        <Link
+          to="/add-new-driver"
+          className="px-3 sm:px-6 py-3 bg-yellow-400 cursor-pointer sm:font-bold hover:bg-yellow-500 text-black rounded transition-colors"
+        >
+          Add Driver
+        </Link>
+      </div>
     </div>
   );
 }

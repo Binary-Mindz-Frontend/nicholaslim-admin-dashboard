@@ -2,8 +2,9 @@ import { useState } from "react";
 import FilterSection from "@/components/Users/FilterSection/FilterSection";
 import { useUserColumns } from "./userWebTable/userWebTable";
 import CustomTable from "@/components/Dashboard/DataTable/DataTable";
-import TablePagination from "@/pages/Dashboard/_components/TablePagination";
+import UsersTablePagination from "../_components/UsersTablePagination";
 import { Link } from "react-router-dom";
+import { Plus } from "lucide-react";
 
 export default function UsersPage() {
   const [dateFilter, setDateFilter] = useState("");
@@ -11,7 +12,13 @@ export default function UsersPage() {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Reset to page 1 when items per page changes
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   // Reset all filters and go back to page 1
   const handleResetFilter = () => {
@@ -40,10 +47,17 @@ export default function UsersPage() {
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
       <div className="w-full mx-auto space-y-4 mb-6">
         {/* Header Section */}
-        <div className="pt-2 sm:py-2">
+        <div className="pt-2 sm:py-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h1 className="text-black text-2xl font-bold">
             Web User Management
           </h1>
+          <Link
+            to="/add-new-user"
+            className="flex items-center gap-2 px-3 sm:px-6 py-3 bg-yellow-400 cursor-pointer sm:font-bold hover:bg-yellow-500 text-black rounded transition-colors"
+          >
+            <Plus size={18} />
+            Add User
+          </Link>
         </div>
 
         {/* Category List Section */}
@@ -72,22 +86,14 @@ export default function UsersPage() {
       <CustomTable columns={userColumns} data={users} />
 
       {/* Pagination Component */}
-      <TablePagination
+      <UsersTablePagination
         currentPage={currentPage}
         totalItems={totalItems}
         itemsPerPage={itemsPerPage}
         onPageChange={setCurrentPage}
+        onItemsPerPageChange={handleItemsPerPageChange}
       />
 
-      {/* Add New User Button */}
-      <div className="flex justify-center my-6">
-        <Link
-          to="/add-new-user"
-          className="px-3 sm:px-6 py-3 bg-yellow-400 cursor-pointer sm:font-bold hover:bg-yellow-500 text-black rounded transition-colors"
-        >
-          Add User
-        </Link>
-      </div>
     </div>
   );
 }
