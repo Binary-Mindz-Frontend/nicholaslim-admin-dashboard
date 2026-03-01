@@ -9,6 +9,7 @@ import toast from "react-hot-toast"; // Import toast
 interface UseUserColumnsParams {
   status?: string;
   dateFilter?: string;
+  search?: string;
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -22,6 +23,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
   const { data: usersData, isLoading, isError } = useGetOnlyUserTypesQuery({
     status: params.status || "",
     dateFilter: params.dateFilter || "",
+    search: params.search || "",
     page: params.page || 1,
     limit: params.limit || 10,
     sortBy: params.sortBy || "createdAt",
@@ -110,7 +112,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
         return <span>{contact}</span>;
       },
     },
-     {
+    {
       header: "Registration Source",
       cell: (row: TUser) => {
         if (row.regi_status === "DIRECT_SIGNIN") {
@@ -134,7 +136,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
       header: "Joining Date",
       accessor: "joiningDate",
     },
-   
+
     {
       header: "Active/Inactive",
       cell: (row: TUser) => (

@@ -79,6 +79,7 @@ interface UseDriverColumnsParams {
   raiderId?: number;
   raider_name?: string;
   raiderVerificationFromAdmin?: string;
+  search?: string;
 }
 
 export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
@@ -100,6 +101,9 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
   }
   if (params.raiderVerificationFromAdmin) {
     queryParams.raiderVerificationFromAdmin = params.raiderVerificationFromAdmin;
+  }
+  if (params.search) {
+    queryParams.search = params.search;
   }
 
   // Fetch the data using useGetRiderProfilesQuery hook with filtered params
@@ -191,13 +195,12 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       accessor: "raider_verificationFromAdmin",
       cell: (row) => (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            row.raider_verificationFromAdmin === "APPROVED"
+          className={`px-3 py-1 rounded-full text-xs font-medium ${row.raider_verificationFromAdmin === "APPROVED"
               ? "bg-green-100 text-green-800"
               : row.raider_verificationFromAdmin === "PENDING"
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-red-100 text-red-800"
-          }`}
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-red-100 text-red-800"
+            }`}
         >
           {row.raider_verificationFromAdmin}
         </span>
@@ -208,11 +211,10 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       accessor: "LoginType",
       cell: (row) => (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            row.LoginType === "ADMIN_SIGNIN"
+          className={`px-3 py-1 rounded-full text-xs font-medium ${row.LoginType === "ADMIN_SIGNIN"
               ? "bg-yellow-300 text-black"
               : "bg-gray-300 text-black"
-          }`}
+            }`}
         >
           {row.LoginType === "ADMIN_SIGNIN" ? "Assigned by Admin" : "Self Registered"}
         </span>
@@ -242,7 +244,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
     {
       header: "Action",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      cell: (row) => <DriverAction row={row as any} onDeleteSuccess={() => {}} />,
+      cell: (row) => <DriverAction row={row as any} onDeleteSuccess={() => { }} />,
     },
   ];
 

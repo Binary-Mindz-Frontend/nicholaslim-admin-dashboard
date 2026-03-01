@@ -1,11 +1,11 @@
 import { useState } from "react";
 import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 import { useRequestColumns } from "./RequestTable/RequestTable";
-import TablePagination from "@/pages/Dashboard/_components/TablePagination";
+import AdminTablePagination from "@/components/Shared/CustomPagination/AdminTablePagination";
 
 export default function NewJoinRequest() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [filters, setFilters] = useState({
     raiderId: undefined,
     raider_name: "",
@@ -18,6 +18,12 @@ export default function NewJoinRequest() {
     raiderId: filters.raiderId,
     raider_name: filters.raider_name || undefined,
   });
+
+  // Reset to page 1 when items per page changes
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
@@ -38,17 +44,19 @@ export default function NewJoinRequest() {
         </div> */}
 
         {/* Optional: Search/Filter Section */}
-        <div className="flex gap-4 items-center">
-          <input
-            type="text"
-            placeholder="Search by name..."
-            value={filters.raider_name}
-            onChange={(e) => {
-              setFilters({ ...filters, raider_name: e.target.value });
-              setCurrentPage(1); // Reset to page 1 on search
-            }}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+        <div className="flex gap-4 items-center mb-2">
+          <div className="px-4 py-1 border border-yellow-400 rounded-md w-full sm:w-[48%] md:w-auto bg-white">
+            <input
+              type="text"
+              placeholder="Search by name..."
+              value={filters.raider_name}
+              onChange={(e) => {
+                setFilters({ ...filters, raider_name: e.target.value });
+                setCurrentPage(1); // Reset to page 1 on search
+              }}
+              className="w-full px-2 py-1 border-none rounded-md focus:outline-none"
+            />
+          </div>
         </div>
       </div>
 
@@ -65,14 +73,12 @@ export default function NewJoinRequest() {
         <>
           <CustomTable columns={requestColumns} data={requests} />
 
-          <TablePagination
+          <AdminTablePagination
             currentPage={currentPage}
             totalItems={totalItems}
             itemsPerPage={itemsPerPage}
-            onPageChange={(page: number) => {
-              console.log("Page changed to:", page);
-              setCurrentPage(page);
-            }}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={handleItemsPerPageChange}
           />
         </>
       )}

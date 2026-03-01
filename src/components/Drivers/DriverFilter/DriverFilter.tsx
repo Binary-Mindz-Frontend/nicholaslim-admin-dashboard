@@ -18,21 +18,37 @@ interface FilterSectionProps {
   verificationStatus: string | undefined;
   setVerificationStatus: (value: string | undefined) => void;
 
+  search: string;
+  setSearch: (value: string) => void;
+
   handleResetFilter: () => void;
 }
 
 export default function DriverFilter({
   raiderId,
   setRaiderId,
-  raiderName,
-  setRaiderName,
+  // raiderName,
+  // setRaiderName,
   verificationStatus,
   setVerificationStatus,
+  search,
+  setSearch,
   handleResetFilter,
 }: FilterSectionProps) {
   return (
     <div className="w-full bg-white rounded-md px-1 py-1">
       <div className="flex flex-wrap items-center gap-3">
+
+        {/* Search Input */}
+        <div className="px-4 py-1 border border-yellow-400 rounded-md w-full sm:w-[48%] md:w-auto">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by Name or Email"
+            className="w-full px-2 py-1 border-none rounded-md focus:outline-none"
+          />
+        </div>
 
         {/* Filter By */}
         <div
@@ -55,7 +71,7 @@ export default function DriverFilter({
         </div>
 
         {/* Raider Name Input */}
-        <div className="px-4 py-1 border border-yellow-400 rounded-md w-full sm:w-[48%] md:w-auto">
+        {/* <div className="px-4 py-1 border border-yellow-400 rounded-md w-full sm:w-[48%] md:w-auto">
           <input
             type="text"
             value={raiderName}
@@ -63,7 +79,7 @@ export default function DriverFilter({
             placeholder="Enter Raider Name"
             className="w-full px-2 py-1 border-none rounded-md focus:outline-none"
           />
-        </div>
+        </div> */}
 
         {/* Verification Status Dropdown */}
         <div

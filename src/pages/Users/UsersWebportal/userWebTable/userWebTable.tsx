@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import {  useGetWebUserTypesQuery, useToggleUserActiveStatusMutation } from "@/redux/features/usersTypes/usersTypesApi";
+import { useGetWebUserTypesQuery, useToggleUserActiveStatusMutation } from "@/redux/features/usersTypes/usersTypesApi";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Switch } from "@/components/ui/switch";
 
@@ -26,6 +26,7 @@ export type TUser = {
 interface UseUserColumnsParams {
   status?: string;
   dateFilter?: string;
+  search?: string;
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -39,6 +40,7 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
   const { data: usersData, isLoading, isError } = useGetWebUserTypesQuery({
     status: params.status || "",
     dateFilter: params.dateFilter || "",
+    search: params.search || "",
     page: params.page || 1,
     limit: params.limit || 10,
     sortBy: params.sortBy || "createdAt",
@@ -111,23 +113,23 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
       ),
     },
     {
-  header: "Role",
-  cell: (row: TUser) => {
-    const roles = Array.isArray(row.role) ? row.role : [row.role];
-    return (
-      <div className="flex flex-wrap gap-1">
-        {roles.map((r, index) => (
-          <span
-            key={index}
-            className="px-2 py-0.5 uppercase rounded-full text-xs font-medium text-gray-700"
-          >
-            {r}
-          </span>
-        ))}
-      </div>
-    );
-  },
-},
+      header: "Role",
+      cell: (row: TUser) => {
+        const roles = Array.isArray(row.role) ? row.role : [row.role];
+        return (
+          <div className="flex flex-wrap gap-1">
+            {roles.map((r, index) => (
+              <span
+                key={index}
+                className="px-2 py-0.5 uppercase rounded-full text-xs font-medium text-gray-700"
+              >
+                {r}
+              </span>
+            ))}
+          </div>
+        );
+      },
+    },
     {
       header: "Email Address",
       accessor: "contactEmail",
@@ -146,14 +148,14 @@ export const useUserColumns = (params: UseUserColumnsParams = {}) => {
       },
     },
     {
-  header: "Registration Source",
-  cell: (row: TUser) => {
-    if (row.regi_status === "ADMIN_SIGNIN") {
-      return <span>Web Admin</span>;
-    }
-    return <span></span>;
-  },
-},
+      header: "Registration Source",
+      cell: (row: TUser) => {
+        if (row.regi_status === "ADMIN_SIGNIN") {
+          return <span>Web Admin</span>;
+        }
+        return <span></span>;
+      },
+    },
 
     {
       header: "Total Order",
