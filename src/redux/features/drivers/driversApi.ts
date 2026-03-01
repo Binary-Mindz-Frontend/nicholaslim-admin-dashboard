@@ -49,6 +49,7 @@ const driversApi = baseApi.injectEndpoints({
             query: ({
                 raiderId,
                 raider_name,
+                search,
                 page = 1,
                 limit = 10,
             }) => {
@@ -60,6 +61,9 @@ const driversApi = baseApi.injectEndpoints({
                 }
                 if (raiderId) {
                     url += `&raiderId=${raiderId}`;
+                }
+                if (search) {
+                    url += `&search=${encodeURIComponent(search)}`;
                 }
 
                 url += `&raider_verificationFromAdmin=APPROVED`;
@@ -78,6 +82,7 @@ const driversApi = baseApi.injectEndpoints({
                 raider_name,
                 raiderVerificationFromAdmin,
                 loginType,
+                search,
                 page = 1,
                 limit = 10,
             }) => {
@@ -92,6 +97,7 @@ const driversApi = baseApi.injectEndpoints({
                 if (raider_name) params.append("raider_name", raider_name);
                 if (raiderVerificationFromAdmin) params.append("raider_verificationFromAdmin", raiderVerificationFromAdmin);
                 if (loginType) params.append("loginType", loginType);
+                if (search) params.append("search", search);
 
                 return {
                     url: `/raider-profile/rider-profiles?${params.toString()}`,
