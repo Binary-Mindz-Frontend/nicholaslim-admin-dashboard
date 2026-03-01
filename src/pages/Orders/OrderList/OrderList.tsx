@@ -3,10 +3,11 @@ import { useState } from "react";
 import { useOrderColumns } from "./OrderTable/OrderTable";
 import TrackOrderSection from "./TrackOrderSection/TrackOrderSection";
 import OrderFilter from "@/components/Orders/OrderFilter/OrderFilter";
-import TablePagination from "@/pages/Dashboard/_components/TablePagination";
+import AdminTablePagination from "@/components/Shared/CustomPagination/AdminTablePagination";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { format } from "date-fns";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function OrderList() {
   // Filter states
@@ -15,6 +16,7 @@ export default function OrderList() {
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -79,18 +81,13 @@ export default function OrderList() {
     status,
     startDate: formatDateForAPI(startDate),
     endDate: formatDateForAPI(endDate),
-    search,
+    search: debouncedSearch,
     page: currentPage,
     limit: itemsPerPage,
   });
 
   // Handle loading state
-  if (isLoading)
-    return (
-      <div className="flex justify-center items-center h-64">
-        <p className="text-lg">Loading orders...</p>
-      </div>
-    );
+  // if (isLoading) ... (Handled inline below)
 
   // Handle error state
   if (isError)
@@ -132,26 +129,26 @@ export default function OrderList() {
           setEndDate={handleEndDateChange}
           search={search}
           setSearch={handleSearchChange}
-          itemsPerPage={itemsPerPage}
-          setItemsPerPage={handleItemsPerPageChange}
           handleResetFilter={handleResetFilter}
-          totalItems={totalItems}
         />
       </div>
 
       {/* Custom Table Section */}
-      {orders.length > 0 ? (
+      {isLoading && orders.length === 0 ? (
+        <div className="flex justify-center items-center h-64 bg-white rounded-lg border border-gray-100">
+          <p className="text-lg">Loading orders...</p>
+        </div>
+      ) : orders.length > 0 ? (
         <>
           <CustomTable columns={orderColumns} data={orders} />
 
           {/* Pagination Component */}
-          <TablePagination
+          <AdminTablePagination
             currentPage={currentPage}
             totalItems={totalItems}
             itemsPerPage={itemsPerPage}
-            onPageChange={(page) => {
-              setCurrentPage(page);
-            }}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={handleItemsPerPageChange}
           />
         </>
       ) : (

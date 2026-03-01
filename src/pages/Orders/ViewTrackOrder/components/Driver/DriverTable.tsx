@@ -83,6 +83,7 @@ interface UseDriverColumnsParams {
   raiderId?: number;
   raider_name?: string;
   raiderVerificationFromAdmin?: string;
+  search?: string;
 }
 
 export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
@@ -104,6 +105,9 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
   if (params.raider_name) {
     queryParams.raider_name = params.raider_name;
   }
+  if (params.search) {
+    queryParams.search = params.search;
+  }
 
   // Fetch the data using useGetRiderProfilesQuery hook with filtered params
   const { data, isLoading, isError } = useGetApprovedRiderProfilesQuery(queryParams);
@@ -122,33 +126,33 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
 
 
 
- const handleAssignClick = async (riderId: number) => {
-  if (!orderId) return toast.error("Order ID not found");
+  const handleAssignClick = async (riderId: number) => {
+    if (!orderId) return toast.error("Order ID not found");
 
-  setAssigningDriverId(riderId);
+    setAssigningDriverId(riderId);
 
-  try {
-    const response = await assignDriver({ orderId, riderId }).unwrap();
+    try {
+      const response = await assignDriver({ orderId, riderId }).unwrap();
 
-    if (response.success) {
-      toast.success("Driver assigned successfully!");
-    } else {
-     toast.error(response?.error?.message || response?.message || "Failed to assign driver");
+      if (response.success) {
+        toast.success("Driver assigned successfully!");
+      } else {
+        toast.error(response?.error?.message || response?.message || "Failed to assign driver");
+      }
+    } catch (error: any) {
+
+      const errorMessage =
+        error?.data?.error?.message ||
+        error?.data?.message ||
+        error?.error?.message ||
+        error?.message ||
+        "Failed to assign driver";
+
+      toast.error(errorMessage);
+    } finally {
+      setAssigningDriverId(null);
     }
-  } catch (error: any) {
- 
-  const errorMessage =
-    error?.data?.error?.message ||
-    error?.data?.message ||             
-    error?.error?.message ||            
-    error?.message ||                   
-    "Failed to assign driver";
-
-  toast.error(errorMessage);
-  } finally {
-    setAssigningDriverId(null);
-  }
-};
+  };
 
 
   // Define columns for the driver data
@@ -231,10 +235,10 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       cell: (row) => (
         <span
           className={`px-3 py-1 rounded-full text-xs font-medium ${row.raider_verificationFromAdmin === "APPROVED"
-              ? "bg-green-100 text-green-800"
-              : row.raider_verificationFromAdmin === "PENDING"
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-red-100 text-red-800"
+            ? "bg-green-100 text-green-800"
+            : row.raider_verificationFromAdmin === "PENDING"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-red-100 text-red-800"
             }`}
         >
           {row.raider_verificationFromAdmin}
@@ -247,8 +251,8 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       cell: (row) => (
         <span
           className={`px-3 py-1 rounded-full text-xs font-medium ${row.LoginType === "ADMIN_SIGNIN"
-              ? "bg-yellow-300 text-black"
-              : "bg-gray-300 text-black"
+            ? "bg-yellow-300 text-black"
+            : "bg-gray-300 text-black"
             }`}
         >
           {row.LoginType === "ADMIN_SIGNIN" ? "Assigned by Admin" : "Self Registered"}

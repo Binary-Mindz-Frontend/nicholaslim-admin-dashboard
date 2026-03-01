@@ -10,6 +10,7 @@ export default function DriverListTrack() {
   const [raiderId, setRaiderId] = useState<number | undefined>();
   const [raiderName, setRaiderName] = useState("");
   const [verificationStatus, setVerificationStatus] = useState<string | undefined>();
+  const [search, setSearch] = useState("");
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -20,6 +21,7 @@ export default function DriverListTrack() {
     setRaiderId(undefined);
     setRaiderName("");
     setVerificationStatus(undefined);
+    setSearch("");
     setCurrentPage(1); // Reset to page 1 when filters are reset
   };
 
@@ -39,11 +41,17 @@ export default function DriverListTrack() {
     setCurrentPage(1);
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
   // Get the driver columns and data with pagination support
   const { driverColumns, drivers, isLoading, isError, totalItems } = useDriverColumns({
     raiderId,
     raider_name: raiderName,
     raiderVerificationFromAdmin: verificationStatus,
+    search,
     page: currentPage,
     limit: itemsPerPage,
   });
@@ -88,6 +96,8 @@ export default function DriverListTrack() {
           setRaiderName={handleRaiderNameChange}
           verificationStatus={verificationStatus}
           setVerificationStatus={handleVerificationStatusChange}
+          search={search}
+          setSearch={handleSearchChange}
           handleResetFilter={handleResetFilter}
         />
       </div>

@@ -1,4 +1,4 @@
-import { Filter, Repeat, Search } from "lucide-react";
+import { Filter, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -7,7 +7,6 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Popover,
@@ -30,10 +29,7 @@ interface FilterSectionProps {
   setEndDate: (value: Date | undefined) => void;
   search: string;
   setSearch: (value: string) => void;
-  itemsPerPage: number;
-  setItemsPerPage: (value: number) => void;
   handleResetFilter: () => void;
-  totalItems?: number;
 }
 
 export default function OrderFilter({
@@ -47,29 +43,26 @@ export default function OrderFilter({
   setEndDate,
   search,
   setSearch,
-  itemsPerPage,
-  setItemsPerPage,
   handleResetFilter,
 }: FilterSectionProps) {
   return (
-    <div className="w-full bg-white rounded-md p-4 space-y-4">
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <Input
-          placeholder="Search by Order ID or User Name..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 pr-4 py-2 w-full border border-yellow-400 rounded-md focus:ring-yellow-400 focus:border-yellow-400"
-        />
-      </div>
-
+    <div className="w-full bg-white rounded-md p-4">
       {/* Filter Row */}
       <div className="flex flex-wrap items-center gap-3">
+        {/* Search Field */}
+        <div className="flex items-center gap-2 px-4 py-3 border border-yellow-400 rounded-md w-full sm:w-[48%] md:w-[250px]">
+          <input
+            type="text"
+            placeholder="Search by Order ID or User Name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full text-sm outline-none bg-transparent"
+          />
+        </div>
         {/* Filter By Label */}
-        <div className="flex items-center gap-2 px-4 py-2 border border-yellow-400 rounded-md bg-yellow-50">
-          <Filter className="h-4 w-4 text-yellow-600" />
-          <span className="text-sm font-medium whitespace-nowrap">
+        <div className="flex items-center gap-2 px-4 py-2 border border-yellow-400 rounded-md ">
+          <Filter className="h-4 w-4 " />
+          <span className="text-sm py-1 font-medium whitespace-nowrap">
             Filter By
           </span>
         </div>
@@ -184,35 +177,7 @@ export default function OrderFilter({
           </div>
         </div>
 
-        {/* Items Per Page Dropdown */}
-        <div className="flex items-center gap-2 px-4 py-1 border border-yellow-400 rounded-md">
-          <span className="text-sm text-gray-600 whitespace-nowrap">Show:</span>
-          <Select
-            value={itemsPerPage.toString()}
-            onValueChange={(value) => setItemsPerPage(Number(value))}
-          >
-            <SelectTrigger className="w-20 border-none shadow-none px-0 h-8 focus:ring-0">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-            </SelectContent>
-          </Select>
-          <span className="text-sm text-gray-600 whitespace-nowrap">
-            entries
-          </span>
-        </div>
 
-        {/* Total Items Badge */}
-        {/* <div className="flex items-center gap-2 px-4 py-1 bg-gray-100 rounded-md">
-          <span className="text-sm font-medium">Total:</span>
-          <span className="text-sm font-bold text-yellow-600">
-            {totalItems}
-          </span>
-        </div> */}
 
         {/* Reset Button */}
         <div className="flex-1 min-w-[120px]">
