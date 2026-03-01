@@ -16,6 +16,7 @@ const driversApi = baseApi.injectEndpoints({
                 raiderId,
                 raider_name,
                 raiderVerificationFromAdmin,
+                search,
                 page = 1,
                 limit = 10,
             }) => {
@@ -31,6 +32,9 @@ const driversApi = baseApi.injectEndpoints({
                 }
                 if (raiderVerificationFromAdmin) {
                     url += `&raider_verificationFromAdmin=${raiderVerificationFromAdmin}`;
+                }
+                if (search) {
+                    url += `&search=${encodeURIComponent(search)}`;
                 }
 
                 return {
