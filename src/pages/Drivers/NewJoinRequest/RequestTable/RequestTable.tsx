@@ -75,7 +75,7 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
   // Fetch the data using useGetGoinReqestRiderProfilesQuery hook with filtered params
   const { data, isLoading, isError } = useGetGoinReqestRiderProfilesQuery(queryParams);
 
-console.log("join reques data ", data?.data?.data); 
+// console.log("join reques data ", data?.data?.data); 
 
   useEffect(() => {
     if (data?.data?.data) {
