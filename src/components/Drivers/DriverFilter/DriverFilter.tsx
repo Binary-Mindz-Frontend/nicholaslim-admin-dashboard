@@ -22,6 +22,7 @@ interface FilterSectionProps {
   setSearch: (value: string) => void;
 
   handleResetFilter: () => void;
+  showApproved?: boolean;
 }
 
 export default function DriverFilter({
@@ -34,6 +35,7 @@ export default function DriverFilter({
   search,
   setSearch,
   handleResetFilter,
+  showApproved = true,
 }: FilterSectionProps) {
   return (
     <div className="w-full bg-white rounded-md px-1 py-1">
@@ -97,7 +99,7 @@ export default function DriverFilter({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
-              <SelectItem value="APPROVED">Approved</SelectItem>
+              {showApproved && <SelectItem value="APPROVED">Approved</SelectItem>}
               <SelectItem value="PENDING">Pending</SelectItem>
               <SelectItem value="REJECTED">Rejected</SelectItem>
             </SelectContent>

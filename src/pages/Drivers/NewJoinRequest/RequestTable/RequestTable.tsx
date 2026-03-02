@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
-import {useGetGoinReqestRiderProfilesQuery , useVerifyRiderProfileMutation } from "@/redux/features/drivers/driversApi";
-import { Eye, MoreVertical,  Check, X } from "lucide-react";
+import { useGetGoinReqestRiderProfilesQuery, useVerifyRiderProfileMutation } from "@/redux/features/drivers/driversApi";
+import { Eye, MoreVertical, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast"; // For showing toast messages
 import { useNavigate } from "react-router-dom";
@@ -27,9 +27,9 @@ interface TRequest {
   raider_status: string;
   raider_verificationFromAdmin: string;
   created_at: string; // This is your "Requested Date"
-  registrations: TRegistration[]; 
+  registrations: TRegistration[];
 
-  
+
 }
 
 interface UseRequestColumnsParams {
@@ -37,8 +37,9 @@ interface UseRequestColumnsParams {
   limit?: number;
   raiderId?: number;
   raider_name?: string;
-  loginType?: string;  
-  raiderVerificationFromAdmin?: string;  
+  loginType?: string;
+  raiderVerificationFromAdmin?: string;
+  search?: string;
 }
 
 type RiderVerificationStatus = "APPROVED" | "REJECTED";
@@ -47,18 +48,19 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
   const [requests, setRequests] = useState<TRequest[]>([]);
   const [totalItems, setTotalItems] = useState(0);
   const [verifyRiderProfile] =
-  useVerifyRiderProfileMutation();
+    useVerifyRiderProfileMutation();
   const navigate = useNavigate();
 
   // Build query params - only include defined values
-  const queryParams = {
+  const queryParams: UseRequestColumnsParams = {
     page: params.page || 1,
     limit: params.limit || 10,
-    raiderId: params.raiderId,
-    raider_name: params.raider_name,
-    loginType: "DIRECT_SIGNIN",  
-    raiderVerificationFromAdmin: "PENDING",  
+    loginType: "DIRECT_SIGNIN",
   };
+
+  if (params.raiderVerificationFromAdmin !== undefined) {
+    queryParams.raiderVerificationFromAdmin = params.raiderVerificationFromAdmin;
+  }
 
   if (params.raiderId !== undefined) {
     queryParams.raiderId = params.raiderId;
@@ -66,20 +68,23 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
   if (params.raider_name) {
     queryParams.raider_name = params.raider_name;
   }
+  if (params.search) {
+    queryParams.search = params.search;
+  }
 
-  // Fetch the data using useGetRiderProfilesQuery hook with filtered params
+  // Fetch the data using useGetGoinReqestRiderProfilesQuery hook with filtered params
   const { data, isLoading, isError } = useGetGoinReqestRiderProfilesQuery(queryParams);
-  
- 
+
+// console.log("join reques data ", data?.data?.data); 
 
   useEffect(() => {
     if (data?.data?.data) {
-      setRequests(data.data.data); 
+      setRequests(data.data.data);
       setTotalItems(data.data.pagination?.total || 0);
     }
   }, [data]);
 
- const handleUpdateStatus = async (
+  const handleUpdateStatus = async (
     id: string | number,
     status: RiderVerificationStatus,
     registrations: TRegistration[] // Add this parameter
@@ -113,7 +118,7 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
         <span className="font-medium  ">D{row.id}</span>
       ),
     },
-    
+
     {
       header: "Name",
       cell: (row) => {
@@ -137,7 +142,7 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
         const contact = row.registrations?.[0]?.contact_number;
         if (!contact) return <span>N/A</span>;
         // Masking logic
-        return <span>{contact.slice(0, 3)}****{contact.slice(-3)}</span>;
+        return <span>{contact}</span>;
       },
     },
     {
@@ -146,7 +151,7 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
         // Use outer created_at if inner one isn't available
         const dateStr = row.registrations?.[0]?.created_at || row.created_at;
         if (!dateStr) return <span>N/A</span>;
-        
+
         const date = new Date(dateStr);
         return <span>{date.toLocaleDateString("en-GB", {
           day: "2-digit",
@@ -159,7 +164,7 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
       header: "Registered",
       accessor: "registrations",
       cell: (row) => (
-        <span className="font-medium  ">{row?.registrations?.length === 0? "NO": "Yes"}</span>
+        <span className="font-medium  ">{row?.registrations?.length === 0 ? "NO" : "Yes"}</span>
       ),
     },
     {
@@ -192,13 +197,13 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
               <DropdownMenuItem onClick={() => navigate(`/join-request/${row.id}`)}>
                 <Eye className="h-4 w-4 mr-2" /> View
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => handleUpdateStatus(row.id, "APPROVED", row.registrations)}
                 className="text-green-600"
               >
                 <Check className="h-4 w-4 mr-2" /> Accept
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => handleUpdateStatus(row.id, "REJECTED", row.registrations)}
                 className="text-red-600"
               >
