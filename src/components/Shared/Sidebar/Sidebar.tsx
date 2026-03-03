@@ -189,7 +189,7 @@ export function Sidebar() {
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate("/login");
+    // navigate("/login");
 
     if (window.innerWidth < 1024) {
       setIsSidebarOpen(false);
