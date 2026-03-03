@@ -86,21 +86,28 @@ const driversApi = baseApi.injectEndpoints({
                 page = 1,
                 limit = 10,
             }) => {
-                const params = new URLSearchParams();
+                // Construct the URL with query parameters
+                let url = `/raider-profile/rider-profiles?page=${page}&limit=${limit}`;
 
-                // Add basic pagination
-                params.append("page", page.toString());
-                params.append("limit", limit.toString());
-
-                // Add optional filters
-                if (raiderId) params.append("raiderId", raiderId.toString());
-                if (raider_name) params.append("raider_name", raider_name);
-                if (raiderVerificationFromAdmin) params.append("raider_verificationFromAdmin", raiderVerificationFromAdmin);
-                if (loginType) params.append("loginType", loginType);
-                if (search) params.append("search", search);
+                // Add additional query parameters if they exist
+                if (raider_name) {
+                    url += `&raider_name=${encodeURIComponent(raider_name)}`;
+                }
+                if (raiderId) {
+                    url += `&raiderId=${raiderId}`;
+                }
+                if (raiderVerificationFromAdmin) {
+                    url += `&raider_verificationFromAdmin=${raiderVerificationFromAdmin}`;
+                }
+                if (loginType) {
+                    url += `&loginType=${loginType}`;
+                }
+                if (search) {
+                    url += `&search=${encodeURIComponent(search)}`;
+                }
 
                 return {
-                    url: `/raider-profile/rider-profiles?${params.toString()}`,
+                    url,
                     method: "GET",
                 };
             },

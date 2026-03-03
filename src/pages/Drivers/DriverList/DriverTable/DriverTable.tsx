@@ -115,7 +115,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
     }
   }, [data]);
 
-  console.log("Driver data:", data?.data?.data);
+  // console.log("Driver data:", data?.data?.data);
   // Define columns for the driver data
   const driverColumns: Column<TDriver>[] = [
     {
