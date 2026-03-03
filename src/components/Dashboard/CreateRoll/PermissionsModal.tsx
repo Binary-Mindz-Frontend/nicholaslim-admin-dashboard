@@ -1,5 +1,3 @@
-/* eslint-disable prefer-const */
-// export default PermissionsModal;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   AlertDialog,
@@ -11,20 +9,28 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import React, { useState, useEffect } from "react";
-import { X, UserMinus, Save, ChevronDown, ChevronRight, Check, Minus } from "lucide-react";
+import React, { useState, useEffect, useCallback} from "react";
+import {
+  X,
+  UserMinus,
+  Save,
+  ChevronDown,
+  ChevronRight,
+  Check,
+  Minus,
+} from "lucide-react";
 import toast from "react-hot-toast";
 
 // Import menu items and mapping
 import { menuItems, MenuItem } from "@/components/Shared/Sidebar/MenuItems";
 import {
-  menuToPermissionMapping,
-  childRouteToParentMapping,
+  getAllBackendModulesForMenu,
+  hasAnyPermissionForMenu,
+  hasAllPermissionsForMenu,
+  hasPartialPermissionsForMenu,
 } from "@/utils/permissionMapping";
 
-import {
-  MODULE_ACTIONS,
-} from "@/pages/Admin/AddRemovePermission/AddRemovePermission";
+import { MODULE_ACTIONS } from "@/pages/Admin/AddRemovePermission/AddRemovePermission";
 import {
   useGetRoleUsersQuery,
   useRemoveUserFromRoleMutation,
@@ -70,7 +76,7 @@ const CustomCheckbox: React.FC<{
   className?: string;
 }> = ({ checked, indeterminate, onChange, disabled, className }) => {
   return (
-    <div className={`relative inline-flex items-center ${className || ''}`}>
+    <div className={`relative inline-flex items-center ${className || ""}`}>
       <input
         type="checkbox"
         className="sr-only"
@@ -81,11 +87,11 @@ const CustomCheckbox: React.FC<{
       <div
         className={`
           w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
+          ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"}
           ${
             checked || indeterminate
-              ? 'bg-yellow-500 border-yellow-500 shadow-md'
-              : 'bg-white border-gray-300 hover:border-yellow-400 hover:shadow-sm'
+              ? "bg-yellow-500 border-yellow-500 shadow-md"
+              : "bg-white border-gray-300 hover:border-yellow-400 hover:shadow-sm"
           }
         `}
         onClick={(e) => {
@@ -102,177 +108,50 @@ const CustomCheckbox: React.FC<{
         {checked && !indeterminate && (
           <Check className="w-3.5 h-3.5 text-white stroke-3" />
         )}
-        {indeterminate && (
-          <Minus className="w-3.5 h-3.5 text-white stroke-3" />
-        )}
+        {indeterminate && <Minus className="w-3.5 h-3.5 text-white stroke-3" />}
       </div>
     </div>
   );
 };
 
 // Build a tree structure from menu items
-const buildMenuTree = (items: MenuItem[], parentId?: string, level: number = 0): MenuNode[] => {
+const buildMenuTree = (
+  items: MenuItem[],
+  parentId?: string,
+  level: number = 0,
+): MenuNode[] => {
   return items
-    .filter(item => item.id !== "login" && item.id !== "")
+    .filter((item) => item.id !== "login" && item.id !== "")
     .map((item) => ({
       id: item.id,
       label: item.label,
       parentId,
       route: item.route,
       level,
-      children: item.children ? buildMenuTree(item.children, item.id, level + 1) : undefined,
+      children: item.children
+        ? buildMenuTree(item.children, item.id, level + 1)
+        : undefined,
     }));
 };
 
 const MENU_TREE = buildMenuTree(menuItems);
 
-// Get all backend modules for a menu item (including children recursively)
-const getAllBackendModulesForMenuItem = (menuId: string): string[] => {
-  // Direct modules from mapping
-  const directModules = menuToPermissionMapping[menuId] || [];
-  
-  // Check if this is a child route that maps to a parent
-  const parentId = childRouteToParentMapping[menuId];
-  const parentModules = parentId && parentId !== menuId ? 
-    (menuToPermissionMapping[parentId] || []) : [];
-  
-  // Check grandparent
-  const grandParentId = parentId ? childRouteToParentMapping[parentId] : undefined;
-  const grandParentModules = grandParentId ? menuToPermissionMapping[grandParentId] || [] : [];
-  
-  // Find the node in menu tree to get children
-  const findNodeModules = (nodes: MenuNode[], targetId: string): string[] => {
-    for (const node of nodes) {
-      if (node.id === targetId) {
-        // Get modules from this node
-        let modules: string[] = [];
-        
-        // Add direct modules
-        modules.push(...(menuToPermissionMapping[node.id] || []));
-        
-        // Add parent mapping if exists
-        const parentMap = childRouteToParentMapping[node.id];
-        if (parentMap && parentMap !== node.id) {
-          modules.push(...(menuToPermissionMapping[parentMap] || []));
-        }
-        
-        // Recursively get modules from all children
-        if (node.children) {
-          const collectChildModules = (childNodes: MenuNode[]) => {
-            for (const child of childNodes) {
-              modules.push(...(menuToPermissionMapping[child.id] || []));
-              const childParentMap = childRouteToParentMapping[child.id];
-              if (childParentMap && childParentMap !== child.id) {
-                modules.push(...(menuToPermissionMapping[childParentMap] || []));
-              }
-              if (child.children) {
-                collectChildModules(child.children);
-              }
-            }
-          };
-          collectChildModules(node.children);
-        }
-        
-        return [...new Set(modules)]; // Remove duplicates
-      }
-      
-      if (node.children) {
-        const result = findNodeModules(node.children, targetId);
-        if (result.length > 0) return result;
-      }
-    }
-    return [];
-  };
-  
-  const childModules = findNodeModules(MENU_TREE, menuId);
-  
-  // Combine all modules and remove duplicates
-  return [...new Set([
-    ...directModules, 
-    ...parentModules, 
-    ...grandParentModules,
-    ...childModules
-  ])];
-};
-
-// Get all permissions for a menu item (including children)
-const getAllPermissionsForMenuItem = (menuId: string): Permission[] => {
-  const backendModules = getAllBackendModulesForMenuItem(menuId);
+// Get all permissions for a menu item (including children recursively)
+const getAllPermissionsForMenuItem = (
+  menuId: string,
+  moduleActions: Record<string, string[]>,
+): Permission[] => {
+  const backendModules = getAllBackendModulesForMenu(menuId);
   const permissions: Permission[] = [];
-  
+
   for (const module of backendModules) {
-    const actions = MODULE_ACTIONS[module] || [];
+    const actions = moduleActions[module] || [];
     actions.forEach((action) => {
       permissions.push({ module, action });
     });
   }
-  
+
   return permissions;
-};
-
-// Check if menu item has any permissions
-const hasAnyPermission = (
-  menuId: string,
-  selectedPermissions: Permission[]
-): boolean => {
-  const backendModules = getAllBackendModulesForMenuItem(menuId);
-  
-  for (const module of backendModules) {
-    const hasModulePermission = selectedPermissions.some(
-      (p) => p.module === module
-    );
-    if (hasModulePermission) return true;
-  }
-  
-  return false;
-};
-
-// Check if all modules for this menu item have all their actions
-const hasAllPermissions = (
-  menuId: string,
-  selectedPermissions: Permission[]
-): boolean => {
-  const backendModules = getAllBackendModulesForMenuItem(menuId);
-  
-  for (const module of backendModules) {
-    const requiredActions = MODULE_ACTIONS[module] || [];
-    const actualPermissions = selectedPermissions.filter(
-      (p) => p.module === module
-    );
-    
-    if (actualPermissions.length !== requiredActions.length) {
-      return false;
-    }
-  }
-  
-  return backendModules.length > 0;
-};
-
-// Check if some (but not all) modules have permissions
-const hasPartialPermissions = (
-  menuId: string,
-  selectedPermissions: Permission[]
-): boolean => {
-  const backendModules = getAllBackendModulesForMenuItem(menuId);
-  let hasSomePermission = false;
-  let hasAllPermission = true;
-  
-  for (const module of backendModules) {
-    const requiredActions = MODULE_ACTIONS[module] || [];
-    const actualPermissions = selectedPermissions.filter(
-      (p) => p.module === module
-    );
-    
-    if (actualPermissions.length > 0) {
-      hasSomePermission = true;
-    }
-    
-    if (actualPermissions.length !== requiredActions.length) {
-      hasAllPermission = false;
-    }
-  }
-  
-  return hasSomePermission && !hasAllPermission && backendModules.length > 0;
 };
 
 // Recursive component to render menu tree with professional styling
@@ -283,14 +162,35 @@ const MenuTreeItem: React.FC<{
   expandedNodes: Set<string>;
   onToggleExpand: (nodeId: string) => void;
   isEditing: boolean;
-}> = ({ node, selectedPermissions, onToggle, expandedNodes, onToggleExpand, isEditing }) => {
+  moduleActions: Record<string, string[]>;
+}> = ({
+  node,
+  selectedPermissions,
+  onToggle,
+  expandedNodes,
+  onToggleExpand,
+  isEditing,
+  moduleActions,
+}) => {
   const hasChildren = node.children && node.children.length > 0;
   const isExpanded = expandedNodes.has(node.id);
-  
-  const hasPermission = hasAnyPermission(node.id, selectedPermissions);
-  const hasAll = hasAllPermissions(node.id, selectedPermissions);
-  const hasPartial = hasPartialPermissions(node.id, selectedPermissions);
-  
+
+  const hasPermission = hasAnyPermissionForMenu(
+    node.id,
+    selectedPermissions,
+    moduleActions,
+  );
+  const hasAll = hasAllPermissionsForMenu(
+    node.id,
+    selectedPermissions,
+    moduleActions,
+  );
+  const hasPartial = hasPartialPermissionsForMenu(
+    node.id,
+    selectedPermissions,
+    moduleActions,
+  );
+
   // Background color based on state
   let bgColor = "bg-white";
   let borderColor = "border-gray-200";
@@ -336,8 +236,8 @@ const MenuTreeItem: React.FC<{
           flex items-center py-2.5 px-3 rounded-xl transition-all duration-200
           ${bgColor} ${borderColor} border
           hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm
-          ${hasChildren ? 'cursor-pointer' : ''}
-          ${isEditing ? 'hover:border-yellow-400' : ''}
+          ${hasChildren ? "cursor-pointer" : ""}
+          ${isEditing ? "hover:border-yellow-400" : ""}
         `}
         style={{ marginLeft }}
         onClick={handleToggle}
@@ -368,12 +268,12 @@ const MenuTreeItem: React.FC<{
 
           {hasPermission && (
             <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full shrink-0 font-medium">
-              {getAllBackendModulesForMenuItem(node.id).length}
+              {getAllBackendModulesForMenu(node.id).length}
             </span>
           )}
         </div>
       </div>
-      
+
       {hasChildren && isExpanded && (
         <div className="ml-4 border-l-2 border-yellow-100 pl-2 mt-1 space-y-1">
           {node.children?.map((child) => (
@@ -385,6 +285,7 @@ const MenuTreeItem: React.FC<{
               expandedNodes={expandedNodes}
               onToggleExpand={onToggleExpand}
               isEditing={isEditing}
+              moduleActions={moduleActions}
             />
           ))}
         </div>
@@ -404,14 +305,14 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
   const [selectedPermissions, setSelectedPermissions] =
     useState<Permission[]>(permissions);
   const [activeTab, setActiveTab] = useState<"permissions" | "users">(
-    "permissions"
+    "permissions",
   );
   const [pendingRemove, setPendingRemove] = useState<{
     userId: number;
     username: string;
   } | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(
-    new Set(["system-configuration"])
+    new Set(["system-configuration"]),
   );
 
   const [isEditing, setIsEditing] = useState(false);
@@ -452,31 +353,37 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
     });
   };
 
-  const handlePermissionToggle = (menuId: string, checked: boolean) => {
-    if (!isEditing) return;
+  const handlePermissionToggle = useCallback(
+    (menuId: string, checked: boolean) => {
+      if (!isEditing) return;
 
-    const menuPermissions = getAllPermissionsForMenuItem(menuId);
-    
-    setSelectedPermissions((prev) => {
-      if (checked) {
-        // Add all permissions for this menu item and its children
-        const newPermissions = [...prev];
-        menuPermissions.forEach((perm) => {
-          const exists = prev.some(
-            (p) => p.module === perm.module && p.action === perm.action
-          );
-          if (!exists) {
-            newPermissions.push(perm);
-          }
-        });
-        return newPermissions;
-      } else {
-        // Remove all permissions for this menu item and its children
-        const backendModules = getAllBackendModulesForMenuItem(menuId);
-        return prev.filter((p) => !backendModules.includes(p.module));
-      }
-    });
-  };
+      const menuPermissions = getAllPermissionsForMenuItem(
+        menuId,
+        MODULE_ACTIONS,
+      );
+
+      setSelectedPermissions((prev) => {
+        if (checked) {
+          // Add all permissions for this menu item and its children
+          const newPermissions = [...prev];
+          menuPermissions.forEach((perm) => {
+            const exists = prev.some(
+              (p) => p.module === perm.module && p.action === perm.action,
+            );
+            if (!exists) {
+              newPermissions.push(perm);
+            }
+          });
+          return newPermissions;
+        } else {
+          // Remove all permissions for this menu item and its children
+          const backendModules = getAllBackendModulesForMenu(menuId);
+          return prev.filter((p) => !backendModules.includes(p.module));
+        }
+      });
+    },
+    [isEditing],
+  );
 
   const getSelectedModuleCount = () => {
     const selectedModules = new Set();
@@ -493,12 +400,22 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
     toast.loading("Updating permissions...");
 
     try {
-      const cleanPermissions = selectedPermissions.map(
-        ({ module, action }) => ({
-          module,
-          action,
-        })
-      );
+      // Clean permissions to ensure no duplicates
+      const permissionMap = new Map();
+      selectedPermissions.forEach(({ module, action }) => {
+        if (!permissionMap.has(module)) {
+          permissionMap.set(module, new Set());
+        }
+        permissionMap.get(module).add(action);
+      });
+
+      // Convert back to array format
+      const cleanPermissions: Permission[] = [];
+      permissionMap.forEach((actions, module) => {
+        actions.forEach((action: string) => {
+          cleanPermissions.push({ module, action });
+        });
+      });
 
       const updateData = {
         id: roleId,
@@ -682,7 +599,10 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
                       </div>
                       <div className="flex-1">
                         <p className="text-xs text-yellow-700">
-                          <span className="font-semibold">Note:</span> Selecting a parent item grants all permissions for that section and its children.
+                          <span className="font-semibold">Note:</span> Selecting
+                          a parent item grants all permissions for that section
+                          and its children. The sidebar will only show items
+                          that have at least one permission assigned.
                         </p>
                         <div className="flex items-center space-x-4 mt-1">
                           <div className="flex items-center space-x-1">
@@ -695,7 +615,9 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
                             <div className="w-4 h-4 bg-yellow-500 rounded flex items-center justify-center">
                               <Minus className="w-3 h-3 text-white" />
                             </div>
-                            <span className="text-xs text-gray-600">Partial</span>
+                            <span className="text-xs text-gray-600">
+                              Partial
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -714,6 +636,7 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
                       expandedNodes={expandedNodes}
                       onToggleExpand={toggleExpand}
                       isEditing={isEditing}
+                      moduleActions={MODULE_ACTIONS}
                     />
                   ))}
                 </div>

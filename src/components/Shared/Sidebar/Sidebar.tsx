@@ -117,6 +117,19 @@ export function Sidebar() {
           .map((child) => {
             // Check if child itself has permission
             if (hasPermissionForMenu(child.id, permissionsData)) {
+              // If child has children, filter them too
+              if (child.children && child.children.length > 0) {
+                const filteredNestedChildren = child.children.filter(
+                  (nestedChild) =>
+                    hasPermissionForMenu(nestedChild.id, permissionsData),
+                );
+                if (filteredNestedChildren.length > 0) {
+                  return {
+                    ...child,
+                    children: filteredNestedChildren,
+                  };
+                }
+              }
               return child;
             }
 
@@ -189,7 +202,7 @@ export function Sidebar() {
 
   const handleLogout = () => {
     dispatch(logout());
-    // navigate("/login");
+    navigate("/login");
 
     if (window.innerWidth < 1024) {
       setIsSidebarOpen(false);
@@ -294,7 +307,7 @@ export function Sidebar() {
                       onClick={() =>
                         handleItemClick(child.id, false, level + 1)
                       }
-                      className={`w-full cursor-pointer flex items-center text-left gap-2 px-3 py-2 rounded text-sm transition-colors ml-4 ${
+                      className={`w-full cursor-pointer flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ml-4 ${
                         isChildActive
                           ? "text-yellow-600 font-medium bg-yellow-50"
                           : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"

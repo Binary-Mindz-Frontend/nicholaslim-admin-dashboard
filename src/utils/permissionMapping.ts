@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 interface PermissionMapping {
   [key: string]: string[];
@@ -9,16 +10,16 @@ export const menuToPermissionMapping: PermissionMapping = {
   "": ["dashboard"],
   dashboard: ["dashboard"],
 
-  // Admin & RBAC - UPDATED to ensure proper mapping
+  // Admin & RBAC
   admin: ["rbac"],
   "create-edit-role": ["rbac"],
   "add-remove-permission": ["rbac"],
-  "roles-permissions": ["rbac"], // Added alias for roles & permissions
+  "roles-permissions": ["rbac"],
 
-  // User Management - CRITICAL: Map both parent and child routes to "user" module
-  "users-web-portal": ["user"], // Web users route
-  "users-app": ["user"], // Mobile users route
-  users: ["user"], // Parent menu item
+  // User Management
+  "users-web-portal": ["user"],
+  "users-app": ["user"],
+  users: ["user"],
   user_profile: ["user_profile"],
   "users-app/:id": ["user", "user_profile"],
   "favourite-drivers": ["user"],
@@ -83,7 +84,7 @@ export const menuToPermissionMapping: PermissionMapping = {
   "transaction-stats": ["report_analytics_stats"],
 
   // Vehicle Management
-  "vehicle-types": ["destination"],
+  "vehicle-types": ["destination", "vehicle_type"],
   "vehicle-management": ["destination"],
 
   // Wallet
@@ -131,28 +132,28 @@ export const menuToPermissionMapping: PermissionMapping = {
   "additional-service": ["additionl_order_service"],
   "additional-service/:id": ["additionl_order_service"],
 
-  // System Configuration (Parent) - UPDATED with comprehensive module list
+  // System Configuration (Parent) - Comprehensive list of all modules under system config
   "system-configuration": [
-    "vechicle_pricing",
-    "destination",
-    "driver_order_compitition",
-    "quiz",
-    "customer_order_confirmation",
-    "coin",
     "service_areas",
     "vehicle_type",
     "delivery_type",
     "policies",
+    "vechicle_pricing",
     "revenue_order_config",
+    "platform_fee",
+    "driver_order_compitition",
+    "quiz",
     "quizzes",
+    "customer_order_confirmation",
     "additionl_order_service",
     "driver_incentive",
     "customer_rewards",
     "promo_code",
-    "platform_fee",
+    "coin",
+    "destination",
   ],
 
-  // Service Configuration - UPDATED
+  // Service Configuration
   "service-configuration": [
     "service_areas",
     "vehicle_type",
@@ -177,12 +178,11 @@ export const menuToPermissionMapping: PermissionMapping = {
   "policy-management": ["policies"],
   "policy-management/:id": ["policies"],
 
-  // Revenue Configuration - UPDATED
+  // Revenue Configuration
   "revenue-configuration": ["revenue_order_config", "platform_fee"],
   "platform-fee-config": ["revenue_order_config"],
-  // "platform-fee": ["platform_fee"], // Added direct mapping
 
-  // Driver Configuration - UPDATED
+  // Driver Configuration
   "driver-configuration": [
     "driver_order_compitition",
     "quiz",
@@ -190,14 +190,14 @@ export const menuToPermissionMapping: PermissionMapping = {
     "driver_incentive",
   ],
 
-  // Customer Configuration - UPDATED
+  // Customer Configuration
   "customer-configuration": [
     "additionl_order_service",
     "customer_order_confirmation",
     "customer_rewards",
   ],
 
-  // Incentive & Rewards Configuration - UPDATED
+  // Incentive & Rewards Configuration
   "incentive-rewards-configuration": [
     "driver_incentive",
     "customer_rewards",
@@ -242,13 +242,13 @@ export const childRouteToParentMapping: Record<string, string> = {
   // Dashboard
   dashboard: "admin",
 
-  // Admin & RBAC - UPDATED to ensure proper parent mapping
+  // Admin & RBAC
   "create-edit-role": "admin",
   "add-remove-permission": "admin",
   "roles-permissions": "admin",
 
-  // Users - CRITICAL: Map web users route to users parent
-  "users-web-portal": "users", // This ensures it appears under Users menu
+  // Users
+  "users-web-portal": "users",
   "users-app": "users",
   "add-new-user": "users",
   "favourite-drivers": "users",
@@ -344,10 +344,10 @@ export const childRouteToParentMapping: Record<string, string> = {
   faq: "content",
   "faq/:id": "content",
 
-  // System Configuration mappings - UPDATED to ensure all sub-items map correctly
+  // System Configuration mappings
   "system-configuration": "system-configuration",
   "service-configuration": "system-configuration",
-  "service-area": "service-configuration", // Map to intermediate parent
+  "service-area": "service-configuration",
   "service-area/:id": "service-configuration",
   "vehicle-types": "service-configuration",
   "vehicle-types/:id": "service-configuration",
@@ -357,27 +357,24 @@ export const childRouteToParentMapping: Record<string, string> = {
   "policy-management/:id": "service-configuration",
 
   "revenue-configuration": "system-configuration",
-  "platform-fee": "revenue-configuration", // Map to intermediate parent
+  "platform-fee": "revenue-configuration",
   "platform-fee/:id": "revenue-configuration",
   "platform-fee-config": "revenue-configuration",
 
   "driver-configuration": "system-configuration",
-  "driver-order-competition": "driver-configuration", // Map to intermediate parent
+  "driver-order-competition": "driver-configuration",
   "driver-order-competition/:id": "driver-configuration",
   quiz: "driver-configuration",
-  // "quiz/:id": "driver-configuration",
 
   "customer-configuration": "system-configuration",
-  "customer-order-confirmation": "customer-configuration", // Map to intermediate parent
+  "customer-order-confirmation": "customer-configuration",
   "customer-order-confirmation/:id": "customer-configuration",
 
   "incentive-rewards-configuration": "system-configuration",
-  "coin-system": "incentive-rewards-configuration", // Map to intermediate parent
+  "coin-system": "incentive-rewards-configuration",
   "coin-system/:id": "incentive-rewards-configuration",
   "incentive-management": "incentive-rewards-configuration",
   "incentive-management/:id": "incentive-rewards-configuration",
-  // "promocode": "incentive-rewards-configuration",
-  // "promocode/:id": "incentive-rewards-configuration",
 
   // Service Chat under support
   "service-chat": "support",
@@ -488,7 +485,110 @@ export const isDynamicRoute = (route: string): boolean => {
   });
 };
 
-// UPDATED: Improved permission check with better parent-child relationship handling
+// Get all backend modules for a specific menu ID (including parent and children)
+export const getAllBackendModulesForMenu = (menuId: string): string[] => {
+  const directModules = menuToPermissionMapping[menuId] || [];
+
+  // Get modules from parent if this is a child
+  const parentId = childRouteToParentMapping[menuId];
+  const parentModules = parentId ? menuToPermissionMapping[parentId] || [] : [];
+
+  // Get modules from grandparent
+  const grandParentId = parentId
+    ? childRouteToParentMapping[parentId]
+    : undefined;
+  const grandParentModules = grandParentId
+    ? menuToPermissionMapping[grandParentId] || []
+    : [];
+
+  // Combine all modules and remove duplicates
+  return [
+    ...new Set([...directModules, ...parentModules, ...grandParentModules]),
+  ];
+};
+
+// Check if a menu item has any permissions assigned
+export const hasAnyPermissionForMenu = (
+menuId: string, selectedPermissions: any[], moduleActions: Record<string, string[]>,
+): boolean => {
+  const backendModules = getAllBackendModulesForMenu(menuId);
+
+  for (const module of backendModules) {
+    const hasModulePermission = selectedPermissions.some(
+      (p) => p.module === module,
+    );
+    if (hasModulePermission) return true;
+  }
+
+  return false;
+};
+
+// Check if a menu item has all permissions (fully selected)
+export const hasAllPermissionsForMenu = (
+  menuId: string,
+  selectedPermissions: any[],
+  moduleActions: Record<string, string[]>,
+): boolean => {
+  const backendModules = getAllBackendModulesForMenu(menuId);
+
+  if (backendModules.length === 0) return false;
+
+  for (const module of backendModules) {
+    const requiredActions = moduleActions[module] || [];
+    const actualPermissions = selectedPermissions.filter(
+      (p) => p.module === module,
+    );
+
+    // If module has no actions defined, check if it has any permission
+    if (requiredActions.length === 0) {
+      if (actualPermissions.length === 0) {
+        return false;
+      }
+    } else if (actualPermissions.length !== requiredActions.length) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+// Check if a menu item has partial permissions (some but not all)
+export const hasPartialPermissionsForMenu = (
+  menuId: string,
+  selectedPermissions: any[],
+  moduleActions: Record<string, string[]>,
+): boolean => {
+  const backendModules = getAllBackendModulesForMenu(menuId);
+
+  if (backendModules.length === 0) return false;
+
+  let hasSomePermission = false;
+  let hasAllPermission = true;
+
+  for (const module of backendModules) {
+    const requiredActions = moduleActions[module] || [];
+    const actualPermissions = selectedPermissions.filter(
+      (p) => p.module === module,
+    );
+
+    if (actualPermissions.length > 0) {
+      hasSomePermission = true;
+    }
+
+    if (requiredActions.length === 0) {
+      // If module has no actions defined, check if it has any permission
+      if (actualPermissions.length === 0) {
+        hasAllPermission = false;
+      }
+    } else if (actualPermissions.length !== requiredActions.length) {
+      hasAllPermission = false;
+    }
+  }
+
+  return hasSomePermission && !hasAllPermission;
+};
+
+// Check if user has permission for a specific menu item (based on permissions data from backend)
 export const hasPermissionForMenu = (
   menuId: string,
   permissionsData: any,
@@ -585,7 +685,7 @@ export const getAllAvailableRoutes = (permissionsData: any): string[] => {
   return availableRoutes;
 };
 
-// UPDATED: Improved parent menu visibility check
+// Check if parent menu should be shown based on child permissions
 export const shouldShowParentMenu = (
   menuItem: any,
   permissionsData: any,
@@ -595,7 +695,7 @@ export const shouldShowParentMenu = (
     return hasPermissionForMenu(menuItem.id, permissionsData);
   }
 
-  // Check if this parent itself has permissions (for cases where parent has its own module)
+  // Check if this parent itself has permissions
   if (hasPermissionForMenu(menuItem.id, permissionsData)) {
     return true;
   }
@@ -616,93 +716,4 @@ export const shouldShowParentMenu = (
   };
 
   return checkChildren(menuItem.children);
-};
-
-// NEW: Get all backend modules for a specific menu ID (useful for permission toggling)
-export const getAllBackendModulesForMenu = (menuId: string): string[] => {
-  const directModules = menuToPermissionMapping[menuId] || [];
-
-  // Get modules from parent if this is a child
-  const parentId = childRouteToParentMapping[menuId];
-  const parentModules = parentId ? menuToPermissionMapping[parentId] || [] : [];
-
-  // Get modules from grandparent
-  const grandParentId = parentId
-    ? childRouteToParentMapping[parentId]
-    : undefined;
-  const grandParentModules = grandParentId
-    ? menuToPermissionMapping[grandParentId] || []
-    : [];
-
-  // Combine all modules and remove duplicates
-  return [
-    ...new Set([...directModules, ...parentModules, ...grandParentModules]),
-  ];
-};
-
-// NEW: Check if a menu item has any permissions assigned
-export const hasAnyPermissionForMenu = (
-  menuId: string,
-  selectedPermissions: any[],
-): boolean => {
-  const backendModules = getAllBackendModulesForMenu(menuId);
-
-  for (const module of backendModules) {
-    const hasModulePermission = selectedPermissions.some(
-      (p) => p.module === module,
-    );
-    if (hasModulePermission) return true;
-  }
-
-  return false;
-};
-
-// NEW: Check if a menu item has all permissions (fully selected)
-export const hasAllPermissionsForMenu = (
-  menuId: string,
-  selectedPermissions: any[],
-  moduleActions: Record<string, string[]>,
-): boolean => {
-  const backendModules = getAllBackendModulesForMenu(menuId);
-
-  for (const module of backendModules) {
-    const requiredActions = moduleActions[module] || [];
-    const actualPermissions = selectedPermissions.filter(
-      (p) => p.module === module,
-    );
-
-    if (actualPermissions.length !== requiredActions.length) {
-      return false;
-    }
-  }
-
-  return backendModules.length > 0;
-};
-
-// NEW: Check if a menu item has partial permissions (some but not all)
-export const hasPartialPermissionsForMenu = (
-  menuId: string,
-  selectedPermissions: any[],
-  moduleActions: Record<string, string[]>,
-): boolean => {
-  const backendModules = getAllBackendModulesForMenu(menuId);
-  let hasSomePermission = false;
-  let hasAllPermission = true;
-
-  for (const module of backendModules) {
-    const requiredActions = moduleActions[module] || [];
-    const actualPermissions = selectedPermissions.filter(
-      (p) => p.module === module,
-    );
-
-    if (actualPermissions.length > 0) {
-      hasSomePermission = true;
-    }
-
-    if (actualPermissions.length !== requiredActions.length) {
-      hasAllPermission = false;
-    }
-  }
-
-  return hasSomePermission && !hasAllPermission && backendModules.length > 0;
 };
