@@ -29,7 +29,7 @@ export const menuItems: MenuItem[] = [
     id: "",
     label: "Dashboard",
     icon: <Layout className="w-5 h-5" />,
-    route: "/dashboard",
+    route: "/",
   },
 
   {
@@ -203,7 +203,7 @@ export const menuItems: MenuItem[] = [
 
   {
     id: "orders",
-    label: "Order",
+    label: "Orders",
     icon: <Package className="w-5 h-5" />,
     children: [
       {
