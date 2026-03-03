@@ -511,8 +511,9 @@ export const menuToPermissionMapping: PermissionMapping = {
   "add-new-user": ["user"],
 
   // Driver/Raider Management
+  drivers: ["raider"],
   "driver-list": ["raider"],
-  "driver-list/:id": ["raider", "my_raider"],
+  "driver-list/:id": ["raider"],
   "add-new-driver": ["raider"],
   "new-join-request": ["raider"],
   "join-request/:id": ["raider"],
