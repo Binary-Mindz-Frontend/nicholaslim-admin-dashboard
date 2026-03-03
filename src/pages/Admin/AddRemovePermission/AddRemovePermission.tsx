@@ -1,289 +1,4 @@
-// /* eslint-disable @typescript-eslint/no-explicit-any */
-// /* eslint-disable react-refresh/only-export-components */
-// import { useState, useEffect } from "react";
-// import {
-//   useGetRoleBasedAccessControlQuery,
-//   useUpdateRoleBasedAccessControlMutation,
-// } from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
-// import { toast } from "react-hot-toast";
-// import { PermissionFormData, Role } from "@/types/roleBasedAccessControlType";
-// import RoleSelector from "@/components/Dashboard/AddRemovePermission/RoleSelector";
-// import PermissionsGrid from "@/components/Dashboard/AddRemovePermission/PermissionsGrid";
-
-// export default function AddRemovePermission() {
-//   const { data: roleData = [], isLoading: isLoadingRoles } =
-//     useGetRoleBasedAccessControlQuery({});
-
-//   const [updateRoleBasedAccessControl, { isLoading: isUpdating }] =
-//     useUpdateRoleBasedAccessControlMutation();
-
-//   const [formData, setFormData] = useState<PermissionFormData>({
-//     roleId: "",
-//     permissions: [],
-//   });
-
-//   const [localRoles, setLocalRoles] = useState<Role[]>([]);
-//   const [hasInitialized, setHasInitialized] = useState(false);
-
-//   useEffect(() => {
-//     if (Array.isArray(roleData) && roleData.length > 0) {
-//       setLocalRoles(roleData);
-//       if (!hasInitialized) {
-//         setHasInitialized(true);
-//       }
-//     }
-//   }, [roleData, hasInitialized]);
-
-//   const nonStaticRoles = localRoles.filter((role) => !role.isStatic);
-
-//   useEffect(() => {
-//     if (nonStaticRoles.length > 0 && !formData.roleId) {
-//       const firstNonStaticRole = nonStaticRoles[0];
-//       setFormData({
-//         roleId: firstNonStaticRole.id.toString(),
-//         permissions: firstNonStaticRole.permissions.map((p) => ({
-//           module: p.module,
-//           action: p.action,
-//         })),
-//       });
-//     }
-//   }, [nonStaticRoles, formData.roleId]);
-
-//   const handleRoleChange = (roleId: string) => {
-//     const selectedRole = localRoles.find(
-//       (role) => role.id.toString() === roleId
-//     );
-
-//     if (selectedRole) {
-//       setFormData({
-//         roleId,
-//         permissions: selectedRole.permissions.map((p) => ({
-//           module: p.module,
-//           action: p.action,
-//         })),
-//       });
-//     }
-//   };
-
-//   const handlePermissionToggle = (permission: string) => {
-//     const backendModule = FRONTEND_TO_BACKEND_MODULES[permission];
-//     const moduleActions = MODULE_ACTIONS[backendModule] || [];
-
-//     setFormData((prev) => {
-//       const currentModulePermissions = prev.permissions.filter(
-//         (p) => p.module === backendModule
-//       );
-
-//       if (currentModulePermissions.length === moduleActions.length) {
-//         return {
-//           ...prev,
-//           permissions: prev.permissions.filter(
-//             (p) => p.module !== backendModule
-//           ),
-//         };
-//       } else {
-//         const newPermissions = moduleActions.map((action) => ({
-//           module: backendModule,
-//           action,
-//         }));
-
-//         const filteredPermissions = prev.permissions.filter(
-//           (p) => p.module !== backendModule
-//         );
-
-//         return {
-//           ...prev,
-//           permissions: [...filteredPermissions, ...newPermissions],
-//         };
-//       }
-//     });
-//   };
-
-//   const handleSubmit = async () => {
-//     if (!formData.roleId) {
-//       toast.error("Please select a role");
-//       return;
-//     }
-
-//     const roleId = parseInt(formData.roleId);
-//     toast.loading("Updating permissions...");
-
-//     try {
-//       const updateData = {
-//         id: roleId,
-//         permissions: formData.permissions,
-//       };
-
-//       const response = await updateRoleBasedAccessControl(updateData).unwrap();
-
-//       toast.dismiss();
-//       toast.success(response?.message || "Permissions updated successfully!");
-
-//       setLocalRoles((prevRoles) =>
-//         prevRoles.map((role) =>
-//           role.id === roleId
-//             ? {
-//                 ...role,
-//                 permissions: formData.permissions.map((p) => ({
-//                   id: Math.random(),
-//                   module: p.module,
-//                   action: p.action,
-//                   roleId: roleId,
-//                 })),
-//               }
-//             : role
-//         )
-//       );
-//     } catch (error: any) {
-//       toast.dismiss();
-//       toast.error(error?.data?.message || "Failed to update permissions");
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-gray-50 px-8 sm:p-6 lg:p-8">
-//       <div className="flex justify-between items-center mb-6">
-//         <h1 className="text-2xl font-semibold text-gray-800 pt-2 sm:pt-0">
-//           Add/Remove Permission
-//         </h1>
-//       </div>
-
-//       <div className="bg-white rounded-xl shadow-sm p-6 sm:px-9 lg:px-36 lg:p-10">
-//         <RoleSelector
-//           roles={nonStaticRoles}
-//           selectedRoleId={formData.roleId}
-//           onRoleChange={handleRoleChange}
-//           isLoading={isLoadingRoles || isUpdating}
-//         />
-
-//         <PermissionsGrid
-//           permissions={ALL_PERMISSIONS}
-//           selectedPermissions={formData.permissions}
-//           onPermissionToggle={handlePermissionToggle}
-//           isLoading={isLoadingRoles || isUpdating}
-//         />
-
-//         <div className="flex justify-center">
-//           <button
-//             onClick={handleSubmit}
-//             disabled={!formData.roleId || isUpdating || isLoadingRoles}
-//             className="px-12 py-3 bg-yellow-400 font-bold hover:bg-yellow-500 text-black rounded transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-//           >
-//             {isUpdating ? "Updating..." : "Update Permissions"}
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// const FRONTEND_TO_BACKEND_MODULES: Record<string, string> = {
-//   Users: "user",
-//   Drivers: "raider",
-//   Order: "order",
-//   "Live Map/ Fleet Tracking": "live_map",
-//   "Support & Dispute": "support_dispute",
-//   "Payments & Transactions": "payment_transaction",
-//   "Notifications & Communication": "notification",
-//   "Report Analytics": "report_analytics",
-//   "Vehicle Type & Pricing Management": "vechicle_pricing",
-//   "Wallet Management": "wallet",
-//   "Coin System": "coin",
-//   Quiz: "quiz",
-//   Advertisement: "advertisement",
-//   "Platform fee": "platform_fee",
-//   "Content Management": "content_management",
-//   "Driver Order Competition": "driver_order_competition",
-//   "Customer Order Confirmation": "customer_order_confirmation",
-//   "Order Placement": "order_placement",
-//   // DESTINATION: "destination",
-//   // "MY RAIDER": "my_raider",
-//   // REFERRAL: "referral",
-//   // RBAC: "rbac",
-// };
-
-// const MODULE_ACTIONS: Record<string, string[]> = {
-//   user: [
-//     "create",
-//     "read",
-//     "update",
-//     "update_user_profile",
-//     "update_user_role",
-//     "update_user_status",
-//     "delete",
-//     "get_user_profile",
-//   ],
-//   raider: ["create", "read", "update", "delete", "just_admin"],
-//   order: [
-//     "create",
-//     "read",
-//     "update",
-//     "add_destination_to_order",
-//     "order_compitition",
-//     "get_order_details",
-//     "order_read_mine",
-//     "order_read_feed",
-//     "update_order_status",
-//     "cancel_order",
-//     "delete",
-//   ],
-//   payment_transaction: [
-//     "create",
-//     "read",
-//     "update_transaction_status",
-//     "update_transaction_amount",
-//     "approve_transaction",
-//     "refund_transaction",
-//     "delete",
-//   ],
-//   live_map: ["read"],
-//   advertisement: ["create", "read", "delete", "update", "just_admin"],
-//   content_management: ["create", "read", "delete", "update"],
-//   wallet: ["create", "read", "delete", "update"],
-//   notification: ["create", "delete", "update"],
-//   platform_fee: ["create", "delete", "update", "read"],
-//   quiz: ["create", "delete", "update", "read", "get_one"],
-//   coin: ["create", "delete", "update", "read", "get_one"],
-//   driver_order_competition: ["create", "read", "delete", "update"],
-//   customer_order_confirmation: ["create", "read", "delete", "update"],
-//   vechicle_pricing: ["create", "read", "delete", "update", "just_admin"],
-//   // destination: ["create", "read", "update", "delete", "just_admin"],
-//   // my_raider: ["create", "read", "delete", "update", "read_admin_my_raider"],
-//   // referral: ["create", "read", "delete", "update"],
-//   // rbac: ["create", "read", "delete", "update_rbac_role_permission"],
-//   support_dispute: ["create", "read", "delete", "update", "just_admin"],
-//   order_placement: ["create", "read", "delete", "update", "just_admin"],
-//   report_analytics: ["create", "read", "delete", "update", "just_admin"],
-// };
-
-// const ALL_PERMISSIONS = [
-//   "Users",
-//   "Drivers",
-//   "Order",
-//   "Live Map/ Fleet Tracking",
-//   "Support & Dispute",
-//   "Payments & Transactions",
-//   "Notifications & Communication",
-//   "Report Analytics",
-//   "Vehicle Type & Pricing Management",
-//   "Wallet Management",
-//   "Coin System",
-//   "Quiz",
-//   "Advertisement",
-//   "Platform fee",
-//   "Content Management",
-//   "Driver Order Competition",
-//   "Customer Order Confirmation",
-//   "Order Placement",
-//   // "DESTINATION",
-//   // "MY RAIDER",
-//   // "REFERRAL",
-//   // "RBAC",
-// ];
-
-// export { FRONTEND_TO_BACKEND_MODULES, MODULE_ACTIONS, ALL_PERMISSIONS };
-
-
+/* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect } from "react";
@@ -294,7 +9,7 @@ import {
 import { toast } from "react-hot-toast";
 import { PermissionFormData, Role } from "@/types/roleBasedAccessControlType";
 import RoleSelector from "@/components/Dashboard/AddRemovePermission/RoleSelector";
-import { ChevronDown, Save } from "lucide-react";
+import { ChevronDown, ChevronRight, Save, Check, Minus, Search, X } from "lucide-react";
 
 // Import menu items and mapping
 import { menuItems, MenuItem } from "@/components/Shared/Sidebar/MenuItems";
@@ -314,161 +29,354 @@ interface MenuNode {
   children?: MenuNode[];
   parentId?: string;
   route?: string;
+  level?: number;
 }
 
 // Build menu tree
-const buildMenuTree = (items: MenuItem[], parentId?: string): MenuNode[] => {
+const buildMenuTree = (
+  items: MenuItem[],
+  parentId?: string,
+  level: number = 0,
+): MenuNode[] => {
   return items
-    .filter(item => item.id !== "login" && item.id !== "")
+    .filter((item) => item.id !== "login" && item.id !== "")
     .map((item) => ({
       id: item.id,
       label: item.label,
       parentId,
       route: item.route,
-      children: item.children ? buildMenuTree(item.children, item.id) : undefined,
+      level,
+      children: item.children
+        ? buildMenuTree(item.children, item.id, level + 1)
+        : undefined,
     }));
 };
 
 const MENU_TREE = buildMenuTree(menuItems);
 
-// Helper functions (same as in PermissionsModal)
-const getBackendModulesForMenuItem = (menuId: string): string[] => {
+// Get all backend modules for a menu item (including children recursively)
+const getAllBackendModulesForMenuItem = (menuId: string): string[] => {
+  // Direct modules from mapping
   const directModules = menuToPermissionMapping[menuId] || [];
+
+  // Check if this is a child route that maps to a parent
   const parentId = childRouteToParentMapping[menuId];
-  if (parentId && parentId !== menuId) {
-    const parentModules = menuToPermissionMapping[parentId] || [];
-    return [...new Set([...directModules, ...parentModules])];
-  }
-  return directModules;
+  const parentModules = parentId ? menuToPermissionMapping[parentId] || [] : [];
+
+  // Check grandparent
+  const grandParentId = parentId
+    ? childRouteToParentMapping[parentId]
+    : undefined;
+  const grandParentModules = grandParentId
+    ? menuToPermissionMapping[grandParentId] || []
+    : [];
+
+  // Find modules from children in menu tree
+  const findChildModules = (nodes: MenuNode[], targetId: string): string[] => {
+    for (const node of nodes) {
+      if (node.id === targetId) {
+        const childModules: string[] = [];
+
+        if (node.children) {
+          const collectModules = (childNodes: MenuNode[]) => {
+            for (const child of childNodes) {
+              childModules.push(...(menuToPermissionMapping[child.id] || []));
+
+              // Check child's parent mapping
+              const childParent = childRouteToParentMapping[child.id];
+              if (childParent && childParent !== child.id) {
+                childModules.push(
+                  ...(menuToPermissionMapping[childParent] || []),
+                );
+              }
+
+              if (child.children) {
+                collectModules(child.children);
+              }
+            }
+          };
+          collectModules(node.children);
+        }
+
+        return childModules;
+      }
+
+      if (node.children) {
+        const result = findChildModules(node.children, targetId);
+        if (result.length > 0) return result;
+      }
+    }
+    return [];
+  };
+
+  const childModules = findChildModules(MENU_TREE, menuId);
+
+  // Combine all modules and remove duplicates
+  return [
+    ...new Set([
+      ...directModules,
+      ...parentModules,
+      ...grandParentModules,
+      ...childModules,
+    ]),
+  ];
 };
 
-const hasAnyPermission = (menuId: string, selectedPermissions: Permission[]): boolean => {
-  const backendModules = getBackendModulesForMenuItem(menuId);
-  for (const module of backendModules) {
-    if (selectedPermissions.some((p) => p.module === module)) return true;
-  }
-  return false;
-};
-
-const hasAllPermissions = (menuId: string, selectedPermissions: Permission[]): boolean => {
-  const backendModules = getBackendModulesForMenuItem(menuId);
-  for (const module of backendModules) {
-    const requiredActions = MODULE_ACTIONS[module] || [];
-    const actualPermissions = selectedPermissions.filter((p) => p.module === module);
-    if (actualPermissions.length !== requiredActions.length) return false;
-  }
-  return backendModules.length > 0;
-};
-
-const hasPartialPermissions = (menuId: string, selectedPermissions: Permission[]): boolean => {
-  const backendModules = getBackendModulesForMenuItem(menuId);
-  let hasSome = false;
-  let hasAll = true;
-  
-  for (const module of backendModules) {
-    const requiredActions = MODULE_ACTIONS[module] || [];
-    const actualPermissions = selectedPermissions.filter((p) => p.module === module);
-    if (actualPermissions.length > 0) hasSome = true;
-    if (actualPermissions.length !== requiredActions.length) hasAll = false;
-  }
-  
-  return hasSome && !hasAll && backendModules.length > 0;
-};
-
+// Get all permissions for a menu item (including children)
 const getAllPermissionsForMenuItem = (menuId: string): Permission[] => {
-  const backendModules = getBackendModulesForMenuItem(menuId);
+  const backendModules = getAllBackendModulesForMenuItem(menuId);
   const permissions: Permission[] = [];
-  
+
   for (const module of backendModules) {
     const actions = MODULE_ACTIONS[module] || [];
     actions.forEach((action) => {
       permissions.push({ module, action });
     });
   }
-  
+
   return permissions;
 };
 
-// MenuTreeItem component
+// Check if menu item has any permissions
+const hasAnyPermission = (
+  menuId: string,
+  selectedPermissions: Permission[],
+): boolean => {
+  const backendModules = getAllBackendModulesForMenuItem(menuId);
+
+  for (const module of backendModules) {
+    const hasModulePermission = selectedPermissions.some(
+      (p) => p.module === module,
+    );
+    if (hasModulePermission) return true;
+  }
+
+  return false;
+};
+
+// Check if all modules for this menu item have all their actions
+const hasAllPermissions = (
+  menuId: string,
+  selectedPermissions: Permission[],
+): boolean => {
+  const backendModules = getAllBackendModulesForMenuItem(menuId);
+
+  for (const module of backendModules) {
+    const requiredActions = MODULE_ACTIONS[module] || [];
+    const actualPermissions = selectedPermissions.filter(
+      (p) => p.module === module,
+    );
+
+    if (actualPermissions.length !== requiredActions.length) {
+      return false;
+    }
+  }
+
+  return backendModules.length > 0;
+};
+
+// Check if some (but not all) modules have permissions
+const hasPartialPermissions = (
+  menuId: string,
+  selectedPermissions: Permission[],
+): boolean => {
+  const backendModules = getAllBackendModulesForMenuItem(menuId);
+  let hasSomePermission = false;
+  let hasAllPermission = true;
+
+  for (const module of backendModules) {
+    const requiredActions = MODULE_ACTIONS[module] || [];
+    const actualPermissions = selectedPermissions.filter(
+      (p) => p.module === module,
+    );
+
+    if (actualPermissions.length > 0) {
+      hasSomePermission = true;
+    }
+
+    if (actualPermissions.length !== requiredActions.length) {
+      hasAllPermission = false;
+    }
+  }
+
+  return hasSomePermission && !hasAllPermission && backendModules.length > 0;
+};
+
+// Professional Checkbox Component with Material Design
+const CustomCheckbox: React.FC<{
+  checked: boolean;
+  indeterminate?: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+  className?: string;
+  size?: "sm" | "md" | "lg";
+}> = ({ checked, indeterminate, onChange, disabled, className, size = "md" }) => {
+  const sizeClasses = {
+    sm: "w-4 h-4",
+    md: "w-5 h-5",
+    lg: "w-6 h-6",
+  };
+
+  const iconSizes = {
+    sm: "w-2.5 h-2.5",
+    md: "w-3.5 h-3.5",
+    lg: "w-4 h-4",
+  };
+
+  return (
+    <div className={`relative inline-flex items-center ${className || ''}`}>
+      <input
+        type="checkbox"
+        className="sr-only"
+        checked={checked}
+        onChange={onChange}
+        disabled={disabled}
+      />
+      <div
+        className={`
+          ${sizeClasses[size]} rounded border-2 flex items-center justify-center transition-all duration-200
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
+          ${
+            checked || indeterminate
+              ? 'bg-primary-600 border-primary-600 shadow-md'
+              : 'bg-white border-gray-300 hover:border-primary-400 hover:shadow-sm'
+          }
+        `}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!disabled) {
+            const syntheticEvent = {
+              target: { checked: !checked },
+              stopPropagation: () => {},
+            } as React.ChangeEvent<HTMLInputElement>;
+            onChange(syntheticEvent);
+          }
+        }}
+      >
+        {checked && !indeterminate && (
+          <Check className={`${iconSizes[size]} text-white stroke-3`} />
+        )}
+        {indeterminate && (
+          <Minus className={`${iconSizes[size]} text-white stroke-3`} />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// MenuTreeItem component with professional styling
 const MenuTreeItem: React.FC<{
   node: MenuNode;
   selectedPermissions: Permission[];
   onToggle: (menuId: string, checked: boolean) => void;
   expandedNodes: Set<string>;
   onToggleExpand: (nodeId: string) => void;
-  level?: number;
-}> = ({ node, selectedPermissions, onToggle, expandedNodes, onToggleExpand, level = 0 }) => {
+  searchTerm?: string;
+}> = ({
+  node,
+  selectedPermissions,
+  onToggle,
+  expandedNodes,
+  onToggleExpand,
+  searchTerm = "",
+}) => {
   const hasChildren = node.children && node.children.length > 0;
   const isExpanded = expandedNodes.has(node.id);
-  
+
   const hasPermission = hasAnyPermission(node.id, selectedPermissions);
   const hasAll = hasAllPermissions(node.id, selectedPermissions);
   const hasPartial = hasPartialPermissions(node.id, selectedPermissions);
-  
+
+  // Highlight search term
+  const highlightText = (text: string) => {
+    if (!searchTerm) return text;
+    const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'));
+    return parts.map((part, i) => 
+      part.toLowerCase() === searchTerm.toLowerCase() ? 
+        <span key={i} className="bg-yellow-200 font-medium">{part}</span> : part
+    );
+  };
+
   const getCheckboxState = () => {
     if (hasAll) return "checked";
     if (hasPartial) return "indeterminate";
     return "unchecked";
   };
-  
+
   const checkboxState = getCheckboxState();
-  
+
   const handleToggle = () => {
     if (hasChildren) {
       onToggleExpand(node.id);
     }
   };
-  
+
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
     onToggle(node.id, e.target.checked);
   };
-  
+
+  const marginLeft = node.level ? `${node.level * 1.5}rem` : "0";
+
+  // Background color based on state
+  let bgColor = "bg-white";
+  let borderColor = "border-gray-200";
+  let textColor = "text-gray-700";
+
+  if (hasAll) {
+    bgColor = "bg-green-50";
+    borderColor = "border-green-200";
+  } else if (hasPartial) {
+    bgColor = "bg-primary-50";
+    borderColor = "border-primary-200";
+  }
+
   return (
     <div className="select-none">
       <div
-        className={`flex items-center py-2 px-2 rounded-lg hover:bg-gray-50 cursor-pointer ${
-          level > 0 ? "ml-6" : ""
-        }`}
+        className={`
+          flex items-center py-2.5 px-3 rounded-xl transition-all duration-200
+          ${bgColor} ${borderColor} border
+          hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm
+          ${hasChildren ? 'cursor-pointer' : ''}
+        `}
+        style={{ marginLeft }}
         onClick={handleToggle}
       >
-        {hasChildren && (
-          <ChevronDown
-            className={`w-4 h-4 mr-1 transition-transform duration-200 ${
-              isExpanded ? "rotate-180" : ""
-            }`}
+        <div className="flex items-center flex-1 min-w-0">
+          {hasChildren && (
+            <div className="mr-1 shrink-0">
+              {isExpanded ? (
+                <ChevronDown className="w-4 h-4 text-gray-500" />
+              ) : (
+                <ChevronRight className="w-4 h-4 text-gray-500" />
+              )}
+            </div>
+          )}
+          {!hasChildren && <div className="w-5 mr-1 shrink-0" />}
+
+          <CustomCheckbox
+            checked={checkboxState === "checked"}
+            indeterminate={checkboxState === "indeterminate"}
+            onChange={handleCheckboxChange}
+            className="mr-3 shrink-0"
+            size="md"
           />
-        )}
-        {!hasChildren && <div className="w-5 mr-1" />}
-        
-        <input
-          type="checkbox"
-          className="w-4 h-4 mr-3 rounded border-gray-300 text-yellow-400 focus:ring-yellow-400 cursor-pointer"
-          checked={checkboxState === "checked"}
-          ref={(input) => {
-            if (input && checkboxState === "indeterminate") {
-              input.indeterminate = true;
-            } else if (input) {
-              input.indeterminate = false;
-            }
-          }}
-          onChange={handleCheckboxChange}
-          onClick={(e) => e.stopPropagation()}
-        />
-        
-        <span className="flex-1 text-sm font-medium text-gray-700">
-          {node.label}
-        </span>
-        
-        {hasPermission && (
-          <span className="text-xs text-gray-500 mr-2">
-            {getBackendModulesForMenuItem(node.id).length} module(s)
+
+          <span className={`flex-1 text-sm font-medium ${textColor} truncate`}>
+            {highlightText(node.label)}
           </span>
-        )}
+
+          {hasPermission && (
+            <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full shrink-0 font-medium">
+              {getAllBackendModulesForMenuItem(node.id).length}
+            </span>
+          )}
+        </div>
       </div>
-      
+
       {hasChildren && isExpanded && (
-        <div className="ml-4 border-l border-gray-200 pl-2">
+        <div className="ml-4 border-l-2 border-primary-100 pl-2 mt-1 space-y-1">
           {node.children?.map((child) => (
             <MenuTreeItem
               key={child.id}
@@ -477,7 +385,7 @@ const MenuTreeItem: React.FC<{
               onToggle={onToggle}
               expandedNodes={expandedNodes}
               onToggleExpand={onToggleExpand}
-              level={level + 1}
+              searchTerm={searchTerm}
             />
           ))}
         </div>
@@ -501,8 +409,9 @@ export default function AddRemovePermission() {
   const [localRoles, setLocalRoles] = useState<Role[]>([]);
   const [hasInitialized, setHasInitialized] = useState(false);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(
-    new Set(["system-configuration"])
+    new Set(["system-configuration", "admin"]), // Expanded by default
   );
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (Array.isArray(roleData) && roleData.length > 0) {
@@ -530,7 +439,7 @@ export default function AddRemovePermission() {
 
   const handleRoleChange = (roleId: string) => {
     const selectedRole = localRoles.find(
-      (role) => role.id.toString() === roleId
+      (role) => role.id.toString() === roleId,
     );
 
     if (selectedRole) {
@@ -546,14 +455,14 @@ export default function AddRemovePermission() {
 
   const handlePermissionToggle = (menuId: string, checked: boolean) => {
     const menuPermissions = getAllPermissionsForMenuItem(menuId);
-    
+
     setFormData((prev) => {
       if (checked) {
-        // Add all permissions for this menu item
+        // Add all permissions for this menu item and its children
         const newPermissions = [...prev.permissions];
         menuPermissions.forEach((perm) => {
           const exists = prev.permissions.some(
-            (p) => p.module === perm.module && p.action === perm.action
+            (p) => p.module === perm.module && p.action === perm.action,
           );
           if (!exists) {
             newPermissions.push(perm);
@@ -561,12 +470,12 @@ export default function AddRemovePermission() {
         });
         return { ...prev, permissions: newPermissions };
       } else {
-        // Remove all permissions for this menu item
-        const backendModules = getBackendModulesForMenuItem(menuId);
+        // Remove all permissions for this menu item and its children
+        const backendModules = getAllBackendModulesForMenuItem(menuId);
         return {
           ...prev,
           permissions: prev.permissions.filter(
-            (p) => !backendModules.includes(p.module)
+            (p) => !backendModules.includes(p.module),
           ),
         };
       }
@@ -585,6 +494,22 @@ export default function AddRemovePermission() {
     });
   };
 
+  const expandAll = () => {
+    const allNodes = new Set<string>();
+    const collectNodes = (nodes: MenuNode[]) => {
+      nodes.forEach(node => {
+        allNodes.add(node.id);
+        if (node.children) collectNodes(node.children);
+      });
+    };
+    collectNodes(MENU_TREE);
+    setExpandedNodes(allNodes);
+  };
+
+  const collapseAll = () => {
+    setExpandedNodes(new Set());
+  };
+
   const handleSubmit = async () => {
     if (!formData.roleId) {
       toast.error("Please select a role");
@@ -592,7 +517,7 @@ export default function AddRemovePermission() {
     }
 
     const roleId = parseInt(formData.roleId);
-    toast.loading("Updating permissions...");
+    const loadingToast = toast.loading("Updating permissions...");
 
     try {
       const updateData = {
@@ -602,7 +527,7 @@ export default function AddRemovePermission() {
 
       const response = await updateRoleBasedAccessControl(updateData).unwrap();
 
-      toast.dismiss();
+      toast.dismiss(loadingToast);
       toast.success(response?.message || "Permissions updated successfully!");
 
       setLocalRoles((prevRoles) =>
@@ -617,11 +542,11 @@ export default function AddRemovePermission() {
                   roleId: roleId,
                 })),
               }
-            : role
-        )
+            : role,
+        ),
       );
     } catch (error: any) {
-      toast.dismiss();
+      toast.dismiss(loadingToast);
       toast.error(error?.data?.message || "Failed to update permissions");
     }
   };
@@ -634,133 +559,188 @@ export default function AddRemovePermission() {
     return selectedModules.size;
   };
 
+  const getSelectedActionCount = () => {
+    return formData.permissions.length;
+  };
+
+  // Filter menu items based on search
+  const filterMenuItems = (nodes: MenuNode[], search: string): MenuNode[] => {
+    if (!search) return nodes;
+    
+    return nodes.reduce((acc: MenuNode[], node) => {
+      const matches = node.label.toLowerCase().includes(search.toLowerCase());
+      
+      if (node.children) {
+        const filteredChildren = filterMenuItems(node.children, search);
+        if (filteredChildren.length > 0) {
+          acc.push({
+            ...node,
+            children: filteredChildren,
+          });
+        } else if (matches) {
+          acc.push({ ...node, children: [] });
+        }
+      } else if (matches) {
+        acc.push(node);
+      }
+      
+      return acc;
+    }, []);
+  };
+
+  const filteredMenuTree = searchTerm ? filterMenuItems(MENU_TREE, searchTerm) : MENU_TREE;
+
   return (
-    <div className="min-h-screen bg-gray-50 px-8 sm:p-6 lg:p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800 pt-2 sm:pt-0">
-          Add/Remove Permission
-        </h1>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm p-6 sm:px-9 lg:px-36 lg:p-10">
-        <RoleSelector
-          roles={nonStaticRoles}
-          selectedRoleId={formData.roleId}
-          onRoleChange={handleRoleChange}
-          isLoading={isLoadingRoles || isUpdating}
-        />
-
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">
-              Permissions
-            </h2>
-            <span className="text-sm text-gray-500">
-              {getSelectedModuleCount()} modules selected
-            </span>
-          </div>
-
-          <div className="border rounded-lg p-4 bg-gray-50 max-h-[500px] overflow-y-auto">
-            <div className="text-sm text-gray-500 mb-4">
-              <span className="font-medium">Note:</span> Selecting a parent
-              item will grant all permissions for that section. Selecting a
-              child item will grant only that specific feature's permissions.
-            </div>
-            
-            <div className="space-y-1">
-              {MENU_TREE.map((node) => (
-                <MenuTreeItem
-                  key={node.id}
-                  node={node}
-                  selectedPermissions={formData.permissions}
-                  onToggle={handlePermissionToggle}
-                  expandedNodes={expandedNodes}
-                  onToggleExpand={toggleExpand}
-                />
-              ))}
-            </div>
-          </div>
+    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">
+            Role Permissions Manager
+          </h1>
         </div>
 
-        <div className="flex justify-center">
-          <button
-            onClick={handleSubmit}
-            disabled={!formData.roleId || isUpdating || isLoadingRoles}
-            className="px-12 py-3 bg-yellow-400 font-bold hover:bg-yellow-500 text-black rounded transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed flex items-center"
-          >
-            {isUpdating ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mr-2"></div>
-                Updating...
-              </>
-            ) : (
-              <>
-                <Save size={18} className="mr-2" />
-                Update Permissions
-              </>
-            )}
-          </button>
+        <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8">
+          <RoleSelector
+            roles={nonStaticRoles}
+            selectedRoleId={formData.roleId}
+            onRoleChange={handleRoleChange}
+            isLoading={isLoadingRoles || isUpdating}
+          />
+
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Module Permissions
+              </h2>
+              <div className="flex items-center space-x-3">
+                <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                  {getSelectedModuleCount()} modules • {getSelectedActionCount()} actions
+                </span>
+              </div>
+            </div>
+
+            {/* Search and Controls */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+              <div className="relative flex-1 w-full">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search modules..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-transparent outline-none transition-all"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center space-x-2 shrink-0">
+                <button
+                  onClick={expandAll}
+                  className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Expand All
+                </button>
+                <button
+                  onClick={collapseAll}
+                  className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Collapse All
+                </button>
+              </div>
+            </div>
+
+            {/* Info Box */}
+            <div className="mb-4 p-4 bg-linear-to-r from-primary-50 to-blue-50 border border-primary-100 rounded-xl">
+              <div className="flex items-start space-x-3">
+                <div className="shrink-0 w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">i</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-primary-800">
+                    <span className="font-semibold">How it works:</span> Selecting a parent item grants all permissions for that section and its children. The number indicates total backend modules.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-4 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-5 h-5 bg-green-500 rounded flex items-center justify-center shadow-sm">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-xs text-gray-600">Full access</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-5 h-5 bg-primary-500 rounded flex items-center justify-center shadow-sm">
+                        <Minus className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-xs text-gray-600">Partial access</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-5 h-5 bg-white border-2 border-gray-300 rounded"></div>
+                      <span className="text-xs text-gray-600">No access</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Permissions Tree */}
+            <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
+              <div className="max-h-[500px] overflow-y-auto p-4 space-y-1 custom-scrollbar">
+                {filteredMenuTree.length > 0 ? (
+                  filteredMenuTree.map((node) => (
+                    <MenuTreeItem
+                      key={node.id}
+                      node={node}
+                      selectedPermissions={formData.permissions}
+                      onToggle={handlePermissionToggle}
+                      expandedNodes={expandedNodes}
+                      onToggleExpand={toggleExpand}
+                      searchTerm={searchTerm}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-gray-500">
+                    No modules found matching "{searchTerm}"
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <button
+              onClick={handleSubmit}
+              disabled={!formData.roleId || isUpdating || isLoadingRoles}
+              className="px-12 py-3 bg-linear-to-r from-primary-500 to-primary-600 font-bold hover:from-primary-600 hover:to-primary-700 text-white rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              {isUpdating ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                  Updating Permissions...
+                </>
+              ) : (
+                <>
+                  <Save size={20} className="mr-3" />
+                  Save Permission Changes
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// Keep the existing constants
-const FRONTEND_TO_BACKEND_MODULES: Record<string, string> = {
-  // Core Modules
-  Users: "user",
-  Drivers: "raider",
-  Order: "order",
-  "Live Map/ Fleet Tracking": "live_map",
-  "Support & Dispute": "support_dispute",
-  "Payments & Transactions": "payment_transaction",
-  "Notifications & Communication": "notification",
-  "Report Analytics": "report_analytics",
-  "Vehicle Type & Pricing Management": "vechicle_pricing",
-  "Wallet Management": "wallet",
-  "Coin System": "coin",
-  Quiz: "quiz",
-  Advertisement: "advertisement",
-  "Platform fee": "platform_fee",
-  "Content Management": "content_management",
-  "Driver Order Competition": "driver_order_competition",
-  "Customer Order Confirmation": "customer_order_confirmation",
-  "Order Placement": "order_placement",
-
-  // New Modules from your enum
-  Dashboard: "dashboard",
-  Destination: "destination",
-  "My Raider": "my_raider",
-  "Payment Method": "payment_method",
-  Referral: "referral",
-  "Additional Services": "additional_services",
-  "User Profile": "user_profile",
-  "Service Areas": "service_areas",
-  "Vehicle Type": "vehicle_type",
-  "Delivery Type": "delivery_type",
-  Policies: "policies",
-  "Revenue Configuration": "revenue_order_config",
-  "Additional Order Service": "additionl_order_service",
-  "Order Confirmation": "order_confirmation",
-  Quizzes: "quizzes",
-  "Driver Incentive": "driver_incentive",
-  "Customer Rewards": "customer_rewards",
-  "Promo Code": "promo_code",
-  "Coin Stats": "coin_stats",
-  "Incentive Analytics": "incentive_analytics",
-  "KPI Stats": "kpi_stats",
-  "Transaction Stats": "transactions_stats",
-  "Report Analytics Stats": "report_analytics_stats",
-  "Contact Info": "contact_info",
-  "Service Chat": "service_chat",
-  "Dashboard Popup": "dashboard_popup",
-  FAQ: "faq",
-  RBAC: "rbac",
-};
-
-
+// Module Actions configuration based on your enums
 const MODULE_ACTIONS: Record<string, string[]> = {
+  // Dashboard
+  dashboard: ["read"],
+
   // User Management
   user: [
     "create",
@@ -837,12 +817,14 @@ const MODULE_ACTIONS: Record<string, string[]> = {
 
   // Quiz Management
   quiz: ["create", "read", "delete", "update", "get_one"],
+  quizzes: ["create", "read", "delete", "update", "get_one"],
 
   // Coin/Rewards System
   coin: ["create", "read", "delete", "update", "get_one", "reedom_coin"],
 
   // Driver Order Competition
   driver_order_competition: ["create", "read", "delete", "update"],
+  driver_order_compitition: ["create", "read", "delete", "update"],
 
   // Customer Order Confirmation
   customer_order_confirmation: ["create", "read", "delete", "update"],
@@ -858,12 +840,7 @@ const MODULE_ACTIONS: Record<string, string[]> = {
 
   // Report & Analytics
   report_analytics: ["create", "read", "delete", "update", "just_admin"],
-
-  // Report Analytics Stats
   report_analytics_stats: ["create", "read", "delete", "update", "just_admin"],
-
-  // Dashboard
-  dashboard: ["read"],
 
   // Destination Management
   destination: ["create", "read", "update", "delete", "just_admin"],
@@ -911,9 +888,6 @@ const MODULE_ACTIONS: Record<string, string[]> = {
   // Order Confirmation
   order_confirmation: ["create", "read", "update", "delete", "just_admin"],
 
-  // Quizzes
-  quizzes: ["create", "read", "update", "delete", "get_one"],
-
   // Driver Incentive
   driver_incentive: ["create", "read", "update", "delete"],
 
@@ -948,57 +922,56 @@ const MODULE_ACTIONS: Record<string, string[]> = {
   rbac: ["create", "read", "delete", "update_rbac_role_permission"],
 };
 
-// Keep ALL_PERMISSIONS for backward compatibility if needed
-const ALL_PERMISSIONS = [
-  // Core Permissions
-  "Users",
-  "Drivers",
-  "Order",
-  "Live Map/ Fleet Tracking",
-  "Support & Dispute",
-  "Payments & Transactions",
-  "Notifications & Communication",
-  "Report Analytics",
-  "Vehicle Type & Pricing Management",
-  "Wallet Management",
-  "Coin System",
-  "Quiz",
-  "Advertisement",
-  "Platform fee",
-  "Content Management",
-  "Driver Order Competition",
-  "Customer Order Confirmation",
-  "Order Placement",
-  
-  // New Permissions from your enum
-  "Dashboard",
-  "Destination",
-  "My Raider",
-  "Payment Method",
-  "Referral",
-  "Additional Services",
-  "User Profile",
-  "Service Areas",
-  "Vehicle Type",
-  "Delivery Type",
-  "Policies",
-  "Revenue Configuration",
-  "Additional Order Service",
-  "Order Confirmation",
-  "Quizzes",
-  "Driver Incentive",
-  "Customer Rewards",
-  "Promo Code",
-  "Coin Stats",
-  "Incentive Analytics",
-  "KPI Stats",
-  "Transaction Stats",
-  "Report Analytics Stats",
-  "Contact Info",
-  "Service Chat",
-  "Dashboard Popup",
-  "FAQ",
-  "RBAC",
-]
+// Keep for backward compatibility
+const FRONTEND_TO_BACKEND_MODULES: Record<string, string> = {
+  Dashboard: "dashboard",
+  Users: "user",
+  Drivers: "raider",
+  Order: "order",
+  "Live Map/ Fleet Tracking": "live_map",
+  "Support & Dispute": "support_dispute",
+  "Payments & Transactions": "payment_transaction",
+  "Notifications & Communication": "notification",
+  "Report Analytics": "report_analytics",
+  "Vehicle Type & Pricing Management": "vechicle_pricing",
+  "Wallet Management": "wallet",
+  "Coin System": "coin",
+  Quiz: "quiz",
+  Advertisement: "advertisement",
+  "Platform fee": "platform_fee",
+  "Content Management": "content_management",
+  "Driver Order Competition": "driver_order_competition",
+  "Customer Order Confirmation": "customer_order_confirmation",
+  "Order Placement": "order_placement",
+  Destination: "destination",
+  "My Raider": "my_raider",
+  "Payment Method": "payment_method",
+  Referral: "referral",
+  "Additional Services": "additional_services",
+  "User Profile": "user_profile",
+  "Service Areas": "service_areas",
+  "Vehicle Type": "vehicle_type",
+  "Delivery Type": "delivery_type",
+  Policies: "policies",
+  "Revenue Configuration": "revenue_order_config",
+  "Additional Order Service": "additionl_order_service",
+  "Order Confirmation": "order_confirmation",
+  Quizzes: "quizzes",
+  "Driver Incentive": "driver_incentive",
+  "Customer Rewards": "customer_rewards",
+  "Promo Code": "promo_code",
+  "Coin Stats": "coin_stats",
+  "Incentive Analytics": "incentive_analytics",
+  "KPI Stats": "kpi_stats",
+  "Transaction Stats": "transactions_stats",
+  "Report Analytics Stats": "report_analytics_stats",
+  "Contact Info": "contact_info",
+  "Service Chat": "service_chat",
+  "Dashboard Popup": "dashboard_popup",
+  FAQ: "faq",
+  RBAC: "rbac",
+};
+
+const ALL_PERMISSIONS = Object.keys(FRONTEND_TO_BACKEND_MODULES || {});
 
 export { FRONTEND_TO_BACKEND_MODULES, MODULE_ACTIONS, ALL_PERMISSIONS };
