@@ -188,7 +188,7 @@ export const menuItems: MenuItem[] = [
     children: [
       {
         id: "driver-list",
-        label: "Driver",
+        label: "Drivers",
         icon: null,
         route: "/driver-list",
       },
