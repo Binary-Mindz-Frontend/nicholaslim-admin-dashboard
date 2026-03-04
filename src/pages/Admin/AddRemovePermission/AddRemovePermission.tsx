@@ -99,6 +99,12 @@ const getAllBackendModulesForMenuItem = (menuId: string): string[] => {
   ];
 };
 
+// Extract all unique modules currently mapped in the menu tree to prevent ghost permissions
+const ALL_ACTIVE_TREE_MODULES = new Set<string>();
+MENU_TREE.forEach(node => {
+  getAllBackendModulesForMenuItem(node.id).forEach(mod => ALL_ACTIVE_TREE_MODULES.add(mod));
+});
+
 // Get all permissions for a menu item (including children)
 const getAllPermissionsForMenuItem = (menuId: string): Permission[] => {
   const backendModules = getAllBackendModulesForMenuItem(menuId);
@@ -406,7 +412,7 @@ export default function AddRemovePermission() {
       setFormData({
         roleId: firstNonStaticRole.id.toString(),
         permissions: firstNonStaticRole.permissions
-          .filter((p) => p.action && p.action.trim() !== "" && !!MODULE_ACTIONS[p.module])
+          .filter((p) => p.action && p.action.trim() !== "" && !!MODULE_ACTIONS[p.module] && ALL_ACTIVE_TREE_MODULES.has(p.module))
           .map((p) => ({
             module: p.module,
             action: p.action,
@@ -424,7 +430,7 @@ export default function AddRemovePermission() {
       setFormData({
         roleId,
         permissions: selectedRole.permissions
-          .filter((p) => p.action && p.action.trim() !== "" && !!MODULE_ACTIONS[p.module])
+          .filter((p) => p.action && p.action.trim() !== "" && !!MODULE_ACTIONS[p.module] && ALL_ACTIVE_TREE_MODULES.has(p.module))
           .map((p) => ({
             module: p.module,
             action: p.action,
@@ -817,9 +823,15 @@ const MODULE_ACTIONS: Record<string, string[]> = {
 
   // Order Placement
   order_placement: ["create", "read", "delete", "update", "just_admin"],
+  live_order_tracking: ["create", "read", "delete", "update"],
+  order_history: ["read", "delete"],
+  payment_options: ["create", "read", "delete", "update", "just_admin"],
 
   // Report & Analytics
   report_analytics: ["create", "read", "delete", "update", "just_admin"],
+  report_orders: ["read", "delete"],
+  driver_performance: ["read"],
+  customer_report: ["read"],
   report_analytics_stats: ["create", "read", "delete", "update", "just_admin"],
 
   // Destination Management
@@ -852,6 +864,10 @@ const MODULE_ACTIONS: Record<string, string[]> = {
 
   // Vehicle Type
   vehicle_type: ["create", "read", "update", "delete", "just_admin"],
+
+  // Wallet Management
+  wallet_user: ["create", "read", "update", "delete", "just_admin"],
+  wallet_driver: ["create", "read", "update", "delete", "just_admin"],
 
   // Delivery Type
   delivery_type: ["create", "read", "update", "delete", "just_admin"],
@@ -913,8 +929,13 @@ const FRONTEND_TO_BACKEND_MODULES: Record<string, string> = {
   "Payments & Transactions": "payment_transaction",
   "Notifications & Communication": "notification",
   "Report Analytics": "report_analytics",
+  "Report Orders": "report_orders",
+  "Driver Performance": "driver_performance",
+  "Customer Report": "customer_report",
   "Vehicle Type & Pricing Management": "vechicle_pricing",
   "Wallet Management": "wallet",
+  "User Wallet": "wallet_user",
+  "Driver Wallet": "wallet_driver",
   "Coin System": "coin",
   Quiz: "quiz",
   Advertisement: "advertisement",
@@ -923,6 +944,9 @@ const FRONTEND_TO_BACKEND_MODULES: Record<string, string> = {
   "Driver Order Competition": "driver_order_competition",
   "Customer Order Confirmation": "customer_order_confirmation",
   "Order Placement": "order_placement",
+  "Live Order Tracking": "live_order_tracking",
+  "Order History": "order_history",
+  "Payment Options": "payment_options",
   Destination: "destination",
   "My Raider": "my_raider",
   "Payment Method": "payment_method",

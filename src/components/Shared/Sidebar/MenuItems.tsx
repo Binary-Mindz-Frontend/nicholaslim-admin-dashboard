@@ -308,7 +308,7 @@ export const menuItems: MenuItem[] = [
   },
 
   {
-    id: "support",
+    id: "support-communication",
     label: "Support & Communication",
     icon: <HelpCircle className="w-5 h-5" />,
     children: [

@@ -181,6 +181,12 @@ const getAllBackendModulesForMenuItem = (menuId: string): string[] => {
   ];
 };
 
+// Extract all unique modules currently mapped in the menu tree to prevent ghost permissions
+const ALL_ACTIVE_TREE_MODULES = new Set<string>();
+MENU_TREE.forEach(node => {
+  getAllBackendModulesForMenuItem(node.id).forEach(mod => ALL_ACTIVE_TREE_MODULES.add(mod));
+});
+
 // Get all permissions for a menu item (including children recursively)
 const getAllPermissionsForMenuItem = (
   menuId: string,
@@ -348,7 +354,7 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
   isLoading = false,
 }) => {
   const filterValidPermissions = (perms: Permission[]) =>
-    perms.filter(p => p.action && p.action.trim() !== "" && !!MODULE_ACTIONS[p.module]);
+    perms.filter(p => p.action && p.action.trim() !== "" && !!MODULE_ACTIONS[p.module] && ALL_ACTIVE_TREE_MODULES.has(p.module));
 
   const [selectedPermissions, setSelectedPermissions] =
     useState<Permission[]>(filterValidPermissions(permissions));

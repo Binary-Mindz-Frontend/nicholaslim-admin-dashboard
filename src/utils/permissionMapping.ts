@@ -11,15 +11,13 @@ export const menuToPermissionMapping: PermissionMapping = {
   dashboard: ["dashboard"],
 
   // Admin & RBAC
-  admin: ["rbac"],
   "create-edit-role": ["rbac"],
   "add-remove-permission": ["rbac"],
   "roles-permissions": ["rbac"],
 
   // User Management
   "users-web-portal": ["user"],
-  "users-app": ["user"],
-  users: ["user"],
+  "users-app": ["user", "user_profile"],
   user_profile: ["user_profile"],
   "users-app/:id": ["user", "user_profile"],
   "favourite-drivers": ["user"],
@@ -29,7 +27,6 @@ export const menuToPermissionMapping: PermissionMapping = {
 
   // Driver/Raider Management
   "driver-list": ["raider"],
-  drivers: ["raider"],
   "driver-list/:id": ["raider"],
   "add-new-driver": ["raider"],
   "new-join-request": ["raider"],
@@ -40,18 +37,16 @@ export const menuToPermissionMapping: PermissionMapping = {
 
   // Order Management
   "order-list": ["order"],
-  orders: ["order"],
   "assign-driver": ["order"],
   "assign-driver/:id": ["order"],
 
   // Order Placement
-  "order-placement": ["order_placement"],
   order: ["order_placement"],
-  "live-order-tracking": ["order_placement"],
-  "order-history": ["order_placement"],
-  "payment-options": ["order_placement"],
+  "live-order-tracking": ["live_order_tracking"],
+  "order-history": ["order_history"],
+  "payment-options": ["payment_options"],
   "order/:id": ["order_placement"],
-  "live-order-tracking/:id": ["order_placement"],
+  "live-order-tracking/:id": ["live_order_tracking"],
 
   // Support
   "support-dispute": ["support_dispute"],
@@ -71,28 +66,25 @@ export const menuToPermissionMapping: PermissionMapping = {
   notifications: ["notification"],
 
   // Reports & Analytics
-  "report-orders": ["report_analytics"],
-  reports: ["report_analytics", "report_analytics_stats"],
-  "driver-performance": ["report_analytics"],
-  "customer-report": ["report_analytics"],
-  kpi: ["report_analytics_stats"],
-  coins: ["report_analytics_stats"],
-  incentives: ["report_analytics_stats"],
-  "kpi-stats": ["report_analytics_stats"],
-  "coin-stats": ["report_analytics_stats"],
-  "incentive-analytics": ["report_analytics_stats"],
-  "transaction-stats": ["report_analytics_stats"],
+  "report-orders": ["report_orders"],
+  "driver-performance": ["driver_performance"],
+  "customer-report": ["customer_report"],
+  kpi: ["kpi_stats"],
+  coins: ["coin_stats"],
+  incentives: ["incentive_analytics"],
+  "kpi-stats": ["kpi_stats"],
+  "coin-stats": ["coin_stats"],
+  "incentive-analytics": ["incentive_analytics"],
+  "transaction-stats": ["transactions_stats"],
 
   // Vehicle Management
   "vehicle-types": ["destination", "vehicle_type"],
-  "vehicle-management": ["destination"],
 
   // Wallet
-  "wallet-user": ["wallet"],
-  wallet: ["wallet"],
-  "wallet-driver": ["wallet"],
-  "wallet-user/:id": ["wallet"],
-  "wallet-driver/:id": ["wallet"],
+  "wallet-user": ["wallet_user"],
+  "wallet-driver": ["wallet_driver"],
+  "wallet-user/:id": ["wallet_user"],
+  "wallet-driver/:id": ["wallet_driver"],
 
   // Coin System
   "coin-system": ["coin"],
@@ -132,43 +124,9 @@ export const menuToPermissionMapping: PermissionMapping = {
   "additional-service": ["additionl_order_service"],
   "additional-service/:id": ["additionl_order_service"],
 
-  // System Configuration (Parent) - Comprehensive list of all modules under system config
-  "system-configuration": [
-    "service_areas",
-    "vehicle_type",
-    "delivery_type",
-    "policies",
-    "vechicle_pricing",
-    "revenue_order_config",
-    "platform_fee",
-    "driver_order_compitition",
-    "quiz",
-    "quizzes",
-    "customer_order_confirmation",
-    "additionl_order_service",
-    "driver_incentive",
-    "customer_rewards",
-    "promo_code",
-    "coin",
-    "destination",
-  ],
-
-  // Service Configuration
-  "service-configuration": [
-    "service_areas",
-    "vehicle_type",
-    "delivery_type",
-    "policies",
-    "vechicle_pricing",
-  ],
-
   // Service Area
   "service-area": ["service_areas"],
   "service-area/:id": ["service_areas"],
-
-  // Vehicle Types
-  // "vehicle-types": ["vehicle_type", "vechicle_pricing"],
-  "vehicle-types/:id": ["vehicle_type"],
 
   // Types of Delivery
   "types-of-delivery": ["delivery_type"],
@@ -179,30 +137,7 @@ export const menuToPermissionMapping: PermissionMapping = {
   "policy-management/:id": ["policies"],
 
   // Revenue Configuration
-  "revenue-configuration": ["revenue_order_config", "platform_fee"],
   "platform-fee-config": ["revenue_order_config"],
-
-  // Driver Configuration
-  "driver-configuration": [
-    "driver_order_compitition",
-    "quiz",
-    "quizzes",
-    "driver_incentive",
-  ],
-
-  // Customer Configuration
-  "customer-configuration": [
-    "additionl_order_service",
-    "customer_order_confirmation",
-    "customer_rewards",
-  ],
-
-  // Incentive & Rewards Configuration
-  "incentive-rewards-configuration": [
-    "driver_incentive",
-    "customer_rewards",
-    "promo_code",
-  ],
 
   // Incentive Management
   "incentive-management": ["driver_incentive"],
@@ -217,6 +152,7 @@ export const menuToPermissionMapping: PermissionMapping = {
   "contactinfo/:id": ["contact_info"],
   contectinfo: ["contact_info"],
   "contectinfo/:id": ["contact_info"],
+
 
   // Service Chat
   "service-chat": ["service_chat"],
