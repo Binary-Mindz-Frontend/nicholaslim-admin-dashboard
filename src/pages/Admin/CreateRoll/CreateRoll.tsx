@@ -278,17 +278,17 @@ const CreateRoll: React.FC = () => {
             className="mt-4 sm:mt-0 flex items-center px-4 py-2 bg-yellow-400 rounded-lg hover:bg-yellow-500 text-black transition-colors cursor-pointer"
           >
             <Plus size={20} className="mr-2" />
-            Create New Role
+            Add Role
           </button>
         </div>
 
         {/* Roles Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+          {/* <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-800">
               Existing Roles ({roles?.length || 0})
             </h2>
-          </div>
+          </div> */}
 
           {roles && roles.length > 0 ? (
             <CustomTable
