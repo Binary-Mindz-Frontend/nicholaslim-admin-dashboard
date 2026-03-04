@@ -24,7 +24,6 @@ import toast from "react-hot-toast";
 // Import menu items and mapping
 import { menuItems, MenuItem } from "@/components/Shared/Sidebar/MenuItems";
 import {
-  getAllBackendModulesForMenu,
   hasAnyPermissionForMenu,
   hasAllPermissionsForMenu,
   hasPartialPermissionsForMenu,

@@ -15,7 +15,6 @@ import { ChevronDown, ChevronRight, Save, Check, Minus, Search, X } from "lucide
 import { menuItems, MenuItem } from "@/components/Shared/Sidebar/MenuItems";
 import {
   menuToPermissionMapping,
-  childRouteToParentMapping,
 } from "@/utils/permissionMapping";
 
 interface Permission {
