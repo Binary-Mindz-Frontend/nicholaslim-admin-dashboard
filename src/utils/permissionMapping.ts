@@ -489,27 +489,15 @@ export const isDynamicRoute = (route: string): boolean => {
 export const getAllBackendModulesForMenu = (menuId: string): string[] => {
   const directModules = menuToPermissionMapping[menuId] || [];
 
-  // Get modules from parent if this is a child
-  const parentId = childRouteToParentMapping[menuId];
-  const parentModules = parentId ? menuToPermissionMapping[parentId] || [] : [];
-
-  // Get modules from grandparent
-  const grandParentId = parentId
-    ? childRouteToParentMapping[parentId]
-    : undefined;
-  const grandParentModules = grandParentId
-    ? menuToPermissionMapping[grandParentId] || []
-    : [];
-
   // Combine all modules and remove duplicates
   return [
-    ...new Set([...directModules, ...parentModules, ...grandParentModules]),
+    ...new Set([...directModules]),
   ];
 };
 
 // Check if a menu item has any permissions assigned
 export const hasAnyPermissionForMenu = (
-menuId: string, selectedPermissions: any[], moduleActions: Record<string, string[]>,
+  menuId: string, selectedPermissions: any[], _moduleActions: Record<string, string[]>,
 ): boolean => {
   const backendModules = getAllBackendModulesForMenu(menuId);
 
