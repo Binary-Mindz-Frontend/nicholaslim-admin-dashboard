@@ -459,13 +459,51 @@ export default function AddRemovePermission() {
         });
         return { ...prev, permissions: newPermissions };
       } else {
-        // Remove only the direct permissions for this menu item and its children (not bundled modules)
-        const backendModules = getAllBackendModulesForMenuItem(menuId, false);
+        // Find all modules that are still required by other selected menu items
+        const requiredByOthers = new Set<string>();
+
+        const collectRequiredModules = (nodes: MenuNode[]) => {
+          nodes.forEach((node) => {
+            // Skip the branch being removed
+            if (node.id === menuId) return;
+
+            // Is this specific menu item selected?
+            // A menu item is "selected" if its primary modules are in prev.permissions
+            const primaryModules = menuToPermissionMapping[node.id] || [];
+            const isSelected =
+              primaryModules.length > 0 &&
+              primaryModules.every((mod) =>
+                prev.permissions.some((p) => p.module === mod),
+              );
+
+            if (isSelected) {
+              getSelectionModules(node.id).forEach((mod) =>
+                requiredByOthers.add(mod),
+              );
+            }
+
+            if (node.children) collectRequiredModules(node.children);
+          });
+        };
+
+        collectRequiredModules(MENU_TREE);
+
+        // Modules to remove candidate (direct + children's direct + bundles)
+        const modulesToRemoveCandidate = getAllBackendModulesForMenuItem(
+          menuId,
+          true,
+        );
+
         return {
           ...prev,
-          permissions: prev.permissions.filter(
-            (p) => !backendModules.includes(p.module) && p.action && p.action.trim() !== "",
-          ),
+          permissions: prev.permissions.filter((p) => {
+            // If it's not a module being removed, keep it
+            if (!modulesToRemoveCandidate.includes(p.module)) return true;
+            // If it's a module being removed but still required by others, keep it
+            if (requiredByOthers.has(p.module)) return true;
+            // Otherwise, remove it
+            return false;
+          }),
         };
       }
     });
