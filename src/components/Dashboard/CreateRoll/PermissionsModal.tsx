@@ -142,7 +142,8 @@ const findChildModules = (nodes: MenuNode[], targetId: string): string[] => {
       if (node.children) {
         const collectModules = (childNodes: MenuNode[]) => {
           for (const child of childNodes) {
-            childModules.push(...(menuToPermissionMapping[child.id] || []));
+            // Use getSelectionModules to support bundling for children
+            childModules.push(...getSelectionModules(child.id));
 
             if (child.children) {
               collectModules(child.children);
@@ -200,9 +201,40 @@ const findParentPermissions = (
 };
 
 // Get all backend modules for a menu item (including children recursively)
-const getAllBackendModulesForMenuItem = (menuId: string): string[] => {
-  // Use selection bundles for the target item to support "pairing" (e.g. user_web + user)
-  const directModules = getSelectionModules(menuId);
+const getAllBackendModulesForMenuItem = (menuId: string, isSelection: boolean = true): string[] => {
+  // Use getSelectionModules for selection, otherwise stick to direct mapping for deselection
+  const directModules = isSelection ? getSelectionModules(menuId) : (menuToPermissionMapping[menuId] || []);
+
+  const findChildModules = (nodes: MenuNode[], targetId: string): string[] => {
+    for (const node of nodes) {
+      if (node.id === targetId) {
+        const childModules: string[] = [];
+
+        if (node.children) {
+          const collectModules = (childNodes: MenuNode[]) => {
+            for (const child of childNodes) {
+              // Same logic for child modules
+              const childDirect = isSelection ? getSelectionModules(child.id) : (menuToPermissionMapping[child.id] || []);
+              childModules.push(...childDirect);
+
+              if (child.children) {
+                collectModules(child.children);
+              }
+            }
+          };
+          collectModules(node.children);
+        }
+
+        return childModules;
+      }
+
+      if (node.children) {
+        const result = findChildModules(node.children, targetId);
+        if (result.length > 0) return result;
+      }
+    }
+    return [];
+  };
 
   const childModules = findChildModules(MENU_TREE, menuId);
 
@@ -521,8 +553,8 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
           });
           return newPermissions;
         } else {
-          // Remove all permissions for this menu item and its children
-          const backendModules = getAllBackendModulesForMenuItem(menuId);
+          // Remove only the direct permissions for this menu item and its children (not bundled modules)
+          const backendModules = getAllBackendModulesForMenuItem(menuId, false);
           return prev.filter(
             (p) => !backendModules.includes(p.module) && p.action && p.action.trim() !== ""
           );
