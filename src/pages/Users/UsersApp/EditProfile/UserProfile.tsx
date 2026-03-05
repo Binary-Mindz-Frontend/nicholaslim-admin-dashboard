@@ -364,6 +364,8 @@ export default function UserProfile() {
     }
   }, [userData]);
 
+  console.log(userData,'userData' )
+
   if (isLoading)
     return <p className="text-center p-10">Loading user data...</p>;
   if (isError || !formData.id)
@@ -436,7 +438,7 @@ export default function UserProfile() {
     const previousRole = selectedRole;
     setSelectedRole(value); // ✅ sets it
 
-    const role = roleData.find((r: { id: number }) => r.id === Number(value));
+    const role = roleData?.find((r: { id: number }) => r.id === Number(value));
     toast.loading(`Assigning role ${role?.name}...`);
 
     try {
@@ -456,6 +458,8 @@ export default function UserProfile() {
       setSelectedRole(previousRole); // rollback on error
     }
   };
+
+  console.log(roleData?.data, 'roleData')
 
   return (
     <div className="sm:p-6 mx-auto space-y-6 bg-[#F5F7FA]">
@@ -572,7 +576,7 @@ export default function UserProfile() {
               </div>
             </SelectTrigger>
             <SelectContent>
-              {roleData.map(
+              {roleData?.data?.map(
                 (role: { id: number; name: string; isActive: boolean }) => (
                   <SelectItem key={role.id} value={String(role.id)}>
                     {role.name}
