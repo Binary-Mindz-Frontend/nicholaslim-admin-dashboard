@@ -3,9 +3,17 @@ import { baseApi } from "@/redux/api/baseApi";
 export const walletApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get Wallet with search and pagination
-    getWallet: builder.query({
+    userGetWallet: builder.query({
       query: ({ role, search, page, limit, balanceSort }) => ({
         url: `/wallet/user/wallet`,
+        method: "GET",
+        params: { role, search, page, limit, balanceSort },
+      }),
+      providesTags: ["Wallets"],
+    }),
+    raiderGetWallet: builder.query({
+      query: ({ role, search, page, limit, balanceSort }) => ({
+        url: `/wallet/raider/wallet`,
         method: "GET",
         params: { role, search, page, limit, balanceSort },
       }),
@@ -48,7 +56,8 @@ export const walletApi = baseApi.injectEndpoints({
 });
 
 export const {
-  useGetWalletQuery,
+  useUserGetWalletQuery,
+  useRaiderGetWalletQuery,
   useGetWalletHistoryQuery,
   useGetWalletCardsQuery,
   useWalletPayMutation,
