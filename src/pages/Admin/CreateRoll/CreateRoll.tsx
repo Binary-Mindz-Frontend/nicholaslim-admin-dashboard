@@ -19,6 +19,8 @@ import RoleFormModal from "@/components/Dashboard/CreateRoll/RoleFormModal";
 import ConfirmModal from "@/components/Dashboard/CreateRoll/ConfirmModal";
 import PermissionsModal from "@/components/Dashboard/CreateRoll/PermissionsModal";
 import toast from "react-hot-toast";
+import { Search } from "lucide-react";
+import CustomPagination from "@/components/Shared/CustomPagination/CustomPagination";
 
 interface Role {
   id: number;
@@ -34,11 +36,19 @@ interface Role {
 }
 
 const CreateRoll: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
   const {
     data: roles,
     isLoading,
     error,
-  } = useGetRoleBasedAccessControlQuery("");
+  } = useGetRoleBasedAccessControlQuery({
+    search: searchTerm,
+    page: currentPage,
+    limit: limit,
+  });
   const [addRole] = useAddRoleBasedAccessControlMutation();
   const [updateRole] = useUpdateRoleBasedAccessControlRoleMutation();
   const [updateStatus] = useUpdateRoleBasedAccessControlStatusMutation();
@@ -154,10 +164,10 @@ const CreateRoll: React.FC = () => {
         <span className="text-gray-600">
           {row.createdAt
             ? new Date(row.createdAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
             : "N/A"}
         </span>
       ),
@@ -202,11 +212,10 @@ const CreateRoll: React.FC = () => {
             }}
             disabled={row._count.users > 0 || row.isStatic}
             // className="p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded transition-colors cursor-pointer"
-            className={`p-2 rounded transition-colors cursor-pointer ${
-              row._count.users > 0 || row.isStatic
-                ? "text-gray-400 hover:cursor-not-allowed"
-                : "text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50"
-            }`}
+            className={`p-2 rounded transition-colors cursor-pointer ${row._count.users > 0 || row.isStatic
+              ? "text-gray-400 hover:cursor-not-allowed"
+              : "text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50"
+              }`}
             title="Edit Role"
           >
             <Edit2 size={18} />
@@ -219,17 +228,16 @@ const CreateRoll: React.FC = () => {
               setShowDeleteModal(true);
             }}
             disabled={row._count.users > 0 || row.isStatic}
-            className={`p-2 rounded transition-colors cursor-pointer ${
-              row._count.users > 0 || row.isStatic
-                ? "text-gray-400 hover:cursor-not-allowed"
-                : "text-red-600 hover:text-red-800 hover:bg-red-50"
-            }`}
+            className={`p-2 rounded transition-colors cursor-pointer ${row._count.users > 0 || row.isStatic
+              ? "text-gray-400 hover:cursor-not-allowed"
+              : "text-red-600 hover:text-red-800 hover:bg-red-50"
+              }`}
             title={
               row.isStatic
                 ? "Cannot delete static role"
                 : row._count.users > 0
-                ? "Cannot delete role with assigned users"
-                : "Delete role"
+                  ? "Cannot delete role with assigned users"
+                  : "Delete role"
             }
           >
             <Trash2 size={18} />
@@ -273,29 +281,57 @@ const CreateRoll: React.FC = () => {
             </p>
           </div>
 
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="mt-4 sm:mt-0 flex items-center px-4 py-2 bg-yellow-400 rounded-lg hover:bg-yellow-500 text-black transition-colors cursor-pointer"
-          >
-            <Plus size={20} className="mr-2" />
-            Create New Role
-          </button>
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mt-4 sm:mt-0">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-64">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search size={18} className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search roles..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1); // Reset to first page on search
+                }}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 sm:text-sm transition-colors"
+              />
+            </div>
+
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center px-4 py-2 bg-yellow-400 rounded-lg hover:bg-yellow-500 text-black transition-colors cursor-pointer w-full sm:w-auto justify-center"
+            >
+              <Plus size={20} className="mr-2" />
+              Add Role
+            </button>
+          </div>
         </div>
 
         {/* Roles Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+          {/* <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-800">
               Existing Roles ({roles?.length || 0})
             </h2>
-          </div>
+          </div> */}
 
-          {roles && roles.length > 0 ? (
-            <CustomTable
-              columns={orderColumns}
-              data={roles}
-              isLoading={isLoading}
-            />
+          {roles?.data && roles?.data.length > 0 ? (
+            <>
+              <CustomTable
+                columns={orderColumns}
+                data={roles?.data}
+                isLoading={isLoading}
+              />
+              <CustomPagination
+                currentPage={currentPage}
+                totalItems={roles?.meta?.total || 0}
+                itemsPerPage={limit}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={setLimit}
+              />
+            </>
           ) : (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
@@ -321,10 +357,10 @@ const CreateRoll: React.FC = () => {
               </p>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors"
               >
                 <Plus size={20} className="mr-2" />
-                Create Your First Role
+                Add Role
               </button>
             </div>
           )}
@@ -336,7 +372,7 @@ const CreateRoll: React.FC = () => {
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreateRole}
           title="Create New Role"
-          // isLoading={addRole.isLoading}
+        // isLoading={addRole.isLoading}
         />
 
         {/* Edit Role Modal */}
@@ -349,7 +385,7 @@ const CreateRoll: React.FC = () => {
           onSubmit={handleEditRole}
           title="Edit Role"
           initialData={editRoleData}
-          // isLoading={updateRole.isLoading}
+        // isLoading={updateRole.isLoading}
         />
 
         {/* Delete Confirmation Modal */}
@@ -363,7 +399,7 @@ const CreateRoll: React.FC = () => {
           title="Delete Role"
           message={`Are you sure you want to delete the role "${selectedRole?.name}"? This action cannot be undone.`}
           confirmText="Delete Role"
-          // isLoading={deleteRole.isLoading}
+        // isLoading={deleteRole.isLoading}
         />
 
         {/* Permissions Modal */}
@@ -377,7 +413,7 @@ const CreateRoll: React.FC = () => {
             permissions={selectedRole.permissions}
             roleName={selectedRole.name}
             roleId={selectedRole.id}
-            // isLoading={updateRolePermissions.isLoading}
+          // isLoading={updateRolePermissions.isLoading}
           />
         )}
       </div>
