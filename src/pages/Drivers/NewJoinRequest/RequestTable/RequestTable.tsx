@@ -75,7 +75,7 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
   // Fetch the data using useGetGoinReqestRiderProfilesQuery hook with filtered params
   const { data, isLoading, isError } = useGetGoinReqestRiderProfilesQuery(queryParams);
 
-// console.log("join reques data ", data?.data?.data); 
+  // console.log("join reques data ", data?.data?.data); 
 
   useEffect(() => {
     if (data?.data?.data) {
@@ -129,11 +129,12 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
     },
     {
       header: "Email",
+      width: "300px",
       cell: (row) => {
         const email = row.registrations?.[0]?.email_address;
         if (!email) return <span>N/A</span>;
         // Masking logic
-        return <span>{email}</span>;
+        return <span style={{ wordBreak: "break-all", display: "block" }}>{email}</span>;
       },
     },
     {

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { LuScanEye, LuArrowUpDown, LuX } from "react-icons/lu";
 import SCustomTable from "@/pages/Dashboard/_components/CutomTable";
 import { useNavigate } from "react-router-dom";
-import { useGetWalletQuery } from "@/redux/features/wallet/walletApi";
+import { useUserGetWalletQuery } from "@/redux/features/wallet/walletApi";
 import { FiSearch } from "react-icons/fi";
 import CustomPagination from "@/components/Shared/CustomPagination/CustomPagination";
 
@@ -30,7 +30,7 @@ const UserWalletTable: React.FC = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const { data, isLoading, error } = useGetWalletQuery({
+  const { data, isLoading, error } = useUserGetWalletQuery({
     role: "USER",
     search: searchQuery || undefined,
     page: currentPage,
