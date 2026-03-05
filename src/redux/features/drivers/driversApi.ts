@@ -21,7 +21,7 @@ const driversApi = baseApi.injectEndpoints({
                 limit = 10,
             }) => {
                 // Construct the URL with query parameters
-                let url = `/raider-profile/rider-profiles?page=${page}&limit=${limit}`;
+                let url = `/raider-profile/rider-profiles/raider?page=${page}&limit=${limit}`;
 
                 // Add additional query parameters if they exist
                 if (raider_name) {
