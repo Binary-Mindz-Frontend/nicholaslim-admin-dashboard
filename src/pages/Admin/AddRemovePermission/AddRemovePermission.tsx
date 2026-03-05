@@ -725,7 +725,7 @@ export default function AddRemovePermission() {
 // Module Actions configuration based on your enums
 const MODULE_ACTIONS: Record<string, string[]> = {
   // Dashboard
-  dashboard: ["read"],
+  dashboard: ["read", "just_admin"],
 
   // User Management
   user: [
@@ -737,9 +737,10 @@ const MODULE_ACTIONS: Record<string, string[]> = {
     "update_user_profile",
     "update_user_role",
     "update_user_status",
+    "just_admin",
   ],
-  user_web: ["create", "read", "update", "delete"],
-  user_mobile: ["create", "read", "update", "delete"],
+  user_web: ["create", "read", "update", "delete", "just_admin"],
+  user_mobile: ["create", "read", "update", "delete", "just_admin"],
 
   // Raider/Driver Management
   raider: [
@@ -753,7 +754,7 @@ const MODULE_ACTIONS: Record<string, string[]> = {
     "order_read_feed",
     "read_admin_my_raider",
   ],
-  raider_join: ["create", "read", "update", "delete"],
+  raider_join: ["create", "read", "update", "delete", "just_admin"],
 
   // Order Management
   order: [
@@ -769,6 +770,7 @@ const MODULE_ACTIONS: Record<string, string[]> = {
     "order_read_mine",
     "order_compitition",
     "order_read_feed",
+    "just_admin",
   ],
 
   // Payment & Transaction Management
@@ -781,42 +783,57 @@ const MODULE_ACTIONS: Record<string, string[]> = {
     "update_transaction_amount",
     "approve_transaction",
     "refund_transaction",
+    "just_admin",
   ],
 
   // Live Map/Fleet Tracking
-  live_map: ["read"],
+  live_map: ["read", "just_admin"],
 
   // Advertisement Management
   advertisement: ["create", "read", "delete", "update", "just_admin"],
 
   // Content Management
-  content_management: ["create", "read", "delete", "update"],
+  content_management: ["create", "read", "delete", "update", "just_admin"],
 
   // FAQ Management
-  faq: ["create", "read", "delete", "update"],
+  faq: ["create", "read", "delete", "update", "just_admin"],
 
   // Wallet Management
-  wallet: ["create", "read", "delete", "update", "reedom_coin"],
+  wallet: ["create", "read", "delete", "update", "reedom_coin", "just_admin"],
 
   // Notification Management
-  notification: ["create", "read", "delete", "update"],
+  notification: ["create", "read", "delete", "update", "just_admin"],
 
   // Platform Fee Management
-  platform_fee: ["create", "read", "delete", "update"],
+  platform_fee: ["create", "read", "delete", "update", "just_admin"],
 
   // Quiz Management
-  quiz: ["create", "read", "delete", "update", "get_one"],
-  quizzes: ["create", "read", "delete", "update", "get_one"],
+  quiz: ["create", "read", "delete", "update", "get_one", "just_admin"],
+  quizzes: ["create", "read", "delete", "update", "get_one", "just_admin"],
 
   // Coin/Rewards System
-  coin: ["create", "read", "delete", "update", "get_one", "reedom_coin"],
+  coin: [
+    "create",
+    "read",
+    "delete",
+    "update",
+    "get_one",
+    "reedom_coin",
+    "just_admin",
+  ],
 
   // Driver Order Competition
-  driver_order_competition: ["create", "read", "delete", "update"],
-  driver_order_compitition: ["create", "read", "delete", "update"],
+  driver_order_competition: ["create", "read", "delete", "update", "just_admin"],
+  driver_order_compitition: ["create", "read", "delete", "update", "just_admin"],
 
   // Customer Order Confirmation
-  customer_order_confirmation: ["create", "read", "delete", "update"],
+  customer_order_confirmation: [
+    "create",
+    "read",
+    "delete",
+    "update",
+    "just_admin",
+  ],
 
   // Vehicle & Pricing Management
   vechicle_pricing: ["create", "read", "delete", "update", "just_admin"],
@@ -826,31 +843,38 @@ const MODULE_ACTIONS: Record<string, string[]> = {
 
   // Order Placement
   order_placement: ["create", "read", "delete", "update", "just_admin"],
-  live_order_tracking: ["create", "read", "delete", "update"],
-  order_history: ["read", "delete"],
+  live_order_tracking: ["create", "read", "delete", "update", "just_admin"],
+  order_history: ["read", "delete", "just_admin"],
   payment_options: ["create", "read", "delete", "update", "just_admin"],
 
   // Report & Analytics
   report_analytics: ["create", "read", "delete", "update", "just_admin"],
-  report_orders: ["read", "delete"],
-  driver_performance: ["read"],
-  customer_report: ["read"],
+  report_orders: ["read", "delete", "just_admin"],
+  driver_performance: ["read", "just_admin"],
+  customer_report: ["read", "just_admin"],
   report_analytics_stats: ["create", "read", "delete", "update", "just_admin"],
 
   // Destination Management
   destination: ["create", "read", "update", "delete", "just_admin"],
 
   // My Raider
-  my_raider: ["create", "read", "delete", "update", "read_admin_my_raider"],
+  my_raider: [
+    "create",
+    "read",
+    "delete",
+    "update",
+    "read_admin_my_raider",
+    "just_admin",
+  ],
 
   // Payment Method
   payment_method: ["create", "read", "update", "delete", "just_admin"],
 
   // Referral Management
-  referral: ["create", "read", "update", "delete"],
+  referral: ["create", "read", "update", "delete", "just_admin"],
 
   // Additional Services
-  additional_services: ["create", "read", "update", "delete"],
+  additional_services: ["create", "read", "update", "delete", "just_admin"],
 
   // User Profile
   user_profile: [
@@ -860,6 +884,7 @@ const MODULE_ACTIONS: Record<string, string[]> = {
     "delete",
     "get_user_profile",
     "update_user_profile",
+    "just_admin",
   ],
 
   // Service Areas
@@ -890,13 +915,13 @@ const MODULE_ACTIONS: Record<string, string[]> = {
   order_confirmation: ["create", "read", "update", "delete", "just_admin"],
 
   // Driver Incentive
-  driver_incentive: ["create", "read", "update", "delete"],
+  driver_incentive: ["create", "read", "update", "delete", "just_admin"],
 
   // Customer Rewards
-  customer_rewards: ["create", "read", "update", "delete", "reedom_coin"],
+  customer_rewards: ["create", "read", "update", "delete", "reedom_coin", "just_admin"],
 
   // Promo Code
-  promo_code: ["create", "read", "update", "delete"],
+  promo_code: ["create", "read", "update", "delete", "just_admin"],
 
   // Coin Stats
   coin_stats: ["create", "read", "update", "delete", "just_admin"],
@@ -914,13 +939,19 @@ const MODULE_ACTIONS: Record<string, string[]> = {
   contact_info: ["create", "read", "update", "delete", "just_admin"],
 
   // Service Chat
-  service_chat: ["create", "read", "update", "delete"],
+  service_chat: ["create", "read", "update", "delete", "just_admin"],
 
   // Dashboard Popup
   dashboard_popup: ["create", "read", "update", "delete", "just_admin"],
 
   // RBAC (Role Based Access Control)
-  rbac: ["create", "read", "delete", "update_rbac_role_permission"],
+  rbac: [
+    "create",
+    "read",
+    "delete",
+    "update_rbac_role_permission",
+    "just_admin",
+  ],
 };
 
 // Keep for backward compatibility
