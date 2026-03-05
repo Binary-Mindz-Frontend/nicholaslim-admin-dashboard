@@ -22,6 +22,7 @@ export interface MenuItem {
   children?: MenuItem[];
   isExpanded?: boolean;
   route?: string;
+  hidden?: boolean;
 }
 
 export const menuItems: MenuItem[] = [
@@ -308,7 +309,7 @@ export const menuItems: MenuItem[] = [
   },
 
   {
-    id: "support",
+    id: "support-communication",
     label: "Support & Communication",
     icon: <HelpCircle className="w-5 h-5" />,
     children: [

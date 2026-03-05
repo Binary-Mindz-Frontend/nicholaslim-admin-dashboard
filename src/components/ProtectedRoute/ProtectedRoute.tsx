@@ -101,12 +101,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       // Extract base route (remove parameters)
       const baseRoute = extractBaseRoute(path);
 
-      // Find parent menu for the base route
+      // Find parent menu for the base route as fallback
       const parentRoute =
         childRouteToParentMapping[baseRoute] || childRouteToParentMapping[path];
-      const menuIdToCheck = parentRoute || baseRoute;
 
-      const access = hasPermissionForMenu(menuIdToCheck, permissionsData);
+      // Check the exact route first, then fallback to checking the parent concept
+      const access = hasPermissionForMenu(baseRoute, permissionsData) ||
+        (parentRoute ? hasPermissionForMenu(parentRoute, permissionsData) : false);
+
       setHasAccess(access);
     }
   }, [location.pathname, permissionsData, isLoading]);
