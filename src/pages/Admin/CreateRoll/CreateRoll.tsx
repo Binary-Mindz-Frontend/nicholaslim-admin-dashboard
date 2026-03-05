@@ -154,10 +154,10 @@ const CreateRoll: React.FC = () => {
         <span className="text-gray-600">
           {row.createdAt
             ? new Date(row.createdAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
             : "N/A"}
         </span>
       ),
@@ -202,11 +202,10 @@ const CreateRoll: React.FC = () => {
             }}
             disabled={row._count.users > 0 || row.isStatic}
             // className="p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded transition-colors cursor-pointer"
-            className={`p-2 rounded transition-colors cursor-pointer ${
-              row._count.users > 0 || row.isStatic
+            className={`p-2 rounded transition-colors cursor-pointer ${row._count.users > 0 || row.isStatic
                 ? "text-gray-400 hover:cursor-not-allowed"
                 : "text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50"
-            }`}
+              }`}
             title="Edit Role"
           >
             <Edit2 size={18} />
@@ -219,17 +218,16 @@ const CreateRoll: React.FC = () => {
               setShowDeleteModal(true);
             }}
             disabled={row._count.users > 0 || row.isStatic}
-            className={`p-2 rounded transition-colors cursor-pointer ${
-              row._count.users > 0 || row.isStatic
+            className={`p-2 rounded transition-colors cursor-pointer ${row._count.users > 0 || row.isStatic
                 ? "text-gray-400 hover:cursor-not-allowed"
                 : "text-red-600 hover:text-red-800 hover:bg-red-50"
-            }`}
+              }`}
             title={
               row.isStatic
                 ? "Cannot delete static role"
                 : row._count.users > 0
-                ? "Cannot delete role with assigned users"
-                : "Delete role"
+                  ? "Cannot delete role with assigned users"
+                  : "Delete role"
             }
           >
             <Trash2 size={18} />
@@ -290,10 +288,10 @@ const CreateRoll: React.FC = () => {
             </h2>
           </div> */}
 
-          {roles && roles.length > 0 ? (
+          {roles?.data && roles?.data.length > 0 ? (
             <CustomTable
               columns={orderColumns}
-              data={roles}
+              data={roles?.data}
               isLoading={isLoading}
             />
           ) : (
@@ -321,10 +319,10 @@ const CreateRoll: React.FC = () => {
               </p>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors"
               >
                 <Plus size={20} className="mr-2" />
-                Create Your First Role
+                Add Role
               </button>
             </div>
           )}
@@ -336,7 +334,7 @@ const CreateRoll: React.FC = () => {
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreateRole}
           title="Create New Role"
-          // isLoading={addRole.isLoading}
+        // isLoading={addRole.isLoading}
         />
 
         {/* Edit Role Modal */}
@@ -349,7 +347,7 @@ const CreateRoll: React.FC = () => {
           onSubmit={handleEditRole}
           title="Edit Role"
           initialData={editRoleData}
-          // isLoading={updateRole.isLoading}
+        // isLoading={updateRole.isLoading}
         />
 
         {/* Delete Confirmation Modal */}
@@ -363,7 +361,7 @@ const CreateRoll: React.FC = () => {
           title="Delete Role"
           message={`Are you sure you want to delete the role "${selectedRole?.name}"? This action cannot be undone.`}
           confirmText="Delete Role"
-          // isLoading={deleteRole.isLoading}
+        // isLoading={deleteRole.isLoading}
         />
 
         {/* Permissions Modal */}
@@ -377,7 +375,7 @@ const CreateRoll: React.FC = () => {
             permissions={selectedRole.permissions}
             roleName={selectedRole.name}
             roleId={selectedRole.id}
-            // isLoading={updateRolePermissions.isLoading}
+          // isLoading={updateRolePermissions.isLoading}
           />
         )}
       </div>

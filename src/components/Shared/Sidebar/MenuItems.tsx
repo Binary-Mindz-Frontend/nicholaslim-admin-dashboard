@@ -22,6 +22,7 @@ export interface MenuItem {
   children?: MenuItem[];
   isExpanded?: boolean;
   route?: string;
+  hidden?: boolean;
 }
 
 export const menuItems: MenuItem[] = [

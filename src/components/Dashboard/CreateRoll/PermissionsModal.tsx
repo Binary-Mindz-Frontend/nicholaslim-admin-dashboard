@@ -24,10 +24,8 @@ import toast from "react-hot-toast";
 // Import menu items and mapping
 import { menuItems, MenuItem } from "@/components/Shared/Sidebar/MenuItems";
 import {
-  hasAnyPermissionForMenu,
-  hasAllPermissionsForMenu,
-  hasPartialPermissionsForMenu,
   menuToPermissionMapping,
+  getSelectionModules,
 } from "@/utils/permissionMapping";
 
 import { MODULE_ACTIONS } from "@/pages/Admin/AddRemovePermission/AddRemovePermission";
@@ -120,7 +118,7 @@ const buildMenuTree = (
   level: number = 0,
 ): MenuNode[] => {
   return items
-    .filter((item) => item.id !== "login" && item.id !== "")
+    .filter((item) => item.id !== "login" && item.id !== "" && item.id !== "admin")
     .map((item) => ({
       id: item.id,
       label: item.label,
@@ -135,50 +133,86 @@ const buildMenuTree = (
 
 const MENU_TREE = buildMenuTree(menuItems);
 
-// Get all backend modules for a menu item (including children recursively)
-const getAllBackendModulesForMenuItem = (menuId: string): string[] => {
-  // Direct modules from mapping
-  const directModules = menuToPermissionMapping[menuId] || [];
-
-  // Find modules from children in menu tree
-  const findChildModules = (nodes: MenuNode[], targetId: string): string[] => {
-    for (const node of nodes) {
-      if (node.id === targetId) {
-        const childModules: string[] = [];
-
-        if (node.children) {
-          const collectModules = (childNodes: MenuNode[]) => {
-            for (const child of childNodes) {
-              childModules.push(...(menuToPermissionMapping[child.id] || []));
-
-              if (child.children) {
-                collectModules(child.children);
-              }
-            }
-          };
-          collectModules(node.children);
-        }
-
-        return childModules;
-      }
+// Find modules from children in menu tree
+const findChildModules = (nodes: MenuNode[], targetId: string): string[] => {
+  for (const node of nodes) {
+    if (node.id === targetId) {
+      const childModules: string[] = [];
 
       if (node.children) {
-        const result = findChildModules(node.children, targetId);
-        if (result.length > 0) return result;
+        const collectModules = (childNodes: MenuNode[]) => {
+          for (const child of childNodes) {
+            childModules.push(...(menuToPermissionMapping[child.id] || []));
+
+            if (child.children) {
+              collectModules(child.children);
+            }
+          }
+        };
+        collectModules(node.children);
+      }
+
+      return childModules;
+    }
+
+    if (node.children) {
+      const result = findChildModules(node.children, targetId);
+      if (result.length > 0) return result;
+    }
+  }
+  return [];
+};
+
+// Helper to find parent permissions for a menu item (e.g. users-web-portal -> user)
+const findParentPermissions = (
+  menuId: string,
+  moduleActions: Record<string, string[]>,
+  tree: MenuNode[],
+): Permission[] => {
+  const findNode = (nodes: MenuNode[], targetId: string): MenuNode | null => {
+    for (const node of nodes) {
+      if (node.id === targetId) return node;
+      if (node.children) {
+        const found = findNode(node.children, targetId);
+        if (found) return found;
       }
     }
-    return [];
+    return null;
   };
+
+  const node = findNode(tree, menuId);
+  const parentId = node?.parentId;
+
+  if (!parentId) return [];
+
+  const parentModules = getSelectionModules(parentId);
+  const permissions: Permission[] = [];
+
+  for (const module of parentModules) {
+    const actions = moduleActions[module] || [];
+    actions.forEach((action) => {
+      permissions.push({ module, action });
+    });
+  }
+
+  // Also check grandparents
+  return [...permissions, ...findParentPermissions(parentId, moduleActions, tree)];
+};
+
+// Get all backend modules for a menu item (including children recursively)
+const getAllBackendModulesForMenuItem = (menuId: string): string[] => {
+  // Use selection bundles for the target item to support "pairing" (e.g. user_web + user)
+  const directModules = getSelectionModules(menuId);
 
   const childModules = findChildModules(MENU_TREE, menuId);
 
-  // Combine all modules and remove duplicates
+  // Combine all modules and remove duplicates, filtering by active MODULE_ACTIONS
   return [
     ...new Set([
       ...directModules,
       ...childModules,
     ]),
-  ];
+  ].filter(mod => !!MODULE_ACTIONS[mod]);
 };
 
 // Extract all unique modules currently mapped in the menu tree to prevent ghost permissions
@@ -187,14 +221,21 @@ MENU_TREE.forEach(node => {
   getAllBackendModulesForMenuItem(node.id).forEach(mod => ALL_ACTIVE_TREE_MODULES.add(mod));
 });
 
-// Get all permissions for a menu item (including children recursively)
+// Get all permissions for a menu item (including children recursively AND parents recursively for selection)
 const getAllPermissionsForMenuItem = (
   menuId: string,
   moduleActions: Record<string, string[]>,
 ): Permission[] => {
   const backendModules = getAllBackendModulesForMenuItem(menuId);
+  const parentPermissions = findParentPermissions(
+    menuId,
+    moduleActions,
+    MENU_TREE,
+  );
+
   const permissions: Permission[] = [];
 
+  // Add the modules for this item and its children
   for (const module of backendModules) {
     const actions = moduleActions[module] || [];
     actions.forEach((action) => {
@@ -202,7 +243,50 @@ const getAllPermissionsForMenuItem = (
     });
   }
 
-  return permissions;
+  // Add parent permissions (toggle up)
+  return [...permissions, ...parentPermissions];
+};
+
+// Helper to check if a menu or any of its children have any permission
+const hasAnyPermissionLocal = (
+  menuId: string,
+  selectedPermissions: Permission[],
+  moduleActions: Record<string, string[]>,
+): boolean => {
+  console.log(moduleActions, "moduleActions")
+  const backendModules = getAllBackendModulesForMenuItem(menuId);
+  return backendModules.some(mod =>
+    selectedPermissions.some(p => p.module === mod)
+  );
+};
+
+// Helper to check if a menu and all its children have all permissions
+const hasAllPermissionsLocal = (
+  menuId: string,
+  selectedPermissions: Permission[],
+  moduleActions: Record<string, string[]>,
+): boolean => {
+  const backendModules = getAllBackendModulesForMenuItem(menuId);
+  if (backendModules.length === 0) return false;
+
+  return backendModules.every(mod => {
+    const requiredActions = moduleActions[mod] || [];
+    const actualPermissions = selectedPermissions.filter(p => p.module === mod);
+
+    if (requiredActions.length === 0) return actualPermissions.length > 0;
+    return actualPermissions.length === requiredActions.length;
+  });
+};
+
+// Helper to check for partial permissions
+const hasPartialPermissionsLocal = (
+  menuId: string,
+  selectedPermissions: Permission[],
+  moduleActions: Record<string, string[]>,
+): boolean => {
+  const hasAny = hasAnyPermissionLocal(menuId, selectedPermissions, moduleActions);
+  const hasAll = hasAllPermissionsLocal(menuId, selectedPermissions, moduleActions);
+  return hasAny && !hasAll;
 };
 
 // Recursive component to render menu tree with professional styling
@@ -226,17 +310,17 @@ const MenuTreeItem: React.FC<{
     const hasChildren = node.children && node.children.length > 0;
     const isExpanded = expandedNodes.has(node.id);
 
-    const hasPermission = hasAnyPermissionForMenu(
+    const hasPermission = hasAnyPermissionLocal(
       node.id,
       selectedPermissions,
       moduleActions,
     );
-    const hasAll = hasAllPermissionsForMenu(
+    const hasAll = hasAllPermissionsLocal(
       node.id,
       selectedPermissions,
       moduleActions,
     );
-    const hasPartial = hasPartialPermissionsForMenu(
+    const hasPartial = hasPartialPermissionsLocal(
       node.id,
       selectedPermissions,
       moduleActions,
@@ -420,7 +504,14 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
         if (checked) {
           // Add all permissions for this menu item and its children
           const newPermissions = [...prev];
-          menuPermissions.forEach((perm) => {
+          const parentPermissions = findParentPermissions(
+            menuId,
+            MODULE_ACTIONS,
+            MENU_TREE,
+          );
+          const allToAdd = [...menuPermissions, ...parentPermissions];
+
+          allToAdd.forEach((perm) => {
             const exists = prev.some(
               (p) => p.module === perm.module && p.action === perm.action,
             );

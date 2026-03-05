@@ -101,7 +101,7 @@ export function Sidebar() {
       }
 
       // Check if this item or any of its children should be shown
-      if (!shouldShowParentMenu(item, permissionsData)) {
+      if (item.hidden || !shouldShowParentMenu(item, permissionsData)) {
         return acc;
       }
 
@@ -246,13 +246,12 @@ export function Sidebar() {
           {/* Parent Menu Item */}
           <button
             onClick={() => handleItemClick(item.id, hasChildren, level)}
-            className={`w-full flex items-center cursor-pointer gap-3 px-4 py-2.5 rounded-lg font-medium transition-colors relative group ${
-              isLogoutButton
+            className={`w-full flex items-center cursor-pointer gap-3 px-4 py-2.5 rounded-lg font-medium transition-colors relative group ${isLogoutButton
                 ? "bg-red-50 hover:bg-red-100 text-red-600"
                 : isItemActive || isChildActive
                   ? "bg-primary text-slate-900"
                   : "text-slate-700 hover:bg-slate-100"
-            } ${level > 0 ? "ml-4" : ""}`}
+              } ${level > 0 ? "ml-4" : ""}`}
           >
             {(isItemActive || isChildActive) &&
               level === 0 &&
@@ -277,9 +276,8 @@ export function Sidebar() {
 
             {hasChildren && !isLogoutButton && (
               <ChevronDown
-                className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
-                  isExpanded ? "rotate-180" : ""
-                }`}
+                className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""
+                  }`}
               />
             )}
           </button>
@@ -307,11 +305,10 @@ export function Sidebar() {
                       onClick={() =>
                         handleItemClick(child.id, false, level + 1)
                       }
-                      className={`w-full cursor-pointer flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ml-4 text-left ${
-                        isChildActive
+                      className={`w-full cursor-pointer flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ml-4 text-left ${isChildActive
                           ? "text-yellow-600 font-medium bg-yellow-50"
                           : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                      }`}
+                        }`}
                     >
                       {child.icon ? (
                         <span className="shrink-0">{child.icon}</span>

@@ -16,10 +16,14 @@ export const menuToPermissionMapping: PermissionMapping = {
   "roles-permissions": ["rbac"],
 
   // User Management
-  "users-web-portal": ["user"],
-  "users-app": ["user", "user_profile"],
+  "users-web-portal": ["user_web"],
+  user_web: ["user_web"],
+  user_general: ["user"],
+  "users-app": ["user_mobile"],
+  user_mobile: ["user_mobile"],
+  user_general_mobile: ["user"],
   user_profile: ["user_profile"],
-  "users-app/:id": ["user", "user_profile"],
+  "users-app/:id": ["user_mobile"],
   "favourite-drivers": ["user"],
   "favourite-drivers/:id": ["user"],
   "order-history/:id": ["user"],
@@ -29,9 +33,9 @@ export const menuToPermissionMapping: PermissionMapping = {
   "driver-list": ["raider"],
   "driver-list/:id": ["raider"],
   "add-new-driver": ["raider"],
-  "new-join-request": ["raider"],
-  "join-request": ["raider"],
-  "join-request/:id": ["raider"],
+  "new-join-request": ["raider_join"],
+  "join-request": ["raider_join"],
+  "join-request/:id": ["raider_join"],
   "raider-details": ["raider"],
   "raider-details/:id": ["raider"],
 
@@ -44,7 +48,7 @@ export const menuToPermissionMapping: PermissionMapping = {
   order: ["order_placement"],
   "live-order-tracking": ["live_order_tracking"],
   "order-history": ["order_history"],
-  "payment-options": ["payment_options"],
+  "payment-options": ["payment_options", "payment_method"],
   "order/:id": ["order_placement"],
   "live-order-tracking/:id": ["live_order_tracking"],
 
@@ -78,13 +82,13 @@ export const menuToPermissionMapping: PermissionMapping = {
   "transaction-stats": ["transactions_stats"],
 
   // Vehicle Management
-  "vehicle-types": ["destination", "vehicle_type"],
+  "vehicle-types": ["vehicle_type"],
 
   // Wallet
-  "wallet-user": ["wallet_user"],
-  "wallet-driver": ["wallet_driver"],
-  "wallet-user/:id": ["wallet_user"],
-  "wallet-driver/:id": ["wallet_driver"],
+  "wallet-user": ["wallet_user", "user_wallet"],
+  "wallet-driver": ["wallet_driver", "raider_wallet"],
+  "wallet-user/:id": ["wallet_user", "user_wallet"],
+  "wallet-driver/:id": ["wallet_driver", "raider_wallet"],
 
   // Coin System
   "coin-system": ["coin"],
@@ -171,6 +175,28 @@ export const menuToPermissionMapping: PermissionMapping = {
   // Order Confirmation (specific)
   "order-confirmation": ["order_confirmation"],
   "order-confirmation-rules": ["order_confirmation"],
+
+  // Parent Fallbacks (for sidebar visibility of legacy roles)
+  wallet: ["wallet"],
+  reports: ["report_analytics"],
+  "order-placement": ["order_placement"],
+  "finance-reporting": ["report_analytics_stats"],
+  users: [],
+  drivers: [],
+  "system-configuration": [],
+};
+
+// Map menu IDs to additional modules that should be selected together
+// (e.g. selecting Web Users should also select the general User module)
+export const selectionBundles: Record<string, string[]> = {
+  "users-web-portal": ["user_web", "user"],
+  "users-app": ["user_mobile", "user"],
+  "users-app/:id": ["user_mobile", "user"],
+};
+
+// Helper to get selection modules for a menu ID
+export const getSelectionModules = (menuId: string): string[] => {
+  return selectionBundles[menuId] || menuToPermissionMapping[menuId] || [];
 };
 
 // Map child routes to their parent menu IDs (for sidebar navigation)

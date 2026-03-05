@@ -738,6 +738,8 @@ const MODULE_ACTIONS: Record<string, string[]> = {
     "update_user_role",
     "update_user_status",
   ],
+  user_web: ["create", "read", "update", "delete"],
+  user_mobile: ["create", "read", "update", "delete"],
 
   // Raider/Driver Management
   raider: [
@@ -751,6 +753,7 @@ const MODULE_ACTIONS: Record<string, string[]> = {
     "order_read_feed",
     "read_admin_my_raider",
   ],
+  raider_join: ["create", "read", "update", "delete"],
 
   // Order Management
   order: [
@@ -868,6 +871,8 @@ const MODULE_ACTIONS: Record<string, string[]> = {
   // Wallet Management
   wallet_user: ["create", "read", "update", "delete", "just_admin"],
   wallet_driver: ["create", "read", "update", "delete", "just_admin"],
+  user_wallet: ["create", "read", "update", "delete", "just_admin"],
+  raider_wallet: ["create", "read", "update", "delete", "just_admin"],
 
   // Delivery Type
   delivery_type: ["create", "read", "update", "delete", "just_admin"],
@@ -882,7 +887,7 @@ const MODULE_ACTIONS: Record<string, string[]> = {
   additionl_order_service: ["create", "read", "update", "delete", "just_admin"],
 
   // Order Confirmation
-  // order_confirmation: ["create", "read", "update", "delete", "just_admin"],
+  order_confirmation: ["create", "read", "update", "delete", "just_admin"],
 
   // Driver Incentive
   driver_incentive: ["create", "read", "update", "delete"],
