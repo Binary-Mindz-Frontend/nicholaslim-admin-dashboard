@@ -15,6 +15,7 @@ import { ChevronDown, ChevronRight, Save, Check, Minus, Search, X } from "lucide
 import { menuItems, MenuItem } from "@/components/Shared/Sidebar/MenuItems";
 import {
   menuToPermissionMapping,
+  getSelectionModules,
 } from "@/utils/permissionMapping";
 
 interface Permission {
@@ -54,9 +55,9 @@ const buildMenuTree = (
 const MENU_TREE = buildMenuTree(menuItems);
 
 // Get all backend modules for a menu item (including children recursively)
-const getAllBackendModulesForMenuItem = (menuId: string): string[] => {
-  // Direct modules from mapping
-  const directModules = menuToPermissionMapping[menuId] || [];
+const getAllBackendModulesForMenuItem = (menuId: string, isSelection: boolean = true): string[] => {
+  // Use getSelectionModules for selection, otherwise stick to direct mapping for deselection
+  const directModules = isSelection ? getSelectionModules(menuId) : (menuToPermissionMapping[menuId] || []);
 
   // Find modules from children in menu tree
   const findChildModules = (nodes: MenuNode[], targetId: string): string[] => {
@@ -67,7 +68,9 @@ const getAllBackendModulesForMenuItem = (menuId: string): string[] => {
         if (node.children) {
           const collectModules = (childNodes: MenuNode[]) => {
             for (const child of childNodes) {
-              childModules.push(...(menuToPermissionMapping[child.id] || []));
+              // Same logic for child modules
+              const childDirect = isSelection ? getSelectionModules(child.id) : (menuToPermissionMapping[child.id] || []);
+              childModules.push(...childDirect);
 
               if (child.children) {
                 collectModules(child.children);
@@ -456,8 +459,8 @@ export default function AddRemovePermission() {
         });
         return { ...prev, permissions: newPermissions };
       } else {
-        // Remove all permissions for this menu item and its children
-        const backendModules = getAllBackendModulesForMenuItem(menuId);
+        // Remove only the direct permissions for this menu item and its children (not bundled modules)
+        const backendModules = getAllBackendModulesForMenuItem(menuId, false);
         return {
           ...prev,
           permissions: prev.permissions.filter(
