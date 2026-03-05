@@ -3,10 +3,18 @@ import { baseApi } from "@/redux/api/baseApi";
 const roleBasedAccessControlApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getRoleBasedAccessControl: builder.query({
-      query: () => ({
-        url: "/roles",
-        method: "GET",
-      }),
+      query: (params: { search?: string; page?: number; limit?: number } = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.search) queryParams.append("search", params.search);
+        if (params.page) queryParams.append("page", params.page.toString());
+        if (params.limit) queryParams.append("limit", params.limit.toString());
+
+        const queryString = queryParams.toString();
+        return {
+          url: `/roles${queryString ? `?${queryString}` : ""}`,
+          method: "GET",
+        };
+      },
       providesTags: ["RoleBasedAccessControl", "Users"],
     }),
 
