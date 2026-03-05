@@ -176,11 +176,6 @@ export const menuToPermissionMapping: PermissionMapping = {
   "order-confirmation": ["order_confirmation"],
   "order-confirmation-rules": ["order_confirmation"],
 
-  // Parent Fallbacks (for sidebar visibility of legacy roles)
-  wallet: ["wallet"],
-  reports: ["report_analytics"],
-  "order-placement": ["order_placement"],
-  "finance-reporting": ["report_analytics_stats"],
   users: [],
   drivers: [],
   "system-configuration": [],
@@ -449,7 +444,7 @@ export const isDynamicRoute = (route: string): boolean => {
 
 // Get all backend modules for a specific menu ID (including parent and children)
 export const getAllBackendModulesForMenu = (menuId: string): string[] => {
-  const directModules = menuToPermissionMapping[menuId] || [];
+  const directModules = getSelectionModules(menuId);
 
   // Combine all modules and remove duplicates
   return [
@@ -543,7 +538,7 @@ export const hasPermissionForMenu = (
   menuId: string,
   permissionsData: any,
 ): boolean => {
-  if (menuId === "login") return true;
+  if (menuId === "login" || menuId === "customize-profile" || menuId === "change-password") return true;
 
   const baseMenuId = extractBaseRoute(menuId);
 
