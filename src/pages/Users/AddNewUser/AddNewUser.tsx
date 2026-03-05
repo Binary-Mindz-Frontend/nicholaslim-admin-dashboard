@@ -100,9 +100,9 @@ export default function AddNewUser() {
   });
 
   const [addUser, { isLoading }] = useAddUserTypeMutation();
-  const { data: rolesResponse, isLoading: rolesLoading } = useGetRoleBasedAccessControlQuery("");
+  const { data: rolesResponse, isLoading: rolesLoading } = useGetRoleBasedAccessControlQuery(undefined);
 
-  const roles = rolesResponse || [];
+  const roles = rolesResponse?.data || [];
 
   const onSubmit = async (data: FormData) => {
     if (!data.fullName || !data.email || !data.phone || !data.password || !data.role) {

@@ -312,9 +312,9 @@ interface ApiUserData {
   id: number;
   username: string;
   email: string;
-    phone: string;
-    
-    
+  phone: string;
+
+
 }
 
 // ------------------ COMPONENT STATE TYPE ------------------
@@ -335,8 +335,8 @@ export default function UserProfile() {
   const searchParams = new URLSearchParams(location.search);
   const isEditMode = searchParams.get("mode") === "edit";
 
-    const { data: userData, isLoading, isError } = useGetUserTypeByIdQuery(id);
-    console.log(userData, "userData");
+  const { data: userData, isLoading, isError } = useGetUserTypeByIdQuery(id);
+  console.log(userData, "userData");
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserTypeMutation();
 
   const [formData, setFormData] = useState<Partial<UserProfileType>>({});
@@ -348,6 +348,9 @@ export default function UserProfile() {
     useAddaddUserToRoleMutation();
   console.log(roleData, "roleData");
 
+  const [userRoles, setUserRoles] = useState<
+    { id: number; name: string }[]
+  >([]);
 
   useEffect(() => {
     if (userData && userData.data) {
@@ -361,10 +364,11 @@ export default function UserProfile() {
       };
 
       setFormData(initialFormData);
+      setUserRoles(userData?.data?.roles || [])
     }
   }, [userData]);
 
-  console.log(userData,'userData' )
+  console.log(userData, 'userData')
 
   if (isLoading)
     return <p className="text-center p-10">Loading user data...</p>;
@@ -561,30 +565,47 @@ export default function UserProfile() {
               />
             </div>
           ))}
-          <Select
-            value={selectedRole}
-            onValueChange={handleRoleChange}
-            disabled={isChangingRole}
-          >
-            <SelectTrigger className="w-full mt-7">
-              <div className="flex items-center gap-2">
-                {isChangingRole && (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-yellow-400 border-t-transparent shrink-0" />
+          {/* ROLE SECTION */}
+          {!isEditMode ? (
+            <div className="col-span-1 sm:col-span-2">
+              <Label className="text-sm font-semibold pb-2">Assigned Roles</Label>
+
+              <div className="flex flex-wrap gap-2 mt-2">
+                {userRoles.length > 0 ? (
+                  userRoles.map((role) => (
+                    <span
+                      key={role.id}
+                      className="px-4 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium"
+                    >
+                      {role.name}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-gray-500">No roles assigned</p>
                 )}
-                {/* shadcn needs SelectValue mounted to display selected label */}
-                <SelectValue placeholder="Select a role" />
               </div>
-            </SelectTrigger>
-            <SelectContent>
-              {roleData?.data?.map(
-                (role: { id: number; name: string; isActive: boolean }) => (
-                  <SelectItem key={role.id} value={String(role.id)}>
-                    {role.name}
-                  </SelectItem>
-                ),
-              )}
-            </SelectContent>
-          </Select>
+            </div>
+          ) : (
+            <Select
+              value={selectedRole}
+              onValueChange={handleRoleChange}
+              disabled={isChangingRole}
+            >
+              <SelectTrigger className="w-full mt-7">
+                <SelectValue placeholder="Select a role" />
+              </SelectTrigger>
+
+              <SelectContent>
+                {roleData?.data?.map(
+                  (role: { id: number; name: string; isActive: boolean }) => (
+                    <SelectItem key={role.id} value={String(role.id)}>
+                      {role.name}
+                    </SelectItem>
+                  )
+                )}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* ACTION BUTTONS (ONLY IN EDIT MODE) */}
