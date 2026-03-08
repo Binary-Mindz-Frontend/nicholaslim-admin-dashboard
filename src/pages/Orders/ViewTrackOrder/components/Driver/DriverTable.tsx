@@ -245,6 +245,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
         </span>
       ),
     },
+   
     {
       header: "Onboarding Type",
       accessor: "LoginType",

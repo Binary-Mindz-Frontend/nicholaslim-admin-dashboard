@@ -220,6 +220,11 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
         </span>
       ),
     },
+     {
+      header: "User Rating",
+      accessor: "User_rating" || "N/A",
+
+    },
     {
       header: "Availability Status",
       accessor: "is_available",
