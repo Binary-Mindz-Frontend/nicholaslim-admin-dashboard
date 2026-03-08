@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Navigation,
   Search,
+  ChevronRight,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,119 +49,161 @@ interface ResolvedAddress {
   lng: number;
 }
 
+interface AddressSuggestion {
+  label: string;
+  building: string;
+  road: string;
+  postal_code: string;
+  lat: number;
+  lng: number;
+}
+
 declare global {
   interface Window {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    google: any;
-    __googleMapsLoaded?: boolean;
-    __googleMapsCallbacks?: Array<() => void>;
+    L: any;
+    __leafletLoaded?: boolean;
+    __leafletCallbacks?: Array<() => void>;
   }
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
-const SG_CENTER = { lat: 1.3521, lng: 103.8198 };
+const SG_CENTER: [number, number] = [1.3521, 103.8198];
+const ONEMAP_SEARCH = "https://www.onemap.gov.sg/api/common/elastic/search";
+const ONEMAP_REVERSE = "https://www.onemap.gov.sg/api/public/revgeocode";
 
-// ─── Maps Loader (singleton) ──────────────────────────────────────────────────
+// ─── Leaflet Loader (singleton) ───────────────────────────────────────────────
 
-function loadGoogleMaps(): Promise<void> {
+function loadLeaflet(): Promise<void> {
   return new Promise((resolve, reject) => {
-    // Already loaded
-    if (window.google?.maps) {
-      resolve();
-      return;
+    if (window.L) { resolve(); return; }
+    if (!window.__leafletCallbacks) window.__leafletCallbacks = [];
+    window.__leafletCallbacks.push(resolve);
+    if (document.getElementById("leaflet-css")) {
+      // CSS already injected, just wait for JS
+    } else {
+      const link = document.createElement("link");
+      link.id = "leaflet-css";
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
     }
 
-    // Queue callbacks while loading
-    if (!window.__googleMapsCallbacks) {
-      window.__googleMapsCallbacks = [];
-    }
-    window.__googleMapsCallbacks.push(resolve);
-
-    // Only inject once
-    if (document.getElementById("gm-script")) return;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).__gmInit = () => {
-      window.__googleMapsLoaded = true;
-      window.__googleMapsCallbacks?.forEach((cb) => cb());
-      window.__googleMapsCallbacks = [];
-    };
+    if (document.getElementById("leaflet-js")) return;
 
     const script = document.createElement("script");
-    script.id = "gm-script";
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&callback=__gmInit`;
+    script.id = "leaflet-js";
+    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
     script.async = true;
-    script.defer = true;
-    script.onerror = () =>
-      reject(new Error("Google Maps script failed to load"));
+    script.onload = () => {
+      window.__leafletLoaded = true;
+      window.__leafletCallbacks?.forEach((cb) => cb());
+      window.__leafletCallbacks = [];
+    };
+    script.onerror = () => reject(new Error("Leaflet failed to load"));
     document.head.appendChild(script);
   });
 }
 
-// ─── Address Helpers ──────────────────────────────────────────────────────────
+// ─── OneMap API Helpers ───────────────────────────────────────────────────────
 
-type AC = { long_name: string; short_name: string; types: string[] };
-
-function getComponent(components: AC[], type: string): string {
-  return components.find((c) => c.types.includes(type))?.long_name ?? "";
+interface OneMapResult {
+  SEARCHVAL: string;
+  BLK_NO: string;
+  ROAD_NAME: string;
+  BUILDING: string;
+  ADDRESS: string;
+  POSTAL: string;
+  X: string;
+  Y: string;
+  LATITUDE: string;
+  LONGITUDE: string;
 }
 
-/**
- * Format: "{street_number} {neighborhood/route}, {country}"
- * e.g. "157 Serangoon, Singapore"
- */
-function formatAddress(components: AC[], fallback: string): string {
-  const num = getComponent(components, "street_number");
-  const neighborhood =
-    getComponent(components, "neighborhood") ||
-    getComponent(components, "sublocality_level_1") ||
-    getComponent(components, "sublocality") ||
-    getComponent(components, "route") ||
-    getComponent(components, "locality");
-  const country = getComponent(components, "country");
-  const street = [num, neighborhood].filter(Boolean).join(" ");
-  return [street, country].filter(Boolean).join(", ") || fallback;
+function formatOneMapAddress(r: OneMapResult): string {
+  const parts: string[] = [];
+  const building = r.BUILDING?.trim();
+  if (building && building.toUpperCase() !== "NIL" && building !== r.BLK_NO) {
+    parts.push(building);
+  }
+  const street = [r.BLK_NO?.trim(), r.ROAD_NAME?.trim()]
+    .filter(Boolean)
+    .join(" ");
+  if (street) parts.push(street);
+  if (r.POSTAL && r.POSTAL !== "NIL") {
+    parts.push(`Singapore ${r.POSTAL}`);
+  } else {
+    parts.push("Singapore");
+  }
+  return parts.join("\n");
 }
 
-function extractPostalCode(components: AC[]): string {
-  return getComponent(components, "postal_code");
+function formatOneMapAddressLine(r: OneMapResult): string {
+  return formatOneMapAddress(r).replace(/\n/g, ", ");
 }
 
-// ─── Geocode Helpers ──────────────────────────────────────────────────────────
-
-interface GeoResult {
-  address_components: AC[];
-  formatted_address: string;
-  geometry: { location: { lat: number; lng: number } };
-}
-
-async function geocode(query: string): Promise<GeoResult[]> {
-  const r = await fetch(
-    `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${MAPS_KEY}`,
-  );
-  const d = await r.json();
-  return d.status === "OK" ? d.results : [];
-}
-
-async function reverseGeocode(lat: number, lng: number): Promise<GeoResult[]> {
-  const r = await fetch(
-    `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${MAPS_KEY}`,
-  );
-  const d = await r.json();
-  return d.status === "OK" ? d.results : [];
-}
-
-function toResolved(results: GeoResult[]): ResolvedAddress | null {
-  if (!results.length) return null;
-  const r = results[0];
+async function fetchOneMapPage(query: string, page: number): Promise<{ results: OneMapResult[]; totalNumPages: number }> {
+  const url = `${ONEMAP_SEARCH}?searchVal=${encodeURIComponent(query)}&returnGeom=Y&getAddrDetails=Y&pageNum=${page}`;
+  const res = await fetch(url);
+  if (!res.ok) return { results: [], totalNumPages: 1 };
+  const data = await res.json();
   return {
-    lat: r.geometry.location.lat,
-    lng: r.geometry.location.lng,
-    postal_code: extractPostalCode(r.address_components),
-    address: formatAddress(r.address_components, r.formatted_address),
+    results: data.results ?? [],
+    totalNumPages: data.totalNumPages ?? 1,
   };
+}
+
+async function searchOneMap(query: string): Promise<OneMapResult[]> {
+  const first = await fetchOneMapPage(query, 1);
+  if (first.totalNumPages <= 1) return first.results;
+  const extraPages = Math.min(first.totalNumPages - 1, 5);
+  const rest = await Promise.all(
+    Array.from({ length: extraPages }, (_, i) => fetchOneMapPage(query, i + 2)),
+  );
+  return [first.results, ...rest.map((p) => p.results)].flat();
+}
+
+async function reverseOneMap(lat: number, lng: number): Promise<OneMapResult | null> {
+  const url = `${ONEMAP_REVERSE}?location=${lat},${lng}&buffer=40&addressType=All&otherFeatures=N`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const info = data.GeocodeInfo;
+  if (!info || !info.length) return null;
+  const g = info[0];
+  return {
+    SEARCHVAL: g.BUILDINGNAME || g.ROAD || "",
+    BLK_NO: g.BLOCK || "",
+    ROAD_NAME: g.ROAD || "",
+    BUILDING: g.BUILDINGNAME || "",
+    ADDRESS: g.ADDRESS || "",
+    POSTAL: g.POSTALCODE || "",
+    X: "",
+    Y: "",
+    LATITUDE: String(lat),
+    LONGITUDE: String(lng),
+  };
+}
+
+function toSuggestions(results: OneMapResult[]): AddressSuggestion[] {
+  const seen = new Set<string>();
+  return results
+    .filter((r) => r.POSTAL && r.POSTAL !== "NIL" && r.LATITUDE && r.LONGITUDE)
+    .map((r) => {
+      const label = formatOneMapAddressLine(r);
+      if (seen.has(label)) return null;
+      seen.add(label);
+      return {
+        label,
+        building: r.BUILDING?.toUpperCase() === "NIL" ? "" : r.BUILDING,
+        road: r.ROAD_NAME,
+        postal_code: r.POSTAL,
+        lat: parseFloat(r.LATITUDE),
+        lng: parseFloat(r.LONGITUDE),
+      } as AddressSuggestion;
+    })
+    .filter(Boolean) as AddressSuggestion[];
 }
 
 // ─── Interactive Map Modal ────────────────────────────────────────────────────
@@ -179,152 +222,144 @@ const MapModal: React.FC<MapModalProps> = ({
   initialPostalCode,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-
-  // Keep map, marker, listener in refs so they survive re-renders
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markerRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const clickListenerRef = useRef<any>(null);
 
   const [postalInput, setPostalInput] = useState("");
   const [pending, setPending] = useState<ResolvedAddress | null>(null);
   const [searching, setSearching] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(0);
   const initialSearchDoneRef = useRef(false);
 
-  // ── On open: reset state and load map ──
   useEffect(() => {
     if (!isOpen) return;
 
-    // Reset
     setPostalInput(initialPostalCode ?? "");
     setPending(null);
     setError(null);
     setMapReady(false);
+    setSuggestions([]);
+    setShowSuggestions(false);
     initialSearchDoneRef.current = false;
 
-    // Load SDK then init map
-    loadGoogleMaps()
+    loadLeaflet()
       .then(() => setMapReady(true))
-      .catch(() => setError("Failed to load Google Maps. Check your API key."));
+      .catch(() => setError("Failed to load map library."));
 
     return () => {
-      // Cleanup map when modal unmounts/closes
       clearTimeout(debounceRef.current);
-      if (clickListenerRef.current) {
-        window.google?.maps?.event?.removeListener(clickListenerRef.current);
-        clickListenerRef.current = null;
-      }
-      if (markerRef.current) {
-        markerRef.current.setMap(null);
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
         markerRef.current = null;
       }
-      mapRef.current = null;
     };
   }, [isOpen]);
-  
 
-  // ── Init map once SDK is ready AND container div is mounted ──
   useEffect(() => {
-    if (!mapReady || !mapContainerRef.current) return;
+    if (!mapReady || !mapContainerRef.current || mapRef.current) return;
 
-    const map = new window.google.maps.Map(mapContainerRef.current, {
+    const L = window.L;
+
+    const map = L.map(mapContainerRef.current, {
       center: SG_CENTER,
       zoom: 11,
-      disableDefaultUI: false,
       zoomControl: true,
-      streetViewControl: false,
-      mapTypeControl: false,
-      fullscreenControl: false,
-      clickableIcons: true,
     });
+
+    L.tileLayer(
+      "https://www.onemap.gov.sg/maps/tiles/Default/{z}/{x}/{y}.png",
+      {
+        attribution:
+          '<img src="https://www.onemap.gov.sg/web-assets/images/logo/om_logo.png" style="height:20px;width:20px;"/> OneMap | Map data &copy; contributors, <a href="http://SLA.gov.sg">Singapore Land Authority</a>',
+        maxZoom: 19,
+        minZoom: 11,
+      },
+    ).addTo(map);
 
     mapRef.current = map;
 
-    // Click anywhere on the map → place pin + reverse geocode
-    clickListenerRef.current = map.addListener(
-      "click",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      async (event: any) => {
-        const lat: number = event.latLng.lat();
-        const lng: number = event.latLng.lng();
-        dropPin(lat, lng);
-        setSearching(true);
-        setError(null);
-        try {
-          const results = await reverseGeocode(lat, lng);
-          const resolved = toResolved(results);
-          if (resolved) {
-            setPending(resolved);
-            setPostalInput(resolved.postal_code || postalInputRef.current);
-          } else {
-            setError("Couldn't detect address here. Try clicking nearby.");
-          }
-        } catch {
-          setError("Address lookup failed. Please try again.");
-        } finally {
-          setSearching(false);
+    map.on("click", async (e: { latlng: { lat: number; lng: number } }) => {
+      const { lat, lng } = e.latlng;
+      dropPin(lat, lng);
+      setSearching(true);
+      setError(null);
+      setShowSuggestions(false);
+      try {
+        const result = await reverseOneMap(lat, lng);
+        if (result) {
+          const address = formatOneMapAddressLine(result);
+          setPending({ postal_code: result.POSTAL, address, lat, lng });
+          setPostalInput(result.POSTAL || "");
+        } else {
+          setError("Couldn't detect address here. Try clicking nearby.");
         }
-      },
-    );
+      } catch {
+        setError("Address lookup failed.");
+      } finally {
+        setSearching(false);
+      }
+    });
 
-    // Auto-search initial postal code once map is ready
-    if (
-      !initialSearchDoneRef.current &&
-      initialPostalCode &&
-      initialPostalCode.length >= 3
-    ) {
+    if (!initialSearchDoneRef.current && initialPostalCode && initialPostalCode.length >= 3) {
       initialSearchDoneRef.current = true;
       runSearch(initialPostalCode);
     }
   }, [mapReady]);
 
-  // Keep a ref of postalInput for use inside the click closure
-  const postalInputRef = useRef(postalInput);
-  useEffect(() => {
-    postalInputRef.current = postalInput;
-  }, [postalInput]);
-
-  // ── Drop / move pin ──
   function dropPin(lat: number, lng: number) {
+    const L = window.L;
     if (!mapRef.current) return;
     if (markerRef.current) {
-      markerRef.current.setPosition({ lat, lng });
+      markerRef.current.setLatLng([lat, lng]);
     } else {
-      markerRef.current = new window.google.maps.Marker({
-        position: { lat, lng },
-        map: mapRef.current,
-        animation: window.google.maps.Animation.DROP,
-        cursor: "pointer",
-      });
+      markerRef.current = L.marker([lat, lng]).addTo(mapRef.current);
     }
-    mapRef.current.panTo({ lat, lng });
+    mapRef.current.panTo([lat, lng]);
   }
 
-  // ── Search a postal code string ──
   async function runSearch(query: string) {
     if (!query.trim() || query.trim().length < 3) return;
     setSearching(true);
     setError(null);
+    setSuggestions([]);
+    setShowSuggestions(false);
     try {
-      const results = await geocode(query);
-      const resolved = toResolved(results);
-      if (resolved) {
-        setPending(resolved);
-        setPostalInput(resolved.postal_code || query);
-        dropPin(resolved.lat, resolved.lng);
-        // Zoom into the postal code area so user can click precisely
-        if (mapRef.current) {
-          mapRef.current.setZoom(16);
-        }
-      } else {
+      const results = await searchOneMap(query);
+      if (!results.length) {
         setPending(null);
-        setError("No location found for this postal code.");
+        setError("No location found. Try a building name, road, or postal code.");
+        return;
       }
+
+      const suggs = toSuggestions(results);
+
+      if (!suggs.length) {
+        setError("No results with valid postal codes found.");
+        return;
+      }
+
+      setSuggestions(suggs);
+      setShowSuggestions(true);
+
+      const first = suggs[0];
+      dropPin(first.lat, first.lng);
+      if (mapRef.current) mapRef.current.setZoom(17);
+
+      setPending({
+        postal_code: first.postal_code,
+        address: first.label,
+        lat: first.lat,
+        lng: first.lng,
+      });
+      setPostalInput(first.postal_code);
     } catch {
       setError("Search failed. Please try again.");
     } finally {
@@ -332,9 +367,24 @@ const MapModal: React.FC<MapModalProps> = ({
     }
   }
 
+  function selectSuggestion(s: AddressSuggestion) {
+    setPending({
+      postal_code: s.postal_code,
+      address: s.label,
+      lat: s.lat,
+      lng: s.lng,
+    });
+    setPostalInput(s.postal_code);
+    dropPin(s.lat, s.lng);
+    if (mapRef.current) mapRef.current.setZoom(18);
+    setShowSuggestions(false);
+  }
+
   const handlePostalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setPostalInput(val);
+    setSuggestions([]);
+    setShowSuggestions(false);
     clearTimeout(debounceRef.current);
     if (val.trim().length >= 3) {
       debounceRef.current = setTimeout(() => runSearch(val), 700);
@@ -359,18 +409,14 @@ const MapModal: React.FC<MapModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-
-      {/* Modal card */}
       <div
-        className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden"
+        className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden"
         style={{ maxHeight: "90vh" }}
       >
-        {/* ── Header ── */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-yellow-400 flex items-center justify-center shadow-sm">
@@ -381,7 +427,7 @@ const MapModal: React.FC<MapModalProps> = ({
                 Select Location
               </p>
               <p className="text-xs text-gray-400 mt-px">
-                Search a postal code, then click the map to pinpoint
+                Search by postal code, building name, or road — powered by OneMap
               </p>
             </div>
           </div>
@@ -393,7 +439,6 @@ const MapModal: React.FC<MapModalProps> = ({
           </button>
         </div>
 
-        {/* ── Search bar ── */}
         <div className="px-6 py-3 bg-gray-50 border-b border-gray-100 shrink-0">
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -406,7 +451,7 @@ const MapModal: React.FC<MapModalProps> = ({
                 value={postalInput}
                 onChange={handlePostalChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Enter postal code — e.g. 538547"
+                placeholder="e.g. 544750 or Compassvale or The Luxurie"
                 autoFocus
                 className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg
                            focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition"
@@ -434,46 +479,96 @@ const MapModal: React.FC<MapModalProps> = ({
             </p>
           ) : (
             <p className="mt-1.5 text-xs text-gray-400">
-              After searching, click anywhere on the map to pick a precise spot.
+              {showSuggestions
+                ? `${suggestions.length} address${suggestions.length !== 1 ? "es" : ""} found — pick one below or click the map.`
+                : "Search by postal code, building name, or road name."}
             </p>
           )}
         </div>
 
-        {/* ── Map container ── */}
-        <div className="relative shrink-0" style={{ height: "380px" }}>
-          {/* Loading overlay */}
+        {showSuggestions && suggestions.length > 0 && (
+          <div
+            className="px-6 py-3 border-b border-gray-100 bg-white shrink-0 overflow-y-auto"
+            style={{ maxHeight: "220px" }}
+          >
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
+              Results
+            </p>
+            <ul className="space-y-1">
+              {suggestions.map((s, i) => {
+                const isSelected =
+                  pending?.postal_code === s.postal_code &&
+                  pending?.address === s.label;
+                return (
+                  <li key={i}>
+                    <button
+                      type="button"
+                      onClick={() => selectSuggestion(s)}
+                      className={`w-full text-left flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm transition-all
+                        ${
+                          isSelected
+                            ? "bg-yellow-50 border border-yellow-300 text-gray-900"
+                            : "hover:bg-gray-50 border border-transparent text-gray-700"
+                        }`}
+                    >
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        <MapPin
+                          size={14}
+                          className={`shrink-0 mt-0.5 ${isSelected ? "text-yellow-500" : "text-gray-400"}`}
+                        />
+                        <div className="min-w-0">
+                          {s.building && (
+                            <p className="font-semibold text-gray-900 truncate leading-tight">
+                              {s.building}
+                            </p>
+                          )}
+                          <p className="text-gray-600 truncate text-xs leading-tight">
+                            {[s.road && `${s.road}`, `Singapore ${s.postal_code}`]
+                              .filter(Boolean)
+                              .join(", ")}
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronRight
+                        size={14}
+                        className={`shrink-0 ${isSelected ? "text-yellow-500" : "text-gray-300"}`}
+                      />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        <div className="relative shrink-0" style={{ height: "450px" }}>
           {!mapReady && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-gray-100">
               <Loader2 size={28} className="animate-spin text-yellow-400" />
               <p className="text-sm text-gray-500">Loading map…</p>
             </div>
           )}
+          <div ref={mapContainerRef} className="w-full h-full" style={{ zIndex: 0 }} />
 
-          {/* The actual Google Map renders here */}
-          <div ref={mapContainerRef} className="w-full h-full" />
-
-          {/* "No pin yet" hint */}
           {mapReady && !pending && !searching && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none z-10">
               <div className="bg-white/95 border border-gray-200 shadow rounded-full px-4 py-2 flex items-center gap-2 text-xs text-gray-500 whitespace-nowrap">
                 <MapPin size={12} className="text-yellow-500 shrink-0" />
-                Search a postal code, then click the map to select
+                Search or click the map to select
               </div>
             </div>
           )}
 
-          {/* Searching spinner overlay on map */}
           {searching && (
-            <div className="absolute inset-0 bg-white/40 flex items-center justify-center pointer-events-none">
+            <div className="absolute inset-0 bg-white/40 flex items-center justify-center pointer-events-none z-10">
               <div className="bg-white rounded-xl shadow-md px-4 py-3 flex items-center gap-2 text-sm text-gray-600">
                 <Loader2 size={16} className="animate-spin text-yellow-500" />
-                Finding location…
+                Finding addresses…
               </div>
             </div>
           )}
         </div>
 
-        {/* ── Footer: address preview + confirm ── */}
         <div className="px-6 py-4 border-t border-gray-100 shrink-0">
           {pending ? (
             <div className="flex items-center justify-between gap-4">
@@ -481,9 +576,13 @@ const MapModal: React.FC<MapModalProps> = ({
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">
                   Selected Address
                 </p>
-                <p className="text-sm font-semibold text-gray-900 truncate">
-                  {pending.address}
-                </p>
+                <div className="text-sm font-semibold text-gray-900 leading-snug">
+                  {pending.address.split("\n").map((line, i) => (
+                    <p key={i} className={i === 0 ? "font-bold" : "font-normal text-gray-700"}>
+                      {line}
+                    </p>
+                  ))}
+                </div>
                 <p className="text-xs text-gray-500 mt-0.5">
                   Postal Code:{" "}
                   <span className="font-medium">{pending.postal_code}</span>
@@ -514,7 +613,7 @@ const MapModal: React.FC<MapModalProps> = ({
   );
 };
 
-// ─── PostalCodeField (read-only with Change/Select button) ───────────────────
+// ─── PostalCodeField ──────────────────────────────────────────────────────────
 
 const PostalCodeField: React.FC<{
   postalCode: string;
@@ -522,8 +621,6 @@ const PostalCodeField: React.FC<{
   isDetecting: boolean;
   onChangeRequest: () => void;
 }> = ({ postalCode, address, isDetecting, onChangeRequest }) => (
-  
- 
   <div>
     <Label className="mb-2">Postal Code</Label>
     <div className="flex items-center gap-2">
@@ -536,7 +633,7 @@ const PostalCodeField: React.FC<{
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
           {isDetecting ? (
-            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+            <Loader2 className="h-4 w-4 animate-spin text-yellow-500" />
           ) : postalCode ? (
             <Navigation className="h-4 w-4 text-yellow-500" />
           ) : null}
@@ -545,13 +642,20 @@ const PostalCodeField: React.FC<{
       <button
         type="button"
         onClick={onChangeRequest}
-        className="text-sm font-semibold text-yellow-600 hover:text-yellow-700 underline underline-offset-2 shrink-0 transition-colors"
+        disabled={isDetecting}
+        className="text-sm font-semibold text-yellow-600 hover:text-yellow-700 underline underline-offset-2 shrink-0 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {postalCode ? "Change" : "Select"}
       </button>
     </div>
     {!isDetecting && address && (
       <p className="text-xs text-gray-500 mt-1 truncate">{address}</p>
+    )}
+    {isDetecting && (
+      <p className="text-xs text-yellow-600 mt-1 flex items-center gap-1">
+        <Loader2 size={10} className="animate-spin" />
+        Auto-detecting your current location…
+      </p>
     )}
     {!isDetecting && !postalCode && (
       <p className="text-xs text-gray-400 mt-1">
@@ -560,9 +664,33 @@ const PostalCodeField: React.FC<{
       </p>
     )}
   </div>
-  );
+);
 
+// ─── DetectingAddressInput ────────────────────────────────────────────────────
+// Address input with built-in detecting state overlay for sender
 
+const DetectingAddressInput: React.FC<{
+  value: string;
+  isDetecting: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+}> = ({ value, isDetecting, onChange, placeholder = "Auto-filled from map" }) => (
+  <div className="relative">
+    <Input
+      value={isDetecting ? "" : value}
+      onChange={onChange}
+      placeholder={isDetecting ? "Detecting your location…" : placeholder}
+      readOnly={isDetecting}
+      className={isDetecting ? "pr-10 bg-gray-50 cursor-not-allowed text-gray-400" : ""}
+      required={!isDetecting}
+    />
+    {isDetecting && (
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+        <Loader2 className="h-4 w-4 animate-spin text-yellow-500" />
+      </div>
+    )}
+  </div>
+);
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -575,34 +703,24 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
   removeRecipient,
 }) => {
   const [isDetecting, setIsDetecting] = useState(true);
-  // null = closed | "sender" | recipientId
   const [modalTarget, setModalTarget] = useState<string | null>(null);
 
-  // ── Auto-detect sender location on mount ──
+  // ── Geolocation on mount (reverse via OneMap) ──
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setIsDetecting(false);
-      return;
-    }
+    if (!navigator.geolocation) { setIsDetecting(false); return; }
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
         try {
-          const results = await reverseGeocode(
-            coords.latitude,
-            coords.longitude,
-          );
-          const resolved = toResolved(results);
-          if (resolved) {
+          const result = await reverseOneMap(coords.latitude, coords.longitude);
+          if (result) {
+            const address = formatOneMapAddressLine(result);
             const ev = (v: string) =>
               ({ target: { value: v } }) as React.ChangeEvent<HTMLInputElement>;
-            handleSenderInputChange(ev(resolved.postal_code), "postal_code");
-            handleSenderInputChange(ev(resolved.address), "address");
+            handleSenderInputChange(ev(result.POSTAL), "postal_code");
+            handleSenderInputChange(ev(address), "address");
           }
-        } catch {
-          /* ignore */
-        } finally {
-          setIsDetecting(false);
-        }
+        } catch { /* ignore */ }
+        finally { setIsDetecting(false); }
       },
       () => setIsDetecting(false),
       { timeout: 8000 },
@@ -617,11 +735,7 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
         handleSenderInputChange(ev(resolved.postal_code), "postal_code");
         handleSenderInputChange(ev(resolved.address), "address");
       } else {
-        handleRecipientInputChange(
-          ev(resolved.postal_code),
-          target,
-          "postal_code",
-        );
+        handleRecipientInputChange(ev(resolved.postal_code), target, "postal_code");
         handleRecipientInputChange(ev(resolved.address), target, "address");
       }
     },
@@ -638,7 +752,6 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
       {/* ── Sender Info ── */}
       <div className="bg-white rounded-lg p-8 border border-gray-200 mb-6">
         <h3 className="text-lg font-medium mb-4">Sender Info</h3>
-
         <div className="grid grid-cols-2 gap-6 mb-4">
           <div>
             <Label className="mb-2">Name</Label>
@@ -661,22 +774,33 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
           </div>
         </div>
 
+        {/* ── Postal + Address + Floor row ── */}
         <div className="grid grid-cols-3 gap-6 mb-6">
+          {/* Postal Code — shows spinner + "detecting" while locating */}
           <PostalCodeField
             postalCode={sender.postal_code}
             address={sender.address}
             isDetecting={isDetecting}
             onChangeRequest={() => setModalTarget("sender")}
           />
+
+          {/* Address — also shows detecting state */}
           <div>
             <Label className="mb-2">Address</Label>
-            <Input
+            <DetectingAddressInput
               value={sender.address}
+              isDetecting={isDetecting}
               onChange={(e) => handleSenderInputChange(e, "address")}
               placeholder="Auto-filled from map"
-              required
             />
+            {isDetecting && (
+              <p className="text-xs text-yellow-600 mt-1 flex items-center gap-1">
+                <Loader2 size={10} className="animate-spin" />
+                Fetching address…
+              </p>
+            )}
           </div>
+
           <div>
             <Label className="mb-2">Floor or Unit no.</Label>
             <Input
@@ -718,7 +842,6 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
               </Button>
             )}
           </div>
-
           <div className="grid grid-cols-2 gap-6 mb-6">
             <div>
               <Label className="mb-2">Recipient</Label>
@@ -743,7 +866,6 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
               />
             </div>
           </div>
-
           <div className="grid grid-cols-3 gap-6 mb-6">
             <PostalCodeField
               postalCode={recipient.postal_code}
@@ -773,7 +895,6 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
               />
             </div>
           </div>
-
           <div>
             <Label className="mb-2">Note to driver</Label>
             <Textarea
@@ -796,7 +917,6 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
         Add Stop
       </Button>
 
-      {/* ── Map Modal (keyed so it fully remounts each open) ── */}
       {modalTarget !== null && (
         <MapModal
           key={modalTarget}
