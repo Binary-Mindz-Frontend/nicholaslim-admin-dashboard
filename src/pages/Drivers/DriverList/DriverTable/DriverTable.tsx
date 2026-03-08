@@ -115,7 +115,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
     }
   }, [data]);
 
-  // console.log("Driver data:", data?.data?.data);
+  console.log("Driver data:", data?.data?.data);
   // Define columns for the driver data
   const driverColumns: Column<TDriver>[] = [
     {
@@ -134,6 +134,16 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
         <p>
           {row.registrations?.[0]?.raider_name || "N/A"}
         </p>
+      ),
+    },
+    {
+      header: "Email",
+      accessor: "registrations",
+      width: "300px",
+      cell: (row) => (
+        <span style={{ wordBreak: "break-all", display: "block" }}>
+          {row.registrations?.[0]?.email_address || "N/A"}
+        </span>
       ),
     },
     {
@@ -196,10 +206,10 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       cell: (row) => (
         <span
           className={`px-3 py-1 rounded-full text-xs font-medium ${row.raider_verificationFromAdmin === "APPROVED"
-              ? "bg-green-100 text-green-800"
-              : row.raider_verificationFromAdmin === "PENDING"
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-red-100 text-red-800"
+            ? "bg-green-100 text-green-800"
+            : row.raider_verificationFromAdmin === "PENDING"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-red-100 text-red-800"
             }`}
         >
           {row.raider_verificationFromAdmin}
@@ -212,8 +222,8 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       cell: (row) => (
         <span
           className={`px-3 py-1 rounded-full text-xs font-medium ${row.LoginType === "ADMIN_SIGNIN"
-              ? "bg-yellow-300 text-black"
-              : "bg-gray-300 text-black"
+            ? "bg-yellow-300 text-black"
+            : "bg-gray-300 text-black"
             }`}
         >
           {row.LoginType === "ADMIN_SIGNIN" ? "Assigned by Admin" : "Self Registered"}

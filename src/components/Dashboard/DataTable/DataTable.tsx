@@ -2,15 +2,17 @@ import React from "react";
 
 export type Column<T> =
   | {
-      header: string;
-      accessor: keyof T;
-      cell?: (row: T) => React.ReactNode;
-    }
+    header: string;
+    accessor: keyof T;
+    cell?: (row: T) => React.ReactNode;
+    width?: string;
+  }
   | {
-      header: string;
-      accessor?: undefined;
-      cell: (row: T) => React.ReactNode;
-    };
+    header: string;
+    accessor?: undefined;
+    cell: (row: T) => React.ReactNode;
+    width?: string;
+  };
 
 export interface ITableProps<T> {
   columns: Column<T>[];
@@ -57,16 +59,15 @@ const CustomTable = <T extends object>({ columns, data, isLoading }: ITableProps
           {data.map((row, rowIndex) => (
             <tr
               key={rowIndex}
-              className={`${
-                rowIndex % 2 === 1 ? "bg-[#F7F9FA]" : "bg-white"
-              } pointer-events-auto`}
+              className={`${rowIndex % 2 === 1 ? "bg-[#F7F9FA]" : "bg-white"
+                } pointer-events-auto`}
             >
               {columns.map((column, colIndex) => {
                 const content = column.cell
                   ? column.cell(row)
                   : column.accessor
-                  ? String(row[column.accessor])
-                  : "";
+                    ? String(row[column.accessor])
+                    : "";
 
                 return (
                   <td
@@ -74,14 +75,15 @@ const CustomTable = <T extends object>({ columns, data, isLoading }: ITableProps
                     className="
                       px-5 py-4 text-sm text-[#1E1E1E] text-center whitespace-nowrap
                       pointer-events-auto
-                    "                                
+                    "
                   >
                     <div
-                      className="inline-block max-w-[150px] overflow-hidden text-ellipsis"
-                      onClick={(e) => e.stopPropagation()}    
+                      className="inline-block overflow-hidden text-ellipsis"
+                      style={{ maxWidth: column.width || "150px" }}
+                      onClick={(e) => e.stopPropagation()}
                       onMouseDown={(e) => e.stopPropagation()}
-                      title={column.accessor && typeof row[column.accessor] === 'string' 
-                        ? String(row[column.accessor]) 
+                      title={column.accessor && typeof row[column.accessor] === 'string'
+                        ? String(row[column.accessor])
                         : undefined}
                     >
                       {content}

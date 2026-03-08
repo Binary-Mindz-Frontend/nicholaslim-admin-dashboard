@@ -15,7 +15,7 @@ import { ChevronDown, ChevronRight, Save, Check, Minus, Search, X } from "lucide
 import { menuItems, MenuItem } from "@/components/Shared/Sidebar/MenuItems";
 import {
   menuToPermissionMapping,
-  childRouteToParentMapping,
+  getSelectionModules,
 } from "@/utils/permissionMapping";
 
 interface Permission {
@@ -55,21 +55,9 @@ const buildMenuTree = (
 const MENU_TREE = buildMenuTree(menuItems);
 
 // Get all backend modules for a menu item (including children recursively)
-const getAllBackendModulesForMenuItem = (menuId: string): string[] => {
-  // Direct modules from mapping
-  const directModules = menuToPermissionMapping[menuId] || [];
-
-  // Check if this is a child route that maps to a parent
-  const parentId = childRouteToParentMapping[menuId];
-  const parentModules = parentId ? menuToPermissionMapping[parentId] || [] : [];
-
-  // Check grandparent
-  const grandParentId = parentId
-    ? childRouteToParentMapping[parentId]
-    : undefined;
-  const grandParentModules = grandParentId
-    ? menuToPermissionMapping[grandParentId] || []
-    : [];
+const getAllBackendModulesForMenuItem = (menuId: string, isSelection: boolean = true): string[] => {
+  // Use getSelectionModules for selection, otherwise stick to direct mapping for deselection
+  const directModules = isSelection ? getSelectionModules(menuId) : (menuToPermissionMapping[menuId] || []);
 
   // Find modules from children in menu tree
   const findChildModules = (nodes: MenuNode[], targetId: string): string[] => {
@@ -80,15 +68,9 @@ const getAllBackendModulesForMenuItem = (menuId: string): string[] => {
         if (node.children) {
           const collectModules = (childNodes: MenuNode[]) => {
             for (const child of childNodes) {
-              childModules.push(...(menuToPermissionMapping[child.id] || []));
-
-              // Check child's parent mapping
-              const childParent = childRouteToParentMapping[child.id];
-              if (childParent && childParent !== child.id) {
-                childModules.push(
-                  ...(menuToPermissionMapping[childParent] || []),
-                );
-              }
+              // Same logic for child modules
+              const childDirect = isSelection ? getSelectionModules(child.id) : (menuToPermissionMapping[child.id] || []);
+              childModules.push(...childDirect);
 
               if (child.children) {
                 collectModules(child.children);
@@ -115,12 +97,16 @@ const getAllBackendModulesForMenuItem = (menuId: string): string[] => {
   return [
     ...new Set([
       ...directModules,
-      ...parentModules,
-      ...grandParentModules,
       ...childModules,
     ]),
   ];
 };
+
+// Extract all unique modules currently mapped in the menu tree to prevent ghost permissions
+const ALL_ACTIVE_TREE_MODULES = new Set<string>();
+MENU_TREE.forEach(node => {
+  getAllBackendModulesForMenuItem(node.id).forEach(mod => ALL_ACTIVE_TREE_MODULES.add(mod));
+});
 
 // Get all permissions for a menu item (including children)
 const getAllPermissionsForMenuItem = (menuId: string): Permission[] => {
@@ -236,10 +222,9 @@ const CustomCheckbox: React.FC<{
         className={`
           ${sizeClasses[size]} rounded border-2 flex items-center justify-center transition-all duration-200
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
-          ${
-            checked || indeterminate
-              ? 'bg-primary-600 border-primary-600 shadow-md'
-              : 'bg-white border-gray-300 hover:border-primary-400 hover:shadow-sm'
+          ${checked || indeterminate
+            ? 'bg-primary-600 border-primary-600 shadow-md'
+            : 'bg-white border-gray-300 hover:border-primary-400 hover:shadow-sm'
           }
         `}
         onClick={(e) => {
@@ -247,7 +232,7 @@ const CustomCheckbox: React.FC<{
           if (!disabled) {
             const syntheticEvent = {
               target: { checked: !checked },
-              stopPropagation: () => {},
+              stopPropagation: () => { },
             } as React.ChangeEvent<HTMLInputElement>;
             onChange(syntheticEvent);
           }
@@ -280,119 +265,119 @@ const MenuTreeItem: React.FC<{
   onToggleExpand,
   searchTerm = "",
 }) => {
-  const hasChildren = node.children && node.children.length > 0;
-  const isExpanded = expandedNodes.has(node.id);
+    const hasChildren = node.children && node.children.length > 0;
+    const isExpanded = expandedNodes.has(node.id);
 
-  const hasPermission = hasAnyPermission(node.id, selectedPermissions);
-  const hasAll = hasAllPermissions(node.id, selectedPermissions);
-  const hasPartial = hasPartialPermissions(node.id, selectedPermissions);
+    const hasPermission = hasAnyPermission(node.id, selectedPermissions);
+    const hasAll = hasAllPermissions(node.id, selectedPermissions);
+    const hasPartial = hasPartialPermissions(node.id, selectedPermissions);
 
-  // Highlight search term
-  const highlightText = (text: string) => {
-    if (!searchTerm) return text;
-    const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'));
-    return parts.map((part, i) => 
-      part.toLowerCase() === searchTerm.toLowerCase() ? 
-        <span key={i} className="bg-yellow-200 font-medium">{part}</span> : part
-    );
-  };
+    // Highlight search term
+    const highlightText = (text: string) => {
+      if (!searchTerm) return text;
+      const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'));
+      return parts.map((part, i) =>
+        part.toLowerCase() === searchTerm.toLowerCase() ?
+          <span key={i} className="bg-yellow-200 font-medium">{part}</span> : part
+      );
+    };
 
-  const getCheckboxState = () => {
-    if (hasAll) return "checked";
-    if (hasPartial) return "indeterminate";
-    return "unchecked";
-  };
+    const getCheckboxState = () => {
+      if (hasAll) return "checked";
+      if (hasPartial) return "indeterminate";
+      return "unchecked";
+    };
 
-  const checkboxState = getCheckboxState();
+    const checkboxState = getCheckboxState();
 
-  const handleToggle = () => {
-    if (hasChildren) {
-      onToggleExpand(node.id);
+    const handleToggle = () => {
+      if (hasChildren) {
+        onToggleExpand(node.id);
+      }
+    };
+
+    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      e.stopPropagation();
+      onToggle(node.id, e.target.checked);
+    };
+
+    const marginLeft = node.level ? `${node.level * 1.5}rem` : "0";
+
+    // Background color based on state
+    let bgColor = "bg-white";
+    let borderColor = "border-gray-200";
+    let textColor = "text-gray-700";
+
+    if (hasAll) {
+      bgColor = "bg-green-50";
+      borderColor = "border-green-200";
+    } else if (hasPartial) {
+      bgColor = "bg-primary-50";
+      borderColor = "border-primary-200";
     }
-  };
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
-    onToggle(node.id, e.target.checked);
-  };
-
-  const marginLeft = node.level ? `${node.level * 1.5}rem` : "0";
-
-  // Background color based on state
-  let bgColor = "bg-white";
-  let borderColor = "border-gray-200";
-  let textColor = "text-gray-700";
-
-  if (hasAll) {
-    bgColor = "bg-green-50";
-    borderColor = "border-green-200";
-  } else if (hasPartial) {
-    bgColor = "bg-primary-50";
-    borderColor = "border-primary-200";
-  }
-
-  return (
-    <div className="select-none">
-      <div
-        className={`
+    return (
+      <div className="select-none">
+        <div
+          className={`
           flex items-center py-2.5 px-3 rounded-xl transition-all duration-200
           ${bgColor} ${borderColor} border
           hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm
           ${hasChildren ? 'cursor-pointer' : ''}
         `}
-        style={{ marginLeft }}
-        onClick={handleToggle}
-      >
-        <div className="flex items-center flex-1 min-w-0">
-          {hasChildren && (
-            <div className="mr-1 shrink-0">
-              {isExpanded ? (
-                <ChevronDown className="w-4 h-4 text-gray-500" />
-              ) : (
-                <ChevronRight className="w-4 h-4 text-gray-500" />
-              )}
-            </div>
-          )}
-          {!hasChildren && <div className="w-5 mr-1 shrink-0" />}
+          style={{ marginLeft }}
+          onClick={handleToggle}
+        >
+          <div className="flex items-center flex-1 min-w-0">
+            {hasChildren && (
+              <div className="mr-1 shrink-0">
+                {isExpanded ? (
+                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-gray-500" />
+                )}
+              </div>
+            )}
+            {!hasChildren && <div className="w-5 mr-1 shrink-0" />}
 
-          <CustomCheckbox
-            checked={checkboxState === "checked"}
-            indeterminate={checkboxState === "indeterminate"}
-            onChange={handleCheckboxChange}
-            className="mr-3 shrink-0"
-            size="md"
-          />
-
-          <span className={`flex-1 text-sm font-medium ${textColor} truncate`}>
-            {highlightText(node.label)}
-          </span>
-
-          {hasPermission && (
-            <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full shrink-0 font-medium">
-              {getAllBackendModulesForMenuItem(node.id).length}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {hasChildren && isExpanded && (
-        <div className="ml-4 border-l-2 border-primary-100 pl-2 mt-1 space-y-1">
-          {node.children?.map((child) => (
-            <MenuTreeItem
-              key={child.id}
-              node={child}
-              selectedPermissions={selectedPermissions}
-              onToggle={onToggle}
-              expandedNodes={expandedNodes}
-              onToggleExpand={onToggleExpand}
-              searchTerm={searchTerm}
+            <CustomCheckbox
+              checked={checkboxState === "checked"}
+              indeterminate={checkboxState === "indeterminate"}
+              onChange={handleCheckboxChange}
+              className="mr-3 shrink-0"
+              size="md"
             />
-          ))}
+
+            <span className={`flex-1 text-sm font-medium ${textColor} truncate`}>
+              {highlightText(node.label)}
+            </span>
+
+            {hasPermission && (
+              <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full shrink-0 font-medium">
+                {getAllBackendModulesForMenuItem(node.id).length}
+              </span>
+            )}
+          </div>
         </div>
-      )}
-    </div>
-  );
-};
+
+        {hasChildren && isExpanded && (
+          <div className="ml-4 border-l-2 border-primary-100 pl-2 mt-1 space-y-1">
+            {node.children?.map((child) => (
+              <MenuTreeItem
+                key={child.id}
+                node={child}
+                selectedPermissions={selectedPermissions}
+                onToggle={onToggle}
+                expandedNodes={expandedNodes}
+                onToggleExpand={onToggleExpand}
+                searchTerm={searchTerm}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
 export default function AddRemovePermission() {
   const { data: roleData = [], isLoading: isLoadingRoles } =
@@ -429,10 +414,12 @@ export default function AddRemovePermission() {
       const firstNonStaticRole = nonStaticRoles[0];
       setFormData({
         roleId: firstNonStaticRole.id.toString(),
-        permissions: firstNonStaticRole.permissions.map((p) => ({
-          module: p.module,
-          action: p.action,
-        })),
+        permissions: firstNonStaticRole.permissions
+          .filter((p) => p.action && p.action.trim() !== "" && !!MODULE_ACTIONS[p.module] && ALL_ACTIVE_TREE_MODULES.has(p.module))
+          .map((p) => ({
+            module: p.module,
+            action: p.action,
+          })),
       });
     }
   }, [nonStaticRoles, formData.roleId]);
@@ -445,10 +432,12 @@ export default function AddRemovePermission() {
     if (selectedRole) {
       setFormData({
         roleId,
-        permissions: selectedRole.permissions.map((p) => ({
-          module: p.module,
-          action: p.action,
-        })),
+        permissions: selectedRole.permissions
+          .filter((p) => p.action && p.action.trim() !== "" && !!MODULE_ACTIONS[p.module] && ALL_ACTIVE_TREE_MODULES.has(p.module))
+          .map((p) => ({
+            module: p.module,
+            action: p.action,
+          })),
       });
     }
   };
@@ -470,13 +459,51 @@ export default function AddRemovePermission() {
         });
         return { ...prev, permissions: newPermissions };
       } else {
-        // Remove all permissions for this menu item and its children
-        const backendModules = getAllBackendModulesForMenuItem(menuId);
+        // Find all modules that are still required by other selected menu items
+        const requiredByOthers = new Set<string>();
+
+        const collectRequiredModules = (nodes: MenuNode[]) => {
+          nodes.forEach((node) => {
+            // Skip the branch being removed
+            if (node.id === menuId) return;
+
+            // Is this specific menu item selected?
+            // A menu item is "selected" if its primary modules are in prev.permissions
+            const primaryModules = menuToPermissionMapping[node.id] || [];
+            const isSelected =
+              primaryModules.length > 0 &&
+              primaryModules.every((mod) =>
+                prev.permissions.some((p) => p.module === mod),
+              );
+
+            if (isSelected) {
+              getSelectionModules(node.id).forEach((mod) =>
+                requiredByOthers.add(mod),
+              );
+            }
+
+            if (node.children) collectRequiredModules(node.children);
+          });
+        };
+
+        collectRequiredModules(MENU_TREE);
+
+        // Modules to remove candidate (direct + children's direct + bundles)
+        const modulesToRemoveCandidate = getAllBackendModulesForMenuItem(
+          menuId,
+          true,
+        );
+
         return {
           ...prev,
-          permissions: prev.permissions.filter(
-            (p) => !backendModules.includes(p.module),
-          ),
+          permissions: prev.permissions.filter((p) => {
+            // If it's not a module being removed, keep it
+            if (!modulesToRemoveCandidate.includes(p.module)) return true;
+            // If it's a module being removed but still required by others, keep it
+            if (requiredByOthers.has(p.module)) return true;
+            // Otherwise, remove it
+            return false;
+          }),
         };
       }
     });
@@ -522,7 +549,7 @@ export default function AddRemovePermission() {
     try {
       const updateData = {
         id: roleId,
-        permissions: formData.permissions,
+        permissions: formData.permissions.filter(p => p.action && p.action.trim() !== ""),
       };
 
       const response = await updateRoleBasedAccessControl(updateData).unwrap();
@@ -534,14 +561,14 @@ export default function AddRemovePermission() {
         prevRoles.map((role) =>
           role.id === roleId
             ? {
-                ...role,
-                permissions: formData.permissions.map((p) => ({
-                  id: Math.random(),
-                  module: p.module,
-                  action: p.action,
-                  roleId: roleId,
-                })),
-              }
+              ...role,
+              permissions: formData.permissions.map((p) => ({
+                id: Math.random(),
+                module: p.module,
+                action: p.action,
+                roleId: roleId,
+              })),
+            }
             : role,
         ),
       );
@@ -566,10 +593,10 @@ export default function AddRemovePermission() {
   // Filter menu items based on search
   const filterMenuItems = (nodes: MenuNode[], search: string): MenuNode[] => {
     if (!search) return nodes;
-    
+
     return nodes.reduce((acc: MenuNode[], node) => {
       const matches = node.label.toLowerCase().includes(search.toLowerCase());
-      
+
       if (node.children) {
         const filteredChildren = filterMenuItems(node.children, search);
         if (filteredChildren.length > 0) {
@@ -583,7 +610,7 @@ export default function AddRemovePermission() {
       } else if (matches) {
         acc.push(node);
       }
-      
+
       return acc;
     }, []);
   };
@@ -739,7 +766,7 @@ export default function AddRemovePermission() {
 // Module Actions configuration based on your enums
 const MODULE_ACTIONS: Record<string, string[]> = {
   // Dashboard
-  dashboard: ["read"],
+  dashboard: ["read", "just_admin"],
 
   // User Management
   user: [
@@ -751,7 +778,10 @@ const MODULE_ACTIONS: Record<string, string[]> = {
     "update_user_profile",
     "update_user_role",
     "update_user_status",
+    "just_admin",
   ],
+  user_web: ["create", "read", "update", "delete", "just_admin"],
+  user_mobile: ["create", "read", "update", "delete", "just_admin"],
 
   // Raider/Driver Management
   raider: [
@@ -765,6 +795,7 @@ const MODULE_ACTIONS: Record<string, string[]> = {
     "order_read_feed",
     "read_admin_my_raider",
   ],
+  raider_join: ["create", "read", "update", "delete", "just_admin"],
 
   // Order Management
   order: [
@@ -780,6 +811,7 @@ const MODULE_ACTIONS: Record<string, string[]> = {
     "order_read_mine",
     "order_compitition",
     "order_read_feed",
+    "just_admin",
   ],
 
   // Payment & Transaction Management
@@ -792,42 +824,57 @@ const MODULE_ACTIONS: Record<string, string[]> = {
     "update_transaction_amount",
     "approve_transaction",
     "refund_transaction",
+    "just_admin",
   ],
 
   // Live Map/Fleet Tracking
-  live_map: ["read"],
+  live_map: ["read", "just_admin"],
 
   // Advertisement Management
   advertisement: ["create", "read", "delete", "update", "just_admin"],
 
   // Content Management
-  content_management: ["create", "read", "delete", "update"],
+  content_management: ["create", "read", "delete", "update", "just_admin"],
 
   // FAQ Management
-  faq: ["create", "read", "delete", "update"],
+  faq: ["create", "read", "delete", "update", "just_admin"],
 
   // Wallet Management
-  wallet: ["create", "read", "delete", "update", "reedom_coin"],
+  wallet: ["create", "read", "delete", "update", "reedom_coin", "just_admin"],
 
   // Notification Management
-  notification: ["create", "read", "delete", "update"],
+  notification: ["create", "read", "delete", "update", "just_admin"],
 
   // Platform Fee Management
-  platform_fee: ["create", "read", "delete", "update"],
+  platform_fee: ["create", "read", "delete", "update", "just_admin"],
 
   // Quiz Management
-  quiz: ["create", "read", "delete", "update", "get_one"],
-  quizzes: ["create", "read", "delete", "update", "get_one"],
+  quiz: ["create", "read", "delete", "update", "get_one", "just_admin"],
+  quizzes: ["create", "read", "delete", "update", "get_one", "just_admin"],
 
   // Coin/Rewards System
-  coin: ["create", "read", "delete", "update", "get_one", "reedom_coin"],
+  coin: [
+    "create",
+    "read",
+    "delete",
+    "update",
+    "get_one",
+    "reedom_coin",
+    "just_admin",
+  ],
 
   // Driver Order Competition
-  driver_order_competition: ["create", "read", "delete", "update"],
-  driver_order_compitition: ["create", "read", "delete", "update"],
+  driver_order_competition: ["create", "read", "delete", "update", "just_admin"],
+  driver_order_compitition: ["create", "read", "delete", "update", "just_admin"],
 
   // Customer Order Confirmation
-  customer_order_confirmation: ["create", "read", "delete", "update"],
+  customer_order_confirmation: [
+    "create",
+    "read",
+    "delete",
+    "update",
+    "just_admin",
+  ],
 
   // Vehicle & Pricing Management
   vechicle_pricing: ["create", "read", "delete", "update", "just_admin"],
@@ -837,25 +884,38 @@ const MODULE_ACTIONS: Record<string, string[]> = {
 
   // Order Placement
   order_placement: ["create", "read", "delete", "update", "just_admin"],
+  live_order_tracking: ["create", "read", "delete", "update", "just_admin"],
+  order_history: ["read", "delete", "just_admin"],
+  payment_options: ["create", "read", "delete", "update", "just_admin"],
 
   // Report & Analytics
   report_analytics: ["create", "read", "delete", "update", "just_admin"],
+  report_orders: ["read", "delete", "just_admin"],
+  driver_performance: ["read", "just_admin"],
+  customer_report: ["read", "just_admin"],
   report_analytics_stats: ["create", "read", "delete", "update", "just_admin"],
 
   // Destination Management
   destination: ["create", "read", "update", "delete", "just_admin"],
 
   // My Raider
-  my_raider: ["create", "read", "delete", "update", "read_admin_my_raider"],
+  my_raider: [
+    "create",
+    "read",
+    "delete",
+    "update",
+    "read_admin_my_raider",
+    "just_admin",
+  ],
 
   // Payment Method
   payment_method: ["create", "read", "update", "delete", "just_admin"],
 
   // Referral Management
-  referral: ["create", "read", "update", "delete"],
+  referral: ["create", "read", "update", "delete", "just_admin"],
 
   // Additional Services
-  additional_services: ["create", "read", "update", "delete"],
+  additional_services: ["create", "read", "update", "delete", "just_admin"],
 
   // User Profile
   user_profile: [
@@ -865,6 +925,7 @@ const MODULE_ACTIONS: Record<string, string[]> = {
     "delete",
     "get_user_profile",
     "update_user_profile",
+    "just_admin",
   ],
 
   // Service Areas
@@ -872,6 +933,12 @@ const MODULE_ACTIONS: Record<string, string[]> = {
 
   // Vehicle Type
   vehicle_type: ["create", "read", "update", "delete", "just_admin"],
+
+  // Wallet Management
+  wallet_user: ["create", "read", "update", "delete", "just_admin"],
+  wallet_driver: ["create", "read", "update", "delete", "just_admin"],
+  user_wallet: ["create", "read", "update", "delete", "just_admin"],
+  raider_wallet: ["create", "read", "update", "delete", "just_admin"],
 
   // Delivery Type
   delivery_type: ["create", "read", "update", "delete", "just_admin"],
@@ -889,13 +956,13 @@ const MODULE_ACTIONS: Record<string, string[]> = {
   order_confirmation: ["create", "read", "update", "delete", "just_admin"],
 
   // Driver Incentive
-  driver_incentive: ["create", "read", "update", "delete"],
+  driver_incentive: ["create", "read", "update", "delete", "just_admin"],
 
   // Customer Rewards
-  customer_rewards: ["create", "read", "update", "delete", "reedom_coin"],
+  customer_rewards: ["create", "read", "update", "delete", "reedom_coin", "just_admin"],
 
   // Promo Code
-  promo_code: ["create", "read", "update", "delete"],
+  promo_code: ["create", "read", "update", "delete", "just_admin"],
 
   // Coin Stats
   coin_stats: ["create", "read", "update", "delete", "just_admin"],
@@ -913,13 +980,19 @@ const MODULE_ACTIONS: Record<string, string[]> = {
   contact_info: ["create", "read", "update", "delete", "just_admin"],
 
   // Service Chat
-  service_chat: ["create", "read", "update", "delete"],
+  service_chat: ["create", "read", "update", "delete", "just_admin"],
 
   // Dashboard Popup
   dashboard_popup: ["create", "read", "update", "delete", "just_admin"],
 
   // RBAC (Role Based Access Control)
-  rbac: ["create", "read", "delete", "update_rbac_role_permission"],
+  rbac: [
+    "create",
+    "read",
+    "delete",
+    "update_rbac_role_permission",
+    "just_admin",
+  ],
 };
 
 // Keep for backward compatibility
@@ -933,8 +1006,13 @@ const FRONTEND_TO_BACKEND_MODULES: Record<string, string> = {
   "Payments & Transactions": "payment_transaction",
   "Notifications & Communication": "notification",
   "Report Analytics": "report_analytics",
+  "Report Orders": "report_orders",
+  "Driver Performance": "driver_performance",
+  "Customer Report": "customer_report",
   "Vehicle Type & Pricing Management": "vechicle_pricing",
   "Wallet Management": "wallet",
+  "User Wallet": "wallet_user",
+  "Driver Wallet": "wallet_driver",
   "Coin System": "coin",
   Quiz: "quiz",
   Advertisement: "advertisement",
@@ -943,6 +1021,9 @@ const FRONTEND_TO_BACKEND_MODULES: Record<string, string> = {
   "Driver Order Competition": "driver_order_competition",
   "Customer Order Confirmation": "customer_order_confirmation",
   "Order Placement": "order_placement",
+  "Live Order Tracking": "live_order_tracking",
+  "Order History": "order_history",
+  "Payment Options": "payment_options",
   Destination: "destination",
   "My Raider": "my_raider",
   "Payment Method": "payment_method",
