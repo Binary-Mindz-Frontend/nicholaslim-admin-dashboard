@@ -231,6 +231,8 @@ export default function EditDriverProfile() {
         );
     }
 
+    console.log(driverData, "newdriverdata")
+
     return (
         <div className="sm:p-6 mx-auto space-y-6 bg-[#F5F7FA]">
             {/* Back Button */}
@@ -268,15 +270,15 @@ export default function EditDriverProfile() {
                     <p className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 text-base sm:text-lg font-medium text-center">
                         <span className="flex items-center gap-1">
                             <Star size={20} className="text-yellow-500" />
-                            4.8/5
+                           {driverData.data.formattedAverage || 0}/5
                         </span>
                         <span className="flex items-center gap-1">
                             <Medal size={20} />
-                            Bronze
+                           {driverData.data.rank || 0}
                         </span>
                         <span className="flex items-center gap-1">
                             <Rss size={20} />
-                            150 Followers
+                           {driverData.data.followers || 0}  Followers
                         </span>
                     </p>
                 </div>

@@ -55,6 +55,7 @@ interface Registration {
   account_number: string;
   created_at: string;
   updated_at: string;
+ // Add totalRatings field to Registration
 }
 
 interface TDriver {
@@ -71,6 +72,7 @@ interface TDriver {
   created_at: string;
   updated_at: string;
   registrations: Registration[];
+   totalRatings: number; 
 }
 
 interface UseDriverColumnsParams {
@@ -229,6 +231,11 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
           {row.LoginType === "ADMIN_SIGNIN" ? "Assigned by Admin" : "Self Registered"}
         </span>
       ),
+    },
+     {
+      header: "User Rating",
+      accessor: "totalRatings",
+
     },
     {
       header: "Availability Status",
