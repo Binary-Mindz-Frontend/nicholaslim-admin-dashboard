@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   AlertDialog,
@@ -34,6 +35,7 @@ import {
   useRemoveUserFromRoleMutation,
   useUpdateRoleBasedAccessControlMutation,
 } from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
+import AssignUsersTab from "./AssignUsersTab";
 
 interface Permission {
   module: string;
@@ -86,9 +88,10 @@ const CustomCheckbox: React.FC<{
         className={`
           w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200
           ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"}
-          ${checked || indeterminate
-            ? "bg-yellow-500 border-yellow-500 shadow-md"
-            : "bg-white border-gray-300 hover:border-yellow-400 hover:shadow-sm"
+          ${
+            checked || indeterminate
+              ? "bg-yellow-500 border-yellow-500 shadow-md"
+              : "bg-white border-gray-300 hover:border-yellow-400 hover:shadow-sm"
           }
         `}
         onClick={(e) => {
@@ -96,7 +99,7 @@ const CustomCheckbox: React.FC<{
           if (!disabled) {
             const syntheticEvent = {
               target: { checked: !checked },
-              stopPropagation: () => { },
+              stopPropagation: () => {},
             } as React.ChangeEvent<HTMLInputElement>;
             onChange(syntheticEvent);
           }
@@ -118,7 +121,9 @@ const buildMenuTree = (
   level: number = 0,
 ): MenuNode[] => {
   return items
-    .filter((item) => item.id !== "login" && item.id !== "" && item.id !== "admin")
+    .filter(
+      (item) => item.id !== "login" && item.id !== "" && item.id !== "admin",
+    )
     .map((item) => ({
       id: item.id,
       label: item.label,
@@ -197,13 +202,21 @@ const findParentPermissions = (
   }
 
   // Also check grandparents
-  return [...permissions, ...findParentPermissions(parentId, moduleActions, tree)];
+  return [
+    ...permissions,
+    ...findParentPermissions(parentId, moduleActions, tree),
+  ];
 };
 
 // Get all backend modules for a menu item (including children recursively)
-const getAllBackendModulesForMenuItem = (menuId: string, isSelection: boolean = true): string[] => {
+const getAllBackendModulesForMenuItem = (
+  menuId: string,
+  isSelection: boolean = true,
+): string[] => {
   // Use getSelectionModules for selection, otherwise stick to direct mapping for deselection
-  const directModules = isSelection ? getSelectionModules(menuId) : (menuToPermissionMapping[menuId] || []);
+  const directModules = isSelection
+    ? getSelectionModules(menuId)
+    : menuToPermissionMapping[menuId] || [];
 
   const findChildModules = (nodes: MenuNode[], targetId: string): string[] => {
     for (const node of nodes) {
@@ -214,7 +227,9 @@ const getAllBackendModulesForMenuItem = (menuId: string, isSelection: boolean = 
           const collectModules = (childNodes: MenuNode[]) => {
             for (const child of childNodes) {
               // Same logic for child modules
-              const childDirect = isSelection ? getSelectionModules(child.id) : (menuToPermissionMapping[child.id] || []);
+              const childDirect = isSelection
+                ? getSelectionModules(child.id)
+                : menuToPermissionMapping[child.id] || [];
               childModules.push(...childDirect);
 
               if (child.children) {
@@ -239,18 +254,17 @@ const getAllBackendModulesForMenuItem = (menuId: string, isSelection: boolean = 
   const childModules = findChildModules(MENU_TREE, menuId);
 
   // Combine all modules and remove duplicates, filtering by active MODULE_ACTIONS
-  return [
-    ...new Set([
-      ...directModules,
-      ...childModules,
-    ]),
-  ].filter(mod => !!MODULE_ACTIONS[mod]);
+  return [...new Set([...directModules, ...childModules])].filter(
+    (mod) => !!MODULE_ACTIONS[mod],
+  );
 };
 
 // Extract all unique modules currently mapped in the menu tree to prevent ghost permissions
 const ALL_ACTIVE_TREE_MODULES = new Set<string>();
-MENU_TREE.forEach(node => {
-  getAllBackendModulesForMenuItem(node.id).forEach(mod => ALL_ACTIVE_TREE_MODULES.add(mod));
+MENU_TREE.forEach((node) => {
+  getAllBackendModulesForMenuItem(node.id).forEach((mod) =>
+    ALL_ACTIVE_TREE_MODULES.add(mod),
+  );
 });
 
 // Get all permissions for a menu item (including children recursively AND parents recursively for selection)
@@ -285,10 +299,10 @@ const hasAnyPermissionLocal = (
   selectedPermissions: Permission[],
   moduleActions: Record<string, string[]>,
 ): boolean => {
-  console.log(moduleActions, "moduleActions")
+  console.log(moduleActions, "moduleActions");
   const backendModules = getAllBackendModulesForMenuItem(menuId);
-  return backendModules.some(mod =>
-    selectedPermissions.some(p => p.module === mod)
+  return backendModules.some((mod) =>
+    selectedPermissions.some((p) => p.module === mod),
   );
 };
 
@@ -301,9 +315,11 @@ const hasAllPermissionsLocal = (
   const backendModules = getAllBackendModulesForMenuItem(menuId);
   if (backendModules.length === 0) return false;
 
-  return backendModules.every(mod => {
+  return backendModules.every((mod) => {
     const requiredActions = moduleActions[mod] || [];
-    const actualPermissions = selectedPermissions.filter(p => p.module === mod);
+    const actualPermissions = selectedPermissions.filter(
+      (p) => p.module === mod,
+    );
 
     if (requiredActions.length === 0) return actualPermissions.length > 0;
     return actualPermissions.length === requiredActions.length;
@@ -316,8 +332,16 @@ const hasPartialPermissionsLocal = (
   selectedPermissions: Permission[],
   moduleActions: Record<string, string[]>,
 ): boolean => {
-  const hasAny = hasAnyPermissionLocal(menuId, selectedPermissions, moduleActions);
-  const hasAll = hasAllPermissionsLocal(menuId, selectedPermissions, moduleActions);
+  const hasAny = hasAnyPermissionLocal(
+    menuId,
+    selectedPermissions,
+    moduleActions,
+  );
+  const hasAll = hasAllPermissionsLocal(
+    menuId,
+    selectedPermissions,
+    moduleActions,
+  );
   return hasAny && !hasAll;
 };
 
@@ -339,127 +363,127 @@ const MenuTreeItem: React.FC<{
   isEditing,
   moduleActions,
 }) => {
-    const hasChildren = node.children && node.children.length > 0;
-    const isExpanded = expandedNodes.has(node.id);
+  const hasChildren = node.children && node.children.length > 0;
+  const isExpanded = expandedNodes.has(node.id);
 
-    const hasPermission = hasAnyPermissionLocal(
-      node.id,
-      selectedPermissions,
-      moduleActions,
-    );
-    const hasAll = hasAllPermissionsLocal(
-      node.id,
-      selectedPermissions,
-      moduleActions,
-    );
-    const hasPartial = hasPartialPermissionsLocal(
-      node.id,
-      selectedPermissions,
-      moduleActions,
-    );
+  const hasPermission = hasAnyPermissionLocal(
+    node.id,
+    selectedPermissions,
+    moduleActions,
+  );
+  const hasAll = hasAllPermissionsLocal(
+    node.id,
+    selectedPermissions,
+    moduleActions,
+  );
+  const hasPartial = hasPartialPermissionsLocal(
+    node.id,
+    selectedPermissions,
+    moduleActions,
+  );
 
-    // Background color based on state
-    let bgColor = "bg-white";
-    let borderColor = "border-gray-200";
-    let textColor = "text-gray-700";
+  // Background color based on state
+  let bgColor = "bg-white";
+  let borderColor = "border-gray-200";
+  let textColor = "text-gray-700";
 
-    if (hasAll) {
-      bgColor = "bg-green-50";
-      borderColor = "border-green-200";
-      textColor = "text-green-700";
-    } else if (hasPartial) {
-      bgColor = "bg-yellow-50";
-      borderColor = "border-yellow-200";
-      textColor = "text-yellow-700";
+  if (hasAll) {
+    bgColor = "bg-green-50";
+    borderColor = "border-green-200";
+    textColor = "text-green-700";
+  } else if (hasPartial) {
+    bgColor = "bg-yellow-50";
+    borderColor = "border-yellow-200";
+    textColor = "text-yellow-700";
+  }
+
+  const handleToggle = () => {
+    if (hasChildren) {
+      onToggleExpand(node.id);
     }
+  };
 
-    const handleToggle = () => {
-      if (hasChildren) {
-        onToggleExpand(node.id);
-      }
-    };
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    if (isEditing) {
+      onToggle(node.id, e.target.checked);
+    }
+  };
 
-    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      e.stopPropagation();
-      if (isEditing) {
-        onToggle(node.id, e.target.checked);
-      }
-    };
+  const getCheckboxState = () => {
+    if (hasAll) return "checked";
+    if (hasPartial) return "indeterminate";
+    return "unchecked";
+  };
 
-    const getCheckboxState = () => {
-      if (hasAll) return "checked";
-      if (hasPartial) return "indeterminate";
-      return "unchecked";
-    };
+  const checkboxState = getCheckboxState();
 
-    const checkboxState = getCheckboxState();
+  const marginLeft = node.level ? `${node.level * 1.5}rem` : "0";
 
-    const marginLeft = node.level ? `${node.level * 1.5}rem` : "0";
-
-    return (
-      <div className="select-none">
-        <div
-          className={`
+  return (
+    <div className="select-none">
+      <div
+        className={`
           flex items-center py-2.5 px-3 rounded-xl transition-all duration-200
           ${bgColor} ${borderColor} border
           hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm
           ${hasChildren ? "cursor-pointer" : ""}
           ${isEditing ? "hover:border-yellow-400" : ""}
         `}
-          style={{ marginLeft }}
-          onClick={handleToggle}
-        >
-          <div className="flex items-center flex-1 min-w-0">
-            {hasChildren && (
-              <div className="mr-1 shrink-0">
-                {isExpanded ? (
-                  <ChevronDown className={`w-4 h-4 ${textColor}`} />
-                ) : (
-                  <ChevronRight className={`w-4 h-4 ${textColor}`} />
-                )}
-              </div>
-            )}
-            {!hasChildren && <div className="w-5 mr-1 shrink-0" />}
+        style={{ marginLeft }}
+        onClick={handleToggle}
+      >
+        <div className="flex items-center flex-1 min-w-0">
+          {hasChildren && (
+            <div className="mr-1 shrink-0">
+              {isExpanded ? (
+                <ChevronDown className={`w-4 h-4 ${textColor}`} />
+              ) : (
+                <ChevronRight className={`w-4 h-4 ${textColor}`} />
+              )}
+            </div>
+          )}
+          {!hasChildren && <div className="w-5 mr-1 shrink-0" />}
 
-            <CustomCheckbox
-              checked={checkboxState === "checked"}
-              indeterminate={checkboxState === "indeterminate"}
-              onChange={handleCheckboxChange}
-              className="mr-3 shrink-0"
-              disabled={!isEditing}
-            />
+          <CustomCheckbox
+            checked={checkboxState === "checked"}
+            indeterminate={checkboxState === "indeterminate"}
+            onChange={handleCheckboxChange}
+            className="mr-3 shrink-0"
+            disabled={!isEditing}
+          />
 
-            <span className={`flex-1 text-sm font-medium ${textColor} truncate`}>
-              {node.label}
+          <span className={`flex-1 text-sm font-medium ${textColor} truncate`}>
+            {node.label}
+          </span>
+
+          {hasPermission && (
+            <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full shrink-0 font-medium">
+              {getAllBackendModulesForMenuItem(node.id).length}
             </span>
-
-            {hasPermission && (
-              <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full shrink-0 font-medium">
-                {getAllBackendModulesForMenuItem(node.id).length}
-              </span>
-            )}
-          </div>
+          )}
         </div>
-
-        {hasChildren && isExpanded && (
-          <div className="ml-4 border-l-2 border-yellow-100 pl-2 mt-1 space-y-1">
-            {node.children?.map((child) => (
-              <MenuTreeItem
-                key={child.id}
-                node={child}
-                selectedPermissions={selectedPermissions}
-                onToggle={onToggle}
-                expandedNodes={expandedNodes}
-                onToggleExpand={onToggleExpand}
-                isEditing={isEditing}
-                moduleActions={moduleActions}
-              />
-            ))}
-          </div>
-        )}
       </div>
-    );
-  };
+
+      {hasChildren && isExpanded && (
+        <div className="ml-4 border-l-2 border-yellow-100 pl-2 mt-1 space-y-1">
+          {node.children?.map((child) => (
+            <MenuTreeItem
+              key={child.id}
+              node={child}
+              selectedPermissions={selectedPermissions}
+              onToggle={onToggle}
+              expandedNodes={expandedNodes}
+              onToggleExpand={onToggleExpand}
+              isEditing={isEditing}
+              moduleActions={moduleActions}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const PermissionsModal: React.FC<PermissionsModalProps> = ({
   isOpen,
@@ -470,13 +494,20 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
   isLoading = false,
 }) => {
   const filterValidPermissions = (perms: Permission[]) =>
-    perms.filter(p => p.action && p.action.trim() !== "" && !!MODULE_ACTIONS[p.module] && ALL_ACTIVE_TREE_MODULES.has(p.module));
+    perms.filter(
+      (p) =>
+        p.action &&
+        p.action.trim() !== "" &&
+        !!MODULE_ACTIONS[p.module] &&
+        ALL_ACTIVE_TREE_MODULES.has(p.module),
+    );
 
-  const [selectedPermissions, setSelectedPermissions] =
-    useState<Permission[]>(filterValidPermissions(permissions));
-  const [activeTab, setActiveTab] = useState<"permissions" | "users">(
-    "permissions",
+  const [selectedPermissions, setSelectedPermissions] = useState<Permission[]>(
+    filterValidPermissions(permissions),
   );
+  const [activeTab, setActiveTab] = useState<
+    "permissions" | "users" | "assignUsers"
+  >("permissions");
   const [pendingRemove, setPendingRemove] = useState<{
     userId: number;
     username: string;
@@ -744,21 +775,33 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
           <div className="flex border-b px-6">
             <button
               onClick={() => setActiveTab("permissions")}
-              className={`py-3 px-4 font-medium text-sm border-b-2 transition-colors cursor-pointer ${activeTab === "permissions"
-                ? "border-yellow-400 text-yellow-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+              className={`py-3 px-4 font-medium text-sm border-b-2 transition-colors cursor-pointer ${
+                activeTab === "permissions"
+                  ? "border-yellow-400 text-yellow-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
             >
               Permissions
             </button>
             <button
               onClick={() => setActiveTab("users")}
-              className={`py-3 px-4 font-medium text-sm border-b-2 transition-colors cursor-pointer ${activeTab === "users"
-                ? "border-yellow-400 text-yellow-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+              className={`py-3 px-4 font-medium text-sm border-b-2 transition-colors cursor-pointer ${
+                activeTab === "users"
+                  ? "border-yellow-400 text-yellow-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
             >
               Assigned Users ({roleUsersData?.users?.length || 0})
+            </button>
+            <button
+              onClick={() => setActiveTab("assignUsers")}
+              className={`py-3 px-4 font-medium text-sm border-b-2 transition-colors cursor-pointer ${
+                activeTab === "assignUsers"
+                  ? "border-yellow-400 text-yellow-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Assign User to the Role
             </button>
           </div>
 
@@ -857,6 +900,14 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
                   ))}
                 </div>
               </>
+            ) : activeTab === "assignUsers" ? (
+              <AssignUsersTab
+                roleId={roleId}
+                roleUsers={roleUsersData?.users || []}
+                onUserAssigned={() => {
+                  refetchUsers();
+                }}
+              />
             ) : (
               // Users View
               <div className="space-y-4">
