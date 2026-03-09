@@ -18,7 +18,10 @@ export default function QuizList({
   return (
     <div className=" ">
       <div className="pt-6 md:pt-16 pb-8">
-        <button onClick={() => window.history.back()} className="flex items-center cursor-pointer gap-2 text-foreground hover:text-gray-700 transition-colors mb-6 bg-[#fdc700] px-4 py-2 rounded-sm">
+        <button
+          onClick={() => window.history.back()}
+          className="flex items-center cursor-pointer gap-2 text-foreground hover:text-gray-700 transition-colors mb-6 bg-[#fdc700] px-4 py-2 rounded-sm"
+        >
           <GoArrowLeft size={22} />
           <span className="text-xl">Back</span>
         </button>
@@ -30,7 +33,8 @@ export default function QuizList({
             onClick={onCreate}
             className="btn-yellow px-4 py-2 text-xl flex items-center gap-4 rounded-sm cursor-pointer"
           >
-            Create Questions
+            {/* Create Questions */}
+            Add Question
           </button>
         </div>
 
@@ -41,9 +45,7 @@ export default function QuizList({
             </p>
           </div>
         ) : (
-          <div
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10"
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
             {questions.map((q) => (
               <QuizCard
                 key={q.id}
