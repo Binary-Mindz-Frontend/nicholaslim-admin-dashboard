@@ -12,6 +12,7 @@ import { PeakPricingSection } from "./addVehicleTypes/_components/PeakPricingSec
 
 interface VehicleTypeData {
   vehicle_type: string;
+  vehicle_name: string;
   base_price: number;
   per_km_price: number;
   peak_pricing: boolean;
@@ -22,6 +23,7 @@ interface VehicleTypeData {
 
 interface VehicleTypeStats {
   vehicle_type: string;
+  vehicle_name: string;
   count: number;
   color: string;
 }
@@ -78,17 +80,17 @@ const VehicleTypes = () => {
 
     // Count occurrences of each vehicle type
     apiResponse.data.forEach((vehicle: any) => {
-      const type = vehicle.vehicle_type || "Unknown";
+      const type = vehicle.vehicle_name || "Unknown";
       statsMap.set(type, (statsMap.get(type) || 0) + 1);
     });
 
     // Convert to array with random colors
     const stats: VehicleTypeStats[] = Array.from(statsMap.entries()).map(
       ([type, count]) => ({
-        vehicle_type: type,
+        vehicle_name: type,
         count,
         color: generateRandomColor(),
-      })
+      }),
     );
 
     return stats;
@@ -106,7 +108,7 @@ const VehicleTypes = () => {
       return apiResponse?.data || [];
     }
     return apiResponse.data.filter(
-      (vehicle: any) => vehicle.vehicle_type === selectedType
+      (vehicle: any) => vehicle.vehicle_name === selectedType,
     );
   }, [apiResponse, selectedType]);
 
@@ -166,15 +168,15 @@ const VehicleTypes = () => {
         {/* Dynamic vehicle type buttons */}
         {vehicleTypeStats.map((stat) => (
           <CustomButton
-            key={stat.vehicle_type}
+            key={stat.vehicle_name}
             bgColor={
-              selectedType === stat.vehicle_type ? "#FFEA96" : "#FFE16B40"
+              selectedType === stat.vehicle_name ? "#FFEA96" : "#FFE16B40"
             }
             borderColor="#E2E8F0"
             indicatorColor={stat.color}
-            text={`${stat.vehicle_type}`}
-            click={() => handleVehicleTypeClick(stat.vehicle_type)}
-            isActive={selectedType === stat.vehicle_type}
+            text={`${stat.vehicle_name}`}
+            click={() => handleVehicleTypeClick(stat.vehicle_name)}
+            isActive={selectedType === stat.vehicle_name}
           />
         ))}
 

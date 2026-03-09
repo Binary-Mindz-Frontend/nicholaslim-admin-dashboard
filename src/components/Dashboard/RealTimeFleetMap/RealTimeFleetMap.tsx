@@ -28,6 +28,7 @@ interface Marker {
 interface VehicleType {
   id: number;
   vehicle_type: string;
+  vehicle_name: string;
   base_price: string;
   per_km_price: string;
   peak_pricing: boolean;
@@ -46,6 +47,7 @@ interface OrderData {
   orderStatus?: string;
   vehicleType?: {
     vehicle_type: string;
+    vehicle_name: string;
   };
   assign_rider?: {
     locations?: {
@@ -66,6 +68,7 @@ interface SingleOrderResponse {
     order_status: string;
     vehicle?: {
       vehicle_type: string;
+      vehicle_name: string;
     };
     assign_rider?: {
       id: number;
@@ -243,7 +246,8 @@ export default function FleetMapHeader({
       Math.floor(Math.random() * 360);
 
     // Get vehicle type from order data or use default
-    const vehicleTypeStr = order.vehicleType?.vehicle_type || "MOTORCYCLE";
+    // const vehicleTypeStr = order.vehicleType?.vehicle_type || "MOTORCYCLE";
+    const vehicleTypeStr = order.vehicleType?.vehicle_name || "MOTORCYCLE";
     const vehicleConfig = getVehicleConfig(vehicleTypeStr);
 
     // Create unique ID using orderId and riderId combination
@@ -285,7 +289,8 @@ export default function FleetMapHeader({
     }
 
     // Get vehicle type from response or use default
-    const vehicleTypeStr = data.vehicle?.vehicle_type || "MOTORCYCLE";
+    // const vehicleTypeStr = data.vehicle?.vehicle_type || "MOTORCYCLE";
+    const vehicleTypeStr = data.vehicle?.vehicle_name || "MOTORCYCLE";
     const vehicleConfig = getVehicleConfig(vehicleTypeStr);
 
     const uniqueId = `${data.id}-${data.assign_rider_id}`;
@@ -460,7 +465,8 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
   const getUniqueVehicleTypes = (types: VehicleType[]): VehicleType[] => {
     const seen = new Set<string>();
     return types.filter((type) => {
-      const normalizedType = type.vehicle_type.toLowerCase();
+      // const normalizedType = type.vehicle_type.toLowerCase();
+      const normalizedType = type.vehicle_name.toLowerCase();
       if (seen.has(normalizedType)) {
         return false;
       }
@@ -497,15 +503,18 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
 
     // Add categories for each unique vehicle type
     uniqueVehicleTypes.forEach((type) => {
-      const typeLower = type.vehicle_type.toLowerCase();
+      // const typeLower = type.vehicle_type.toLowerCase();
+      const typeLower = type.vehicle_name.toLowerCase();
       const count = vehicleCounts[typeLower] || 0;
 
       // Only add category if we have this vehicle type in API
-      const config = getVehicleConfig(type.vehicle_type);
+      // const config = getVehicleConfig(type.vehicle_type);
+      const config = getVehicleConfig(type.vehicle_name);
 
       newCategories.push({
         id: typeLower,
-        label: type.vehicle_type,
+        // label: type.vehicle_type,
+        label: type.vehicle_name,
         count,
         color:
           config.color === "#F97316"
