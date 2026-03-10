@@ -28,7 +28,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { useDeleteRiderProfileMutation, useSuspendRiderProfileMutation, useUnsuspendRiderProfileMutation } from "@/redux/features/drivers/driversApi";
+import { useSuspendRiderProfileMutation, useUnsuspendRiderProfileMutation } from "@/redux/features/drivers/driversApi";
+import { useDeleteUserTypeMutation } from "@/redux/features/usersTypes/usersTypesApi";
 
 interface Registration {
   raider_name: string;
@@ -62,7 +63,7 @@ export default function DriverAction({ row, onDeleteSuccess }: Props) {
   const [suspendedDuration, setSuspendedDuration] = useState<Date>();
   const [suspensionReason, setSuspensionReason] = useState("");
   const navigate = useNavigate();
-  const [deleteRider, { isLoading }] = useDeleteRiderProfileMutation();
+  const [deleteUserType, { isLoading }] = useDeleteUserTypeMutation();
   const [suspendRider, { isLoading: isSuspending }] = useSuspendRiderProfileMutation();
   const [unsuspendRider, { isLoading: isUnsuspending }] = useUnsuspendRiderProfileMutation();
 
@@ -72,17 +73,16 @@ export default function DriverAction({ row, onDeleteSuccess }: Props) {
 
   const handleDelete = async () => {
     try {
-      
-       await deleteRider(row.userId).unwrap();
-      
+      await deleteUserType([row.userId]).unwrap();
+
       toast.success(`Driver ${row.registrations?.[0]?.raider_name || 'Rider'} deleted successfully!`);
       setOpen(false);
-      
+
       // Trigger refetch after successful deletion
       if (onDeleteSuccess) {
         onDeleteSuccess();
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to delete driver");
     }
@@ -93,32 +93,32 @@ export default function DriverAction({ row, onDeleteSuccess }: Props) {
       toast.error("Please select a suspension date");
       return;
     }
-    
+
     if (!suspensionReason.trim()) {
       toast.error("Please provide a suspension reason");
       return;
     }
-    
+
     try {
       const suspendData = {
         suspendedDuration: suspendedDuration.toISOString(),
         suspensionReason,
       };
-      
+
       await suspendRider({ id: row.id, data: suspendData }).unwrap();
-      
+
       toast.success(`Driver ${row.registrations?.[0]?.raider_name || 'Rider'} suspended successfully!`);
-      
+
       // Close modal and reset form
       setSuspendModalOpen(false);
       setSuspendedDuration(undefined);
       setSuspensionReason("");
-      
+
       // Trigger refetch after successful suspension
       if (onDeleteSuccess) {
         onDeleteSuccess();
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to suspend driver");
     }
@@ -127,17 +127,17 @@ export default function DriverAction({ row, onDeleteSuccess }: Props) {
   const handleUnsuspend = async () => {
     try {
       await unsuspendRider(row.id).unwrap();
-      
+
       toast.success(`Driver ${row.registrations?.[0]?.raider_name || 'Rider'} unsuspended successfully!`);
-      
+
       // Close dialog
       setUnsuspendDialogOpen(false);
-      
+
       // Trigger refetch after successful unsuspension
       if (onDeleteSuccess) {
         onDeleteSuccess();
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to unsuspend driver");
     }
@@ -154,7 +154,7 @@ export default function DriverAction({ row, onDeleteSuccess }: Props) {
   return (
     <div className="flex items-center justify-center gap-3">
       {/* EDIT ICON */}
-      <button 
+      <button
         className="p-2 rounded hover:bg-gray-200 transition"
         onClick={handleEdit}
         type="button"
@@ -163,7 +163,7 @@ export default function DriverAction({ row, onDeleteSuccess }: Props) {
       </button>
 
       {/* SUSPEND ICON */}
-      <button 
+      <button
         className="p-2 rounded hover:bg-red-200 transition"
         onClick={handleBanClick}
         type="button"
@@ -207,7 +207,7 @@ export default function DriverAction({ row, onDeleteSuccess }: Props) {
           <DialogHeader>
             <DialogTitle>Suspend Driver</DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="suspendedDuration">Suspended Duration</Label>
@@ -234,7 +234,7 @@ export default function DriverAction({ row, onDeleteSuccess }: Props) {
                 </PopoverContent>
               </Popover>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="suspensionReason">Suspension Reason</Label>
               <Textarea
@@ -273,7 +273,7 @@ export default function DriverAction({ row, onDeleteSuccess }: Props) {
             <AlertDialogTitle>Remove Suspension?</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to remove the suspension for driver{" "}
-              <b>{row.registrations?.[0]?.raider_name || 'this rider'}</b>? 
+              <b>{row.registrations?.[0]?.raider_name || 'this rider'}</b>?
               This will restore their access immediately.
             </AlertDialogDescription>
           </AlertDialogHeader>
