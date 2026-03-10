@@ -21,13 +21,6 @@ interface VehicleTypeData {
   isActive: boolean;
 }
 
-interface VehicleTypeStats {
-  vehicle_type: string;
-  vehicle_name: string;
-  count: number;
-  color: string;
-}
-
 const VehicleTypes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -85,7 +78,7 @@ const VehicleTypes = () => {
     });
 
     // Convert to array with random colors
-    const stats: VehicleTypeStats[] = Array.from(statsMap.entries()).map(
+    const stats: any[] = Array.from(statsMap.entries()).map(
       ([type, count]) => ({
         vehicle_name: type,
         count,
