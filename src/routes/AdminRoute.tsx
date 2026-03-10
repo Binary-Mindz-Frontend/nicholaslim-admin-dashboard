@@ -10,7 +10,7 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   const { accessToken } = useSelector((state: RootState) => state.auth);
   
   if (!accessToken) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;

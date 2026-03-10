@@ -18,7 +18,7 @@ export default function NotFound404() {
       {/* Buttons */}
       <div className="flex gap-3">
         <a
-          href="/"
+          href="/login"
           className="px-6 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-white font-semibold rounded-lg transition-colors cursor-pointer"
         >
           Login

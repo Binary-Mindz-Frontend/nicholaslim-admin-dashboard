@@ -24,7 +24,7 @@ const ResetPassword: React.FC = () => {
       setContactType(location.state.contactType || "email");
     } else {
       // If no state, redirect to login
-      navigate("/");
+      navigate("/login");
     }
   }, [location, navigate]);
 
@@ -72,7 +72,7 @@ const ResetPassword: React.FC = () => {
         toast.success("Password reset successfully!", { id: resetToast });
         
         // Navigate to login page
-        navigate("/", { 
+        navigate("/login", { 
           state: { 
             message: "Password has been reset successfully. Please login with your new password." 
           } 
@@ -226,7 +226,7 @@ const ResetPassword: React.FC = () => {
           <div className="text-center">
             <button
               type="button"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/login")}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
               Back to Login
