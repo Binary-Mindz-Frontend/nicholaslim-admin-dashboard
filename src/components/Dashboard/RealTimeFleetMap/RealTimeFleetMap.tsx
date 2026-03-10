@@ -156,7 +156,7 @@ export default function FleetMapHeader({
 
     const map = new google.maps.Map(mapRef.current, {
       center: { lat: 1.3521, lng: 103.8198 },
-      zoom: 11,
+      zoom: 12,
       disableDefaultUI: true,
       zoomControl: false,
       mapTypeControl: false,
@@ -393,7 +393,8 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
 
     socket.on("connect", () => {
       // Request initial orders data
-      socket.emit("admin:refresh_orders");
+      // socket.emit("admin:refresh_orders");
+      socket.emit("admin:loc_raider");
     });
 
     // Listen for all active orders with rider locations
@@ -658,7 +659,7 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
   }, [selectedCategory, vehicles]);
 
   return (
-    <div className="w-full h-[600px] bg-white shadow-sm border border-border rounded-2xl flex flex-col mt-8 relative z-10">
+    <div className="w-full h-[800px] bg-white shadow-sm border border-border rounded-2xl flex flex-col mt-8 relative z-10">
       {/* Header - Removed status and last updated */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-4 sm:px-6 md:px-8 py-4 md:py-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 md:mb-0">
