@@ -73,7 +73,7 @@ import NotFound404 from "@/pages/NotFound404/NotFound404";
 
 const routes = createBrowserRouter([
   {
-    path: "/",
+    path: "/dashboard",
     element: <DashboardLayoutWrapper />,
     children: [
       {
@@ -421,7 +421,7 @@ const routes = createBrowserRouter([
   },
 
   {
-    path: "/login",
+    path: "/",
     element: <Login />,
   },
   {

@@ -21,7 +21,7 @@ export default function NotFound404() {
           href="/"
           className="px-6 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-white font-semibold rounded-lg transition-colors cursor-pointer"
         >
-          Go Home
+          Login
         </a>
         <button
           onClick={() => window.history.back()}
