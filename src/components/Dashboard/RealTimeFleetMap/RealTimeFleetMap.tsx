@@ -28,6 +28,7 @@ interface Marker {
 interface VehicleType {
   id: number;
   vehicle_type: string;
+  vehicle_name: string;
   base_price: string;
   per_km_price: string;
   peak_pricing: boolean;
@@ -46,6 +47,7 @@ interface OrderData {
   orderStatus?: string;
   vehicleType?: {
     vehicle_type: string;
+    vehicle_name: string;
   };
   assign_rider?: {
     locations?: {
@@ -66,6 +68,7 @@ interface SingleOrderResponse {
     order_status: string;
     vehicle?: {
       vehicle_type: string;
+      vehicle_name: string;
     };
     assign_rider?: {
       id: number;
@@ -153,7 +156,7 @@ export default function FleetMapHeader({
 
     const map = new google.maps.Map(mapRef.current, {
       center: { lat: 1.3521, lng: 103.8198 },
-      zoom: 11,
+      zoom: 12,
       disableDefaultUI: true,
       zoomControl: false,
       mapTypeControl: false,
@@ -243,7 +246,8 @@ export default function FleetMapHeader({
       Math.floor(Math.random() * 360);
 
     // Get vehicle type from order data or use default
-    const vehicleTypeStr = order.vehicleType?.vehicle_type || "MOTORCYCLE";
+    // const vehicleTypeStr = order.vehicleType?.vehicle_type || "MOTORCYCLE";
+    const vehicleTypeStr = order.vehicleType?.vehicle_name || "MOTORCYCLE";
     const vehicleConfig = getVehicleConfig(vehicleTypeStr);
 
     // Create unique ID using orderId and riderId combination
@@ -285,7 +289,8 @@ export default function FleetMapHeader({
     }
 
     // Get vehicle type from response or use default
-    const vehicleTypeStr = data.vehicle?.vehicle_type || "MOTORCYCLE";
+    // const vehicleTypeStr = data.vehicle?.vehicle_type || "MOTORCYCLE";
+    const vehicleTypeStr = data.vehicle?.vehicle_name || "MOTORCYCLE";
     const vehicleConfig = getVehicleConfig(vehicleTypeStr);
 
     const uniqueId = `${data.id}-${data.assign_rider_id}`;
@@ -388,7 +393,8 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
 
     socket.on("connect", () => {
       // Request initial orders data
-      socket.emit("admin:refresh_orders");
+      // socket.emit("admin:refresh_orders");
+      socket.emit("admin:loc_raider");
     });
 
     // Listen for all active orders with rider locations
@@ -460,7 +466,8 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
   const getUniqueVehicleTypes = (types: VehicleType[]): VehicleType[] => {
     const seen = new Set<string>();
     return types.filter((type) => {
-      const normalizedType = type.vehicle_type.toLowerCase();
+      // const normalizedType = type.vehicle_type.toLowerCase();
+      const normalizedType = type.vehicle_name.toLowerCase();
       if (seen.has(normalizedType)) {
         return false;
       }
@@ -497,15 +504,18 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
 
     // Add categories for each unique vehicle type
     uniqueVehicleTypes.forEach((type) => {
-      const typeLower = type.vehicle_type.toLowerCase();
+      // const typeLower = type.vehicle_type.toLowerCase();
+      const typeLower = type.vehicle_name.toLowerCase();
       const count = vehicleCounts[typeLower] || 0;
 
       // Only add category if we have this vehicle type in API
-      const config = getVehicleConfig(type.vehicle_type);
+      // const config = getVehicleConfig(type.vehicle_type);
+      const config = getVehicleConfig(type.vehicle_name);
 
       newCategories.push({
         id: typeLower,
-        label: type.vehicle_type,
+        // label: type.vehicle_type,
+        label: type.vehicle_name,
         count,
         color:
           config.color === "#F97316"
@@ -649,7 +659,7 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
   }, [selectedCategory, vehicles]);
 
   return (
-    <div className="w-full h-[600px] bg-white shadow-sm border border-border rounded-2xl flex flex-col mt-8 relative z-10">
+    <div className="w-full h-[800px] bg-white shadow-sm border border-border rounded-2xl flex flex-col mt-8 relative z-10">
       {/* Header - Removed status and last updated */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-4 sm:px-6 md:px-8 py-4 md:py-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 md:mb-0">
