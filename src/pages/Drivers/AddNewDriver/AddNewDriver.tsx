@@ -272,6 +272,12 @@ interface PhoneInputProps {
   disabled?: boolean;
 }
 
+const COUNTRY_CODES = [
+  { code: "+65", label: "🇸🇬 +65", country: "SG" },
+  { code: "+60", label: "🇲🇾 +60", country: "MY" },
+  { code: "+91", label: "🇮🇳 +91", country: "IN" },
+];
+
 const PhoneInput = ({
   value,
   onChange,
@@ -280,12 +286,22 @@ const PhoneInput = ({
   error,
   disabled,
 }: PhoneInputProps) => {
-  // Strip +65 prefix for display in the input
-  const localValue = value.startsWith("+65") ? value.slice(3).trimStart() : value;
+  // Determine selected country code from value, default to +65
+  const selectedCountry = COUNTRY_CODES.find(c => value.startsWith(c.code)) || COUNTRY_CODES[0];
+
+  // Strip selected country code prefix for display in the input
+  const localValue = value.startsWith(selectedCountry.code)
+    ? value.slice(selectedCountry.code.length).trimStart()
+    : value;
+
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCode = e.target.value;
+    onChange(`${newCode}${localValue ? " " + localValue : ""}`);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/[^0-9\s]/g, ""); // digits and spaces only
-    onChange(`+65${raw ? " " + raw : ""}`);
+    onChange(`${selectedCountry.code}${raw ? " " + raw : ""}`);
   };
 
   return (
@@ -293,10 +309,18 @@ const PhoneInput = ({
       <div
         className={`flex items-center w-full border rounded bg-[#FFFAE6] focus-within:border-yellow-400 overflow-hidden ${error ? "border-red-400" : "border-gray-300"}`}
       >
-        {/* Fixed country code badge */}
-        <span className="flex items-center gap-1.5 px-3 py-2 bg-[#FFFAE6] border-r border-gray-300 text-sm font-semibold text-gray-700 whitespace-nowrap select-none shrink-0">
-          🇸🇬 +65
-        </span>
+        <select
+          value={selectedCountry.code}
+          onChange={handleCountryChange}
+          disabled={disabled}
+          className="flex items-center gap-1.5 px-2 py-2 bg-[#FFFAE6] border-r border-gray-300 text-sm font-semibold text-gray-700 whitespace-nowrap outline-none cursor-pointer shrink-0"
+        >
+          {COUNTRY_CODES.map((country) => (
+            <option key={country.code} value={country.code}>
+              {country.label}
+            </option>
+          ))}
+        </select>
         <input
           type="tel"
           value={localValue}
@@ -304,7 +328,7 @@ const PhoneInput = ({
           onBlur={onBlur}
           placeholder={placeholder}
           disabled={disabled}
-          className="flex-1 px-3 py-2  focus:outline-none text-sm"
+          className="flex-1 px-3 py-2 focus:outline-none text-sm bg-transparent"
         />
       </div>
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
