@@ -26,8 +26,8 @@ const redirectToLogin = () => {
     // localStorage.removeItem("user");
 
     // Only redirect if not already on login page to avoid infinite loops
-    if (!window.location.pathname.includes("/login")) {
-      window.location.href = "/login";
+    if (!window.location.pathname.includes("/")) {
+      window.location.href = "/";
     }
   }
 };
@@ -76,7 +76,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   let result = await baseQuery(args, api, extraOptions);
 
   const url = typeof args === "string" ? args : args.url;
-  const isLoginApi = url === "/auth/login";
+  const isLoginApi = url === "/auth/";
 
   if (!isLoginApi && result?.error?.status === 401) {
     // Try to refresh token
