@@ -55,7 +55,7 @@ interface Registration {
   account_number: string;
   created_at: string;
   updated_at: string;
- // Add totalRatings field to Registration
+  // Add totalRatings field to Registration
 }
 
 interface TDriver {
@@ -72,7 +72,7 @@ interface TDriver {
   created_at: string;
   updated_at: string;
   registrations: Registration[];
-   totalRatings: number; 
+  totalRatings: number;
 }
 
 interface UseDriverColumnsParams {
@@ -109,7 +109,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
   }
 
   // Fetch the data using useGetRiderProfilesQuery hook with filtered params
-  const { data, isLoading, isError } = useGetRiderProfilesQuery(queryParams);
+  const { data, isLoading, isError, refetch } = useGetRiderProfilesQuery(queryParams);
   useEffect(() => {
     if (data?.data?.data) {
       setDrivers(data?.data?.data);
@@ -232,7 +232,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
         </span>
       ),
     },
-     {
+    {
       header: "User Rating",
       accessor: "totalRatings",
 
@@ -261,7 +261,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
     {
       header: "Action",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      cell: (row) => <DriverAction row={row as any} onDeleteSuccess={() => { }} />,
+      cell: (row) => <DriverAction row={row as any} onDeleteSuccess={refetch} />,
     },
   ];
 
