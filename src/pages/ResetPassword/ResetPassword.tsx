@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { Eye, EyeOff, Lock, Mail, Phone } from "lucide-react";
 import { useResetPasswordMutation } from "@/redux/features/auth/authApi";

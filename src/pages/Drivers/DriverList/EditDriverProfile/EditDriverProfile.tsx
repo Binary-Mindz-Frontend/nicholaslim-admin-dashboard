@@ -6,31 +6,187 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 
 import { userProfileSchema, UserProfileType } from "./userProfile.schema";
-import { 
-    useGetRiderProfileByIdQuery, 
-    useUpdateRiderProfileMutation 
+import {
+    useGetRiderProfileByIdQuery,
+    useUpdateRiderProfileMutation,
+    useUploadImageMutation
 } from "@/redux/features/drivers/driversApi";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { Camera, Star, Rss, ArrowLeft, Medal } from "lucide-react";
+import { Camera, Star, Rss, ArrowLeft, Medal, Upload, X } from "lucide-react";
+
+interface UploadBoxProps {
+    label: string;
+    onChange: (file: File | null) => void;
+    error?: string | null;
+    isUploading?: boolean;
+    currentPreviewUrl?: string | null;
+    buttonText?: string;
+}
+
+const UploadBox = ({
+    label,
+    onChange,
+    error,
+    isUploading,
+    currentPreviewUrl,
+    buttonText = "Upload Photo",
+}: UploadBoxProps) => {
+    const [localFileUrl, setLocalFileUrl] = useState<string | null>(null);
+    const [isPdf, setIsPdf] = useState(false);
+    const [fileName, setFileName] = useState<string | null>(null);
+
+    const preview = currentPreviewUrl || localFileUrl;
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null;
+        if (!file) return;
+
+        if (file.type === "application/pdf") {
+            if (localFileUrl) URL.revokeObjectURL(localFileUrl);
+            setLocalFileUrl(null);
+            setIsPdf(true);
+            setFileName(file.name);
+        } else if (file.type.startsWith("image/")) {
+            if (localFileUrl) URL.revokeObjectURL(localFileUrl);
+            setLocalFileUrl(URL.createObjectURL(file));
+            setIsPdf(false);
+            setFileName(null);
+        }
+        onChange(file);
+    };
+
+    const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (localFileUrl) {
+            URL.revokeObjectURL(localFileUrl);
+            setLocalFileUrl(null);
+        }
+        setIsPdf(false);
+        setFileName(null);
+        onChange(null);
+        const inputElement = document.getElementById(
+            `upload-${label.replace(/\s+/g, "-")}`,
+        ) as HTMLInputElement;
+        if (inputElement) inputElement.value = "";
+    };
+
+    return (
+        <div>
+            <label className="block text-sm font-semibold mb-2">{label}</label>
+            <div className="relative">
+                <input
+                    type="file"
+                    className="hidden"
+                    id={`upload-${label.replace(/\s+/g, "-")}`}
+                    accept="image/*,.pdf"
+                    onChange={handleFileChange}
+                    disabled={isUploading}
+                />
+                <label
+                    htmlFor={`upload-${label.replace(/\s+/g, "-")}`}
+                    className={`border-2 border-dashed rounded-xl p-6 w-full flex flex-col items-center justify-center text-center cursor-pointer transition min-h-[180px] relative overflow-hidden ${error ? "border-red-400 bg-red-50 hover:bg-red-100" : "border-green-500 bg-white hover:bg-green-50"} ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                    {isUploading ? (
+                        <div className="flex flex-col items-center gap-2">
+                            <Upload size={24} className="text-green-600 animate-pulse" />
+                            <p className="text-sm text-gray-700">Uploading...</p>
+                        </div>
+                    ) : isPdf ? (
+                        <>
+                            <div className="flex flex-col items-center gap-2 p-4">
+                                <div className="bg-red-100 rounded-lg p-3">
+                                    <Upload size={32} className="text-red-500" />
+                                </div>
+                                <p className="text-sm font-medium text-gray-800 break-all text-center">
+                                    {fileName}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleClear}
+                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 z-10 shadow-lg"
+                            >
+                                <X size={16} />
+                            </button>
+                        </>
+                    ) : preview ? (
+                        <>
+                            <img
+                                src={preview}
+                                alt="preview"
+                                className="absolute inset-0 w-full h-full object-cover rounded-xl"
+                            />
+                            <button
+                                type="button"
+                                onClick={handleClear}
+                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 z-10 shadow-lg"
+                            >
+                                <X size={16} />
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <p className="text-sm text-gray-700 mb-2">{label}</p>
+                            <span className="flex items-center gap-0.5 justify-center border border-green-500 rounded-md px-2 py-1">
+                                <Camera className="text-green-600" size={22} />
+                                <span className="text-xs sm:text-sm text-gray-700">
+                                    {buttonText}
+                                </span>
+                            </span>
+                            <p className="text-xs text-gray-400 mt-2">PNG, JPG or PDF</p>
+                        </>
+                    )}
+                </label>
+            </div>
+            {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+        </div>
+    );
+};
 
 export default function EditDriverProfile() {
     const navigate = useNavigate();
     const { id } = useParams();
-    
+
 
     const [profileImage, setProfileImage] = useState<string | null>(null);
-    
+    const [uploadingDocs, setUploadingDocs] = useState<Set<string>>(new Set());
+
     // RTK Query hooks - NOW USING QUERY INSTEAD OF MUTATION
     const { data: driverData, isLoading: isFetching, isError, error } = useGetRiderProfileByIdQuery(
         Number(id),
-        { skip: !id }  
+        { skip: !id }
     );
-    
+
     const [updateRider, { isLoading: isUpdating }] = useUpdateRiderProfileMutation();
+    const [uploadImage] = useUploadImageMutation();
+
+    const handleDocumentChange = async (key: keyof UserProfileType, file: File | null) => {
+        if (!file) {
+            form.setValue(key, "");
+            return;
+        }
+        try {
+            setUploadingDocs((prev) => new Set(prev).add(key));
+            const formData = new FormData();
+            formData.append("images", file);
+            const response = await uploadImage(formData).unwrap();
+            form.setValue(key, response.data[0]);
+        } catch (err) {
+            console.error("Upload error:", err);
+            toast.error(`Failed to upload ${key}`);
+        } finally {
+            setUploadingDocs((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(key);
+                return newSet;
+            });
+        }
+    };
 
     // React Hook Form setup
     const form = useForm<UserProfileType>({
@@ -44,12 +200,12 @@ export default function EditDriverProfile() {
     useEffect(() => {
         if (!driverData) return;
 
-      
+
         try {
             // Handle different possible response structures
             let registration;
             console.log("Driver Data:", driverData);
-            
+
             // Case 1: Direct registration data
             if (driverData.registrations && Array.isArray(driverData.registrations)) {
                 registration = driverData.registrations[0];
@@ -67,7 +223,7 @@ export default function EditDriverProfile() {
                 registration = driverData.data;
             }
 
-       
+
 
             if (!registration) {
                 // console.error("No registration data found. Full response:", driverData);
@@ -127,7 +283,7 @@ export default function EditDriverProfile() {
             };
 
             reset(formData);
-            
+
             // Set profile image if available
             if (registration.driver_photos?.[0]) {
                 setProfileImage(registration.driver_photos[0]);
@@ -150,10 +306,27 @@ export default function EditDriverProfile() {
     }, [isError, error, navigate]);
 
     // Image Upload
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         setProfileImage(URL.createObjectURL(file));
+
+        try {
+            setUploadingDocs((prev) => new Set(prev).add("driver_photos"));
+            const formData = new FormData();
+            formData.append("images", file);
+            const response = await uploadImage(formData).unwrap();
+            form.setValue("driver_photos", [response.data[0]]);
+        } catch (err) {
+            console.error("Profile image upload error:", err);
+            toast.error("Failed to upload profile image");
+        } finally {
+            setUploadingDocs((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete("driver_photos");
+                return newSet;
+            });
+        }
     };
 
     const onSubmit = async (data: UserProfileType) => {
@@ -188,7 +361,7 @@ export default function EditDriverProfile() {
         { key: "current_apartment", label: "Current Apartment" },
         { key: "current_city", label: "Current City" },
         // { key: "current_state_province", label: "Current State/Province" },
-        { key: "current_country", label: "Current Country" },
+        // { key: "current_country", label: "Current Country" },
         { key: "current_zip_post_code", label: "Current Postal Code" },
 
         // Permanent Address
@@ -196,7 +369,7 @@ export default function EditDriverProfile() {
         { key: "permanent_apartment", label: "Permanent Apartment" },
         { key: "permanent_city", label: "Permanent City" },
         // { key: "permanent_state_province", label: "Permanent State/Province" },
-        { key: "permanent_country", label: "Permanent Country" },
+        // { key: "permanent_country", label: "Permanent Country" },
         { key: "permanent_zip_post_code", label: "Permanent Postal Code" },
 
         // Driving License
@@ -270,15 +443,15 @@ export default function EditDriverProfile() {
                     <p className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 text-base sm:text-lg font-medium text-center">
                         <span className="flex items-center gap-1">
                             <Star size={20} className="text-yellow-500" />
-                           {driverData.data.formattedAverage || 0}/5
+                            {driverData.data.formattedAverage || 0}/5
                         </span>
                         <span className="flex items-center gap-1">
                             <Medal size={20} />
-                           {driverData.data.rank || 0}
+                            {driverData.data.rank || 0}
                         </span>
                         <span className="flex items-center gap-1">
                             <Rss size={20} />
-                           {driverData.data.followers || 0}  Followers
+                            {driverData.data.followers || 0}  Followers
                         </span>
                     </p>
                 </div>
@@ -293,11 +466,108 @@ export default function EditDriverProfile() {
 
                                 {formState.errors[key] && (
                                     <p className="text-red-500 text-xs mt-1">
-                                        {formState.errors[key]?.message}
+                                        {formState.errors[key]?.message as string}
                                     </p>
                                 )}
                             </div>
                         ))}
+                    </div>
+                </div>
+
+                {/* Document Upload Sections */}
+                <div className="mt-10 space-y-10">
+                    {/* Identity Card */}
+                    <div>
+                        <h2 className="font-semibold text-lg">Personal Documents</h2>
+                        <p className="text-sm text-gray-600">Upload Your Identity Card</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                            <UploadBox
+                                label="Front side photo of your Identity card"
+                                onChange={(f) => handleDocumentChange("nid_front_images", f)}
+                                currentPreviewUrl={form.watch("nid_front_images") as string}
+                                isUploading={uploadingDocs.has("nid_front_images")}
+                            />
+                            <UploadBox
+                                label="Back side photo of your Identity card"
+                                onChange={(f) => handleDocumentChange("nid_back_images", f)}
+                                currentPreviewUrl={form.watch("nid_back_images") as string}
+                                isUploading={uploadingDocs.has("nid_back_images")}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Driving License */}
+                    <div>
+                        <h2 className="font-semibold text-lg">Driving License</h2>
+                        <p className="text-sm text-gray-600">Upload Your License</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                            <UploadBox
+                                label="Front side of Driving License"
+                                onChange={(f) => handleDocumentChange("driving_license_front_images", f)}
+                                currentPreviewUrl={form.watch("driving_license_front_images") as string}
+                                isUploading={uploadingDocs.has("driving_license_front_images")}
+                            />
+                            <UploadBox
+                                label="Back side of Driving License"
+                                onChange={(f) => handleDocumentChange("driving_license_back_images", f)}
+                                currentPreviewUrl={form.watch("driving_license_back_images") as string}
+                                isUploading={uploadingDocs.has("driving_license_back_images")}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Vehicle Photos */}
+                    <div>
+                        <h2 className="font-semibold text-lg">Vehicle Photos</h2>
+                        <p className="text-sm text-gray-600">Upload Your Vehicle Images</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                            <UploadBox
+                                label="Vehicle Front Side"
+                                onChange={(f) => handleDocumentChange("vehicle_front_images", f)}
+                                currentPreviewUrl={form.watch("vehicle_front_images") as string}
+                                isUploading={uploadingDocs.has("vehicle_front_images")}
+                            />
+                            <UploadBox
+                                label="Vehicle Back Side"
+                                onChange={(f) => handleDocumentChange("vehicle_back_images", f)}
+                                currentPreviewUrl={form.watch("vehicle_back_images") as string}
+                                isUploading={uploadingDocs.has("vehicle_back_images")}
+                            />
+                            <UploadBox
+                                label="Driver Side of Vehicle"
+                                onChange={(f) => handleDocumentChange("vehicle_driver_side_images", f)}
+                                currentPreviewUrl={form.watch("vehicle_driver_side_images") as string}
+                                isUploading={uploadingDocs.has("vehicle_driver_side_images")}
+                            />
+                            <UploadBox
+                                label="Passenger Side of Vehicle"
+                                onChange={(f) => handleDocumentChange("vehicle_passenger_side_images", f)}
+                                currentPreviewUrl={form.watch("vehicle_passenger_side_images") as string}
+                                isUploading={uploadingDocs.has("vehicle_passenger_side_images")}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Policy & Log */}
+                    <div>
+                        <h2 className="font-semibold text-lg">Vehicle Documents</h2>
+                        <p className="text-sm text-gray-600">Upload Vehicle Log & Policy Documents</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                            <UploadBox
+                                label="Vehicle Log"
+                                onChange={(f) => handleDocumentChange("vehicle_log_images", f)}
+                                currentPreviewUrl={form.watch("vehicle_log_images") as string}
+                                isUploading={uploadingDocs.has("vehicle_log_images")}
+                                buttonText="Upload"
+                            />
+                            <UploadBox
+                                label="Vehicle Policy"
+                                onChange={(f) => handleDocumentChange("vehicle_policy_images", f)}
+                                currentPreviewUrl={form.watch("vehicle_policy_images") as string}
+                                isUploading={uploadingDocs.has("vehicle_policy_images")}
+                                buttonText="Upload"
+                            />
+                        </div>
                     </div>
                 </div>
 
