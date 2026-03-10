@@ -174,7 +174,7 @@ const VTtablesData: React.FC<VTtablesDataProps> = ({
   };
 
   const columns = [
-    { key: "vehicle_type" as const, label: "Vehicle Type" },
+    { key: "vehicle_name" as const, label: "Vehicle Type" },
     {
       key: "max_load" as const,
       label: "Max Load",
