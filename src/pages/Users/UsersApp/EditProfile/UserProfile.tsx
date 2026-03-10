@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // import { useEffect, useState } from "react";
 // import { useParams } from "react-router-dom";
 
@@ -420,6 +420,13 @@ export default function UserProfile() {
         updatedData: updatePayload,
       }).unwrap();
       toast.success(response?.message || "User updated successfully! 🎉");
+
+      const existingRoleIds = (userData?.data?.roles || []).map((r: { id: number }) => r.id);
+      const newRoles = userRoles.filter(r => !existingRoleIds.includes(r.id));
+
+      for (const role of newRoles) {
+        await addUserToRole({ roleId: role.id, userId: Number(id) }).unwrap();
+      }
       navigate(-1);
     } catch (error) {
       const apiError = error as { data?: { message?: string } };
@@ -438,30 +445,64 @@ export default function UserProfile() {
     ["phone", "Phone Number"],
   ] as Array<[keyof UserProfileType, string]>;
 
-  const handleRoleChange = async (value: string) => {
-    const previousRole = selectedRole;
-    setSelectedRole(value); // ✅ sets it
+  // const handleRoleChange = async (value: string) => {
+  //   const role = (roleData?.data ?? roleData)?.find(
+  //     (r: { id: number }) => r.id === Number(value)
+  //   );
+  //   if (!role) return;
 
-    const role = roleData?.find((r: { id: number }) => r.id === Number(value));
-    toast.loading(`Assigning role ${role?.name}...`);
+  //   // Avoid duplicate chips
+  //   const alreadyAdded = userRoles.some((r) => r.id === role.id);
+  //   if (alreadyAdded) {
+  //     toast.error(`${role.name} is already assigned.`);
+  //     setSelectedRole("");
+  //     return;
+  //   }
 
-    try {
-      const response = await addUserToRole({
-        roleId: Number(value),
-        userId: Number(id),
-      }).unwrap();
+  //   // Optimistically add the chip
+  //   setUserRoles((prev) => [...prev, { id: role.id, name: role.name }]);
+  //   setSelectedRole(""); // reset select immediately
 
-      if (response.success) {
-        // ❌ remove this → setSelectedRole("") ← this was clearing the display
-        toast.dismiss();
-        toast.success(response.message || "Role assigned successfully!");
-      }
-    } catch (error: any) {
-      toast.dismiss();
-      toast.error(error?.data?.message || "Failed to assign role");
-      setSelectedRole(previousRole); // rollback on error
+  //   toast.loading(`Assigning role ${role.name}...`);
+  //   try {
+  //     const response = await addUserToRole({
+  //       roleId: Number(value),
+  //       userId: Number(id),
+  //     }).unwrap();
+  //     toast.dismiss();
+  //     if (response.success) {
+  //       toast.success(response.message || "Role assigned successfully!");
+  //     } else {
+  //       // rollback on unexpected non-success
+  //       setUserRoles((prev) => prev.filter((r) => r.id !== role.id));
+  //       toast.error(response.message || "Failed to assign role");
+  //     }
+  //   } catch (error: any) {
+  //     // rollback on error
+  //     setUserRoles((prev) => prev.filter((r) => r.id !== role.id));
+  //     toast.dismiss();
+  //     toast.error(error?.data?.message || "Failed to assign role");
+  //   }
+  // };
+
+  const handleRoleChange = (value: string) => {
+    const role = (roleData?.data ?? roleData)?.find(
+      (r: { id: number }) => r.id === Number(value)
+    );
+    if (!role) return;
+
+    const alreadyAdded = userRoles.some((r) => r.id === role.id);
+    if (alreadyAdded) {
+      toast.error(`${role.name} is already assigned.`);
+      setSelectedRole("");
+      return;
     }
+
+    // Just update local state, no API call
+    setUserRoles((prev) => [...prev, { id: role.id, name: role.name }]);
+    setSelectedRole("");
   };
+
 
   console.log(roleData?.data, 'roleData')
 
@@ -566,46 +607,49 @@ export default function UserProfile() {
             </div>
           ))}
           {/* ROLE SECTION */}
-          {!isEditMode ? (
-            <div className="col-span-1 sm:col-span-2">
-              <Label className="text-sm font-semibold pb-2">Assigned Roles</Label>
+          <div className="col-span-1">
+            <Label className="text-sm font-semibold pb-2">
+              {isEditMode ? "Roles" : "Assigned Roles"}
+            </Label>
 
-              <div className="flex flex-wrap gap-2 mt-2">
-                {userRoles.length > 0 ? (
-                  userRoles.map((role) => (
-                    <span
-                      key={role.id}
-                      className="px-4 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium"
-                    >
-                      {role.name}
-                    </span>
-                  ))
-                ) : (
-                  <p className="text-gray-500">No roles assigned</p>
-                )}
-              </div>
+            {/* Role select — only in edit mode */}
+            {isEditMode && (
+              <Select
+                value={selectedRole}
+                onValueChange={handleRoleChange}
+                disabled={isChangingRole}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a role to add" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roleData?.data?.map(
+                    (role: { id: number; name: string; isActive: boolean }) => (
+                      <SelectItem key={role.id} value={String(role.id)}>
+                        {role.name}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+            )}
+
+            {/* Role chips */}
+            <div className="flex flex-wrap gap-2 mt-2">
+              {userRoles.length > 0 ? (
+                userRoles.map((role) => (
+                  <span
+                    key={role.id}
+                    className="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium"
+                  >
+                    {role.name}
+                  </span>
+                ))
+              ) : (
+                <p className="text-gray-500 text-sm">No roles assigned</p>
+              )}
             </div>
-          ) : (
-            <Select
-              value={selectedRole}
-              onValueChange={handleRoleChange}
-              disabled={isChangingRole}
-            >
-              <SelectTrigger className="w-full mt-7">
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-
-              <SelectContent>
-                {roleData?.data?.map(
-                  (role: { id: number; name: string; isActive: boolean }) => (
-                    <SelectItem key={role.id} value={String(role.id)}>
-                      {role.name}
-                    </SelectItem>
-                  )
-                )}
-              </SelectContent>
-            </Select>
-          )}
+          </div>
         </div>
 
         {/* ACTION BUTTONS (ONLY IN EDIT MODE) */}
