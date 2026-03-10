@@ -31,7 +31,7 @@ const Forbidden: React.FC<ForbiddenProps> = ({
 
       <div className="flex gap-3">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/login")}
           className="px-6 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-white font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-2"
         >
           <LogIn size={18} />

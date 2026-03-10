@@ -410,6 +410,6 @@ export const menuItems: MenuItem[] = [
     id: "login",
     label: "Logout",
     icon: <LogOut className="w-5 h-5" />,
-    route: "/",
+    route: "/login",
   },
 ];
