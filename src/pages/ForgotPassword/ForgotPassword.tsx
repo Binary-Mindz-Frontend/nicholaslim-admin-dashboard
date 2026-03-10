@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { Mail, Phone } from "lucide-react";
 import { useForgotPasswordMutation } from "@/redux/features/auth/authApi";

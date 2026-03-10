@@ -164,11 +164,11 @@ const authSlice = createSlice({
         try {
           localStorage.removeItem("accessToken");
           // Force redirect to login page
-          window.location.href = "/login";
+          window.location.href = "/";
         } catch (error) {
           console.error("Failed to clear localStorage:", error);
           // Fallback redirect
-          window.location.href = "/login";
+          window.location.href = "/";
         }
       }
     },

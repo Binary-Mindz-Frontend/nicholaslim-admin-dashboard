@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { Eye, EyeOff, Lock, Mail, Phone } from "lucide-react";
 import { useResetPasswordMutation } from "@/redux/features/auth/authApi";
@@ -23,7 +24,7 @@ const ResetPassword: React.FC = () => {
       setContactType(location.state.contactType || "email");
     } else {
       // If no state, redirect to login
-      navigate("/login");
+      navigate("/");
     }
   }, [location, navigate]);
 
@@ -71,7 +72,7 @@ const ResetPassword: React.FC = () => {
         toast.success("Password reset successfully!", { id: resetToast });
         
         // Navigate to login page
-        navigate("/login", { 
+        navigate("/", { 
           state: { 
             message: "Password has been reset successfully. Please login with your new password." 
           } 
@@ -225,7 +226,7 @@ const ResetPassword: React.FC = () => {
           <div className="text-center">
             <button
               type="button"
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/")}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
               Back to Login
