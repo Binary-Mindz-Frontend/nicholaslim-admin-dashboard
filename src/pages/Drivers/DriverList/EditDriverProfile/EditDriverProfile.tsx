@@ -77,7 +77,7 @@ const UploadBox = ({
 
     return (
         <div>
-            <Label>{label}</Label>
+            <label className="block text-sm font-semibold mb-2">{label}</label>
             <div className="relative">
                 <input
                     type="file"
