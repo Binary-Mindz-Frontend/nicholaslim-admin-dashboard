@@ -335,7 +335,7 @@ export default function UserProfile() {
   const searchParams = new URLSearchParams(location.search);
   const isEditMode = searchParams.get("mode") === "edit";
 
-  const { data: userData, isLoading, isError } = useGetUserTypeByIdQuery(id);
+  const { data: userData, isLoading, isError, refetch } = useGetUserTypeByIdQuery(id);
   console.log(userData, "userData");
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserTypeMutation();
 
@@ -344,7 +344,7 @@ export default function UserProfile() {
   const [selectedRole, setSelectedRole] = useState<string>("");
   // console.log("Fetched user data:", userData);
   const { data: roleData = [] } = useGetRoleBasedAccessControlQuery({});
-  const [addUserToRole, { isLoading: isChangingRole }] =
+  const [addUserToRole] =
     useAddaddUserToRoleMutation();
   console.log(roleData, "roleData");
 
@@ -427,6 +427,7 @@ export default function UserProfile() {
       for (const role of newRoles) {
         await addUserToRole({ roleId: role.id, userId: Number(id) }).unwrap();
       }
+      await refetch();
       navigate(-1);
     } catch (error) {
       const apiError = error as { data?: { message?: string } };
@@ -617,7 +618,7 @@ export default function UserProfile() {
               <Select
                 value={selectedRole}
                 onValueChange={handleRoleChange}
-                disabled={isChangingRole}
+                disabled={isUpdating}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a role to add" />
