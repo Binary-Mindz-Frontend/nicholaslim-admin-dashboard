@@ -540,6 +540,9 @@ export const hasPermissionForMenu = (
 ): boolean => {
   if (menuId === "login" || menuId === "customize-profile" || menuId === "change-password") return true;
 
+  // Grant access to ADMIN role
+  if (permissionsData?.roleName?.includes("ADMIN")) return true;
+
   const baseMenuId = extractBaseRoute(menuId);
 
   // Try multiple strategies to find permissions
