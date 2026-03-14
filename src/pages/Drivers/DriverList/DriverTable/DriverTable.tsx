@@ -72,7 +72,8 @@ interface TDriver {
   created_at: string;
   updated_at: string;
   registrations: Registration[];
-  totalRatings: number;
+  totalRatings?: number;
+  avgRating?: number;
 }
 
 interface UseDriverColumnsParams {
@@ -234,7 +235,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
     },
     {
       header: "User Rating",
-      accessor: "totalRatings",
+      accessor: "avgRating",
 
     },
     {
