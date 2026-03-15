@@ -10,6 +10,7 @@ interface AddVehicleModalProps {
 interface VehicleTypeData {
   vehicle_type: string;
   vehicle_name: string;
+  vehicle_desc: string;
   base_price: number;
   per_km_price: number;
   peak_pricing: boolean;
@@ -28,6 +29,7 @@ const AddVehicleModal = ({
   const [formData, setFormData] = useState<VehicleTypeData>({
     vehicle_type: "",
     vehicle_name: "",
+    vehicle_desc: "",
     base_price: 0,
     per_km_price: 0,
     peak_pricing: true,
@@ -88,6 +90,7 @@ const AddVehicleModal = ({
     setFormData({
       vehicle_type: "",
       vehicle_name: "",
+      vehicle_desc: "",
       base_price: 0,
       per_km_price: 0,
       peak_pricing: true,
@@ -143,7 +146,7 @@ const AddVehicleModal = ({
                 <option value="BICYCLE">Bicycle</option>
                 <option value="MOTORCYCLE">Motorcycle</option>
                 <option value="CAR">Car</option>
-                <option value="Van">Van</option>
+                <option value="VAN">Van</option>
                 <option value="TRUCK">Truck</option>
               </select>
             </div>
@@ -162,6 +165,23 @@ const AddVehicleModal = ({
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 placeholder="e.g. Car, Car (MPV), Truck (6 ft)"
+                required
+              />
+            </div>
+
+            {/* Vehicle Type  */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Vehicle Description
+              </label>
+              <textarea
+                name="vehicle_desc"
+                value={formData.vehicle_desc}
+                onChange={(e) =>
+                  setFormData({ ...formData, vehicle_desc: e.target.value })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400 min-h-20"
+                placeholder="Enter vehicle description..."
                 required
               />
             </div>
