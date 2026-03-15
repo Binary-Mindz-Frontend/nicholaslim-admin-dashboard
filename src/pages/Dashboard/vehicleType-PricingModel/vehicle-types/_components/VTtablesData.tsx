@@ -153,6 +153,8 @@ const VTtablesData: React.FC<VTtablesDataProps> = ({
             ? parseFloat(data.max_load)
             : data.max_load,
         isActive: isActiveBoolean,
+
+        vehicle_desc: data.vehicle_desc,
       };
 
       const result = await updateVehicleType(updateData).unwrap();
