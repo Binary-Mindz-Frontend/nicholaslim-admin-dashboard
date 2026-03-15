@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
@@ -37,6 +38,8 @@ const PromoCode = () => {
     setSelectedId(row.id);
     setEditData({
       promoCode: row.promoCode,
+      discountDesc: row.discountDesc || "",
+      redirectLink: row.redirectLink || "",
       discountType: row.discountType,
       discountValue: row.discountValue.toString(),
       isActive: row.isActive,
@@ -89,6 +92,7 @@ const PromoCode = () => {
       toast.success(res.message || "Promo code deleted!");
       setOpenDeleteModal(false);
     } catch (error: any) {
+      console.log(error);
       toast.error("Delete failed");
     }
   };
