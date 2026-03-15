@@ -1,93 +1,165 @@
 import { baseApi } from "@/redux/api/baseApi";
 
 const driverOrdersApi = baseApi.injectEndpoints({
-    endpoints: (builder) => ({
-        getDriverOrders: builder.query({
-            query: ({
-                page = 1,
-                limit = 10,
-                startDate,
-                endDate,
-                status,
-                category,
-                search,
-            }) => {
-                // Construct the base URL with default pagination
-                let url = `/order?page=${page}&limit=${limit}`;
+  endpoints: (builder) => ({
+    getDriverOrders: builder.query({
+      query: ({
+        page = 1,
+        limit = 10,
+        startDate,
+        endDate,
+        status,
+        category,
+        search,
+      }) => {
+        // Construct the base URL with default pagination
+        let url = `/order?page=${page}&limit=${limit}`;
 
-                // Add additional query parameters if they exist (Matching Driver API style)
-                if (startDate) {
-                    url += `&startDate=${startDate}`;
-                }
-                if (endDate) {
-                    url += `&endDate=${endDate}`;
-                }
-                if (status) {
-                    url += `&status=${status}`;
-                }
-                if (category) {
-                    url += `&category=${category}`;
-                }
-                if (search) {
-                    // Use encodeURIComponent for search terms to handle spaces/special chars
-                    url += `&search=${encodeURIComponent(search)}`;
-                }
+        // Add additional query parameters if they exist (Matching Driver API style)
+        if (startDate) {
+          url += `&startDate=${startDate}`;
+        }
+        if (endDate) {
+          url += `&endDate=${endDate}`;
+        }
+        if (status) {
+          url += `&status=${status}`;
+        }
+        if (category) {
+          url += `&category=${category}`;
+        }
+        if (search) {
+          // Use encodeURIComponent for search terms to handle spaces/special chars
+          url += `&search=${encodeURIComponent(search)}`;
+        }
 
-                return {
-                    url, // Use the manually constructed URL string
-                    method: "GET",
-                };
-            },
-            providesTags: ["Orders"],
-        }),
-
-        // Add this inside your injectEndpoints block in orderApi.ts
-        getOrderStats: builder.query({
-            query: () => ({
-                url: "/order/stats",
-                method: "GET",
-            }),
-            providesTags: ["Orders"],
-        }),
-
-        getSingleOrder: builder.query({
-            query: (id) => ({
-                url: `/order/${id}`,
-                method: "GET",
-            }),
-            providesTags: (id) => [{ type: "Orders", id }]
-        }),
-
-        updateOrder: builder.mutation({
-            query: ({ id, data }) => ({
-                url: `/order/${id}`,
-                method: "PATCH",
-                body: data,
-            }),
-            invalidatesTags: ({ id }) => [
-                { type: "Orders", id },
-                "Orders"
-            ],
-        }),
-
-        deleteOrder: builder.mutation({
-            query: (id) => ({
-                url: `/order/${id}`,
-                method: "DELETE",
-            }),
-            invalidatesTags: ["Orders"],
-        }),
-
-        // Inside your ordersApi.ts builder
-        assignDriver: builder.mutation({
-            query: ({ orderId, riderId }) => ({
-                url: `/order/assign/driver/${orderId}?riderId=${riderId}`,
-                method: 'PATCH',
-            }),
-            invalidatesTags: ({ orderId }) => [{ type: 'Orders', id: orderId }],
-        }),
-
+        return {
+          url, // Use the manually constructed URL string
+          method: "GET",
+        };
+      },
+      providesTags: ["Orders"],
     }),
+
+    // Add this inside your injectEndpoints block in orderApi.ts
+    getOrderStats: builder.query({
+      query: () => ({
+        url: "/order/stats",
+        method: "GET",
+      }),
+      providesTags: ["Orders"],
+    }),
+
+    getSingleOrder: builder.query({
+      query: (id) => ({
+        url: `/order/${id}`,
+        method: "GET",
+      }),
+      providesTags: (id) => [{ type: "Orders", id }],
+    }),
+
+    updateOrder: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/order/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ({ id }) => [{ type: "Orders", id }, "Orders"],
+    }),
+
+    deleteOrder: builder.mutation({
+      query: (id) => ({
+        url: `/order/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Orders"],
+    }),
+
+    // Inside your ordersApi.ts builder
+    assignDriver: builder.mutation({
+      query: ({ orderId, riderId }) => ({
+        url: `/order/assign/driver/${orderId}?riderId=${riderId}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ({ orderId }) => [{ type: "Orders", id: orderId }],
+    }),
+
+    getLiveOrderTrack: builder.query({
+      query: ({
+        page = 1,
+        limit = 10,
+        startDate,
+        endDate,
+        status,
+        category,
+        search,
+      }) => {
+        // Construct the base URL with default pagination
+        let url = `/order/web/live-order-tracking?page=${page}&limit=${limit}`;
+
+        // Add additional query parameters if they exist (Matching Driver API style)
+        if (startDate) {
+          url += `&startDate=${startDate}`;
+        }
+        if (endDate) {
+          url += `&endDate=${endDate}`;
+        }
+        if (status) {
+          url += `&status=${status}`;
+        }
+        if (category) {
+          url += `&category=${category}`;
+        }
+        if (search) {
+          // Use encodeURIComponent for search terms to handle spaces/special chars
+          url += `&search=${encodeURIComponent(search)}`;
+        }
+
+        return {
+          url, // Use the manually constructed URL string
+          method: "GET",
+        };
+      },
+      providesTags: ["Orders"],
+    }),
+
+    getOrderUserHistory: builder.query({
+      query: ({
+        page = 1,
+        limit = 10,
+        startDate,
+        endDate,
+        status,
+        category,
+        search,
+      }) => {
+        let url = `/order/web/user-history?page=${page}&limit=${limit}`;
+
+        if (startDate) {
+          url += `&startDate=${startDate}`;
+        }
+        if (endDate) {
+          url += `&endDate=${endDate}`;
+        }
+        if (status) {
+          url += `&status=${status}`;
+        }
+        if (category) {
+          url += `&category=${category}`;
+        }
+        if (search) {
+          // Use encodeURIComponent for search terms to handle spaces/special chars
+          url += `&search=${encodeURIComponent(search)}`;
+        }
+
+        return {
+          url, // Use the manually constructed URL string
+          method: "GET",
+        };
+      },
+      providesTags: ["Orders"],
+    }),
+  }),
 });
 
 export const {
@@ -97,4 +169,7 @@ export const {
     useUpdateOrderMutation,
     useDeleteOrderMutation,
     useAssignDriverMutation,
+
+    useGetLiveOrderTrackQuery,
+    useGetOrderUserHistoryQuery
 } = driverOrdersApi;

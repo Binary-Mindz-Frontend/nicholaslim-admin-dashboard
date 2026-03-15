@@ -164,7 +164,7 @@ const CoinSystemTable: React.FC<CoinSystemTableProps> = ({
                     </div>
                   </TableCell>
                   <TableCell className="font-semibold text-green-600">
-                    {formatCurrency(row.coin_value_in_cent)}
+                    {formatCurrency(row.coin_amount * row.coin_value_in_cent)}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

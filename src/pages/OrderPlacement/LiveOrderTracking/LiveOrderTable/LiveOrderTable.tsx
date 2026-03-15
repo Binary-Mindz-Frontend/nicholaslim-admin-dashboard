@@ -1,9 +1,11 @@
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Eye, Loader2, Pencil, Trash2 } from "lucide-react";
-import { useDeleteOrderMutation, useGetDriverOrdersQuery } from "@/redux/features/orders/ordersApi";
+import {
+  useDeleteOrderMutation,
+  useGetLiveOrderTrackQuery,
+} from "@/redux/features/orders/ordersApi";
 import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
@@ -68,34 +70,34 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
     ...params,
   };
 
-  const { data, isLoading, isError } = useGetDriverOrdersQuery(queryParams);
+  const { data, isLoading, isError } = useGetLiveOrderTrackQuery(queryParams);
 
   useEffect(() => {
-  const rawData = data?.data?.data || [];
-  if (rawData) {
-    const mappedOrders: TOrder[] = rawData.map((item: TOrderRaw) => ({
-      orderId: item.id?.toString() || "N/A",
-      customerName: item.user?.username || item.user?.phone || "N/A",
-      
-      // --- UPDATED THIS LINE ---
-      address: item.orderStops?.[0]?.address || "No Address Provided",
-      
-      date: item.created_at 
-        ? new Date(item.created_at).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          }) 
-        : "N/A",
-      delivery_type: item.delivery_type || "N/A",
-      order_status: item.order_status || "N/A",
-      route_type: item.route_type || "N/A",
-    }));
+    const rawData = data?.data?.data || [];
+    if (rawData) {
+      const mappedOrders: TOrder[] = rawData.map((item: TOrderRaw) => ({
+        orderId: item.id?.toString() || "N/A",
+        customerName: item.user?.username || item.user?.phone || "N/A",
 
-    setOrders(mappedOrders);
-    setTotalItems(data?.data?.total || 0);
-  }
-}, [data]);
+        // --- UPDATED THIS LINE ---
+        address: item.orderStops?.[0]?.address || "No Address Provided",
+
+        date: item.created_at
+          ? new Date(item.created_at).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : "N/A",
+        delivery_type: item.delivery_type || "N/A",
+        order_status: item.order_status || "N/A",
+        route_type: item.route_type || "N/A",
+      }));
+
+      setOrders(mappedOrders);
+      setTotalItems(data?.data?.total || 0);
+    }
+  }, [data]);
 
   // --- DELETE EXECUTION ---
   const handleDeleteConfirm = async () => {
@@ -115,7 +117,9 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
     {
       header: "ORDER ID",
       accessor: "orderId",
-      cell: (row) => <span className="text-gray-700 font-medium">#{row.orderId}</span>,
+      cell: (row) => (
+        <span className="text-gray-700 font-medium">#{row.orderId}</span>
+      ),
     },
     {
       header: "NAME",
@@ -123,41 +127,55 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
       cell: (row) => <span className="text-blue-600">{row.customerName}</span>,
     },
     {
-  header: "ADDRESS",
-  accessor: "address",
-  cell: (row) => (
-    <div className="flex flex-col">
-      <span className="text-gray-700 truncate max-w-[200px]">
-        {row.address}
-      </span>
-  
-    </div>
-  ),
-},
+      header: "ADDRESS",
+      accessor: "address",
+      cell: (row) => (
+        <div className="flex flex-col">
+          <span className="text-gray-700 truncate max-w-[200px]">
+            {row.address}
+          </span>
+        </div>
+      ),
+    },
     { header: "DATE", accessor: "date" },
     {
       header: "DELIVERY TYPE",
       accessor: "delivery_type",
       cell: (row) => {
-        const style = row.delivery_type === "EXPRESS" ? "bg-green-200 text-green-800" : "bg-gray-200 text-gray-800";
-        return <span className={`px-3 py-1 rounded-full text-xs font-semibold ${style}`}>{row.delivery_type}</span>;
+        const style =
+          row.delivery_type === "EXPRESS"
+            ? "bg-green-200 text-green-800"
+            : "bg-gray-200 text-gray-800";
+        return (
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${style}`}
+          >
+            {row.delivery_type}
+          </span>
+        );
       },
     },
     {
       header: "ACTION",
       cell: (row) => (
         <div className="flex items-center gap-2">
-          <button onClick={() => navigate(`/live-order-tracking/${row.orderId}`)} className="bg-blue-200 p-1.5 rounded hover:bg-blue-300">
+          <button
+            onClick={() => navigate(`/live-order-tracking/${row.orderId}`)}
+            className="bg-blue-200 p-1.5 rounded hover:bg-blue-300"
+          >
             <Eye size={16} className="text-blue-700" />
           </button>
-          <button onClick={() => navigate(`/order/${row.orderId}?edit=true`)} className="bg-green-200 p-1.5 rounded hover:bg-green-300">
+          <button
+            onClick={() => navigate(`/order/${row.orderId}?edit=true`)}
+            className="bg-green-200 p-1.5 rounded hover:bg-green-300"
+          >
             <Pencil size={16} className="text-green-700" />
           </button>
-          <button 
+          <button
             onClick={() => {
               setSelectedOrderId(row.orderId);
               setIsDeleteDialogOpen(true);
-            }} 
+            }}
             className="bg-red-200 p-1.5 rounded hover:bg-red-300 transition-colors"
           >
             <Trash2 size={16} className="text-red-700" />
@@ -168,7 +186,11 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
     {
       header: "ORDER STATUS",
       accessor: "order_status",
-      cell: (row) => <span className="px-4 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">{row.order_status}</span>,
+      cell: (row) => (
+        <span className="px-4 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+          {row.order_status}
+        </span>
+      ),
     },
   ];
 
@@ -180,7 +202,11 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete order
-            <span className="font-bold text-black text-lg"> #{selectedOrderId}</span> from the system.
+            <span className="font-bold text-black text-lg">
+              {" "}
+              #{selectedOrderId}
+            </span>{" "}
+            from the system.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -207,5 +233,12 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
     </AlertDialog>
   );
 
-  return { orderColumns, orders, isLoading, isError, totalItems, DeleteConfirmDialog };
+  return {
+    orderColumns,
+    orders,
+    isLoading,
+    isError,
+    totalItems,
+    DeleteConfirmDialog,
+  };
 };
