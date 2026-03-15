@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { Plus, Edit, Trash2, Clock, BookOpen, Layers } from "lucide-react";
 import { StatusSwitch } from "@/pages/Dashboard/vehicleType-PricingModel/vehicle-types/_components/StatusSwitch";
