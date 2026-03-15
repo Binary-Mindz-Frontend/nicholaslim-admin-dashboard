@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import {
@@ -125,21 +126,26 @@ const Quiz: React.FC = () => {
   const handleEditQuiz = async (quizData: any) => {
     if (!editingQuiz?.id) return;
     toast.loading("Updating quiz...");
-    const { ...updateFields } = quizData;
+
+    const { created_at, updated_at, QuizOption, ...updateFields } = quizData;
+
     const payload = {
       ...updateFields,
-      QuizOption: quizData.QuizOption ? { ...quizData.QuizOption } : undefined,
+      QuizOption: QuizOption ? { ...QuizOption } : undefined,
     };
+
     try {
       const result = await updateQuiz({
         id: editingQuiz.id,
         ...payload,
       }).unwrap();
+
       if (!result.success) {
         toast.dismiss();
         toast.error(result.message);
         return;
       }
+
       setIsModalOpen(false);
       setEditingQuiz(null);
       toast.dismiss();

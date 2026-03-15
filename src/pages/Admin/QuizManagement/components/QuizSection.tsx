@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import QuizList from "./QuizList";
 import QuestionForm from "./CreateEditForm";
@@ -29,47 +30,48 @@ export default function QuizSection() {
 
   const questions: Question[] = questionsResponse?.data || [];
 
-  const handleSave = async (data: any) => {
-    toast.loading("Saving question...");
-    try {
-      const questionData = {
-        ...data,
-        quizId: Number(quizIdFromUrl),
-      };
+const handleSave = async (data: any) => {
+  toast.loading("Saving question...");
+  try {
+    const questionData = {
+      ...data,
+      quizId: Number(quizIdFromUrl),
+    };
 
-      if (currentQuestion && currentQuestion.id) {
-        const result = await updateQuestion({
-          id: currentQuestion.id.toString(),
-          ...questionData,
-        }).unwrap();
+    if (currentQuestion && currentQuestion.id) {
+      const result = await updateQuestion({
+        id: currentQuestion.id.toString(),
+        ...questionData,
+      }).unwrap();
 
-        if (!result.success) {
-          toast.dismiss();
-          toast.error(result.message);
-          return;
-        }
+      if (!result.success) {
         toast.dismiss();
-        toast.success(result.message || "Question updated successfully!");
-      } else {
-        const result = await createQuestion(questionData).unwrap();
+        toast.error(result.message);
+        return;
+      }
+      toast.dismiss();
+      toast.success(result.message || "Question updated successfully!");
+    } else {
+      const result = await createQuestion(questionData).unwrap();
 
-        if (!result.success) {
-          toast.dismiss();
-          toast.error(result.message);
-          return;
-        }
+      if (!result.success) {
         toast.dismiss();
-        toast.success(result.message || "Question created successfully!");
+        toast.error(result.message);
+        return;
       }
 
-      refetch();
-      setView("list");
-      setCurrentQuestion(null);
-    } catch (error: any) {
-      console.error("Failed to save question:", error);
-      toast.error(error?.data?.message || "Failed to save question");
+      toast.dismiss();
+      toast.success(result.message || "Question created successfully!");
     }
-  };
+
+    refetch();
+    setView("list");
+    setCurrentQuestion(null);
+  } catch (error: any) {
+    toast.dismiss();
+    toast.error(error?.data?.message || "Failed to save question");
+  }
+};
 
   const handleDelete = async (id: number) => {
     toast.loading("Deleting question...");
