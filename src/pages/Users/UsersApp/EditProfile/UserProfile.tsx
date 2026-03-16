@@ -343,7 +343,7 @@ export default function UserProfile() {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("");
   // console.log("Fetched user data:", userData);
-  const { data: roleData = [] } = useGetRoleBasedAccessControlQuery({});
+  const { data: roleData = [] } = useGetRoleBasedAccessControlQuery({ limit: 1000 });
   const [addUserToRole] =
     useAddaddUserToRoleMutation();
   console.log(roleData, "roleData");
@@ -623,7 +623,7 @@ export default function UserProfile() {
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a role to add" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60 overflow-y-auto">
                   {roleData?.data?.map(
                     (role: { id: number; name: string; isActive: boolean }) => (
                       <SelectItem key={role.id} value={String(role.id)}>
