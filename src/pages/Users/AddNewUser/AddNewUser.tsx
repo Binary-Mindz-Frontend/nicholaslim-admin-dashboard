@@ -8,6 +8,13 @@ import { useAddUserTypeMutation, useLazyCheckUsernameQuery } from "@/redux/featu
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useGetRoleBasedAccessControlQuery } from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const userSchema = z.object({
   fullName: z.string().min(1, { message: "Username is required" }),
@@ -28,6 +35,7 @@ export default function AddNewUser() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [roleSelectValue, setRoleSelectValue] = useState("");
   const navigate = useNavigate();
   const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "taken" | "available">("idle");
@@ -100,7 +108,7 @@ export default function AddNewUser() {
   });
 
   const [addUser, { isLoading }] = useAddUserTypeMutation();
-  const { data: rolesResponse, isLoading: rolesLoading } = useGetRoleBasedAccessControlQuery(undefined);
+  const { data: rolesResponse, isLoading: rolesLoading } = useGetRoleBasedAccessControlQuery({ limit: 1000 });
 
   const roles = rolesResponse?.data || [];
 
@@ -155,15 +163,7 @@ export default function AddNewUser() {
     reader.readAsDataURL(file);
   };
 
-  const handleRoleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedRole = e.target.value;
-    if (selectedRole && !selectedRoles.includes(selectedRole)) {
-      const newRoles = [...selectedRoles, selectedRole];
-      setSelectedRoles(newRoles);
-      setValue("role", newRoles);
-    }
-    e.target.value = ""; // Reset dropdown
-  };
+
 
   const handleRemoveRole = (roleToRemove: string) => {
     const newRoles = selectedRoles.filter(role => role !== roleToRemove);
@@ -212,24 +212,6 @@ export default function AddNewUser() {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 gap-8 mb-8">
-            {/* <div>
-              <label className="block text-gray-600 font-medium mb-2">
-                Username
-              </label>
-              <input
-                {...register("fullName")}
-                placeholder="Enter username"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.fullName
-                  ? "focus:ring-red-400 ring-2 ring-red-400"
-                  : "focus:ring-yellow-200"
-                  }`}
-              />
-              {errors.fullName && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.fullName.message}
-                </p>
-              )}
-            </div> */}
 
             <div>
               <label className="block text-gray-600 font-medium mb-2">
@@ -343,21 +325,34 @@ export default function AddNewUser() {
             <div>
               <label className="block text-gray-600 font-medium mb-2">Role</label>
 
-              <select
-                onChange={handleRoleSelect}
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.role
-                  ? "focus:ring-red-400 ring-2 ring-red-400"
-                  : "focus:ring-yellow-200"
-                  }`}
+              <Select
+                value={roleSelectValue}
+                onValueChange={(val) => {
+                  if (val && !selectedRoles.includes(val)) {
+                    const newRoles = [...selectedRoles, val];
+                    setSelectedRoles(newRoles);
+                    setValue("role", newRoles);
+                  }
+                  setRoleSelectValue(""); // Reset to show placeholder
+                }}
                 disabled={rolesLoading}
               >
-                <option value="">Select Role</option>
-                {roles.map((role: any) => (
-                  <option key={role.id} value={role.name}>
-                    {role.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger
+                  className={`w-full px-4 py-3 h-auto justify-between bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.role
+                    ? "focus:ring-red-400 ring-2 ring-red-400"
+                    : "focus:ring-yellow-200"
+                    }`}
+                >
+                  <SelectValue placeholder="Select Role" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 overflow-y-auto">
+                  {roles.map((role: any) => (
+                    <SelectItem key={role.id} value={role.name}>
+                      {role.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
               {/* Selected roles display */}
               {selectedRoles.length > 0 && (
