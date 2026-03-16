@@ -372,10 +372,13 @@ export default function UserProfile() {
 
   if (isLoading)
     return <p className="text-center p-10">Loading user data...</p>;
-  if (isError || !formData.id)
+
+  if (isError)
     return (
       <p className="text-center p-10 text-red-500">Error fetching user data.</p>
     );
+
+  if (!userData?.data) return null;
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isEditMode) return;
