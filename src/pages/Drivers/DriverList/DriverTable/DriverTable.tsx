@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useGetRiderProfilesQuery } from "@/redux/features/drivers/driversApi";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
+import { Star, StarHalf } from "lucide-react";
 import DriverAction from "../DriverAction/DriverAction";
 
 // Declare the TDriver and Registration interfaces directly here
@@ -236,7 +237,44 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
     {
       header: "User Rating",
       accessor: "avgRating",
+      cell: (row) => {
+        const rating = row.avgRating || 0;
+        const stars = [];
 
+        for (let i = 1; i <= 5; i++) {
+          if (rating >= i) {
+            // Full Star
+            stars.push(
+              <Star
+                key={i}
+                className="w-4 h-4 fill-yellow-400 text-yellow-400"
+              />
+            );
+          } else if (rating >= i - 0.5) {
+            // Half Star
+            stars.push(
+              <StarHalf
+                key={i}
+                className="w-4 h-4 fill-yellow-400 text-yellow-400"
+              />
+            );
+          } else {
+            // Empty Star
+            stars.push(
+              <Star
+                key={i}
+                className="w-4 h-4 text-gray-300"
+              />
+            );
+          }
+        }
+
+        return (
+          <div className="flex items-center gap-0.5" title={`${rating.toFixed(1)} / 5`}>
+            {stars}
+          </div>
+        );
+      },
     },
     {
       header: "Availability Status",
