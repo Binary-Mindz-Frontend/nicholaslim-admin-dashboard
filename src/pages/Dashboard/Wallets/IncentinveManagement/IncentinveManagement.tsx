@@ -14,7 +14,8 @@ import { DynamicChangeLogTable } from "@/components/Shared/DynamicChangeLogTable
 const IncentiveManagementPage: React.FC = () => {
   const [openCreate, setOpenCreate] = useState(false);
 
-  const { data: incentiveLogs, isLoading } = useGetAllIncentiveLogsQuery(undefined);
+  const { data: incentiveLogs, isLoading } =
+    useGetAllIncentiveLogsQuery(undefined);
 
   const incentiveColumns = [
     {
@@ -27,6 +28,8 @@ const IncentiveManagementPage: React.FC = () => {
               day: "2-digit",
               month: "short",
               year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
             })}
           </span>
           {index === 0 && (
@@ -39,22 +42,32 @@ const IncentiveManagementPage: React.FC = () => {
     },
     {
       header: "Incentive Info",
-      accessor: "incentiveName",
+      accessor: "incentiveData", // Accessing the nested object
       render: (row: any) => (
         <div className="flex flex-col">
-          <span className="font-bold text-slate-900">{row.incentiveName}</span>
+          <span className="font-bold text-slate-900">
+            {row.incentiveData?.name || "N/A"}
+          </span>
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 w-fit font-bold mt-1">
-            {row.type}
+            {row.incentiveData?.driver_type || "N/A"}
           </span>
         </div>
       ),
     },
     {
-      header: "Amount",
-      accessor: "incentiveAmount",
-      align: "right" as const,
+      header: "Reward",
+      accessor: "reward_value",
       render: (row: any) => (
-        <span className="font-bold text-green-600">${row.incentiveAmount}</span>
+        <div className="flex flex-col">
+          <span className="font-bold text-green-600">
+            {row.incentiveData?.reward_type === "FIXED" ? "$" : ""}
+            {row.incentiveData?.reward_value}
+            {row.incentiveData?.reward_type === "PERCENTAGE" ? "%" : ""}
+          </span>
+          <span className="text-[9px] text-gray-400">
+            {row.incentiveData?.reward_type}
+          </span>
+        </div>
       ),
     },
     {
@@ -63,7 +76,7 @@ const IncentiveManagementPage: React.FC = () => {
       render: (row: any) => (
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold border border-slate-200">
-            {row.changedByAdminId}
+            ID: {row.changedByAdminId || "SYS"}
           </div>
           <span className="text-xs font-semibold text-slate-500 uppercase">
             {row.changedByRole}
@@ -72,17 +85,17 @@ const IncentiveManagementPage: React.FC = () => {
       ),
     },
     {
-      header: "Status",
+      header: "Log Status",
       accessor: "status",
       render: (row: any) => (
         <span
           className={`px-2 py-1 rounded-full text-[10px] font-bold border ${
-            row.status === "ONGOING"
+            row.incentiveData?.status === "ACTIVE"
               ? "bg-green-50 text-green-700 border-green-200"
-              : "bg-slate-50 text-slate-600 border-slate-200"
+              : "bg-red-50 text-red-600 border-red-200"
           }`}
         >
-          {row.status}
+          {row.incentiveData?.status || "UNKNOWN"}
         </span>
       ),
     },
@@ -98,7 +111,7 @@ const IncentiveManagementPage: React.FC = () => {
         <IncentivesManagement onCreateNew={() => setOpenCreate(true)} />
 
         <div className="flex justify-between items-center mt-12">
-          <h3 className="text-lg font-bold text-gray-900">Incentives List</h3>
+          <h3 className="text-lg font-bold text-gray-900">Active Incentives</h3>
           <Button
             onClick={() => setOpenCreate(true)}
             className="bg-[#FFCC00] hover:bg-[#e5ba0d] cursor-pointer text-black font-semibold gap-2"
@@ -110,12 +123,14 @@ const IncentiveManagementPage: React.FC = () => {
 
         <IncentivesList />
 
-        {/* Dynamic Table Implementation */}
-        <DynamicChangeLogTable
-          columns={incentiveColumns}
-          data={incentiveLogs?.data || []}
-          isLoading={isLoading}
-        />
+        {/* Change Logs Section */}
+        <div className="pt-8">
+          <DynamicChangeLogTable
+            columns={incentiveColumns}
+            data={incentiveLogs?.data || []}
+            isLoading={isLoading}
+          />
+        </div>
 
         <CreateIncentiveDialog
           open={openCreate}
