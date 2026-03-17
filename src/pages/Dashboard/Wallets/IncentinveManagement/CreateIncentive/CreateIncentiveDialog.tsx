@@ -1,216 +1,342 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "lucide-react"
-import { useState, useEffect } from "react"
-import toast from "react-hot-toast"
-import { useGetUserProfileQuery } from "@/redux/features/usersTypes/usersTypesApi"
-import { useCreateIncentiveMutation, useUpdateIncentiveMutation } from "@/redux/features/incentives/incentivesApi"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
+import {
+  useCreateIncentiveMutation,
+  useUpdateIncentiveMutation,
+} from "@/redux/features/incentives/incentivesApi";
+import { useGetServiceZonesQuery } from "@/redux/features/serviceZone/serviceZoneApi";
 
 interface Props {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  incentiveToEdit: any // New prop for editing incentive
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  incentiveToEdit: any;
 }
 
-const CreateIncentiveDialog: React.FC<Props> = ({ open, onOpenChange, incentiveToEdit }) => {
-  const [name, setName] = useState("")
-  const [type, setType] = useState("")
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
-  const [amount, setAmount] = useState("")
+const CreateIncentiveDialog: React.FC<Props> = ({
+  open,
+  onOpenChange,
+  incentiveToEdit,
+}) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    start_date: "",
+    end_date: "",
+    driver_type: "BIKE",
+    priority: 1,
+    status: "ACTIVE",
+    reward_type: "FIXED",
+    reward_value: "",
+    claim_type: "AUTO",
+    serviceZoneId: "0",
+    metric: "COMPLETED_DELIVERIES",
+    operator: "GTE",
+    ruleValue: "",
+  });
 
-  // API hooks
-  const { data: userData } = useGetUserProfileQuery(undefined)
-  const [createIncentive, { isLoading }] = useCreateIncentiveMutation()
-  const [updateIncentive] = useUpdateIncentiveMutation()
+  const [createIncentive, { isLoading: isCreating }] =
+    useCreateIncentiveMutation();
+  const [updateIncentive, { isLoading: isUpdating }] =
+    useUpdateIncentiveMutation();
+  const { data: zonesRes } = useGetServiceZonesQuery({});
 
-  // If editing, pre-fill the form with existing data
+  const activeZones =
+    zonesRes?.data?.data?.data?.filter((z: any) => z.isActive) || [];
+
   useEffect(() => {
     if (incentiveToEdit) {
-      setName(incentiveToEdit.incentive_name)
-      setType(incentiveToEdit.type)
-      setStartDate(incentiveToEdit.start_date)
-      setEndDate(incentiveToEdit.end_date)
-      setAmount(incentiveToEdit.incentive_amount.toString())
+      setFormData({
+        name: incentiveToEdit.name || "",
+        description: incentiveToEdit.description || "",
+        start_date: incentiveToEdit.start_date?.split("T")[0] || "",
+        end_date: incentiveToEdit.end_date?.split("T")[0] || "",
+        driver_type: incentiveToEdit.driver_type || "BIKE",
+        priority: incentiveToEdit.priority || 1,
+        status: incentiveToEdit.status || "ACTIVE",
+        reward_type: incentiveToEdit.reward_type || "FIXED",
+        reward_value: incentiveToEdit.reward_value?.toString() || "",
+        claim_type: incentiveToEdit.claim_type || "AUTO",
+        serviceZoneId: incentiveToEdit.serviceZoneId?.toString() || "0",
+        metric: incentiveToEdit.rules?.[0]?.metric || "COMPLETED_DELIVERIES",
+        operator: incentiveToEdit.rules?.[0]?.operator || "GTE",
+        ruleValue: incentiveToEdit.rules?.[0]?.value?.toString() || "",
+      });
     }
-  }, [incentiveToEdit])
+  }, [incentiveToEdit, open]);
 
-  const handleCreate = async () => {
-    if (!name || !type || !startDate || !endDate || !amount) {
-      toast.error("All fields are required")
-      return
-    }
-
-    const adminId = userData?.data?.adminProfiles?.[0]?.id
-    if (!adminId) {
-      toast.error("Admin ID not found")
-      return
-    }
-
+  const handleSubmit = async () => {
     const payload = {
-      adminId: adminId,
-      incentive_name: name,
-      type: type.toUpperCase(),
-      start_date: new Date(startDate).toISOString(),
-      end_date: new Date(endDate).toISOString(),
-      incentive_amount: Number(amount),
-      status: "ONGOING",
-    }
+      ...(incentiveToEdit && { id: incentiveToEdit.id }),
+      name: formData.name,
+      description: formData.description || "No description",
+      start_date: new Date(formData.start_date).toISOString(),
+      end_date: new Date(formData.end_date).toISOString(),
+      driver_type: formData.driver_type,
+      priority: Number(formData.priority),
+      status: formData.status,
+      reward_type: formData.reward_type,
+      reward_value: Number(formData.reward_value),
+      claim_type: formData.claim_type,
+      serviceZoneId: Number(formData.serviceZoneId),
+      rules: [
+        {
+          metric: formData.metric,
+          operator: formData.operator,
+          value: Number(formData.ruleValue),
+        },
+      ],
+    };
 
     try {
-      await createIncentive(payload).unwrap()
-      toast.success("Incentive created successfully")
+      const res = incentiveToEdit
+        ? await updateIncentive(payload).unwrap()
+        : await createIncentive(payload).unwrap();
 
-      setName("")
-      setType("")
-      setStartDate("")
-      setEndDate("")
-      setAmount("")
-      onOpenChange(false)
+      if (res.success) {
+        toast.success(res.message);
+        onOpenChange(false);
+      }
+
+      if (!res.success) {
+        toast.error(res.error.response.message);
+      }
     } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to create incentive")
+      toast.error(error?.data?.message || "Something went wrong");
     }
-  }
-
-  const handleEdit = async () => {
-    if (!name || !type || !startDate || !endDate || !amount) {
-      toast.error("All fields are required")
-      return
-    }
-
-    const adminId = userData?.data?.adminProfiles?.[0]?.id
-    if (!adminId) {
-      toast.error("Admin ID not found")
-      return
-    }
-
-    const payload = {
-      id: incentiveToEdit.id, // Include the ID for editing
-      adminId: adminId,
-      incentive_name: name,
-      type: type.toUpperCase(),
-      start_date: new Date(startDate).toISOString(),
-      end_date: new Date(endDate).toISOString(),
-      incentive_amount: Number(amount),
-      status: incentiveToEdit.status, // Keep the original status
-    }
-
-    try {
-      await updateIncentive(payload).unwrap()
-      toast.success("Incentive updated successfully")
-
-      setName("")
-      setType("")
-      setStartDate("")
-      setEndDate("")
-      setAmount("")
-      onOpenChange(false)
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to update incentive")
-    }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg rounded-2xl p-6">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
-            {incentiveToEdit ? "Edit Incentive" : "Create New Incentive"}
+          <DialogTitle>
+            {incentiveToEdit ? "Edit" : "Create"} Incentive
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5 mt-2">
-          {/* Name */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Incentive Name</label>
+        <div className="grid grid-cols-2 gap-4 py-4">
+          {/* Basic Info */}
+          <div className="space-y-2 col-span-2">
+            <Label>Incentive Name</Label>
             <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Weekly Bonus"
-              className="bg-gray-100 py-5"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              placeholder="Summer Bonus"
             />
           </div>
 
-          {/* Type */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Type</label>
-            <select
-              className="w-full px-3 py-2 bg-gray-100 rounded-md border text-sm"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
+          <div className="space-y-2">
+            <Label>Service Zone</Label>
+            <Select
+              value={formData.serviceZoneId}
+              onValueChange={(v) =>
+                setFormData({ ...formData, serviceZoneId: v })
+              }
             >
-              <option value="">Select type</option>
-              <option value="PERFORMANCE">Performance</option>
-              <option value="REFERRAL">Referral</option>
-              <option value="TIME_BASED">Time_based</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Zone" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">All Zones (Default)</SelectItem>
+                {activeZones.map((zone: any) => (
+                  <SelectItem key={zone.id} value={zone.id.toString()}>
+                    {zone.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Dates Row */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Start Date</label>
-              <div className="relative">
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-gray-100 py-5"
-                />
-                <Calendar className="absolute right-3 top-3 h-4 w-4 text-gray-500" />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">End Date</label>
-              <div className="relative">
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-gray-100 py-5"
-                />
-                <Calendar className="absolute right-3 top-3 h-4 w-4 text-gray-500" />
-              </div>
-            </div>
+          <div className="space-y-2">
+            <Label>Driver Type</Label>
+            <Select
+              value={formData.driver_type}
+              onValueChange={(v) =>
+                setFormData({ ...formData, driver_type: v })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="BIKE">BIKE</SelectItem>
+                <SelectItem value="CAR">CAR</SelectItem>
+                <SelectItem value="CYCLE">CYCLE</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Amount */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Incentive Amount</label>
+          {/* Dates */}
+          <div className="space-y-2">
+            <Label>Start Date</Label>
             <Input
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="30"
-              type="number"
-              className="bg-gray-100 py-5"
+              type="date"
+              value={formData.start_date}
+              onChange={(e) =>
+                setFormData({ ...formData, start_date: e.target.value })
+              }
             />
+          </div>
+          <div className="space-y-2">
+            <Label>End Date</Label>
+            <Input
+              type="date"
+              value={formData.end_date}
+              onChange={(e) =>
+                setFormData({ ...formData, end_date: e.target.value })
+              }
+            />
+          </div>
+
+          {/* Reward Config */}
+          <div className="space-y-2">
+            <Label>Reward Type</Label>
+            <Select
+              value={formData.reward_type}
+              onValueChange={(v) =>
+                setFormData({ ...formData, reward_type: v })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="FIXED">FIXED</SelectItem>
+                <SelectItem value="PERCENTAGE">PERCENTAGE</SelectItem>
+                <SelectItem value="POINTS">POINTS</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Reward Value</Label>
+            <Input
+              type="number"
+              value={formData.reward_value}
+              onChange={(e) =>
+                setFormData({ ...formData, reward_value: e.target.value })
+              }
+              placeholder="50"
+            />
+          </div>
+
+          {/* Rules Section */}
+          <div className="col-span-2 border-t pt-4 mt-2">
+            <h4 className="text-sm font-bold mb-3">Target Rules</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Metric</Label>
+                <Select
+                  value={formData.metric}
+                  onValueChange={(v) => setFormData({ ...formData, metric: v })}
+                >
+                  <SelectTrigger className="text-xs">
+                    <SelectValue placeholder="Select Metric" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="COMPLETED_DELIVERIES">
+                      Completed Deliveries
+                    </SelectItem>
+                    <SelectItem value="TOTAL_EARNINGS">
+                      Total Earnings
+                    </SelectItem>
+                    <SelectItem value="ONLINE_HOURS">Online Hours</SelectItem>
+                    <SelectItem value="ACCEPTED_ORDERS">
+                      Accepted Orders
+                    </SelectItem>
+                    <SelectItem value="ACCEPTANCE_RATE">
+                      Acceptance Rate (%)
+                    </SelectItem>
+                    <SelectItem value="CONSECUTIVE_TRIPS">
+                      Consecutive Trips
+                    </SelectItem>
+                    <SelectItem value="REFERRAL_COUNT">
+                      Referral Count
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Operator</Label>
+                <Select
+                  value={formData.operator}
+                  onValueChange={(v) =>
+                    setFormData({ ...formData, operator: v })
+                  }
+                >
+                  <SelectTrigger className="text-xs">
+                    <SelectValue placeholder="Select Operator" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="GTE">
+                      Greater Than or Equal (&ge;)
+                    </SelectItem>
+                    <SelectItem value="LTE">
+                      Less Than or Equal (&le;)
+                    </SelectItem>
+                    <SelectItem value="EQ">Equal To (=)</SelectItem>
+                    <SelectItem value="GT">Greater Than (&gt;)</SelectItem>
+                    <SelectItem value="LT">Less Than (&lt;)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Target Value</Label>
+                <Input
+                  type="number"
+                  value={formData.ruleValue}
+                  onChange={(e) =>
+                    setFormData({ ...formData, ruleValue: e.target.value })
+                  }
+                  placeholder="10"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <DialogFooter className="flex justify-end gap-3 mt-6 cursor-pointer">
+        <DialogFooter>
           <Button
             variant="outline"
-            className="border border-black px-8"
             onClick={() => onOpenChange(false)}
+            className="cursor-pointer"
           >
             Cancel
           </Button>
-
           <Button
-            disabled={isLoading}
-            onClick={incentiveToEdit ? handleEdit : handleCreate}
-            className="bg-black text-white px-8 cursor-pointer hover:bg-gray-800"
+            disabled={isCreating || isUpdating}
+            onClick={handleSubmit}
+            className="cursor-pointer text-black"
           >
-            {isLoading ? "Saving..." : incentiveToEdit ? "Update Incentive" : "Save Incentive"}
+            {isCreating || isUpdating
+              ? "Saving..."
+              : incentiveToEdit
+                ? "Update Incentive"
+                : "Create Incentive"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default CreateIncentiveDialog
+export default CreateIncentiveDialog;
