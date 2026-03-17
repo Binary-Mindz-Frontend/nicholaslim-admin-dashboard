@@ -3,9 +3,9 @@ import {DollarSign, Gift, Users, Calendar } from "lucide-react"
 
 
 interface MetricCardProps {
-  icon: "package" | "gift" | "users" | "calendar"
-  label: string
-  value: string | number
+  icon: "package" | "gift" | "users" | "calendar" | "checkcircle";
+  label: string;
+  value: string | number;
 }
 
 const iconMap = {
@@ -13,6 +13,7 @@ const iconMap = {
   gift:DollarSign ,
   users: Users,
   calendar: Calendar,
+  checkcircle: Calendar
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({ icon, label, value }) => {
