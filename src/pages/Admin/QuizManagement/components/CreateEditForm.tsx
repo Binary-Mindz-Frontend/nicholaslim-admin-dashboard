@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ArrowLeft, Plus, Trash2 } from "lucide-react"; // Icons added
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { Question } from "@/types/questionsTypes";
 import toast from "react-hot-toast";
@@ -33,7 +33,6 @@ export default function QuestionForm({
     question?.question_text || "",
   );
 
-  // Initial state logic
   const [options, setOptions] = useState<any[]>(
     question?.options || [
       { option_text: "", is_correct: false },
@@ -53,12 +52,10 @@ export default function QuestionForm({
     }
   }, [question]);
 
-  // Add new option function
   const addOption = () => {
     setOptions([...options, { option_text: "", is_correct: false }]);
   };
 
-  // Remove option function
   const removeOption = (index: number) => {
     if (options.length <= 2) {
       toast.error("At least two options are required");
@@ -70,11 +67,11 @@ export default function QuestionForm({
 
   const handleOptionChange = (index: number, field: string, value: any) => {
     const newOptions = [...options];
+
+    // For BOOLEAN (True/False), usually only one can be correct.
+    // If you want to allow multiple correct for Boolean too, keep it as is.
+    // If you want only one correct for Boolean, add logic here.
     newOptions[index] = { ...newOptions[index], [field]: value };
-
-    // logic updated: Removed the logic that unchecks other options
-    // so multiple options can be "is_correct: true"
-
     setOptions(newOptions);
   };
 
@@ -97,18 +94,16 @@ export default function QuestionForm({
       return;
     }
 
-    const cleanOptions = options.map((opt) => ({
-      option_text: opt.option_text,
-      is_correct: opt.is_correct,
-    }));
-
     const data = {
       quizId,
       quesType,
       quesCategory,
       quesDeficulty: quesDifficulty,
       question_text,
-      options: cleanOptions,
+      options: options.map((opt) => ({
+        option_text: opt.option_text,
+        is_correct: opt.is_correct,
+      })),
     };
 
     onSave(data);
@@ -143,11 +138,18 @@ export default function QuestionForm({
                     onClick={() => {
                       setQuesType(type as any);
                       if (type === "BOOLEAN") {
+                        // Resetting to exactly 2 options for True/False
                         setOptions([
                           { option_text: "True", is_correct: false },
                           { option_text: "False", is_correct: false },
-                          { option_text: "True", is_correct: false },
-                          { option_text: "False", is_correct: false },
+                        ]);
+                      } else if (type === "MULTIPLE" && options.length < 2) {
+                        // Default options if switching back to Multiple
+                        setOptions([
+                          { option_text: "", is_correct: false },
+                          { option_text: "", is_correct: false },
+                          { option_text: "", is_correct: false },
+                          { option_text: "", is_correct: false },
                         ]);
                       }
                     }}
@@ -163,7 +165,6 @@ export default function QuestionForm({
               </div>
             </div>
 
-            {/* Category & Difficulty */}
             <div className="grid grid-cols-2 gap-8">
               <div>
                 <label className="block text-lg font-medium text-gray-800 mb-3">
@@ -192,7 +193,6 @@ export default function QuestionForm({
               </div>
             </div>
 
-            {/* Question Text */}
             <div>
               <label className="block text-lg font-medium text-gray-800 mb-3">
                 Write a Question
@@ -205,7 +205,6 @@ export default function QuestionForm({
               />
             </div>
 
-            {/* Options Management */}
             <div>
               <div className="flex justify-between items-center mb-6">
                 <p className="text-xl font-medium text-gray-800">Options</p>
@@ -251,13 +250,17 @@ export default function QuestionForm({
                             e.target.value,
                           )
                         }
-                        className="w-full px-5 py-3 border border-gray-300 rounded-xl bg-white focus:ring-yellow-500"
+                        className={`w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-yellow-500 ${
+                          quesType === "BOOLEAN"
+                            ? "bg-gray-100 cursor-not-allowed"
+                            : "bg-white"
+                        }`}
                         placeholder="Enter option text..."
                       />
 
                       <label className="flex items-center space-x-2 cursor-pointer w-fit">
                         <input
-                          type="checkbox" // Changed to checkbox for multiple correct answers
+                          type="checkbox"
                           checked={option.is_correct}
                           onChange={(e) =>
                             handleOptionChange(
@@ -278,7 +281,6 @@ export default function QuestionForm({
               </div>
             </div>
 
-            {/* Save Button */}
             <div className="flex justify-center pt-8">
               <button
                 onClick={handleSave}
