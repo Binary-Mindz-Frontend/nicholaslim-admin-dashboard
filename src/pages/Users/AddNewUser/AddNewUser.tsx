@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useRef, useState } from "react";
 import { Camera, X } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAddUserTypeMutation, useLazyCheckUsernameQuery } from "@/redux/features/usersTypes/usersTypesApi";
@@ -22,14 +22,86 @@ const userSchema = z.object({
     .string()
     .min(1, { message: "Email is required" })
     .email({ message: "Invalid email format" }),
-  phone: z.string().min(1, { message: "Phone is required" }).refine((val) => val.startsWith("+65"), {
-    message: "Phone number must start with +65",
-  }),
+  phone: z.string().min(1, { message: "Phone is required" }),
   password: z.string().min(1, { message: "Password is required" }),
   role: z.array(z.string()).default([]),
 });
 
 type FormData = z.infer<typeof userSchema>;
+
+// ------------------ PHONE INPUT COMPONENT ------------------
+const COUNTRY_CODES = [
+  { code: "+65", label: "🇸🇬 +65", country: "SG" },
+  { code: "+60", label: "🇲🇾 +60", country: "MY" },
+  { code: "+91", label: "🇮🇳 +91", country: "IN" },
+];
+
+interface PhoneInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  onBlur?: any;
+  placeholder?: string;
+  error?: string;
+  disabled?: boolean;
+}
+
+const PhoneInput = ({
+  value,
+  onChange,
+  onBlur,
+  placeholder = "XXXX XXXX",
+  error,
+  disabled,
+}: PhoneInputProps) => {
+  const selectedCountry =
+    COUNTRY_CODES.find((c) => value.startsWith(c.code)) || COUNTRY_CODES[0];
+
+  const localValue = value.startsWith(selectedCountry.code)
+    ? value.slice(selectedCountry.code.length).trimStart()
+    : value;
+
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCode = e.target.value;
+    onChange(`${newCode}${localValue ? " " + localValue : ""}`);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^0-9\s]/g, "");
+    onChange(`${selectedCountry.code}${raw ? " " + raw : ""}`);
+  };
+
+  return (
+    <div>
+      <div
+        className={`flex items-center w-full rounded bg-yellow-50 transition-all focus-within:ring-2 ${
+          error ? "ring-2 ring-red-400" : "focus-within:ring-yellow-200"
+        } overflow-hidden`}
+      >
+        <select
+          value={selectedCountry.code}
+          onChange={handleCountryChange}
+          disabled={disabled}
+          className="flex items-center gap-1.5 px-2 py-3 bg-yellow-50 border-r border-yellow-100 text-sm font-semibold text-gray-700 whitespace-nowrap outline-none cursor-pointer shrink-0"
+        >
+          {COUNTRY_CODES.map((country) => (
+            <option key={country.code} value={country.code}>
+              {country.label}
+            </option>
+          ))}
+        </select>
+        <input
+          type="tel"
+          value={localValue}
+          onChange={handleChange}
+          onBlur={onBlur}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="flex-1 px-4 py-3 focus:outline-none text-gray-700 bg-transparent"
+        />
+      </div>
+    </div>
+  );
+};
 
 export default function AddNewUser() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -94,6 +166,7 @@ export default function AddNewUser() {
     handleSubmit,
     reset,
     setValue,
+    control,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(userSchema) as any,
@@ -101,7 +174,7 @@ export default function AddNewUser() {
     defaultValues: {
       fullName: "",
       email: "",
-      phone: "",
+      phone: "+65",
       password: "",
       role: [],
     },
@@ -287,13 +360,17 @@ export default function AddNewUser() {
               <label className="block text-gray-600 font-medium mb-2">
                 Phone Number
               </label>
-              <input
-                {...register("phone")}
-                placeholder="Enter phone number"
-                className={`w-full px-4 py-3 bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.phone
-                  ? "focus:ring-red-400 ring-2 ring-red-400"
-                  : "focus:ring-yellow-200"
-                  }`}
+              <Controller
+                name="phone"
+                control={control}
+                render={({ field }) => (
+                  <PhoneInput
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    error={errors.phone?.message}
+                  />
+                )}
               />
               {errors.phone && (
                 <p className="text-red-500 text-sm mt-1">
@@ -338,7 +415,7 @@ export default function AddNewUser() {
                 disabled={rolesLoading}
               >
                 <SelectTrigger
-                  className={`w-full px-4 py-3 h-auto justify-between bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.role
+                  className={`w-full px-4 py-5 h-auto justify-between bg-yellow-50 border-0 rounded text-gray-700 outline-none transition-all focus:ring-2 ${errors.role
                     ? "focus:ring-red-400 ring-2 ring-red-400"
                     : "focus:ring-yellow-200"
                     }`}
