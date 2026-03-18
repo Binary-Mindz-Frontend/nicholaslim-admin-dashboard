@@ -295,7 +295,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, ArrowLeft } from "lucide-react";
+import { Camera, ArrowLeft, X } from "lucide-react";
 // Import the update mutation
 import {
   useGetUserTypeByIdQuery,
@@ -304,6 +304,7 @@ import {
 import {
   useAddaddUserToRoleMutation,
   useGetRoleBasedAccessControlQuery,
+  useRemoveUserFromRoleMutation,
 } from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
 
 
@@ -325,6 +326,78 @@ export interface UserProfileType {
   phone: string;
 }
 
+// ------------------ PHONE INPUT COMPONENT ------------------
+const COUNTRY_CODES = [
+  { code: "+65", label: "🇸🇬 +65", country: "SG" },
+  { code: "+60", label: "🇲🇾 +60", country: "MY" },
+  { code: "+91", label: "🇮🇳 +91", country: "IN" },
+];
+
+interface PhoneInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  error?: string;
+  disabled?: boolean;
+}
+
+const PhoneInput = ({
+  value,
+  onChange,
+  placeholder = "XXXX XXXX",
+  error,
+  disabled,
+}: PhoneInputProps) => {
+  const selectedCountry =
+    COUNTRY_CODES.find((c) => value.startsWith(c.code)) || COUNTRY_CODES[0];
+
+  const localValue = value.startsWith(selectedCountry.code)
+    ? value.slice(selectedCountry.code.length).trimStart()
+    : value;
+
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCode = e.target.value;
+    onChange(`${newCode}${localValue ? " " + localValue : ""}`);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^0-9\s]/g, "");
+    onChange(`${selectedCountry.code}${raw ? " " + raw : ""}`);
+  };
+
+  return (
+    <div>
+      <div
+        className={`flex items-center w-full border rounded bg-[#FFFAE6] focus-within:border-yellow-400 overflow-hidden ${
+          error ? "border-red-400" : "border-gray-300"
+        }`}
+      >
+        <select
+          value={selectedCountry.code}
+          onChange={handleCountryChange}
+          disabled={disabled}
+          className="flex items-center gap-1.5 px-2 py-2 bg-[#FFFAE6] border-r border-gray-300 text-sm font-semibold text-gray-700 whitespace-nowrap outline-none cursor-pointer shrink-0"
+        >
+          {COUNTRY_CODES.map((country) => (
+            <option key={country.code} value={country.code}>
+              {country.label}
+            </option>
+          ))}
+        </select>
+        <input
+          type="tel"
+          value={localValue}
+          onChange={handleChange}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="flex-1 px-3 py-2 focus:outline-none text-sm bg-transparent"
+        />
+      </div>
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+  );
+};
+
 // ------------------ COMPONENT LOGIC ------------------
 export default function UserProfile() {
   const { id } = useParams();
@@ -342,10 +415,11 @@ export default function UserProfile() {
   const [formData, setFormData] = useState<Partial<UserProfileType>>({});
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("");
+  const [isSyncing, setIsSyncing] = useState(false);
   // console.log("Fetched user data:", userData);
   const { data: roleData = [] } = useGetRoleBasedAccessControlQuery({ limit: 1000 });
-  const [addUserToRole] =
-    useAddaddUserToRoleMutation();
+  const [addUserToRole] = useAddaddUserToRoleMutation();
+  const [removeUserFromRole] = useRemoveUserFromRoleMutation();
   console.log(roleData, "roleData");
 
   const [userRoles, setUserRoles] = useState<
@@ -353,7 +427,7 @@ export default function UserProfile() {
   >([]);
 
   useEffect(() => {
-    if (userData && userData.data) {
+    if (userData && userData.data && !isSyncing) {
       const apiData = userData.data as ApiUserData;
 
       const initialFormData: UserProfileType = {
@@ -363,10 +437,12 @@ export default function UserProfile() {
         phone: apiData.phone,
       };
 
-      setFormData(initialFormData);
-      setUserRoles(userData?.data?.roles || [])
+      if (!isEditMode || !formData.id) {
+        setFormData(initialFormData);
+        setUserRoles(userData?.data?.roles || []);
+      }
     }
-  }, [userData]);
+  }, [userData, isEditMode, isSyncing]);
 
   console.log(userData, 'userData')
 
@@ -417,6 +493,7 @@ export default function UserProfile() {
       phone: formData.phone,
     };
 
+    setIsSyncing(true);
     try {
       const response = await updateUser({
         id: formData.id,
@@ -424,11 +501,27 @@ export default function UserProfile() {
       }).unwrap();
       toast.success(response?.message || "User updated successfully! 🎉");
 
-      const existingRoleIds = (userData?.data?.roles || []).map((r: { id: number }) => r.id);
-      const newRoles = userRoles.filter(r => !existingRoleIds.includes(r.id));
+      const existingRoleIds: number[] = (userData?.data?.roles || []).map(
+        (r: { id: number }) => r.id
+      );
+      const currentRoleIds = userRoles.map((r) => r.id);
 
-      for (const role of newRoles) {
+      const rolesToAdd = userRoles.filter(
+        (r) => !existingRoleIds.includes(r.id)
+      );
+      const rolesToRemove = (userData?.data?.roles || []).filter(
+        (r: { id: number }) => !currentRoleIds.includes(r.id)
+      );
+
+      for (const role of rolesToAdd) {
         await addUserToRole({ roleId: role.id, userId: Number(id) }).unwrap();
+      }
+
+      for (const role of rolesToRemove) {
+        await removeUserFromRole({
+          roleId: role.id,
+          userId: Number(id),
+        }).unwrap();
       }
       await refetch();
       navigate(-1);
@@ -437,6 +530,8 @@ export default function UserProfile() {
       const errorMessage =
         apiError?.data?.message || "Failed to update user profile.";
       toast.error(errorMessage);
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -505,6 +600,10 @@ export default function UserProfile() {
     // Just update local state, no API call
     setUserRoles((prev) => [...prev, { id: role.id, name: role.name }]);
     setSelectedRole("");
+  };
+
+  const handleRemoveRole = (roleId: number) => {
+    setUserRoles((prev) => prev.filter((role) => role.id !== roleId));
   };
 
 
@@ -597,17 +696,27 @@ export default function UserProfile() {
           {baseFields.map(([key, label]) => (
             <div key={key}>
               <Label className="text-sm font-semibold pb-2">{label}</Label>
-              <Input
-                name={key}
-                value={getStringValue(key)}
-                onChange={handleChange}
-                readOnly={!isEditMode}
-                className={
-                  !isEditMode
-                    ? "bg-gray-50 border-gray-200 cursor-default focus:ring-0"
-                    : "focus:ring-orange-500 outline-none transition-all focus:ring-2"
-                }
-              />
+              {key === "phone" && isEditMode ? (
+                <PhoneInput
+                  value={formData.phone || ""}
+                  onChange={(val) =>
+                    setFormData((prev) => ({ ...prev, phone: val }))
+                  }
+                  disabled={isSyncing}
+                />
+              ) : (
+                <Input
+                  name={key}
+                  value={getStringValue(key)}
+                  onChange={handleChange}
+                  readOnly={!isEditMode}
+                  className={
+                    !isEditMode
+                      ? "bg-gray-50 border-gray-200 cursor-default focus:ring-0"
+                      : "focus:ring-orange-500 outline-none transition-all focus:ring-2"
+                  }
+                />
+              )}
             </div>
           ))}
           {/* ROLE SECTION */}
@@ -642,12 +751,21 @@ export default function UserProfile() {
             <div className="flex flex-wrap gap-2 mt-2">
               {userRoles.length > 0 ? (
                 userRoles.map((role) => (
-                  <span
+                  <div
                     key={role.id}
-                    className="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium"
+                    className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium"
                   >
                     {role.name}
-                  </span>
+                    {isEditMode && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveRole(role.id)}
+                        className="hover:text-red-600 transition-colors p-0.5 rounded-full hover:bg-yellow-200"
+                      >
+                        <X size={14} className="stroke-[3]" />
+                      </button>
+                    )}
+                  </div>
                 ))
               ) : (
                 <p className="text-gray-500 text-sm">No roles assigned</p>
