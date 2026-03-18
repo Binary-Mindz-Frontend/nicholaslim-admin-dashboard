@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useRef, useState } from "react";
-import { Camera } from "lucide-react";
+import { Camera, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -166,9 +166,9 @@ export default function AddNewUser() {
 
 
   const handleRemoveRole = (roleToRemove: string) => {
-    const newRoles = selectedRoles.filter(role => role !== roleToRemove);
+    const newRoles = selectedRoles.filter((role) => role !== roleToRemove);
     setSelectedRoles(newRoles);
-    setValue("role", newRoles);
+    setValue("role", newRoles, { shouldValidate: true });
   };
 
   return (
@@ -331,7 +331,7 @@ export default function AddNewUser() {
                   if (val && !selectedRoles.includes(val)) {
                     const newRoles = [...selectedRoles, val];
                     setSelectedRoles(newRoles);
-                    setValue("role", newRoles);
+                    setValue("role", newRoles, { shouldValidate: true });
                   }
                   setRoleSelectValue(""); // Reset to show placeholder
                 }}
@@ -366,9 +366,9 @@ export default function AddNewUser() {
                       <button
                         type="button"
                         onClick={() => handleRemoveRole(role)}
-                        className="hover:text-red-600 font-bold"
+                        className="hover:text-red-600 transition-colors p-0.5 rounded-full hover:bg-yellow-200"
                       >
-                        ✕
+                        <X size={14} className="stroke-[3]" />
                       </button>
                     </div>
                   ))}
