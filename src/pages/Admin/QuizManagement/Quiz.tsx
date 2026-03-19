@@ -10,7 +10,7 @@ import {
 } from "@/redux/features/quizzes/quizzesApi";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Plus, BookOpen } from "lucide-react";
+import { Plus, BookOpen, AlertTriangle } from "lucide-react"; // Added AlertTriangle
 import AllQuizShowTable from "./components/AllQuizShowTable";
 import QuizModal from "./components/QuizModal";
 import QuizAttemptsTable from "./components/QuizTable";
@@ -29,8 +29,13 @@ const Quiz: React.FC = () => {
   const [editingQuiz, setEditingQuiz] = useState<any | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
+  // New States for Delete Confirmation
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [quizToDelete, setQuizToDelete] = useState<number | null>(null);
+
   const quizzes = quizzesResponse?.data || [];
 
+  // ... (Your quizLogColumns remain exactly the same)
   const quizLogColumns = [
     {
       header: "Date",
@@ -103,6 +108,35 @@ const Quiz: React.FC = () => {
     },
   ];
 
+  // Updated Delete Logic
+  const confirmDelete = async () => {
+    if (!quizToDelete) return;
+
+    toast.loading("Deleting quiz...");
+    try {
+      const result = await deleteQuiz(quizToDelete).unwrap();
+      if (!result.success) {
+        toast.dismiss();
+        toast.error(result.message);
+        return;
+      }
+      toast.dismiss();
+      toast.success("Quiz deleted successfully!");
+      setIsDeleteModalOpen(false);
+      setQuizToDelete(null);
+      refetch();
+    } catch (error) {
+      toast.dismiss();
+      toast.error("Failed to delete quiz");
+    }
+  };
+
+  const openDeleteModal = (id: number) => {
+    setQuizToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  // ... (handleCreateQuiz, handleEditQuiz, handleToggleActive same as before)
   const handleCreateQuiz = async (quizData: any) => {
     toast.loading("Creating quiz...");
     try {
@@ -155,23 +189,6 @@ const Quiz: React.FC = () => {
       console.error("Failed to update quiz:", error);
       toast.dismiss();
       toast.error("Failed to update quiz");
-    }
-  };
-
-  const handleDeleteQuiz = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this quiz?")) {
-      try {
-        const result = await deleteQuiz(id).unwrap();
-        if (!result.success) {
-          toast.error(result.message);
-          return;
-        }
-        toast.success("Quiz deleted successfully!");
-        refetch();
-      } catch (error) {
-        console.error("Failed to delete quiz:", error);
-        toast.error("Failed to delete quiz");
-      }
     }
   };
 
@@ -241,12 +258,47 @@ const Quiz: React.FC = () => {
         <AllQuizShowTable
           quizzes={quizzes}
           onEdit={openEditModal}
-          onDelete={handleDeleteQuiz}
+          onDelete={openDeleteModal} // Changed to openDeleteModal
           onToggleActive={handleToggleActive}
           onAddQuestions={handleAddQuestions}
         />
       </div>
 
+      {/* Delete Confirmation Modal UI */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl transform transition-all">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <AlertTriangle className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Are you sure?
+              </h3>
+              <p className="text-gray-500 mb-8">
+                This action cannot be undone. This will permanently delete the
+                quiz and all associated data.
+              </p>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors cursor-pointer"
+                >
+                  Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Remaining Components */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 mb-8">
         <h2 className="md:text-xl font-bold text-gray-800 px-6 py-4 border-b border-gray-200">
           Quiz Results & Attempts
