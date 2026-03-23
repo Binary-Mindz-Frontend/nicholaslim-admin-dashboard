@@ -76,6 +76,7 @@ export const chatApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
+      invalidatesTags: ["Conversations", "Messages"],
     }),
 
     getConversations: builder.query<ApiResponse<Conversation[]>, void>({
@@ -83,6 +84,7 @@ export const chatApi = baseApi.injectEndpoints({
         url: "/chat/conversations",
         method: "GET",
       }),
+      providesTags: ["Conversations", "Messages"],
     }),
 
     getMessages: builder.query<
@@ -94,6 +96,18 @@ export const chatApi = baseApi.injectEndpoints({
         method: "POST",
         body: { otherUserId, beforeMessageId },
       }),
+      providesTags: ["Messages", "Conversations"],
+    }),
+
+    updateReadMessage: builder.mutation<
+      ApiResponse<void>,
+      { conversationId: string }
+    >({
+      query: ({ conversationId }) => ({
+        url: `/chat/read/${conversationId}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Conversations", "Messages"],
     }),
   }),
   overrideExisting: false,
@@ -103,4 +117,5 @@ export const {
   useCreateConversationMutation,
   useGetConversationsQuery,
   useGetMessagesQuery,
+  useUpdateReadMessageMutation,
 } = chatApi;
