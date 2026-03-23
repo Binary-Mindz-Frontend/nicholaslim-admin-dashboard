@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { setActiveConversation, resetUnreadCount } from "@/redux/chatSlice";
@@ -8,6 +8,7 @@ import {
   useCreateConversationMutation,
   useGetConversationsQuery,
   useGetMessagesQuery,
+  useUpdateReadMessageMutation,
 } from "@/redux/features/chat/chatApi";
 import { useUploadBulkOrderFileMutation } from "@/redux/features/orderPlacement/orderPlacementApi";
 import { FiSend, FiPaperclip, FiFileText, FiMenu } from "react-icons/fi";
@@ -54,6 +55,7 @@ const DashboardChat: React.FC = () => {
 
   const [createConversation] = useCreateConversationMutation();
   const [uploadFile] = useUploadBulkOrderFileMutation();
+  const [updateReadMessage] = useUpdateReadMessageMutation();
 
   useEffect(() => {
     connect();
@@ -74,7 +76,46 @@ const DashboardChat: React.FC = () => {
     }
   }, [conversationsResponse]);
 
-  const currentMessages = (messagesResponse?.data as any)?.messages || [];
+  const reduxMessages = useMemo(() => {
+    return (activeConversation && chatState.messages?.[activeConversation]) || [];
+  }, [activeConversation, chatState.messages]);
+
+  const currentMessages = useMemo(() => {
+    const apiMessages = (messagesResponse?.data as any)?.messages || [];
+    
+    // Create a Map with ID as key to deduplicate
+    const messageMap = new Map();
+    
+    // Add API messages first
+    apiMessages.forEach((msg: any) => {
+      messageMap.set(msg.id, msg);
+    });
+    
+    // Add Redux messages (Socket/Optimistic) if not already present
+    reduxMessages.forEach((msg: any) => {
+      const isIdMatch = messageMap.has(msg.id);
+      
+      // If no ID match, also check for content match for temp messages
+      if (!isIdMatch) {
+        if (msg.id.toString().startsWith("temp-")) {
+          const trimmedContent = msg.content?.trim();
+          const hasContentMatch = Array.from(messageMap.values()).some(
+            (apiMsg: any) => apiMsg.content?.trim() === trimmedContent
+          );
+          if (hasContentMatch) return;
+        }
+        
+        messageMap.set(msg.id, {
+          ...msg,
+          createdAt: msg.timestamp || msg.createdAt, // sync field names
+        });
+      }
+    });
+
+    return Array.from(messageMap.values()).sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+  }, [messagesResponse, reduxMessages]);
 
   // Debug: Log messages to check sender IDs
   useEffect(() => {
@@ -94,21 +135,24 @@ const DashboardChat: React.FC = () => {
     }
   }, [currentMessages, currentUserId]);
 
-  const users =
-    conversationsResponse?.data?.map((conv: any) => {
+  const users = useMemo(() => {
+    return conversationsResponse?.data?.map((conv: any) => {
       const otherUserId = conv.otherUser.id.toString();
+      const isActive = otherUserId === activeConversation;
       const reduxUnread = chatState.unreadCounts?.[otherUserId] || 0;
 
       return {
         id: otherUserId,
+        conversationId: conv.id,
         email: conv.otherUser.email,
         name: conv.otherUser.email.split("@")[0],
-        unreadCount: conv.unreadCount + reduxUnread,
+        unreadCount: isActive ? 0 : (conv.unreadCount + reduxUnread),
         lastMessage: conv.lastMessage,
         lastMessageTime: conv.lastMessage?.createdAt || conv.updatedAt,
-        waitingSince: chatState.lastMessageArrivalTime?.[otherUserId],
+        waitingSince: isActive ? null : chatState.lastMessageArrivalTime?.[otherUserId],
       };
     }) || [];
+  }, [conversationsResponse, activeConversation, chatState.unreadCounts, chatState.lastMessageArrivalTime]);
 
   useEffect(() => {
     if (users.length > 0) {
@@ -128,6 +172,17 @@ const DashboardChat: React.FC = () => {
       }
     }
   }, [users, selectedReceiver, dispatch]);
+
+  // Find active conversation ID for marking as read
+  const activeConversationId = users.find(u => u.id === activeConversation)?.conversationId;
+
+  // Mark as read when active conversation changes or new messages arrive
+  useEffect(() => {
+    if (activeConversationId) {
+      updateReadMessage({ conversationId: activeConversationId });
+      dispatch(resetUnreadCount(activeConversation || ""));
+    }
+  }, [activeConversationId, currentMessages.length]);
 
   const selectedUser = users.find((u: any) => u.id === selectedReceiver);
 
@@ -198,25 +253,26 @@ const DashboardChat: React.FC = () => {
     }
   };
 
-  const formatTime = (timestamp: string) => {
+  const getTimeAgo = (timestamp: string) => {
     if (!timestamp) return "";
     const date = new Date(timestamp);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const weeks = Math.floor(days / 7);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
 
-    if (days === 0) {
-      return date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } else if (days === 1) {
-      return "Yesterday";
-    } else if (days < 7) {
-      return date.toLocaleDateString([], { weekday: "short" });
-    } else {
-      return date.toLocaleDateString([], { month: "short", day: "numeric" });
-    }
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    if (weeks < 4) return `${weeks}w ago`;
+    if (months < 12) return `${months}mo ago`;
+    return `${years}y ago`;
   };
 
   const formatDate = (timestamp: string) => {
@@ -354,9 +410,9 @@ const DashboardChat: React.FC = () => {
                     >
                       {user.name}
                     </h4>
-                    {user.lastMessageTime && (
+                    {user.lastMessageTime && activeConversation !== user.id && (
                       <span className="text-[10px] text-slate-400">
-                        {formatTime(user.lastMessageTime)}
+                        {getTimeAgo(user.lastMessageTime)}
                       </span>
                     )}
                   </div>

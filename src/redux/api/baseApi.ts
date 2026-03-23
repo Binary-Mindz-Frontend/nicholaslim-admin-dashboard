@@ -152,6 +152,8 @@ export const baseApi = createApi({
     "ServiceEmailNumber",
     "DashboardPopup",
     "PromoCodes",
+    "Conversations",
+    "Messages",
   ],
   endpoints: () => ({}),
 });
