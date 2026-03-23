@@ -65,9 +65,19 @@ const EditVehicleModal = ({
     if (initialData) {
       setFormData({
         ...initialData,
-        vehicle_desc: initialData.vehicle_desc || "", // ✅ Load existing desc
+        vehicle_desc: initialData.vehicle_desc || "",
       });
-      const { height, width } = parseDimension(initialData.dimension);
+
+      let { height, width } = parseDimension(initialData.dimension);
+
+      // fallback to individual fields if dimension string is missing
+      if (!height && initialData.dimension_height) {
+        height = initialData.dimension_height.toString();
+      }
+      if (!width && initialData.dimension_width) {
+        width = initialData.dimension_width.toString();
+      }
+
       setDimensionInputs({ height, width });
     }
   }, [initialData]);

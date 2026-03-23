@@ -43,6 +43,17 @@ const OrderConfiguration: React.FC<OrderConfigurationProps> = ({
 }) => {
   const dateInputRef = React.useRef<HTMLInputElement>(null);
 
+  const getVehicleDimension = (vehicle: any) => {
+    if (!vehicle) return "";
+    if (vehicle.dimension) return vehicle.dimension;
+    if (vehicle.dimension_width && vehicle.dimension_height) {
+      let dim = `${vehicle.dimension_height}ft x ${vehicle.dimension_width}ft`;
+      if (vehicle.dimension_length) dim += ` x ${vehicle.dimension_length}ft`;
+      return dim;
+    }
+    return "N/A";
+  };
+
   return (
     <>
       <div className="pt-8">
@@ -124,14 +135,14 @@ const OrderConfiguration: React.FC<OrderConfigurationProps> = ({
               <SelectTrigger className="w-full px-4 py-5 bg-[#FFFAE6] border border-gray-300 rounded">
                 <SelectValue placeholder="Select Vehicle">
                   {selectedVehicle
-                    ? `${selectedVehicle.vehicle_type} (${selectedVehicle.dimension})`
+                    ? `${selectedVehicle.vehicle_type} (${getVehicleDimension(selectedVehicle)})`
                     : "Select Vehicle"}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {vehicleTypes?.map((vehicle: any) => (
                   <SelectItem key={vehicle.id} value={String(vehicle.id)}>
-                    {vehicle.vehicle_type} ({vehicle.dimension})
+                    {vehicle.vehicle_type} ({getVehicleDimension(vehicle)})
                   </SelectItem>
                 ))}
               </SelectContent>

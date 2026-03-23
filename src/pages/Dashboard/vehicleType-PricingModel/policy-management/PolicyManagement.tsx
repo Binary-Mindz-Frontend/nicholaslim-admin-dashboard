@@ -31,8 +31,10 @@ const PolicyManagementPage: React.FC = () => {
   const [deletePolicy, { isLoading: isDeleting }] = useDeletePolicyMutation()
 
   useEffect(() => {
-    if (apiResponse && apiResponse.success && apiResponse.data) {
-      const formattedPolicies = apiResponse.data.map((item: any) => ({
+    const rawData = apiResponse?.data?.data || (Array.isArray(apiResponse?.data) ? apiResponse.data : null);
+
+    if (apiResponse?.success && rawData) {
+      const formattedPolicies = rawData.map((item: any) => ({
         id: item.id.toString(),
         title: item.title || "",
         description: item.desc || "",
@@ -46,11 +48,11 @@ const PolicyManagementPage: React.FC = () => {
       setTimeout(() => {
         setLoadingAnimation(false)
       }, 300)
-    } else {
+    } else if (!isLoading) {
       setPolicies([])
       setLoadingAnimation(false)
     }
-  }, [apiResponse])
+  }, [apiResponse, isLoading])
 
   useEffect(() => {
     if (isLoading) {

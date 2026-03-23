@@ -55,13 +55,19 @@ const chatSlice = createSlice({
         state.messages[receiverId] = [];
       }
 
-      const existingIndex = state.messages[receiverId].findIndex(
-        (m) =>
-          m.id === message.id ||
-          (m.id.startsWith("temp-") &&
-            m.content === message.content &&
-            m.timestamp === message.timestamp),
-      );
+      const messageContent = message.content?.trim() || "";
+      const existingIndex = state.messages[receiverId].findIndex((m) => {
+        if (m.id === message.id) return true;
+        
+        // Robust match for temp messages by trimmed content and 60s window
+        if (m.id.startsWith("temp-") && m.content?.trim() === messageContent) {
+          const mTime = new Date(m.timestamp).getTime();
+          const pTime = new Date(message.timestamp).getTime();
+          // Larger 60s window to handle various delays/drifts
+          return Math.abs(mTime - pTime) < 60000;
+        }
+        return false;
+      });
 
       if (existingIndex === -1) {
         state.messages[receiverId].push(message);

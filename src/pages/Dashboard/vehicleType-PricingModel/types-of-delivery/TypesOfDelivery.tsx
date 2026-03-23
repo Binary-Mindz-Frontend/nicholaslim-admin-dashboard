@@ -8,37 +8,42 @@ import {
 import toast from "react-hot-toast";
 
 interface ApiDeliveryType {
-  id: string;
+  id: number | string;
   name: string;
-  percentage: string;
-  pickup_duration: number;
-  delivery_duration: number; 
+  price_multiplier: string;
+  collection_time: number;
+  collection_unit: string;
+  delivery_time: number;
+  delivery_unit: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
 const convertToFrontendFormat = (apiData: ApiDeliveryType): FrontendDeliveryType => {
-  const pickupUnit = apiData.pickup_duration >= 60 ? "Hour" as const : "Min" as const;
-  const deliveryUnit = apiData.delivery_duration >= 60 ? "Hour" as const : "Min" as const;
+  const pickupUnit = apiData.collection_unit === "MINUTES" ? "Min" : "Hour";
+  const deliveryUnit = apiData.delivery_unit === "MINUTES" ? "Min" : "Hour";
 
   return {
     id: apiData.id.toString(),
     name: apiData.name,
-    percentage: parseFloat(apiData.percentage) || 0,
-    pickupTime: apiData.pickup_duration,
+    percentage: parseFloat(apiData.price_multiplier) || 0,
+    pickupTime: apiData.collection_time,
     pickupUnit: pickupUnit,
-    deliveryTime: apiData.delivery_duration,  
+    deliveryTime: apiData.delivery_time,
     deliveryUnit: deliveryUnit,
   };
 };
 
 const convertToApiFormat = (frontendData: FrontendDeliveryType) => {
   return {
-    id: frontendData.id, // ID in payload
-    name: frontendData.name.toUpperCase(),
-    percentage: frontendData.percentage,
-    pickup_duration: frontendData.pickupTime,
-    delivery_duration: frontendData.deliveryTime,
+    id: frontendData.id,
+    name: frontendData.name,
+    price_multiplier: frontendData.percentage.toString(),
+    collection_time: frontendData.pickupTime,
+    collection_unit: frontendData.pickupUnit === "Min" ? "MINUTES" : "HOURS",
+    delivery_time: frontendData.deliveryTime,
+    delivery_unit: frontendData.deliveryUnit === "Min" ? "MINUTES" : "HOURS",
   };
 };
 
@@ -49,8 +54,9 @@ const DeliveryTypesPage: React.FC = () => {
   const [updateDeliveryType, { isLoading: isUpdating }] = useUpdateDeliveryTypeMutation();
 
   useEffect(() => {
-    if (apiResponse?.success && apiResponse.data) {
-      const convertedData = (apiResponse.data as ApiDeliveryType[]).map(convertToFrontendFormat);
+    const rawData = apiResponse?.data?.data;
+    if (apiResponse?.success && Array.isArray(rawData)) {
+      const convertedData = rawData.map(convertToFrontendFormat);
       setDeliveryTypes(convertedData);
     }
   }, [apiResponse]);
