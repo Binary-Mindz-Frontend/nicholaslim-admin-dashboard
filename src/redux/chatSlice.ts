@@ -8,6 +8,8 @@ interface ChatState {
   activeConversation: string | null;
   isConnected: boolean;
   events: string[];
+  unreadCounts: Record<string, number>;
+  lastMessageArrivalTime: Record<string, string>;
 }
 
 const initialState: ChatState = {
@@ -16,6 +18,8 @@ const initialState: ChatState = {
   activeConversation: null,
   isConnected: false,
   events: [],
+  unreadCounts: {},
+  lastMessageArrivalTime: {},
 };
 
 const chatSlice = createSlice({
@@ -37,6 +41,11 @@ const chatSlice = createSlice({
     setActiveConversation: (state, action: PayloadAction<string>) => {
       state.activeConversation = action.payload;
     },
+    resetUnreadCount: (state, action: PayloadAction<string>) => {
+      const userId = action.payload;
+      state.unreadCounts[userId] = 0;
+      delete state.lastMessageArrivalTime[userId];
+    },
     addMessage: (
       state,
       action: PayloadAction<{ receiverId: string; message: Message }>,
@@ -56,6 +65,18 @@ const chatSlice = createSlice({
 
       if (existingIndex === -1) {
         state.messages[receiverId].push(message);
+
+        // If it's an incoming message and not for the active conversation, increment unread count
+        const currentUserId = localStorage.getItem("userId") || "1";
+        const isIncoming = message.senderId !== currentUserId;
+        const isNotActive = receiverId !== state.activeConversation;
+
+        if (isIncoming && isNotActive) {
+          state.unreadCounts[receiverId] = (state.unreadCounts[receiverId] || 0) + 1;
+          if (!state.lastMessageArrivalTime[receiverId]) {
+            state.lastMessageArrivalTime[receiverId] = message.timestamp;
+          }
+        }
       } else {
         state.messages[receiverId][existingIndex] = message;
       }
@@ -85,6 +106,7 @@ export const {
   addMessage,
   setActiveConversation,
   updateMessageStatus,
+  resetUnreadCount,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;
