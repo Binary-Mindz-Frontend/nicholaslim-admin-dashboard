@@ -82,9 +82,9 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
   }, [data, initializeFormData]);
 
   useEffect(() => {
-    if (vehicleTypes?.data) {
+    if (vehicleTypes?.data?.data) {
       const vehicleId = formData.vehicle_type_id;
-      const vehicle = vehicleTypes.data.find(
+      const vehicle = vehicleTypes.data.data.find(
         (item: any) => item.id === vehicleId
       );
       if (vehicle) {
@@ -94,18 +94,18 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
   }, [vehicleTypes, formData.vehicle_type_id]);
 
   useEffect(() => {
-    if (deliveryType?.data) {
+    if (deliveryType?.data?.data) {
       const deliveryName = formData.delivery_type;
-      const delivery = deliveryType.data.find(
+      const delivery = deliveryType.data.data.find(
         (item: any) => item.name === deliveryName
       );
       if (delivery) {
         setSelectedDeliveryType(delivery);
-      } else if (deliveryType.data.length > 0) {
-        setSelectedDeliveryType(deliveryType.data[0]);
+      } else if (deliveryType.data.data.length > 0) {
+        setSelectedDeliveryType(deliveryType.data.data[0]);
         setFormData((prev: any) => ({
           ...prev,
-          delivery_type: deliveryType.data[0].name,
+          delivery_type: deliveryType.data.data[0].name,
         }));
       }
     }
@@ -273,8 +273,8 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
   return (
     <div>
       <OrderConfiguration
-        deliveryType={deliveryType?.data}
-        vehicleTypes={vehicleTypes?.data}
+        deliveryType={deliveryType?.data?.data}
+        vehicleTypes={vehicleTypes?.data?.data}
         selectedDeliveryType={selectedDeliveryType}
         selectedVehicle={selectedVehicle}
         formData={formData}
