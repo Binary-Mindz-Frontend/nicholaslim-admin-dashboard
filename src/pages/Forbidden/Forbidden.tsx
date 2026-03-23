@@ -73,10 +73,10 @@ const Forbidden: React.FC<ForbiddenProps> = ({
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
 
   useEffect(() => {
-    if (!accessToken) {
+    // if (!accessToken) {
       dispatch(logout());
       navigate("/login", { replace: true });
-    }
+    // }
   }, [accessToken, dispatch, navigate]);
 
   return (
