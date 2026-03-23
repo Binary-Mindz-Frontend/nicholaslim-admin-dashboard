@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
-import { setActiveConversation } from "@/redux/chatSlice";
+import { setActiveConversation, resetUnreadCount } from "@/redux/chatSlice";
 import {
   useCreateConversationMutation,
   useGetConversationsQuery,
@@ -24,7 +24,8 @@ const DashboardChat: React.FC = () => {
   const [selectedReceiver, setSelectedReceiver] = useState<string>("");
   const [sending, setSending] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -56,8 +57,10 @@ const DashboardChat: React.FC = () => {
 
   useEffect(() => {
     connect();
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => {
       disconnect();
+      clearInterval(timer);
     };
   }, [connect, disconnect]);
 
@@ -92,14 +95,20 @@ const DashboardChat: React.FC = () => {
   }, [currentMessages, currentUserId]);
 
   const users =
-    conversationsResponse?.data?.map((conv: any) => ({
-      id: conv.otherUser.id.toString(),
-      email: conv.otherUser.email,
-      name: conv.otherUser.email.split("@")[0],
-      unreadCount: conv.unreadCount,
-      lastMessage: conv.lastMessage,
-      lastMessageTime: conv.lastMessage?.createdAt || conv.updatedAt,
-    })) || [];
+    conversationsResponse?.data?.map((conv: any) => {
+      const otherUserId = conv.otherUser.id.toString();
+      const reduxUnread = chatState.unreadCounts?.[otherUserId] || 0;
+
+      return {
+        id: otherUserId,
+        email: conv.otherUser.email,
+        name: conv.otherUser.email.split("@")[0],
+        unreadCount: conv.unreadCount + reduxUnread,
+        lastMessage: conv.lastMessage,
+        lastMessageTime: conv.lastMessage?.createdAt || conv.updatedAt,
+        waitingSince: chatState.lastMessageArrivalTime?.[otherUserId],
+      };
+    }) || [];
 
   useEffect(() => {
     if (users.length > 0) {
@@ -229,6 +238,19 @@ const DashboardChat: React.FC = () => {
     }
   };
 
+  const getWaitTime = (timestamp: string) => {
+    if (!timestamp) return "";
+    const start = new Date(timestamp);
+    const diff = currentTime.getTime() - start.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+
+    if (minutes < 1) return "Just now";
+    if (hours === 0) return `${minutes}m`;
+    if (hours < 24) return `${hours}h ${minutes % 60}m`;
+    return `${Math.floor(hours / 24)}d`;
+  };
+
   // Function to determine if message is from current user
   const isOwnMessage = (msg: any) => {
     if (!currentUserId) return false;
@@ -296,14 +318,22 @@ const DashboardChat: React.FC = () => {
                 onClick={() => {
                   setSelectedReceiver(user.id);
                   dispatch(setActiveConversation(user.id));
+                  dispatch(resetUnreadCount(user.id));
                   setIsSidebarOpen(false);
                 }}
-                className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 relative ${
                   activeConversation === user.id
                     ? "bg-orange-50/80 border border-orange-100 shadow-sm"
-                    : "hover:bg-slate-50 border border-transparent"
+                    : user.unreadCount > 0
+                      ? "bg-white border-orange-200 shadow-md animate-pulse border-2"
+                      : "hover:bg-slate-50 border border-transparent"
                 }`}
               >
+                {user.unreadCount > 0 && activeConversation !== user.id && (
+                  <div className="absolute -top-1 -right-1 bg-[#ff4c00] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-lg z-10">
+                    {user.unreadCount > 9 ? "9+" : user.unreadCount}
+                  </div>
+                )}
                 <div
                   className={`w-12 h-12 rounded-xl shrink-0 flex items-center justify-center font-bold text-sm ${
                     activeConversation === user.id
@@ -330,10 +360,15 @@ const DashboardChat: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <div className="">
-                    <p className="text-xs text-slate-500 truncate">
+                  <div className="flex justify-between items-center">
+                    <p className={`text-xs truncate ${user.unreadCount > 0 && activeConversation !== user.id ? "text-slate-900 font-bold" : "text-slate-500"}`}>
                       {user.lastMessage?.content || "No messages yet"}
                     </p>
+                    {user.waitingSince && activeConversation !== user.id && (
+                      <span className="text-[10px] text-[#ff4c00] font-bold bg-orange-50 px-1.5 py-0.5 rounded ml-2 whitespace-nowrap">
+                        Wait: {getWaitTime(user.waitingSince)}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

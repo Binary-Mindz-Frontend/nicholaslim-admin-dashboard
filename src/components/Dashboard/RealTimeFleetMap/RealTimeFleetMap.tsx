@@ -464,9 +464,11 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
 
   // Get unique vehicle types from API response
   const getUniqueVehicleTypes = (types: VehicleType[]): VehicleType[] => {
+    // Guard clause: if types is null/undefined or not an array, return empty array
+    if (!Array.isArray(types)) return [];
+
     const seen = new Set<string>();
     return types.filter((type) => {
-      // const normalizedType = type.vehicle_type.toLowerCase();
       const normalizedType = type.vehicle_name.toLowerCase();
       if (seen.has(normalizedType)) {
         return false;
@@ -478,10 +480,10 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
 
   // Update categories based on current vehicles and vehicle types
   const updateCategories = (currentVehicles: Vehicle[]) => {
-    if (!vehicleTypesResponse?.success || !vehicleTypesResponse.data) return;
+    if (!vehicleTypesResponse?.success || !vehicleTypesResponse?.data?.data) return;
 
     // Get unique vehicle types from API
-    const uniqueVehicleTypes = getUniqueVehicleTypes(vehicleTypesResponse.data);
+    const uniqueVehicleTypes = getUniqueVehicleTypes(vehicleTypesResponse?.data?.data);
 
     // Group vehicles by type
     const vehicleCounts: Record<string, number> = {};
@@ -610,7 +612,7 @@ Last Updated: ${vehicle.lastUpdated || "N/A"}`;
   // Update vehicle types from API response
   useEffect(() => {
     if (vehicleTypesResponse?.success && vehicleTypesResponse.data) {
-      const uniqueTypes = getUniqueVehicleTypes(vehicleTypesResponse.data);
+      const uniqueTypes = getUniqueVehicleTypes(vehicleTypesResponse?.data?.data);
       setVehicleTypes(uniqueTypes);
       updateCategories(vehicles);
     }
