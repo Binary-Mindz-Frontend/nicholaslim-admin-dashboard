@@ -67,12 +67,13 @@ const VehicleTypes = () => {
 
   // Calculate vehicle type statistics from API response
   const vehicleTypeStats = useMemo(() => {
-    if (!apiResponse?.data) return [];
+    const rawData = apiResponse?.data?.data || [];
+    if (!Array.isArray(rawData)) return [];
 
     const statsMap = new Map<string, number>();
 
     // Count occurrences of each vehicle type
-    apiResponse.data.forEach((vehicle: any) => {
+    rawData.forEach((vehicle: any) => {
       const type = vehicle.vehicle_name || "Unknown";
       statsMap.set(type, (statsMap.get(type) || 0) + 1);
     });
@@ -91,16 +92,17 @@ const VehicleTypes = () => {
 
   // Get total vehicle count
   const totalVehicles = useMemo(() => {
-    if (!apiResponse?.data) return 0;
-    return apiResponse.data.length;
+    const rawData = apiResponse?.data?.data || [];
+    return Array.isArray(rawData) ? rawData.length : 0;
   }, [apiResponse]);
 
   // Filter data based on selected type
   const filteredData = useMemo(() => {
-    if (!apiResponse?.data || selectedType === "all") {
-      return apiResponse?.data || [];
+    const rawData = apiResponse?.data?.data || [];
+    if (!Array.isArray(rawData) || selectedType === "all") {
+      return rawData;
     }
-    return apiResponse.data.filter(
+    return rawData.filter(
       (vehicle: any) => vehicle.vehicle_name === selectedType,
     );
   }, [apiResponse, selectedType]);

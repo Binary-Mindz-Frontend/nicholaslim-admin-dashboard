@@ -18,9 +18,13 @@ import DeleteConfirmationModal from "@/components/Shared/DeleteConfirmationModal
 interface Vehicle {
   id: string;
   vehicle_type: string;
+  vehicle_name: string;
   max_load: string;
   base_price: string;
-  dimension: string;
+  dimension?: string;
+  dimension_width?: string;
+  dimension_height?: string;
+  dimension_length?: string;
   isActive: boolean;
   per_km_price: string;
   peak_pricing: boolean;
@@ -58,7 +62,7 @@ const VTtablesData: React.FC<VTtablesDataProps> = ({
   const [updateVehicleType] = useUpdateVehicleTypeMutation();
   const [deleteVehicleType] = useDeleteVehicleTypeMutation();
 
-  const vehicleTypes = (apiResponse as ApiResponse)?.data || [];
+  const vehicleTypes = Array.isArray(apiResponse?.data) ? apiResponse.data : [];
   const totalItems = vehicleTypes.length;
 
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -182,7 +186,19 @@ const VTtablesData: React.FC<VTtablesDataProps> = ({
       label: "Max Load",
       render: (max_load: string) => `${max_load} KG`,
     },
-    { key: "dimension" as const, label: "Dimensions" },
+    {
+      key: "dimension" as const,
+      label: "Dimensions",
+      render: (value: string, row: Vehicle) => {
+        if (value) return value;
+        if (row.dimension_width && row.dimension_height) {
+          let dim = `${row.dimension_height}ft x ${row.dimension_width}ft`;
+          if (row.dimension_length) dim += ` x ${row.dimension_length}ft`;
+          return dim;
+        }
+        return "N/A";
+      },
+    },
     {
       key: "base_price" as const,
       label: "Base Price",
