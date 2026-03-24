@@ -15,7 +15,7 @@ const roleBasedAccessControlApi = baseApi.injectEndpoints({
           method: "GET",
         };
       },
-      providesTags: ["RoleBasedAccessControl", "Users"],
+      providesTags: ["RoleBasedAccessControl", "Users", "AdditionalServicesLogs"],
     }),
 
     getRoleAvailablePermissions: builder.query({
@@ -31,7 +31,7 @@ const roleBasedAccessControlApi = baseApi.injectEndpoints({
         url: "/roles/user/permissions",
         method: "GET",
       }),
-      providesTags: ["RoleBasedAccessControl", "Users"],
+      providesTags: ["RoleBasedAccessControl", "Users", "AdditionalServicesLogs"],
     }),
 
     addRoleBasedAccessControl: builder.mutation({
@@ -40,7 +40,7 @@ const roleBasedAccessControlApi = baseApi.injectEndpoints({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["RoleBasedAccessControl", "Users"],
+      invalidatesTags: ["RoleBasedAccessControl", "Users", "AdditionalServicesLogs"],
     }),
 
     updateRoleBasedAccessControl: builder.mutation({
@@ -49,7 +49,7 @@ const roleBasedAccessControlApi = baseApi.injectEndpoints({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["RoleBasedAccessControl", "Users"],
+      invalidatesTags: ["RoleBasedAccessControl", "Users", "AdditionalServicesLogs"],
     }),
 
     updateRoleBasedAccessControlRole: builder.mutation({
@@ -58,7 +58,7 @@ const roleBasedAccessControlApi = baseApi.injectEndpoints({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["RoleBasedAccessControl", "Users"],
+      invalidatesTags: ["RoleBasedAccessControl", "Users", "AdditionalServicesLogs"],
     }),
 
     updateRoleBasedAccessControlStatus: builder.mutation({
@@ -66,7 +66,7 @@ const roleBasedAccessControlApi = baseApi.injectEndpoints({
         url: `/roles/${id}/active-status`,
         method: "PUT",
       }),
-      invalidatesTags: ["RoleBasedAccessControl", "Users"],
+      invalidatesTags: ["RoleBasedAccessControl", "Users", "AdditionalServicesLogs"],
     }),
 
     deleteRoleBasedAccessControl: builder.mutation({
@@ -74,7 +74,7 @@ const roleBasedAccessControlApi = baseApi.injectEndpoints({
         url: `/roles/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["RoleBasedAccessControl", "Users"],
+      invalidatesTags: ["RoleBasedAccessControl", "Users", "AdditionalServicesLogs"],
     }),
 
     getRoleUsers: builder.query({
@@ -82,7 +82,7 @@ const roleBasedAccessControlApi = baseApi.injectEndpoints({
         url: `/roles/${id}/users`,
         method: "GET",
       }),
-      providesTags: ["RoleBasedAccessControl", "Users"],
+      providesTags: ["RoleBasedAccessControl", "Users", "AdditionalServicesLogs"],
     }),
 
     removeUserFromRole: builder.mutation({
@@ -90,14 +90,14 @@ const roleBasedAccessControlApi = baseApi.injectEndpoints({
         url: `/roles/${roleId}/users/${userId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["RoleBasedAccessControl", "Users"],
+      invalidatesTags: ["RoleBasedAccessControl", "Users", "AdditionalServicesLogs"],
     }),
     addaddUserToRole: builder.mutation({
       query: ({ roleId, userId }) => ({
         url: `/roles/${roleId}/users/${userId}`,
         method: "POST",
       }),
-      invalidatesTags: ["RoleBasedAccessControl", "Users"],
+      invalidatesTags: ["RoleBasedAccessControl", "Users", "AdditionalServicesLogs"],
     }),
 
     updateUserRole: builder.mutation({
@@ -106,7 +106,7 @@ const roleBasedAccessControlApi = baseApi.injectEndpoints({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["RoleBasedAccessControl", "Users"],
+      invalidatesTags: ["RoleBasedAccessControl", "Users", "AdditionalServicesLogs"],
     }),
   }),
 });

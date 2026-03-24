@@ -255,7 +255,7 @@ const VTPMServiceArea = () => {
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zone Name</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">City</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Delivery Fee</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price Multiplier*</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -274,7 +274,7 @@ const VTPMServiceArea = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{area.cityZone}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">${area.deliveryFee}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">{area.deliveryFee}x</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">{area.priority}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div
@@ -289,9 +289,8 @@ const VTPMServiceArea = () => {
                               disabled={isStatusUpdating}
                             />
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                area.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-                              }`}
+                              className={`px-3 py-1 rounded-full text-xs font-semibold ${area.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                                }`}
                             >
                               {area.isActive ? "Active" : "Inactive"}
                             </span>

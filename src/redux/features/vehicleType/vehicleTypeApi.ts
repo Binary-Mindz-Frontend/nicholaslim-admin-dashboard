@@ -7,14 +7,14 @@ const vehicleTypeApi = baseApi.injectEndpoints({
         url: "/admin/vehicle-types",
         method: "GET",
       }),
-      providesTags: ["VehicleType"],
+      providesTags: ["VehicleType", "AdditionalServicesLogs"],
     }),
     getVehicleTypeById: builder.query({
       query: (id) => ({
         url: `/admin/vehicle-types/${id}`,
         method: "GET",
       }),
-      providesTags: ["VehicleType"],
+      providesTags: ["VehicleType", "AdditionalServicesLogs"],
     }),
     addVehicleType: builder.mutation({
       query: (data) => ({
@@ -22,7 +22,7 @@ const vehicleTypeApi = baseApi.injectEndpoints({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["VehicleType"],
+      invalidatesTags: ["VehicleType", "AdditionalServicesLogs"],
     }),
     updateVehicleType: builder.mutation({
       query: (data) => {
@@ -34,14 +34,14 @@ const vehicleTypeApi = baseApi.injectEndpoints({
           body: restData,
         };
       },
-      invalidatesTags: ["VehicleType"],
+      invalidatesTags: ["VehicleType", "AdditionalServicesLogs"],
     }),
     deleteVehicleType: builder.mutation({
       query: (id) => ({
         url: `/admin/vehicle-types/delete/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["VehicleType"],
+      invalidatesTags: ["VehicleType", "AdditionalServicesLogs"],
     }),
   }),
 });
