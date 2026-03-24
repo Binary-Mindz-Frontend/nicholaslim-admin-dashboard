@@ -134,48 +134,32 @@ const VTtablesData: React.FC<VTtablesDataProps> = ({
   const handleUpdateVehicle = async (data: any) => {
     const toastId = toast.loading("Updating vehicle type...");
     try {
-      const isActiveBoolean =
-        typeof data.isActive === "boolean"
-          ? data.isActive
-          : data.isActive === "Active" || data.isActive === true;
-
       const updateData = {
         id: data.id,
         vehicle_type: data.vehicle_type,
-        base_price:
-          typeof data.base_price === "string"
-            ? parseFloat(data.base_price)
-            : data.base_price,
-        per_km_price:
-          typeof data.per_km_price === "string"
-            ? parseFloat(data.per_km_price)
-            : data.per_km_price,
-        peak_pricing: Boolean(data.peak_pricing),
-        dimension: data.dimension,
-        max_load:
-          typeof data.max_load === "string"
-            ? parseFloat(data.max_load)
-            : data.max_load,
-        isActive: isActiveBoolean,
-
+        vehicle_name: data.vehicle_name,
         vehicle_desc: data.vehicle_desc,
+        base_price: parseFloat(data.base_price),
+        per_km_price: parseFloat(data.per_km_price),
+        peak_pricing: Boolean(data.peak_pricing),
+        dimension_width: parseFloat(data.dimension_width),
+        dimension_height: parseFloat(data.dimension_height),
+        dimension_length: parseFloat(data.dimension_length),
+        max_load: parseFloat(data.max_load),
+        base_distance: parseFloat(data.base_distance),
+        isActive: Boolean(data.isActive),
       };
 
       const result = await updateVehicleType(updateData).unwrap();
-      if (!result.success) {
-        toast.dismiss(toastId);
+      if (result.success) {
+        toast.success("Vehicle type updated successfully!", { id: toastId });
+        setIsEditModalOpen(false);
+        refetch();
+      } else {
         toast.error(result.message, { id: toastId });
-        return;
       }
-
-      toast.dismiss(toastId);
-      toast.success("Vehicle type updated successfully!");
-      setIsEditModalOpen(false);
-      setSelectedVehicle(null);
-      refetch();
     } catch (error: any) {
-      toast.dismiss(toastId);
-      toast.error(error?.data?.message || "Failed to update vehicle type");
+      toast.error(error?.data?.message || "Failed to update", { id: toastId });
     }
   };
 
@@ -188,16 +172,18 @@ const VTtablesData: React.FC<VTtablesDataProps> = ({
     },
     {
       key: "dimension" as const,
-      label: "Dimensions",
-      render: (value: string, row: Vehicle) => {
-        if (value) return value;
-        if (row.dimension_width && row.dimension_height) {
-          let dim = `${row.dimension_height}ft x ${row.dimension_width}ft`;
-          if (row.dimension_length) dim += ` x ${row.dimension_length}ft`;
-          return dim;
-        }
-        return "N/A";
+      label: "Dimensions (m)",
+      render: (_: string, row: Vehicle) => {
+        const h = row.dimension_height || 0;
+        const w = row.dimension_width || 0;
+        const l = row.dimension_length || 0;
+        return `${h}m x ${w}m x ${l}m`;
       },
+    },
+    {
+      key: "base_distance" as const,
+      label: "Base Dist.",
+      render: (val: string) => `${val} KM`,
     },
     {
       key: "base_price" as const,

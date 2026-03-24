@@ -271,8 +271,8 @@ const ServiceAreaModal = ({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="deliveryFee" className="flex items-center">
-                    Delivery Fee ($){" "}
-                    <span className="text-red-500 ml-1">*</span>
+                    Price Multiplier*{" "}
+                    {/* <span className="text-red-500 ml-1">*</span> */}
                   </Label>
                   <Input
                     id="deliveryFee"
@@ -288,18 +288,16 @@ const ServiceAreaModal = ({
                     }
                     required
                     disabled={isLoading}
+                    placeholder="e.g. 1.0"
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="priority" className="flex items-center">
-                    Priority (1-10) <span className="text-red-500 ml-1">*</span>
+                    Priority <span className="text-red-500 ml-1">*</span>
                   </Label>
-                  <Input
+                  <select
                     id="priority"
-                    type="number"
-                    min="1"
-                    max="10"
                     value={formData.priority}
                     onChange={(e) =>
                       setFormData({
@@ -307,13 +305,21 @@ const ServiceAreaModal = ({
                         priority: parseInt(e.target.value) || 5,
                       })
                     }
+                    className="w-full p-2 border rounded bg-white"
                     required
                     disabled={isLoading}
-                  />
+                  >
+                    {[...Array(10)].map((_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
-              <div>
+              {/* Hiding Minimum Order Amount as per request */}
+              {/* <div>
                 <Label htmlFor="minOrderAmount">Minimum Order Amount ($)</Label>
                 <Input
                   id="minOrderAmount"
@@ -328,7 +334,7 @@ const ServiceAreaModal = ({
                   }
                   disabled={isLoading}
                 />
-              </div>
+              </div> */}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>

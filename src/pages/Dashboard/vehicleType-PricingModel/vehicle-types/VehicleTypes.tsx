@@ -9,15 +9,20 @@ import {
 import toast from "react-hot-toast";
 import CustomButton from "./_components/CustomButton";
 import { PeakPricingSection } from "./addVehicleTypes/_components/PeakPricingSection";
+import NewDynamicChangeLogTable from "@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable";
 
-interface VehicleTypeData {
+export interface VehicleTypeData {
   vehicle_type: string;
   vehicle_name: string;
+  vehicle_desc: string;
   base_price: number;
   per_km_price: number;
   peak_pricing: boolean;
-  dimension: string;
+  dimension_width: number;
+  dimension_height: number;
+  dimension_length: number;
   max_load: number;
+  base_distance: number;
   isActive: boolean;
 }
 
@@ -127,7 +132,7 @@ const VehicleTypes = () => {
       }
 
       toast.dismiss();
-      toast.success("Vehicle type added successfully!");
+      toast.success(result.message || "Vehicle type added successfully!");
 
       refetch(); // Refresh the data
       setIsModalOpen(false);
@@ -216,6 +221,10 @@ const VehicleTypes = () => {
 
       <div className="my-12">
         <PeakPricingSection />
+      </div>
+
+      <div>
+        <NewDynamicChangeLogTable entityType="VehicleType" />
       </div>
     </div>
   );

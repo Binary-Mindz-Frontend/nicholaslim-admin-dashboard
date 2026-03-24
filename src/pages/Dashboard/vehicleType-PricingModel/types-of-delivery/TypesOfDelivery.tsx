@@ -1,125 +1,80 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type React from "react";
-import { useState, useEffect } from "react";
-import TypesDeliveryCard, { DeliveryType as FrontendDeliveryType } from "./_components/TypesDeliveryCard";
+import { useState } from "react";
 import { 
   useGetDeliveryTypesQuery, 
-  useUpdateDeliveryTypeMutation 
+  useAddDeliveryTypeMutation 
 } from "@/redux/features/deliveryTypes/deliveryTypesApi";
 import toast from "react-hot-toast";
-
-interface ApiDeliveryType {
-  id: number | string;
-  name: string;
-  price_multiplier: string;
-  collection_time: number;
-  collection_unit: string;
-  delivery_time: number;
-  delivery_unit: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-const convertToFrontendFormat = (apiData: ApiDeliveryType): FrontendDeliveryType => {
-  const pickupUnit = apiData.collection_unit === "MINUTES" ? "Min" : "Hour";
-  const deliveryUnit = apiData.delivery_unit === "MINUTES" ? "Min" : "Hour";
-
-  return {
-    id: apiData.id.toString(),
-    name: apiData.name,
-    percentage: parseFloat(apiData.price_multiplier) || 0,
-    pickupTime: apiData.collection_time,
-    pickupUnit: pickupUnit,
-    deliveryTime: apiData.delivery_time,
-    deliveryUnit: deliveryUnit,
-  };
-};
-
-const convertToApiFormat = (frontendData: FrontendDeliveryType) => {
-  return {
-    id: frontendData.id,
-    name: frontendData.name,
-    price_multiplier: frontendData.percentage.toString(),
-    collection_time: frontendData.pickupTime,
-    collection_unit: frontendData.pickupUnit === "Min" ? "MINUTES" : "HOURS",
-    delivery_time: frontendData.deliveryTime,
-    delivery_unit: frontendData.deliveryUnit === "Min" ? "MINUTES" : "HOURS",
-  };
-};
+import DeliveryTypesTable from "./_components/DeliveryTypesTable";
+import AddDeliveryTypeModal from "./_components/AddDeliveryTypeModal";
+import NewDynamicChangeLogTable from "@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable";
 
 const DeliveryTypesPage: React.FC = () => {
-  const [deliveryTypes, setDeliveryTypes] = useState<FrontendDeliveryType[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { data: apiResponse, isLoading, error, refetch } = useGetDeliveryTypesQuery("");
-  const [updateDeliveryType, { isLoading: isUpdating }] = useUpdateDeliveryTypeMutation();
+  const { data: apiResponse, isLoading, refetch } = useGetDeliveryTypesQuery("");
+  const [addDeliveryType, { isLoading: isAdding }] = useAddDeliveryTypeMutation();
 
-  useEffect(() => {
-    const rawData = apiResponse?.data?.data;
-    if (apiResponse?.success && Array.isArray(rawData)) {
-      const convertedData = rawData.map(convertToFrontendFormat);
-      setDeliveryTypes(convertedData);
-    }
-  }, [apiResponse]);
+  const handleAddDeliveryType = async (data: any) => {
+    toast.loading("Adding delivery type...");
 
-  const handleSave = async (updatedDelivery: FrontendDeliveryType) => {
-    toast.loading("Updating delivery type...");
     try {
-      const apiData = convertToApiFormat(updatedDelivery);
-      
-      const result = await updateDeliveryType(apiData).unwrap();
-      
-      if (result.success) {
+      const result = await addDeliveryType(data).unwrap();
+
+      if (!result.success) {
         toast.dismiss();
-        toast.success("Delivery type updated successfully!");
-        
-        setDeliveryTypes(prev => 
-          prev.map(delivery => 
-            delivery.id === updatedDelivery.id ? updatedDelivery : delivery
-          )
-        );
-        refetch();
-      } 
-    } catch (error: any) {
-      console.error("Update failed:", error);
+        toast.error(result.message);
+        return;
+      }
+
       toast.dismiss();
-      toast.error(error?.data?.message || "Failed to update delivery type");
+      toast.success(result.message || "Delivery type added successfully!");
+
+      refetch();
+      setIsModalOpen(false);
+    } catch (error: any) {
+      toast.dismiss();
+      console.error("Add failed:", error);
+      toast.error(error?.data?.message || "Failed to add delivery type");
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-4 md:p-6 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-4 md:p-6 flex items-center justify-center">
-        <div className="text-red-500">Error loading delivery types</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Type of Delivery</h1>
-        </div>
+    <div className="my-12 mx-6 sm:mx-12">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Delivery Types</h1>
+      </div>
 
-        {/* Grid of Delivery Cards */}
-        <div className="flex flex-col gap-6">
-          {deliveryTypes.map((delivery) => (
-            <TypesDeliveryCard 
-              key={delivery.id} 
-              delivery={delivery} 
-              onSave={handleSave}
-              isSaving={isUpdating}
-            />
-          ))}
-        </div>
+      {/* Delivery Types Table */}
+      <div className="my-8">
+        <DeliveryTypesTable
+          apiResponse={apiResponse}
+          isLoading={isLoading}
+          refetch={refetch}
+        />
+      </div>
+
+      {/* Add Delivery Type Button */}
+      <div className="flex justify-center mt-12">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-[#FFCC00] rounded-md py-3 px-10 cursor-pointer hover:bg-[#FFD700] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed text-lg shadow-md hover:shadow-lg"
+          disabled={isLoading || isAdding}
+        >
+          {isAdding ? "Adding..." : "Add Delivery Type"}
+        </button>
+      </div>
+
+      {/* Add Delivery Type Modal */}
+      <AddDeliveryTypeModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAddDeliveryType}
+      />
+
+      <div>
+        <NewDynamicChangeLogTable entityType="DeliveryType" />
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ import {
   useUpdatePolicyStatusMutation 
 } from "@/redux/features/policyManagement/policyManagementApi"
 import DeleteConfirmationModal from "./_components/DeleteConfirmationModal"
+import NewDynamicChangeLogTable from "@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable"
 
 const PolicyManagementPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -215,6 +216,10 @@ const PolicyManagementPage: React.FC = () => {
           policy={selectedPolicy}
           isLoading={isDeleting}
         />
+      </div>
+
+      <div className="max-w-7xl mx-auto">
+        <NewDynamicChangeLogTable entityType="Policy" />
       </div>
     </div>
   )

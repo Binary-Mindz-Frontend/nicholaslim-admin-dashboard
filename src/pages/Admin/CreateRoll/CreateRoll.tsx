@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 import {
   useAddRoleBasedAccessControlMutation,
@@ -21,6 +22,7 @@ import PermissionsModal from "@/components/Dashboard/CreateRoll/PermissionsModal
 import toast from "react-hot-toast";
 import { Search } from "lucide-react";
 import CustomPagination from "@/components/Shared/CustomPagination/CustomPagination";
+import NewDynamicChangeLogTable from "@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable";
 
 interface Role {
   id: number;
@@ -416,6 +418,11 @@ const CreateRoll: React.FC = () => {
           // isLoading={updateRolePermissions.isLoading}
           />
         )}
+      </div>
+
+      {/* Change Logs Section */}
+      <div className="max-w-7xl mx-auto">
+        <NewDynamicChangeLogTable entityType="Role" />
       </div>
     </div>
   );

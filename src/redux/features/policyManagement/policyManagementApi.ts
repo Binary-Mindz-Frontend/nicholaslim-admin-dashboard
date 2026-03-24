@@ -7,7 +7,7 @@ const policyManagementApi = baseApi.injectEndpoints({
         url: "/policy",
         method: "GET",
       }),
-      providesTags: ["Policy"],
+      providesTags: ["Policy", "AdditionalServicesLogs"],
     }),
 
     getPolicyById: build.query({
@@ -15,7 +15,7 @@ const policyManagementApi = baseApi.injectEndpoints({
         url: `/policy/${id}`,
         method: "GET",
       }),
-      providesTags: ["Policy"],
+      providesTags: ["Policy", "AdditionalServicesLogs"],
     }),
 
     addPolicy: build.mutation({
@@ -24,7 +24,7 @@ const policyManagementApi = baseApi.injectEndpoints({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Policy"],
+      invalidatesTags: ["Policy", "AdditionalServicesLogs"],
     }),
 
     updatePolicy: build.mutation({
@@ -33,7 +33,7 @@ const policyManagementApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: ["Policy"],
+      invalidatesTags: ["Policy", "AdditionalServicesLogs"],
     }),
 
     updatePolicyStatus: build.mutation({
@@ -41,7 +41,7 @@ const policyManagementApi = baseApi.injectEndpoints({
         url: `/policy/${id}/publish`,
         method: "PATCH",
       }),
-      invalidatesTags: ["Policy"],
+      invalidatesTags: ["Policy", "AdditionalServicesLogs"],
     }),
 
     deletePolicy: build.mutation({
@@ -49,7 +49,7 @@ const policyManagementApi = baseApi.injectEndpoints({
         url: `/policy/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Policy"],
+      invalidatesTags: ["Policy", "AdditionalServicesLogs"],
     }),
   }),
 });
