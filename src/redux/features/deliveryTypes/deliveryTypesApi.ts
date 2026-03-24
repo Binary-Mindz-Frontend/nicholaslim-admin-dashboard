@@ -7,14 +7,14 @@ const deliveryTypesApi = baseApi.injectEndpoints({
         url: "/delivery-types",
         method: "GET",
       }),
-      providesTags: ["DeliveryType"],
+      providesTags: ["DeliveryType", "AdditionalServicesLogs"],
     }),
     getDeliveryTypeById: builder.query({
       query: (id) => ({
         url: `/delivery-types/${id}`,
         method: "GET",
       }),
-      providesTags: ["DeliveryType"],
+      providesTags: ["DeliveryType", "AdditionalServicesLogs"],
     }),
     addDeliveryType: builder.mutation({
       query: (data) => ({
@@ -22,7 +22,7 @@ const deliveryTypesApi = baseApi.injectEndpoints({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["DeliveryType"],
+      invalidatesTags: ["DeliveryType", "AdditionalServicesLogs"],
     }),
     updateDeliveryType: builder.mutation({
       query: ({ id, ...data }) => ({
@@ -30,14 +30,14 @@ const deliveryTypesApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: ["DeliveryType"],
+      invalidatesTags: ["DeliveryType", "AdditionalServicesLogs"],
     }),
     deleteDeliveryType: builder.mutation({
       query: (id) => ({
         url: `/delivery-types/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["DeliveryType"],
+      invalidatesTags: ["DeliveryType", "AdditionalServicesLogs"],
     }),
   }),
 });

@@ -69,6 +69,15 @@ const additionalServicesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["ServiceEmailNumber"],
     }),
+
+    getAdditionalServicesLogs: builder.query({
+      query: (query) => ({
+        url: "/additional-services/logs",
+        method: "GET",
+        params: query,
+      }),
+      providesTags: ["AdditionalServicesLogs"],
+    }),
   }),
 });
 
@@ -81,4 +90,5 @@ export const {
   useGetServiceEmailNumberQuery,
   useUpdateServiceEmailNumberMutation,
   useDeleteServiceEmailNumberMutation,
+  useGetAdditionalServicesLogsQuery,
 } = additionalServicesApi;

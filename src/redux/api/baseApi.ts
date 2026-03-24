@@ -90,7 +90,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
         redirectToLogin();
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
       api.dispatch(logout());
       redirectToLogin();
     }
@@ -154,6 +154,7 @@ export const baseApi = createApi({
     "PromoCodes",
     "Conversations",
     "Messages",
+    "AdditionalServicesLogs",
   ],
   endpoints: () => ({}),
 });

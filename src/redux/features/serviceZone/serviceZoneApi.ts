@@ -7,7 +7,7 @@ const serviceZoneApi = baseApi.injectEndpoints({
         url: "/service-zone",
         method: "GET",
       }),
-      providesTags: ["ServiceZones"],
+      providesTags: ["ServiceZones", "AdditionalServicesLogs"],
     }),
 
     addServiceZone: builder.mutation({
@@ -16,7 +16,7 @@ const serviceZoneApi = baseApi.injectEndpoints({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["ServiceZones"],
+      invalidatesTags: ["ServiceZones", "AdditionalServicesLogs"],
     }),
 
     updateServiceZone: builder.mutation({
@@ -25,7 +25,7 @@ const serviceZoneApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: ["ServiceZones"],
+      invalidatesTags: ["ServiceZones", "AdditionalServicesLogs"],
     }),
 
     updateServiceZoneStatus: builder.mutation({
@@ -33,7 +33,7 @@ const serviceZoneApi = baseApi.injectEndpoints({
         url: `/service-zone/update-status${id}`,
         method: "PATCH",
       }),
-      invalidatesTags: ["ServiceZones"],
+      invalidatesTags: ["ServiceZones", "AdditionalServicesLogs"],
     }),
 
     deleteServiceZone: builder.mutation({
@@ -41,7 +41,7 @@ const serviceZoneApi = baseApi.injectEndpoints({
         url: `/service-zone/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["ServiceZones"],
+      invalidatesTags: ["ServiceZones", "AdditionalServicesLogs"],
     }),
   }),
 });
