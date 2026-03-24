@@ -640,21 +640,6 @@ export default function AddNewDriver() {
     [],
   );
 
-  const handleSelectSuggestion = (
-    suggestion: OneMapSuggestion,
-    postalFieldKey: string,
-    addressFieldKey: string,
-    cityFieldKey: string,
-  ) => {
-    // Fill postal code
-    setValue(postalFieldKey as any, suggestion.postal_code);
-    // Fill address as multi-line string
-    setValue(addressFieldKey as any, suggestion.address);
-    // Fill city from road name or "Singapore"
-    setValue(cityFieldKey as any, "Singapore");
-    setShowPostalSuggestions((prev) => ({ ...prev, [postalFieldKey]: false }));
-  };
-
   const onSubmit = async (data: any) => {
     if (uploadingDocs.size > 0) {
       toast.error("Please wait for all images to finish uploading!");
@@ -743,7 +728,8 @@ export default function AddNewDriver() {
 
   return (
     <div className="px-8 sm:p-6 mx-auto space-y-6 bg-[#F5F7FA]">
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         input[type="date"]::-webkit-calendar-picker-indicator {
           cursor: pointer;
           filter: invert(72%) sepia(98%) saturate(1450%) hue-rotate(352deg) brightness(101%) contrast(98%);
@@ -1291,25 +1277,25 @@ export default function AddNewDriver() {
             <SectionTitle>Vehicle Photos*</SectionTitle>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
               <UploadBox
-                label="Vehicle Front View*"
+                label="Front View of Vehicle*"
                 onChange={(f) => handleDocumentChange("vehicleFront", f)}
                 error={documentErrors.vehicleFront}
                 isUploading={uploadingDocs.has("vehicleFront")}
               />
               <UploadBox
-                label="Vehicle Rear View*"
+                label="Rear View of Vehicle*"
                 onChange={(f) => handleDocumentChange("vehicleRear", f)}
                 error={documentErrors.vehicleRear}
                 isUploading={uploadingDocs.has("vehicleRear")}
               />
               <UploadBox
-                label="Vehicle Driver Side View*"
+                label="Driver Side View*"
                 onChange={(f) => handleDocumentChange("driverSide", f)}
                 error={documentErrors.driverSide}
                 isUploading={uploadingDocs.has("driverSide")}
               />
               <UploadBox
-                label="Vehicle Passenger Side View*"
+                label="Passenger Side View*"
                 onChange={(f) => handleDocumentChange("passengerSide", f)}
                 error={documentErrors.passengerSide}
                 isUploading={uploadingDocs.has("passengerSide")}
