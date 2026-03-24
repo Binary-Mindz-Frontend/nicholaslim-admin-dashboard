@@ -445,7 +445,7 @@ export default function AddNewUser() {
                         onClick={() => handleRemoveRole(role)}
                         className="hover:text-red-600 transition-colors p-0.5 rounded-full hover:bg-yellow-200"
                       >
-                        <X size={14} className="stroke-[3]" />
+                        <X size={14} className="stroke-3" />
                       </button>
                     </div>
                   ))}
