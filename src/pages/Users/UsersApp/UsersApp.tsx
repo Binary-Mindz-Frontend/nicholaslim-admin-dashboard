@@ -6,6 +6,7 @@ import AdminTablePagination from "@/components/Shared/CustomPagination/AdminTabl
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
+import NewDynamicChangeLogTable from "@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable";
 
 export default function UsersPage() {
   const [dateFilter, setDateFilter] = useState("");
@@ -105,6 +106,9 @@ export default function UsersPage() {
         onItemsPerPageChange={handleItemsPerPageChange}
       />
 
+      <div>
+        <NewDynamicChangeLogTable entityType="User" />
+      </div>
     </div>
   );
 }

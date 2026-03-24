@@ -69,22 +69,25 @@ const UploadBox = ({
   const [localFileUrl, setLocalFileUrl] = useState<string | null>(null);
   const [isPdf, setIsPdf] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [isLocallyCleared, setIsLocallyCleared] = useState(false);
 
   useEffect(() => {
-    if (currentPreviewUrl && currentPreviewUrl.toLowerCase().split('?')[0].endsWith(".pdf")) {
-      setIsPdf(true);
-      setFileName("Uploaded PDF Document");
-    } else if (!localFileUrl) {
-      setIsPdf(false);
+    // Reset local clear state when a new remote URL is provided
+    if (currentPreviewUrl && !localFileUrl) {
+      setIsLocallyCleared(false);
+      const isRemotePdf = currentPreviewUrl.toLowerCase().split('?')[0].endsWith(".pdf");
+      setIsPdf(isRemotePdf);
+      setFileName(isRemotePdf ? "Uploaded PDF Document" : null);
     }
   }, [currentPreviewUrl, localFileUrl]);
 
-  const preview = currentPreviewUrl || localFileUrl;
+  const preview = isLocallyCleared ? null : (localFileUrl || currentPreviewUrl);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (!file) return;
 
+    setIsLocallyCleared(false);
     if (file.type === "application/pdf") {
       if (localFileUrl) URL.revokeObjectURL(localFileUrl);
       setLocalFileUrl(null);
@@ -102,6 +105,7 @@ const UploadBox = ({
   const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsLocallyCleared(true);
     if (localFileUrl) {
       URL.revokeObjectURL(localFileUrl);
       setLocalFileUrl(null);
@@ -520,7 +524,12 @@ console.log("check driver data", driverResponse);
   };
 
   const handleDocumentChange = async (key: DocumentKey, file: File | null) => {
-    if (!file) return;
+    if (!file) {
+      setDocumentUrls((prev) => ({ ...prev, [key]: "" }));
+      setUploadingDocs((prev) => { const s = new Set(prev); s.delete(key); return s; });
+      setDocumentErrors((prev) => ({ ...prev, [key]: "This document is required" }));
+      return;
+    }
     try {
       setUploadingDocs((prev) => new Set(prev).add(key));
       const formData = new FormData();
@@ -530,6 +539,8 @@ console.log("check driver data", driverResponse);
       setDocumentErrors((prev) => ({ ...prev, [key]: null }));
     } catch (error: any) {
       toast.error(`Failed to upload document`);
+      setDocumentUrls((prev) => ({ ...prev, [key]: "" }));
+      setDocumentErrors((prev) => ({ ...prev, [key]: `Failed to upload ${key}` }));
     } finally {
       setUploadingDocs((prev) => { const s = new Set(prev); s.delete(key); return s; });
     }
@@ -641,6 +652,7 @@ console.log("check driver data", driverResponse);
       toast.error(error?.data?.message || "Failed to update profile");
     }
   };
+
 console.log("driverResponse", driverResponse )
   if (isFetching) return <div className="flex h-screen items-center justify-center">Loading...</div>;
 
@@ -657,18 +669,20 @@ console.log("driverResponse", driverResponse )
       </h1>
       <div className="border rounded-xl py-10 px-6 lg:px-32 bg-white shadow-sm relative">
         <div className="flex flex-col items-center justify-center">
-          <label className="cursor-pointer">
-            <div className="w-32 h-32 rounded-full bg-secondary flex items-center justify-center border overflow-hidden">
-              {profilePreview || profileImageUrls[0] ? (
-                <img src={profilePreview || profileImageUrls[0]} alt="Profile" className="w-full h-full object-cover" />
-              ) : isProfileUploading ? (
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500" />
-              ) : (
-                <Camera size={32} className="text-gray-500" />
-              )}
-            </div>
-            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleProfileImageChange(e.target.files?.[0] || null)} />
-          </label>
+          <div className="relative">
+            <label className="cursor-pointer">
+              <div className="w-32 h-32 rounded-full bg-secondary flex items-center justify-center border overflow-hidden relative group">
+                {profilePreview || profileImageUrls[0] ? (
+                  <img src={profilePreview || profileImageUrls[0]} alt="Profile" className="w-full h-full object-cover" />
+                ) : isProfileUploading ? (
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500" />
+                ) : (
+                  <Camera size={32} className="text-gray-500" />
+                )}
+              </div>
+              <input type="file" className="hidden" accept="image/*" onChange={(e) => handleProfileImageChange(e.target.files?.[0] || null)} />
+            </label>
+          </div>
           <p className="text-xs font-semibold mt-2">Profile Photo*</p>
         </div>
 
