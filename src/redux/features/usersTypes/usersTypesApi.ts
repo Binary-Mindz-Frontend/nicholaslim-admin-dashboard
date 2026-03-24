@@ -25,7 +25,7 @@ const userTypesApi = baseApi.injectEndpoints({
           method: "GET",
         };
       },
-      providesTags: ["UserTypes"],
+      providesTags: ["UserTypes", "AdditionalServicesLogs"],
     }),
 
     getOnlyUserTypes: builder.query({
@@ -56,7 +56,7 @@ const userTypesApi = baseApi.injectEndpoints({
           method: "GET",
         };
       },
-      providesTags: ["UserTypes"],
+      providesTags: ["UserTypes", "AdditionalServicesLogs"],
     }),
 
     getWebUserTypes: builder.query({
@@ -87,7 +87,7 @@ const userTypesApi = baseApi.injectEndpoints({
           method: "GET",
         };
       },
-      providesTags: ["UserTypes"],
+      providesTags: ["UserTypes", "AdditionalServicesLogs"],
     }),
 
     // Query to get user by ID
@@ -96,7 +96,7 @@ const userTypesApi = baseApi.injectEndpoints({
         url: `/users/${id}`,
         method: "GET",
       }),
-      providesTags: ["UserTypes"],
+      providesTags: ["UserTypes", "AdditionalServicesLogs"],
     }),
 
     // Mutation to permanently delete user(s) by ID(s)
@@ -106,7 +106,7 @@ const userTypesApi = baseApi.injectEndpoints({
         method: "DELETE",
         body: { ids },
       }),
-      invalidatesTags: ["UserTypes"],
+      invalidatesTags: ["UserTypes", "AdditionalServicesLogs"],
     }),
 
     // Mutation to toggle active status
@@ -115,7 +115,7 @@ const userTypesApi = baseApi.injectEndpoints({
         url: `/users/active/${id}`,
         method: "PATCH",
       }),
-      invalidatesTags: ["UserTypes"],
+      invalidatesTags: ["UserTypes", "AdditionalServicesLogs"],
     }),
 
     // Mutation to update a user by ID using PATCH
@@ -128,7 +128,9 @@ const userTypesApi = baseApi.injectEndpoints({
 
       invalidatesTags: (_, __, { id }) => [
         "UserTypes",
+        "AdditionalServicesLogs",
         { type: "UserTypes", id },
+        { type: "AdditionalServicesLogs", id },
       ],
     }),
 
@@ -140,7 +142,7 @@ const userTypesApi = baseApi.injectEndpoints({
         body: newUser,
       }),
 
-      invalidatesTags: ["UserTypes"],
+      invalidatesTags: ["UserTypes", "AdditionalServicesLogs"],
     }),
 
     getUserProfile: builder.query({
@@ -148,7 +150,7 @@ const userTypesApi = baseApi.injectEndpoints({
         url: `users/me`,
         method: "GET",
       }),
-      providesTags: ["UserTypes", "Stripe"],
+      providesTags: ["UserTypes", "Stripe", "AdditionalServicesLogs"],
     }),
 
     updateUserProfile: builder.mutation({
@@ -157,7 +159,7 @@ const userTypesApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: ["UserTypes"],
+      invalidatesTags: ["UserTypes", "AdditionalServicesLogs"],
     }),
 
     // Image upload mutation
@@ -172,7 +174,7 @@ const userTypesApi = baseApi.injectEndpoints({
           body: formData,
         };
       },
-      invalidatesTags: ["UserTypes"],
+      invalidatesTags: ["UserTypes", "AdditionalServicesLogs"],
     }),
 
     checkUsername: builder.query({
@@ -180,6 +182,7 @@ const userTypesApi = baseApi.injectEndpoints({
         url: `/users/check-username?username=${username}`,
         method: "GET",
       }),
+      providesTags: ["UserTypes", "AdditionalServicesLogs"],
     }),
 
   }),
