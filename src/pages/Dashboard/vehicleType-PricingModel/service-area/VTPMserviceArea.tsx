@@ -16,6 +16,7 @@ import {
   useUpdateServiceZoneStatusMutation,
 } from "@/redux/features/serviceZone/serviceZoneApi";
 import { showConfirmDialog, showErrorToast, showSuccessToast } from "@/assets/utils/toast";
+import NewDynamicChangeLogTable from "@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable";
 
 const VTPMServiceArea = () => {
   const { data: apiResponse, isLoading, refetch } = useGetServiceZonesQuery("");
@@ -391,6 +392,10 @@ const VTPMServiceArea = () => {
         }}
         zoneData={detailsZone}
       />
+
+      <div>
+        <NewDynamicChangeLogTable entityType="ServiceZone" />
+      </div>
     </div>
   );
 };
