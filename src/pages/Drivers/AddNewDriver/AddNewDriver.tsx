@@ -32,7 +32,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 const Input = ({ className = "", ...props }: InputProps) => (
   <input
-    className={`w-full border rounded px-3 py-2 bg-gray-100 focus:outline-none focus:border-yellow-400 ${className}`}
+    className={`w-full border rounded px-3 py-2 bg-secondary focus:outline-none focus:border-yellow-400 ${className}`}
     {...props}
   />
 );
@@ -286,10 +286,8 @@ const PhoneInput = ({
   error,
   disabled,
 }: PhoneInputProps) => {
-  // Determine selected country code from value, default to +65
   const selectedCountry = COUNTRY_CODES.find(c => value.startsWith(c.code)) || COUNTRY_CODES[0];
 
-  // Strip selected country code prefix for display in the input
   const localValue = value.startsWith(selectedCountry.code)
     ? value.slice(selectedCountry.code.length).trimStart()
     : value;
@@ -336,6 +334,53 @@ const PhoneInput = ({
   );
 };
 
+// ─── Constants ─────────────────────────────────────────────────────────────
+
+const LICENSE_CLASSES = [
+  "Class 2B",
+  "Class 2A",
+  "Class 2",
+  "Class 3",
+  "Class 3A",
+  "Class 4",
+  "Class 5",
+];
+
+const COUNTRIES = [
+  "Singapore",
+  "Malaysia",
+  "India",
+  "Bangladesh",
+  "Indonesia",
+  "Thailand",
+  "Vietnam",
+];
+
+const RANKS = ["BRONZE", "SILVER", "GOLD", "PLATINUM", "PREMIUM"];
+
+
+const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+  <h2 className="text-xl font-bold text-gray-800 border-b pb-2 mb-6 mt-10">
+    {children}
+  </h2>
+);
+
+const InputWrapper = ({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}) => (
+  <div className="space-y-2">
+    <Label className="text-sm font-semibold">{label}</Label>
+    {children}
+    {error && <p className="text-red-500 text-xs">{error}</p>}
+  </div>
+);
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function AddNewDriver() {
@@ -357,60 +402,60 @@ export default function AddNewDriver() {
   const debounceTimers = useRef<{ [key: string]: ReturnType<typeof setTimeout> }>({});
 
   type DocumentKey =
-    | "nidFront"
-    | "nidBack"
+    | "nricFront"
+    | "nricBack"
     | "licenseFront"
     | "licenseBack"
     | "vehicleFront"
-    | "vehicleBack"
+    | "vehicleRear"
     | "driverSide"
     | "passengerSide"
     | "vehicleLog"
-    | "vehiclePolicy";
+    | "insurancePolicy";
 
   type DocumentFileState = Record<DocumentKey, File | null>;
   type DocumentUrlState = Record<DocumentKey, string>;
   type DocumentErrorState = Record<DocumentKey, string | null>;
 
   const [, setDocuments] = useState<DocumentFileState>({
-    nidFront: null,
-    nidBack: null,
+    nricFront: null,
+    nricBack: null,
     licenseFront: null,
     licenseBack: null,
     vehicleFront: null,
-    vehicleBack: null,
+    vehicleRear: null,
     driverSide: null,
     passengerSide: null,
     vehicleLog: null,
-    vehiclePolicy: null,
+    insurancePolicy: null,
   });
 
   const [documentUrls, setDocumentUrls] = useState<DocumentUrlState>({
-    nidFront: "",
-    nidBack: "",
+    nricFront: "",
+    nricBack: "",
     licenseFront: "",
     licenseBack: "",
     vehicleFront: "",
-    vehicleBack: "",
+    vehicleRear: "",
     driverSide: "",
     passengerSide: "",
     vehicleLog: "",
-    vehiclePolicy: "",
+    insurancePolicy: "",
   });
 
   const [uploadingDocs, setUploadingDocs] = useState<Set<DocumentKey>>(new Set());
 
   const [documentErrors, setDocumentErrors] = useState<DocumentErrorState>({
-    nidFront: null,
-    nidBack: null,
+    nricFront: null,
+    nricBack: null,
     licenseFront: null,
     licenseBack: null,
     vehicleFront: null,
-    vehicleBack: null,
+    vehicleRear: null,
     driverSide: null,
     passengerSide: null,
     vehicleLog: null,
-    vehiclePolicy: null,
+    insurancePolicy: null,
   });
 
   const {
@@ -422,55 +467,45 @@ export default function AddNewDriver() {
   } = useForm({
     mode: "onSubmit",
     defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
+      raider_name: "",
+      email_address: "",
       password: "",
-      phone: "+65",
+      contact_number: "+65",
       dob: "",
       gender: "",
-      emergencyContact: "",
-      emergencyContactNumber: "+65",
-      driverId: "",
-      currentaddress: "",
-      currentapartment: "",
-      currentcity: "",
-      currentstate: "NA",
-      currentpostal: "",
-      permanentaddress: "",
-      permanentapartment: "",
-      permanentcity: "",
-      permanentstate: "NA",
-      permanentpostal: "",
-      drivingLicense: "",
-      dlIssueDate: "",
-      dlExpiryDate: "",
-      vehiclePlate1: "",
-      vehicleType: "",
-      vehiclePlate2: "NA",
-      model: "",
-      registrationDate: "",
-      vehicleLog: "",
-      vehicleIssueDate: "",
-      vehicleExpiryDate: "",
-      policyNumber: "",
-      policyIssue: "",
-      policyExpiry: "",
-      bank: "",
-      accountNumber: "",
+      emergency_contact_name: "",
+      emergency_contact_number: "+65",
+      identity_card_number: "",
+      identity_card_issue_date: "",
+      driving_license_number: "",
+      driving_license_issue_date: "",
+      driving_license_expire_date: "",
+      license_class: "",
+      vehicle_plate_number: "",
+      vehicle_type_id: "",
+      vehicle_brand: "",
+      vehicle_model: "",
+      registration_date: "",
+      chassis_number: "",
+      insurance_policy_number: "",
+      insurance_issue_date: "",
+      insurance_expiry_date: "",
+      current_postal_code: "",
+      current_address: "",
+      current_unit: "",
+      current_country: "Singapore",
+      permanent_postal_code: "",
+      permanent_address: "",
+      permanent_unit: "",
+      permanent_country: "Singapore",
+      bank_name: "",
+      account_number: "",
+      driver_rank: "",
     },
   });
 
-  const phoneValue = watch("phone");
-  const emergencyPhoneValue = watch("emergencyContactNumber");
-
   const [addRiderProfile, { isLoading }] = useAddRiderProfileMutation();
   const { data: vehicleTypesResponse } = useGetVehicleTypesQuery({});
-  const vehicleTypes = [
-    ...new Set(
-      (Array.isArray(vehicleTypesResponse?.data?.data) ? vehicleTypesResponse.data.data : []).map((v: any) => v.vehicle_name),
-    ),
-  ];
 
   const handleProfileImageChange = (file: File | null) => {
     setProfileFile(file);
@@ -530,14 +565,28 @@ export default function AddNewDriver() {
 
   const validateDocuments = () => {
     const errs: DocumentErrorState = {
-      nidFront: null, nidBack: null, licenseFront: null, licenseBack: null,
-      vehicleFront: null, vehicleBack: null, driverSide: null, passengerSide: null,
-      vehicleLog: null, vehiclePolicy: null,
+      nricFront: null,
+      nricBack: null,
+      licenseFront: null,
+      licenseBack: null,
+      vehicleFront: null,
+      vehicleRear: null,
+      driverSide: null,
+      passengerSide: null,
+      vehicleLog: null,
+      insurancePolicy: null,
     };
     const requiredDocs: DocumentKey[] = [
-      "nidFront", "nidBack", "licenseFront", "licenseBack",
-      "vehicleFront", "vehicleBack", "driverSide", "passengerSide",
-      "vehicleLog", "vehiclePolicy",
+      "nricFront",
+      "nricBack",
+      "licenseFront",
+      "licenseBack",
+      "vehicleFront",
+      "vehicleRear",
+      "driverSide",
+      "passengerSide",
+      "vehicleLog",
+      "insurancePolicy",
     ];
     requiredDocs.forEach((doc) => {
       if (!documentUrls[doc]) errs[doc] = "This document is required";
@@ -611,82 +660,72 @@ export default function AddNewDriver() {
       toast.error("Please wait for all images to finish uploading!");
       return;
     }
+
+    // Validate Documents
     const documentsValid = validateDocuments();
+
+    // Validate Profile Photo
     if (!profileImageUrls.length) {
-      toast.error("Please upload a profile image!");
+      toast.error("Profile photo is required!");
       return;
     }
+
     if (!documentsValid) {
       toast.error("Please upload all required documents!");
       return;
     }
 
-    const dateFields = [
-      { value: data.dob, name: "Date of Birth" },
-      { value: data.dlIssueDate, name: "License Issue Date" },
-      { value: data.dlExpiryDate, name: "License Expiry Date" },
-      { value: data.registrationDate, name: "Registration Date" },
-      { value: data.vehicleIssueDate, name: "Vehicle Issue Date" },
-      { value: data.vehicleExpiryDate, name: "Vehicle Expiry Date" },
-      { value: data.policyIssue, name: "Policy Issue Date" },
-      { value: data.policyExpiry, name: "Policy Expiry Date" },
-    ];
-    for (const field of dateFields) {
-      if (!field.value || field.value.trim() === "") {
-        toast.error(`${field.name} is required!`);
-        return;
-      }
-    }
-
     try {
       const formData = {
-        raider_name: data.firstName + " " + data.lastName,
-        contact_number: data.phone,
-        email_address: data.email || undefined,
+        raider_name: data.raider_name,
+        contact_number: data.contact_number,
+        email_address: data.email_address || undefined,
         password: data.password,
         dob: formatDateToISO(data.dob),
         gender: mapGender(data.gender),
         driver_photos: profileImageUrls,
-        emergency_contact_name: data.emergencyContact,
-        emergency_contact_number: data.emergencyContactNumber,
-        identity_card_number: data.driverId,
-        nid_front_images: documentUrls.nidFront,
-        nid_back_images: documentUrls.nidBack,
-        driving_license_number: data.drivingLicense,
-        driving_license_issue_date: formatDateToISO(data.dlIssueDate),
-        driving_license_expire_date: formatDateToISO(data.dlExpiryDate),
+        emergency_contact_name: data.emergency_contact_name,
+        emergency_contact_number: data.emergency_contact_number,
+        identity_card_number: data.identity_card_number,
+        identity_card_issue_date: formatDateToISO(data.identity_card_issue_date),
+        nric_front_images: documentUrls.nricFront,
+        nric_back_images: documentUrls.nricBack,
+        driving_license_number: data.driving_license_number,
+        driving_license_issue_date: formatDateToISO(
+          data.driving_license_issue_date,
+        ),
+        driving_license_expire_date: formatDateToISO(
+          data.driving_license_expire_date,
+        ),
+        license_class: data.license_class.toUpperCase().replace(/\s+/g, "_"),
         driving_license_front_images: documentUrls.licenseFront,
         driving_license_back_images: documentUrls.licenseBack,
-        vehicle_plate_number: data.vehiclePlate1 + "-" + data.vehiclePlate2,
-        vehicle_type: data.vehicleType,
-        vehicle_brand: data.model,
-        registration_date: formatDateToISO(data.registrationDate),
+        vehicle_plate_number: data.vehicle_plate_number,
+        vehicle_type_id: Number(data.vehicle_type_id),
+        vehicle_brand: data.vehicle_brand,
+        vehicle_model: data.vehicle_model,
+        registration_date: formatDateToISO(data.registration_date),
         vehicle_front_images: documentUrls.vehicleFront,
-        vehicle_back_images: documentUrls.vehicleBack,
+        vehicle_back_images: documentUrls.vehicleRear,
         vehicle_driver_side_images: documentUrls.driverSide,
         vehicle_passenger_side_images: documentUrls.passengerSide,
-        vehicle_log_number: data.vehicleLog,
-        vehicle_log_issue_date: formatDateToISO(data.vehicleIssueDate),
-        vehicle_log_expire_date: formatDateToISO(data.vehicleExpiryDate),
+        chassis_number: data.chassis_number,
         vehicle_log_images: documentUrls.vehicleLog,
-        vehicle_policy_number: data.policyNumber,
-        vehicle_policy_issue_date: formatDateToISO(data.policyIssue),
-        vehicle_policy_expire_date: formatDateToISO(data.policyExpiry),
-        vehicle_policy_images: documentUrls.vehiclePolicy,
-        current_address: data.currentaddress,
-        current_apartment: data.currentapartment,
-        current_state_province: data.currentstate,
-        current_city: data.currentcity,
-        current_country: "Singapore",
-        current_zip_post_code: data.currentpostal,
-        permanent_address: data.permanentaddress,
-        permanent_apartment: data.permanentapartment,
-        permanent_state_province: data.permanentstate,
-        permanent_city: data.permanentcity,
-        permanent_country: "Singapore",
-        permanent_zip_post_code: data.permanentpostal,
-        bank_name: data.bank,
-        account_number: data.accountNumber,
+        insurance_policy_number: data.insurance_policy_number,
+        insurance_issue_date: formatDateToISO(data.insurance_issue_date),
+        insurance_expiry_date: formatDateToISO(data.insurance_expiry_date),
+        insurance_policy_images: documentUrls.insurancePolicy,
+        current_postal_code: data.current_postal_code,
+        current_address: data.current_address,
+        current_unit: data.current_unit,
+        current_country: data.current_country,
+        permanent_postal_code: data.permanent_postal_code,
+        permanent_address: data.permanent_address,
+        permanent_unit: data.permanent_unit,
+        permanent_country: data.permanent_country,
+        bank_name: data.bank_name,
+        account_number: data.account_number,
+        driver_rank: data.driver_rank,
       };
 
       const result = await addRiderProfile(formData).unwrap();
@@ -702,60 +741,24 @@ export default function AddNewDriver() {
     }
   };
 
-  const genderOptions = ["Male", "Female", "Other"];
-  const isDateField = (field: string) =>
-    ["dob", "dlIssueDate", "dlExpiryDate", "registrationDate",
-      "vehicleIssueDate", "vehicleExpiryDate", "policyIssue", "policyExpiry"].includes(field);
-  const isPostalField = (field: string) =>
-    ["currentpostal", "permanentpostal"].includes(field);
-  const isPhoneField = (field: string) =>
-    ["phone", "emergencyContactNumber"].includes(field);
-
-  const allFields = [
-    { key: "firstName", label: "Driver Name" },
-    { key: "email", label: "Email Address" },
-    { key: "password", label: "Password" },
-    { key: "phone", label: "Contact Number" },
-    { key: "dob", label: "Date of Birth" },
-    { key: "gender", label: "Select Gender" },
-    { key: "emergencyContact", label: "Emergency Contact Name" },
-    { key: "emergencyContactNumber", label: "Emergency Contact Number" },
-    { key: "driverId", label: "Identity Card Number" },
-    { key: "currentpostal", label: "Current Postal Code" },
-    { key: "currentaddress", label: "Current Address" },
-    { key: "currentapartment", label: "Current Apartment" },
-    { key: "currentcity", label: "Current City" },
-    { key: "permanentpostal", label: "Permanent Postal Code" },
-    { key: "permanentaddress", label: "Permanent Address" },
-    { key: "permanentapartment", label: "Permanent Apartment" },
-    { key: "permanentcity", label: "Permanent City" },
-    { key: "drivingLicense", label: "Driving License Number" },
-    { key: "dlIssueDate", label: "License Issue Date" },
-    { key: "dlExpiryDate", label: "License Expiry Date" },
-    { key: "vehiclePlate1", label: "Vehicle Number Plate" },
-    { key: "vehicleType", label: "Vehicle Type" },
-    { key: "model", label: "Vehicle Model" },
-    { key: "registrationDate", label: "Registration Date" },
-    { key: "vehicleLog", label: "Vehicle Log Number" },
-    { key: "vehicleIssueDate", label: "Vehicle Issue Date" },
-    { key: "vehicleExpiryDate", label: "Vehicle Expiry Date" },
-    { key: "policyNumber", label: "Policy Number" },
-    { key: "policyIssue", label: "Policy Issue Date" },
-    { key: "policyExpiry", label: "Policy Expiry Date" },
-    { key: "bank", label: "Bank Name" },
-    { key: "accountNumber", label: "Account Number" },
-  ];
-
   return (
     <div className="px-8 sm:p-6 mx-auto space-y-6 bg-[#F5F7FA]">
+      <style dangerouslySetInnerHTML={{ __html: `
+        input[type="date"]::-webkit-calendar-picker-indicator {
+          cursor: pointer;
+          filter: invert(72%) sepia(98%) saturate(1450%) hue-rotate(352deg) brightness(101%) contrast(98%);
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+          opacity: 0.8;
+        }
+      ` }} />
       <h1 className="text-2xl font-semibold text-gray-900 pt-2 sm:pt-0">
         Add New Driver
       </h1>
       <div className="border rounded-xl py-10 px-6 lg:px-32 bg-white shadow-sm relative">
-
         {/* Profile Image */}
-        <div className="flex justify-center">
-          <label className="cursor-pointer mt-8 sm:mt-0">
+        <div className="flex flex-col items-center justify-center">
+          <label className="cursor-pointer">
             <div className="w-32 h-32 rounded-full bg-secondary flex items-center justify-center border overflow-hidden">
               {profilePreview || profileImageUrls[0] ? (
                 <img
@@ -774,189 +777,563 @@ export default function AddNewDriver() {
               className="hidden"
               id="upload-images"
               accept="image/*"
-              onChange={(e) => handleProfileImageChange(e.target.files?.[0] || null)}
+              onChange={(e) =>
+                handleProfileImageChange(e.target.files?.[0] || null)
+              }
               disabled={isProfileUploading}
             />
           </label>
+          <p className="text-xs font-semibold mt-2">Profile Photo*</p>
         </div>
 
-        {/* Form Fields */}
         <div className="mt-10">
+          {/* General Information */}
+          <SectionTitle>General Information</SectionTitle>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {allFields.map(({ key, label }) => (
-              <div key={key}>
-                <Label className="text-sm font-semibold pb-2">{label}</Label>
+            <InputWrapper label="Driver Name*" error={errors.raider_name?.message}>
+              <Input
+                {...register("raider_name", { required: "Driver Name is required" })}
+              />
+            </InputWrapper>
+            <InputWrapper
+              label="Email Address*"
+              error={errors.email_address?.message}
+            >
+              <Input
+                {...register("email_address", {
+                  required: "Email Address is required",
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: "Invalid email address",
+                  },
+                })}
+              />
+            </InputWrapper>
+            <InputWrapper label="Password" error={errors.password?.message}>
+              <Input
+                type="password"
+                {...register("password")}
+              />
+            </InputWrapper>
+            <InputWrapper label="Contact Number*" error={errors.contact_number?.message}>
+              <PhoneInput
+                value={watch("contact_number")}
+                onChange={(val) => {
+                  setValue("contact_number", val, { shouldValidate: true });
+                }}
+              />
+              <input type="hidden" {...register("contact_number", { required: "Contact Number is required" })} />
+            </InputWrapper>
+            <InputWrapper label="Date of Birth*" error={errors.dob?.message}>
+              <Input
+                type="date"
+                {...register("dob", { required: "Date of Birth is required" })}
+              />
+            </InputWrapper>
+            <InputWrapper label="Select Gender*" error={errors.gender?.message}>
+              <select
+                {...register("gender", { required: "Gender is required" })}
+                className="w-full border bg-secondary rounded p-2 text-sm"
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </InputWrapper>
+            <InputWrapper
+              label="Emergency Contact Name*"
+              error={errors.emergency_contact_name?.message}
+            >
+              <Input
+                {...register("emergency_contact_name", {
+                  required: "Emergency Contact Name is required",
+                })}
+              />
+            </InputWrapper>
+            <InputWrapper
+              label="Emergency Contact Number*"
+              error={errors.emergency_contact_number?.message}
+            >
+              <PhoneInput
+                value={watch("emergency_contact_number")}
+                onChange={(val) => {
+                  setValue("emergency_contact_number", val, { shouldValidate: true });
+                }}
+              />
+              <input type="hidden" {...register("emergency_contact_number", { required: "Emergency Contact Number is required" })} />
+            </InputWrapper>
+            <InputWrapper label="Driver Rank" error={errors.driver_rank?.message}>
+              <select
+                {...register("driver_rank")}
+                className="w-full border bg-secondary rounded p-2 text-sm"
+              >
+                <option value="">Select Rank</option>
+                {RANKS.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </InputWrapper>
+          </div>
 
-                {/* Dropdown Fields */}
-                {["gender", "vehicleType"].includes(key) && (
-                  <select
-                    {...register(key as any, { required: `${label} is required` })}
-                    className="w-full border bg-secondary rounded p-2"
-                  >
-                    <option value="">Select {label.split(" ").slice(-1).join(" ")}</option>
-                    {key === "gender" &&
-                      genderOptions.map((g) => (
-                        <option key={g} value={g}>{g}</option>
-                      ))}
-                    {key === "vehicleType" &&
-                      (vehicleTypes as string[]).map((v) => (
-                        <option key={v} value={v}>{v}</option>
-                      ))}
-                  </select>
+          {/* 1. Identity Card */}
+          <SectionTitle>Identity Card</SectionTitle>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <InputWrapper label="NRIC Number*" error={errors.identity_card_number?.message}>
+              <Input
+                {...register("identity_card_number", {
+                  required: "NRIC is required",
+                })}
+              />
+            </InputWrapper>
+            <InputWrapper
+              label="Issue Date*"
+              error={errors.identity_card_issue_date?.message}
+            >
+              <Input
+                type="date"
+                {...register("identity_card_issue_date", {
+                  required: "Issue date is required",
+                })}
+              />
+            </InputWrapper>
+          </div>
+
+          {/* 2. Driving License */}
+          <SectionTitle>Driving License</SectionTitle>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <InputWrapper
+              label="Driving License Number*"
+              error={errors.driving_license_number?.message}
+            >
+              <Input
+                {...register("driving_license_number", {
+                  required: "License number is required",
+                })}
+              />
+            </InputWrapper>
+            <InputWrapper
+              label="Issue Date*"
+              error={errors.driving_license_issue_date?.message}
+            >
+              <Input
+                type="date"
+                {...register("driving_license_issue_date", {
+                  required: "Issue date is required",
+                })}
+              />
+            </InputWrapper>
+            <InputWrapper
+              label="Expiry Date*"
+              error={errors.driving_license_expire_date?.message}
+            >
+              <Input
+                type="date"
+                {...register("driving_license_expire_date", {
+                  required: "Expiry date is required",
+                })}
+              />
+            </InputWrapper>
+            <InputWrapper label="License Class*" error={errors.license_class?.message}>
+              <select
+                {...register("license_class", {
+                  required: "License class is required",
+                })}
+                className="w-full border bg-secondary rounded p-2 text-sm"
+              >
+                <option value="">Select Class</option>
+                {LICENSE_CLASSES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </InputWrapper>
+          </div>
+
+          {/* 3. Vehicle Details */}
+          <SectionTitle>Vehicle Details</SectionTitle>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <InputWrapper
+              label="Vehicle Plate Number*"
+              error={errors.vehicle_plate_number?.message}
+            >
+              <Input
+                {...register("vehicle_plate_number", {
+                  required: "Plate number is required",
+                })}
+              />
+            </InputWrapper>
+            <InputWrapper label="Vehicle Type*" error={errors.vehicle_type_id?.message}>
+              <select
+                {...register("vehicle_type_id", {
+                  required: "Vehicle type is required",
+                })}
+                className="w-full border bg-secondary rounded p-2 text-sm"
+              >
+                <option value="">Select Type</option>
+                {vehicleTypesResponse?.data?.data?.map((v: any) => (
+                  <option key={v.id} value={v.id}>
+                    {v.vehicle_name}
+                  </option>
+                ))}
+              </select>
+            </InputWrapper>
+            <InputWrapper label="Vehicle Brand*" error={errors.vehicle_brand?.message}>
+              <Input
+                {...register("vehicle_brand", { required: "Brand is required" })}
+              />
+            </InputWrapper>
+            <InputWrapper label="Vehicle Model*" error={errors.vehicle_model?.message}>
+              <Input
+                {...register("vehicle_model", { required: "Model is required" })}
+              />
+            </InputWrapper>
+            <InputWrapper
+              label="Registration Date*"
+              error={errors.registration_date?.message}
+            >
+              <Input
+                type="date"
+                {...register("registration_date", {
+                  required: "Registration date is required",
+                })}
+              />
+            </InputWrapper>
+          </div>
+
+          {/* 4. Vehicle Log Card */}
+          <SectionTitle>Vehicle Log Card</SectionTitle>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <InputWrapper label="Chassis Number*" error={errors.chassis_number?.message}>
+              <Input
+                {...register("chassis_number", {
+                  required: "Chassis number is required",
+                })}
+              />
+            </InputWrapper>
+          </div>
+
+          {/* 5. Vehicle Insurance Policy */}
+          <SectionTitle>Vehicle Insurance Policy</SectionTitle>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <InputWrapper
+              label="Insurance Policy Number*"
+              error={errors.insurance_policy_number?.message}
+            >
+              <Input
+                {...register("insurance_policy_number", {
+                  required: "Policy number is required",
+                })}
+              />
+            </InputWrapper>
+            <InputWrapper
+              label="Issue Date*"
+              error={errors.insurance_issue_date?.message}
+            >
+              <Input
+                type="date"
+                {...register("insurance_issue_date", {
+                  required: "Issue date is required",
+                })}
+              />
+            </InputWrapper>
+            <InputWrapper
+              label="Expiry Date*"
+              error={errors.insurance_expiry_date?.message}
+            >
+              <Input
+                type="date"
+                {...register("insurance_expiry_date", {
+                  required: "Expiry date is required",
+                })}
+              />
+            </InputWrapper>
+          </div>
+
+          {/* 6. Current Address */}
+          <SectionTitle>Current Address</SectionTitle>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <InputWrapper label="Postal Code*" error={errors.current_postal_code?.message}>
+              <div className="relative">
+                <Input
+                  {...register("current_postal_code", {
+                    required: "Postal code is required",
+                  })}
+                  onChange={(e) => {
+                    register("current_postal_code").onChange(e);
+                    const val = e.target.value;
+                    clearTimeout(debounceTimers.current["currentpostal"]);
+                    setShowPostalSuggestions((prev) => ({
+                      ...prev,
+                      currentpostal: false,
+                    }));
+                    debounceTimers.current["currentpostal"] = setTimeout(() => {
+                      if (val.trim().length >= 3) {
+                        fetchAddressFromPostal(val, "currentpostal");
+                      }
+                    }, 500);
+                  }}
+                />
+                {isLoadingPostal === "currentpostal" && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500" />
+                  </div>
                 )}
-
-                {/* Date Fields */}
-                {isDateField(key) && (
-                  <input
-                    type="date"
-                    {...register(key as any, { required: `${label} is required` })}
-                    className="w-full border bg-secondary rounded p-2"
-                  />
-                )}
-
-                {/* Phone Fields with +65 prefix */}
-                {isPhoneField(key) && (
-                  <PhoneInput
-                    value={key === "phone" ? phoneValue : emergencyPhoneValue}
-                    onChange={(val) => setValue(key as any, val)}
-                    onBlur={register(key as any).onBlur}
-                    error={errors[key as keyof typeof errors]?.message}
-                  />
-                )}
-
-                {/* Postal Code Fields with OneMap auto-fill */}
-                {isPostalField(key) && (() => {
-                  const isCurrentPostal = key === "currentpostal";
-                  const addressField = isCurrentPostal ? "currentaddress" : "permanentaddress";
-                  const cityField = isCurrentPostal ? "currentcity" : "permanentcity";
-
-                  return (
-                    <div className="relative">
-                      <Input
-                        className="bg-secondary rounded pr-8"
-                        {...register(key as any, { required: `${label} is required` })}
-                        onChange={(e) => {
-                          register(key as any).onChange(e);
-                          clearTimeout(debounceTimers.current[key]);
-                          setShowPostalSuggestions((prev) => ({ ...prev, [key]: false }));
-                          debounceTimers.current[key] = setTimeout(() => {
-                            if (e.target.value.trim().length >= 3) {
-                              fetchAddressFromPostal(e.target.value, key);
-                            }
-                          }, 500);
-                        }}
-                      />
-                      {isLoadingPostal === key && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500" />
-                        </div>
-                      )}
-
-                      {/* OneMap suggestion dropdown */}
-                      {showPostalSuggestions[key] && postalSuggestions[key]?.length > 0 && (
-                        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-72 overflow-y-auto">
-                          <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-b">
-                            Suggested Addresses
-                          </div>
-                          {postalSuggestions[key].map((suggestion, index) => (
-                            <button
-                              key={index}
-                              type="button"
-                              className="w-full gap-2 text-left px-4 py-3 hover:bg-[#FFFAE6] focus:bg-[#FFFAE6] focus:outline-none border-b border-gray-50 last:border-0 transition-colors"
-                              onClick={() =>
-                                handleSelectSuggestion(suggestion, key, addressField, cityField)
+                {showPostalSuggestions["currentpostal"] &&
+                  postalSuggestions["currentpostal"]?.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-72 overflow-y-auto">
+                      <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-b">
+                        Suggested Addresses
+                      </div>
+                      {postalSuggestions["currentpostal"].map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          className="w-full text-left px-4 py-3 hover:bg-[#FFFAE6] border-b last:border-0"
+                          onClick={() => {
+                            setValue("current_postal_code", s.postal_code);
+                            setValue("current_address", s.address);
+                            setShowPostalSuggestions((prev) => ({
+                              ...prev,
+                              currentpostal: false,
+                            }));
+                          }}
+                        >
+                          {s.displayLines.map((line, idx) => (
+                            <p
+                              key={idx}
+                              className={
+                                idx === 0
+                                  ? "text-sm font-semibold text-gray-900 leading-tight"
+                                  : "text-xs text-gray-500 leading-tight mt-0.5"
                               }
                             >
-                              {/* Multi-line address format */}
-                              {suggestion.displayLines.map((line, i) => (
-                                <p
-                                  key={i}
-                                  className={
-                                    i === 0
-                                      ? "text-sm font-semibold text-gray-900 leading-tight"
-                                      : "text-xs text-gray-500 leading-tight mt-0.5"
-                                  }
-                                >
-                                  <span className="block">{line}</span>
-                                </p>
-                              ))}
-                            </button>
+                              <span className="block">{line}</span>
+                            </p>
                           ))}
-                        </div>
-                      )}
+                        </button>
+                      ))}
                     </div>
-                  );
-                })()}
-
-                {/* Normal Input */}
-                {!["gender", "vehicleType"].includes(key) &&
-                  !isDateField(key) &&
-                  !isPostalField(key) &&
-                  !isPhoneField(key) && (
-                    <Input
-                      type={key === "password" ? "password" : "text"}
-                      className="bg-secondary rounded"
-                      {...register(
-                        key as any,
-                        key === "email"
-                          ? {}
-                          : { required: `${label} is required` },
-                      )}
-                    />
                   )}
-
-                {/* Validation errors (skip phone fields — PhoneInput handles its own) */}
-                {!isPhoneField(key) && errors[key as keyof typeof errors] && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors[key as keyof typeof errors]?.message}
-                  </p>
-                )}
               </div>
-            ))}
+            </InputWrapper>
+            <InputWrapper label="Address*" error={errors.current_address?.message}>
+              <Input
+                {...register("current_address", { required: "Address is required" })}
+              />
+            </InputWrapper>
+            <InputWrapper
+              label="Apartment, Suite, Unit, Building, Floor, etc."
+              error={errors.current_unit?.message}
+            >
+              <Input {...register("current_unit")} />
+            </InputWrapper>
+            <InputWrapper label="Country" error={errors.current_country?.message}>
+              <select
+                {...register("current_country")}
+                className="w-full border bg-secondary rounded p-2 text-sm"
+              >
+                {COUNTRIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </InputWrapper>
+          </div>
+
+          {/* 7. Permanent Address */}
+          <SectionTitle>Permanent Address</SectionTitle>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <InputWrapper label="Postal Code*" error={errors.permanent_postal_code?.message}>
+              <div className="relative">
+                <Input
+                  {...register("permanent_postal_code", {
+                    required: "Postal code is required",
+                  })}
+                  onChange={(e) => {
+                    register("permanent_postal_code").onChange(e);
+                    const val = e.target.value;
+                    clearTimeout(debounceTimers.current["permanentpostal"]);
+                    setShowPostalSuggestions((prev) => ({
+                      ...prev,
+                      permanentpostal: false,
+                    }));
+                    debounceTimers.current["permanentpostal"] = setTimeout(() => {
+                      if (val.trim().length >= 3) {
+                        fetchAddressFromPostal(val, "permanentpostal");
+                      }
+                    }, 500);
+                  }}
+                />
+                {isLoadingPostal === "permanentpostal" && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500" />
+                  </div>
+                )}
+                {showPostalSuggestions["permanentpostal"] &&
+                  postalSuggestions["permanentpostal"]?.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-72 overflow-y-auto">
+                      <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-b">
+                        Suggested Addresses
+                      </div>
+                      {postalSuggestions["permanentpostal"].map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          className="w-full text-left px-4 py-3 hover:bg-[#FFFAE6] border-b last:border-0"
+                          onClick={() => {
+                            setValue("permanent_postal_code", s.postal_code);
+                            setValue("permanent_address", s.address);
+                            setShowPostalSuggestions((prev) => ({
+                              ...prev,
+                              permanentpostal: false,
+                            }));
+                          }}
+                        >
+                          {s.displayLines.map((line, idx) => (
+                            <p
+                              key={idx}
+                              className={
+                                idx === 0
+                                  ? "text-sm font-semibold text-gray-900 leading-tight"
+                                  : "text-xs text-gray-500 leading-tight mt-0.5"
+                              }
+                            >
+                              <span className="block">{line}</span>
+                            </p>
+                          ))}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+              </div>
+            </InputWrapper>
+            <InputWrapper label="Address*" error={errors.permanent_address?.message}>
+              <Input
+                {...register("permanent_address", { required: "Address is required" })}
+              />
+            </InputWrapper>
+            <InputWrapper
+              label="Apartment, Suite, Unit, Building, Floor, etc."
+              error={errors.permanent_unit?.message}
+            >
+              <Input {...register("permanent_unit")} />
+            </InputWrapper>
+            <InputWrapper label="Country" error={errors.permanent_country?.message}>
+              <select
+                {...register("permanent_country")}
+                className="w-full border bg-secondary rounded p-2 text-sm"
+              >
+                {COUNTRIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </InputWrapper>
+          </div>
+
+          {/* 8. Bank Details */}
+          <SectionTitle>Bank Details</SectionTitle>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <InputWrapper label="Bank Name" error={errors.bank_name?.message}>
+              <Input {...register("bank_name")} />
+            </InputWrapper>
+            <InputWrapper label="Account Number" error={errors.account_number?.message}>
+              <Input {...register("account_number")} />
+            </InputWrapper>
           </div>
         </div>
 
         {/* Document Upload Sections */}
         <div className="mt-10 space-y-10">
-          {/* Identity Card */}
           <div>
-            <h2 className="font-semibold text-lg">Personal Documents</h2>
-            <p className="text-sm text-gray-600">Upload Your Identity Card</p>
+            <SectionTitle>Identity Card Documents*</SectionTitle>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              <UploadBox label="Front side photo of your Identity card" onChange={(f) => handleDocumentChange("nidFront", f)} error={documentErrors.nidFront} isUploading={uploadingDocs.has("nidFront")} />
-              <UploadBox label="Back side photo of your Identity card" onChange={(f) => handleDocumentChange("nidBack", f)} error={documentErrors.nidBack} isUploading={uploadingDocs.has("nidBack")} />
+              <UploadBox
+                label="NRIC Front*"
+                onChange={(f) => handleDocumentChange("nricFront", f)}
+                error={documentErrors.nricFront}
+                isUploading={uploadingDocs.has("nricFront")}
+              />
+              <UploadBox
+                label="NRIC Back*"
+                onChange={(f) => handleDocumentChange("nricBack", f)}
+                error={documentErrors.nricBack}
+                isUploading={uploadingDocs.has("nricBack")}
+              />
             </div>
           </div>
 
-          {/* Driving License */}
           <div>
-            <h2 className="font-semibold text-lg">Driving License</h2>
-            <p className="text-sm text-gray-600">Upload Your License</p>
+            <SectionTitle>Driving License Documents*</SectionTitle>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              <UploadBox label="Front side of Driving License" onChange={(f) => handleDocumentChange("licenseFront", f)} error={documentErrors.licenseFront} isUploading={uploadingDocs.has("licenseFront")} />
-              <UploadBox label="Back side of Driving License" onChange={(f) => handleDocumentChange("licenseBack", f)} error={documentErrors.licenseBack} isUploading={uploadingDocs.has("licenseBack")} />
+              <UploadBox
+                label="Driving License Front*"
+                onChange={(f) => handleDocumentChange("licenseFront", f)}
+                error={documentErrors.licenseFront}
+                isUploading={uploadingDocs.has("licenseFront")}
+              />
+              <UploadBox
+                label="Driving License Back*"
+                onChange={(f) => handleDocumentChange("licenseBack", f)}
+                error={documentErrors.licenseBack}
+                isUploading={uploadingDocs.has("licenseBack")}
+              />
             </div>
           </div>
 
-          {/* Vehicle Photos */}
           <div>
-            <h2 className="font-semibold text-lg">Vehicle Photos</h2>
-            <p className="text-sm text-gray-600">Upload Your Vehicle Images</p>
+            <SectionTitle>Vehicle Photos*</SectionTitle>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              <UploadBox label="Vehicle Front Side" onChange={(f) => handleDocumentChange("vehicleFront", f)} error={documentErrors.vehicleFront} isUploading={uploadingDocs.has("vehicleFront")} />
-              <UploadBox label="Vehicle Back Side" onChange={(f) => handleDocumentChange("vehicleBack", f)} error={documentErrors.vehicleBack} isUploading={uploadingDocs.has("vehicleBack")} />
-              <UploadBox label="Driver Side of Vehicle" onChange={(f) => handleDocumentChange("driverSide", f)} error={documentErrors.driverSide} isUploading={uploadingDocs.has("driverSide")} />
-              <UploadBox label="Passenger Side of Vehicle" onChange={(f) => handleDocumentChange("passengerSide", f)} error={documentErrors.passengerSide} isUploading={uploadingDocs.has("passengerSide")} />
+              <UploadBox
+                label="Vehicle Front View*"
+                onChange={(f) => handleDocumentChange("vehicleFront", f)}
+                error={documentErrors.vehicleFront}
+                isUploading={uploadingDocs.has("vehicleFront")}
+              />
+              <UploadBox
+                label="Vehicle Rear View*"
+                onChange={(f) => handleDocumentChange("vehicleRear", f)}
+                error={documentErrors.vehicleRear}
+                isUploading={uploadingDocs.has("vehicleRear")}
+              />
+              <UploadBox
+                label="Vehicle Driver Side View*"
+                onChange={(f) => handleDocumentChange("driverSide", f)}
+                error={documentErrors.driverSide}
+                isUploading={uploadingDocs.has("driverSide")}
+              />
+              <UploadBox
+                label="Vehicle Passenger Side View*"
+                onChange={(f) => handleDocumentChange("passengerSide", f)}
+                error={documentErrors.passengerSide}
+                isUploading={uploadingDocs.has("passengerSide")}
+              />
             </div>
           </div>
 
-          {/* Policy & Log */}
           <div>
-            <h2 className="font-semibold text-lg">Vehicle Documents</h2>
-            <p className="text-sm text-gray-600">Upload Vehicle Log & Policy Documents</p>
+            <SectionTitle>Vehicle Documents*</SectionTitle>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              <UploadBox label="Vehicle Log" onChange={(f) => handleDocumentChange("vehicleLog", f)} error={documentErrors.vehicleLog} isUploading={uploadingDocs.has("vehicleLog")} buttonText="Upload" />
-              <UploadBox label="Vehicle Policy" onChange={(f) => handleDocumentChange("vehiclePolicy", f)} error={documentErrors.vehiclePolicy} isUploading={uploadingDocs.has("vehiclePolicy")} buttonText="Upload" />
+              <UploadBox
+                label="Vehicle Log Card*"
+                onChange={(f) => handleDocumentChange("vehicleLog", f)}
+                error={documentErrors.vehicleLog}
+                isUploading={uploadingDocs.has("vehicleLog")}
+                buttonText="Upload"
+              />
+              <UploadBox
+                label="Insurance Policy*"
+                onChange={(f) => handleDocumentChange("insurancePolicy", f)}
+                error={documentErrors.insurancePolicy}
+                isUploading={uploadingDocs.has("insurancePolicy")}
+                buttonText="Upload"
+              />
             </div>
           </div>
         </div>
@@ -977,4 +1354,3 @@ export default function AddNewDriver() {
     </div>
   );
 }
-
