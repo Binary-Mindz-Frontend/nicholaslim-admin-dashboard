@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 
 // import { useEffect, useState } from "react";
 // import { useParams } from "react-router-dom";
@@ -762,7 +763,7 @@ export default function UserProfile() {
                         onClick={() => handleRemoveRole(role.id)}
                         className="hover:text-red-600 transition-colors p-0.5 rounded-full hover:bg-yellow-200"
                       >
-                        <X size={14} className="stroke-[3]" />
+                        <X size={14} className="stroke-3" />
                       </button>
                     )}
                   </div>
