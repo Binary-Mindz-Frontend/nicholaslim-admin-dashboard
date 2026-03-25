@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useCallback, useRef, useState } from "react";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Camera, Upload, X } from "lucide-react";
+import { Camera } from "lucide-react";
 import toast from "react-hot-toast";
 import {
   useAddRiderProfileMutation,
@@ -11,375 +11,24 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
 
-// --- START: Component Interfaces ---
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode;
-  className?: string;
-}
+import {
+  Button,
+  MapModal,
+  ResolvedAddress,
+} from "./components/DriverFormShared";
 
-const Button = ({ children, className = "", ...props }: ButtonProps) => (
-  <button
-    className={`px-4 py-2 rounded font-medium transition-colors ${className}`}
-    {...props}
-  >
-    {children}
-  </button>
-);
+import {
+  GeneralInformation,
+  IdentityCardSection,
+  DrivingLicenseSection,
+  VehicleDetailsSection,
+  VehicleLogCardSection,
+  VehicleInsurancePolicySection,
+  AddressSection,
+  BankInformationSection,
+  DocumentUploadSections,
+} from "./components/FormSections";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  className?: string;
-}
-
-const Input = ({ className = "", ...props }: InputProps) => (
-  <input
-    className={`w-full border rounded px-3 py-2 bg-secondary focus:outline-none focus:border-yellow-400 ${className}`}
-    {...props}
-  />
-);
-
-interface LabelProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
-const Label = ({ children, className = "" }: LabelProps) => (
-  <label className={`block text-sm font-semibold mb-2 ${className}`}>
-    {children}
-  </label>
-);
-
-interface UploadBoxProps {
-  label: string;
-  onChange: (file: File | null) => void;
-  error?: string | null;
-  isUploading?: boolean;
-  currentPreviewUrl?: string | null;
-  buttonText?: string;
-}
-
-const UploadBox = ({
-  label,
-  onChange,
-  error,
-  isUploading,
-  currentPreviewUrl,
-  buttonText = "Upload Photo",
-}: UploadBoxProps) => {
-  const [localFileUrl, setLocalFileUrl] = useState<string | null>(null);
-  const [isPdf, setIsPdf] = useState(false);
-  const [fileName, setFileName] = useState<string | null>(null);
-
-  const preview = currentPreviewUrl || localFileUrl;
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    if (!file) return;
-
-    if (file.type === "application/pdf") {
-      if (localFileUrl) URL.revokeObjectURL(localFileUrl);
-      setLocalFileUrl(null);
-      setIsPdf(true);
-      setFileName(file.name);
-    } else if (file.type.startsWith("image/")) {
-      if (localFileUrl) URL.revokeObjectURL(localFileUrl);
-      setLocalFileUrl(URL.createObjectURL(file));
-      setIsPdf(false);
-      setFileName(null);
-    }
-    onChange(file);
-  };
-
-  const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (localFileUrl) {
-      URL.revokeObjectURL(localFileUrl);
-      setLocalFileUrl(null);
-    }
-    setIsPdf(false);
-    setFileName(null);
-    onChange(null);
-    const inputElement = document.getElementById(
-      `upload-${label.replace(/\s+/g, "-")}`,
-    ) as HTMLInputElement;
-    if (inputElement) inputElement.value = "";
-  };
-
-  return (
-    <div>
-      <Label>{label}</Label>
-      <div className="relative">
-        <input
-          type="file"
-          className="hidden"
-          id={`upload-${label.replace(/\s+/g, "-")}`}
-          accept="image/*,.pdf"
-          onChange={handleFileChange}
-          disabled={isUploading}
-        />
-        <label
-          htmlFor={`upload-${label.replace(/\s+/g, "-")}`}
-          className={`border-2 border-dashed rounded-xl p-6 w-full flex flex-col items-center justify-center text-center cursor-pointer transition min-h-[180px] relative overflow-hidden ${error ? "border-red-400 bg-red-50 hover:bg-red-100" : "border-green-500 bg-white hover:bg-green-50"} ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
-        >
-          {isUploading ? (
-            <div className="flex flex-col items-center gap-2">
-              <Upload size={24} className="text-green-600 animate-pulse" />
-              <p className="text-sm text-gray-700">Uploading...</p>
-            </div>
-          ) : isPdf ? (
-            <>
-              <div className="flex flex-col items-center gap-2 p-4">
-                <div className="bg-red-100 rounded-lg p-3">
-                  <Upload size={32} className="text-red-500" />
-                </div>
-                <p className="text-sm font-medium text-gray-800 break-all text-center">
-                  {fileName}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleClear}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 z-10 shadow-lg"
-              >
-                <X size={16} />
-              </button>
-            </>
-          ) : preview ? (
-            <>
-              <img
-                src={preview}
-                alt="preview"
-                className="absolute inset-0 w-full h-full object-cover rounded-xl"
-              />
-              <button
-                type="button"
-                onClick={handleClear}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 z-10 shadow-lg"
-              >
-                <X size={16} />
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="text-sm text-gray-700 mb-2">{label}</p>
-              <span className="flex items-center gap-0.5 justify-center border border-green-500 rounded-md px-2 py-1">
-                <Camera className="text-green-600" size={22} />
-                <span className="text-xs sm:text-sm text-gray-700">
-                  {buttonText}
-                </span>
-              </span>
-              <p className="text-xs text-gray-400 mt-2">PNG, JPG or PDF</p>
-            </>
-          )}
-        </label>
-      </div>
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
-    </div>
-  );
-};
-
-// ─── OneMap API Helpers ───────────────────────────────────────────────────────
-
-const ONEMAP_SEARCH = "https://www.onemap.gov.sg/api/common/elastic/search";
-
-interface OneMapResult {
-  SEARCHVAL: string;
-  BLK_NO: string;
-  ROAD_NAME: string;
-  BUILDING: string;
-  ADDRESS: string;
-  POSTAL: string;
-  X: string;
-  Y: string;
-  LATITUDE: string;
-  LONGITUDE: string;
-}
-
-interface OneMapSuggestion {
-  /** Multi-line display:
-   *  Line 1: Building name (if any)
-   *  Line 2: Block + Road
-   *  Line 3: Singapore XXXXXX
-   */
-  displayLines: string[];
-  /** Single line for list display */
-  label: string;
-  postal_code: string;
-  address: string; // full single-line for form field
-}
-
-function formatOneMapResult(r: OneMapResult): OneMapSuggestion {
-  const lines: string[] = [];
-
-  const building = r.BUILDING?.trim();
-  if (building && building.toUpperCase() !== "NIL" && building !== r.BLK_NO) {
-    lines.push(building);
-  }
-
-  const street = [r.BLK_NO?.trim(), r.ROAD_NAME?.trim()]
-    .filter(Boolean)
-    .join(" ");
-  if (street) lines.push(street);
-
-  if (r.POSTAL && r.POSTAL !== "NIL") {
-    lines.push(`Singapore ${r.POSTAL}`);
-  } else {
-    lines.push("Singapore");
-  }
-
-  return {
-    displayLines: lines,
-    label: lines.join(", "),
-    postal_code: r.POSTAL !== "NIL" ? r.POSTAL : "",
-    address: lines.join("\n"),
-  };
-}
-
-async function fetchOneMapPage(
-  query: string,
-  page: number,
-): Promise<{ results: OneMapResult[]; totalNumPages: number }> {
-  const url = `${ONEMAP_SEARCH}?searchVal=${encodeURIComponent(query)}&returnGeom=Y&getAddrDetails=Y&pageNum=${page}`;
-  const res = await fetch(url);
-  if (!res.ok) return { results: [], totalNumPages: 1 };
-  const data = await res.json();
-  return {
-    results: data.results ?? [],
-    totalNumPages: data.totalNumPages ?? 1,
-  };
-}
-
-async function searchOneMap(query: string): Promise<OneMapResult[]> {
-  const first = await fetchOneMapPage(query, 1);
-  if (first.totalNumPages <= 1) return first.results;
-  const extraPages = Math.min(first.totalNumPages - 1, 4);
-  const rest = await Promise.all(
-    Array.from({ length: extraPages }, (_, i) =>
-      fetchOneMapPage(query, i + 2),
-    ),
-  );
-  return [first.results, ...rest.map((p) => p.results)].flat();
-}
-
-// ─── Phone Input with +65 prefix ─────────────────────────────────────────────
-
-interface PhoneInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  onBlur?: any;
-  placeholder?: string;
-  error?: string;
-  disabled?: boolean;
-}
-
-const COUNTRY_CODES = [
-  { code: "+65", label: "🇸🇬 +65", country: "SG" },
-  { code: "+60", label: "🇲🇾 +60", country: "MY" },
-  { code: "+91", label: "🇮🇳 +91", country: "IN" },
-];
-
-const PhoneInput = ({
-  value,
-  onChange,
-  onBlur,
-  placeholder = "XXXX XXXX",
-  error,
-  disabled,
-}: PhoneInputProps) => {
-  const selectedCountry = COUNTRY_CODES.find(c => value.startsWith(c.code)) || COUNTRY_CODES[0];
-
-  const localValue = value.startsWith(selectedCountry.code)
-    ? value.slice(selectedCountry.code.length).trimStart()
-    : value;
-
-  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCode = e.target.value;
-    onChange(`${newCode}${localValue ? " " + localValue : ""}`);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/[^0-9\s]/g, ""); // digits and spaces only
-    onChange(`${selectedCountry.code}${raw ? " " + raw : ""}`);
-  };
-
-  return (
-    <div>
-      <div
-        className={`flex items-center w-full border rounded bg-[#FFFAE6] focus-within:border-yellow-400 overflow-hidden ${error ? "border-red-400" : "border-gray-300"}`}
-      >
-        <select
-          value={selectedCountry.code}
-          onChange={handleCountryChange}
-          disabled={disabled}
-          className="flex items-center gap-1.5 px-2 py-2 bg-[#FFFAE6] border-r border-gray-300 text-sm font-semibold text-gray-700 whitespace-nowrap outline-none cursor-pointer shrink-0"
-        >
-          {COUNTRY_CODES.map((country) => (
-            <option key={country.code} value={country.code}>
-              {country.label}
-            </option>
-          ))}
-        </select>
-        <input
-          type="tel"
-          value={localValue}
-          onChange={handleChange}
-          onBlur={onBlur}
-          placeholder={placeholder}
-          disabled={disabled}
-          className="flex-1 px-3 py-2 focus:outline-none text-sm bg-transparent"
-        />
-      </div>
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
-    </div>
-  );
-};
-
-// ─── Constants ─────────────────────────────────────────────────────────────
-
-const LICENSE_CLASSES = [
-  "Class 2B",
-  "Class 2A",
-  "Class 2",
-  "Class 3",
-  "Class 3A",
-  "Class 4",
-  "Class 5",
-];
-
-const COUNTRIES = [
-  "Singapore",
-  "Malaysia",
-  "India",
-  "Bangladesh",
-  "Indonesia",
-  "Thailand",
-  "Vietnam",
-];
-
-const RANKS = ["BRONZE", "SILVER", "GOLD", "PLATINUM", "PREMIUM"];
-
-
-const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="text-xl font-bold text-gray-800 border-b pb-2 mb-6 mt-10">
-    {children}
-  </h2>
-);
-
-const InputWrapper = ({
-  label,
-  error,
-  children,
-}: {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-}) => (
-  <div className="space-y-2">
-    <Label className="text-sm font-semibold">{label}</Label>
-    {children}
-    {error && <p className="text-red-500 text-xs">{error}</p>}
-  </div>
-);
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -391,15 +40,7 @@ export default function AddNewDriver() {
   const [isProfileUploading, setIsProfileUploading] = useState(false);
   const navigate = useNavigate();
 
-  // ── OneMap postal suggestion state ──
-  const [isLoadingPostal, setIsLoadingPostal] = useState<string | null>(null);
-  const [postalSuggestions, setPostalSuggestions] = useState<{
-    [key: string]: OneMapSuggestion[];
-  }>({});
-  const [showPostalSuggestions, setShowPostalSuggestions] = useState<{
-    [key: string]: boolean;
-  }>({});
-  const debounceTimers = useRef<{ [key: string]: ReturnType<typeof setTimeout> }>({});
+  const [modalTarget, setModalTarget] = useState<string | null>(null);
 
   type DocumentKey =
     | "nricFront"
@@ -607,37 +248,17 @@ export default function AddNewDriver() {
     return genderMap[gender] || gender.toUpperCase();
   };
 
-  // ── OneMap address lookup ──
-  const fetchAddressFromPostal = useCallback(
-    async (postalCode: string, fieldKey: string) => {
-      if (!postalCode || postalCode.trim().length < 3) return;
-      setIsLoadingPostal(fieldKey);
-      try {
-        const results = await searchOneMap(postalCode);
-        if (results.length > 0) {
-          // Deduplicate by postal+building
-          const seen = new Set<string>();
-          const suggestions: OneMapSuggestion[] = [];
-          for (const r of results) {
-            if (!r.POSTAL || r.POSTAL === "NIL") continue;
-            const key = `${r.POSTAL}-${r.BUILDING}-${r.BLK_NO}`;
-            if (seen.has(key)) continue;
-            seen.add(key);
-            suggestions.push(formatOneMapResult(r));
-          }
-          setPostalSuggestions((prev) => ({ ...prev, [fieldKey]: suggestions }));
-          setShowPostalSuggestions((prev) => ({ ...prev, [fieldKey]: suggestions.length > 0 }));
-        } else {
-          setPostalSuggestions((prev) => ({ ...prev, [fieldKey]: [] }));
-          setShowPostalSuggestions((prev) => ({ ...prev, [fieldKey]: false }));
-        }
-      } catch (error) {
-        console.error("OneMap error:", error);
-      } finally {
-        setIsLoadingPostal(null);
+  const handleModalConfirm = useCallback(
+    (resolved: ResolvedAddress, target: string) => {
+      if (target === "current") {
+        setValue("current_postal_code", resolved.postal_code);
+        setValue("current_address", resolved.address);
+      } else {
+        setValue("permanent_postal_code", resolved.postal_code);
+        setValue("permanent_address", resolved.address);
       }
     },
-    [],
+    [setValue],
   );
 
   const onSubmit = async (data: any) => {
@@ -715,7 +336,6 @@ export default function AddNewDriver() {
 
       const result = await addRiderProfile(formData).unwrap();
       if (!result.success) {
-        toast.error(result.message || "Failed to create rider profile");
         return;
       }
       toast.success(result.message || "Rider profile created successfully!");
@@ -728,614 +348,140 @@ export default function AddNewDriver() {
 
   return (
     <div className="px-8 sm:p-6 mx-auto space-y-6 bg-[#F5F7FA]">
-      <style dangerouslySetInnerHTML={{
-        __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         input[type="date"]::-webkit-calendar-picker-indicator {
           cursor: pointer;
           filter: invert(72%) sepia(98%) saturate(1450%) hue-rotate(352deg) brightness(101%) contrast(98%);
         }
-        input[type="date"]::-webkit-calendar-picker-indicator:hover {
-          opacity: 0.8;
-        }
-      ` }} />
-      <h1 className="text-2xl font-semibold text-gray-900 pt-2 sm:pt-0">
+      `,
+        }}
+      />
+      <h1
+        onClick={() => navigate("/driver-list")}
+        className="flex items-center gap-2 cursor-pointer text-2xl font-semibold text-gray-900"
+      >
         Add New Driver
       </h1>
+
       <div className="border rounded-xl py-10 px-6 lg:px-32 bg-white shadow-sm relative">
-        {/* Profile Image */}
         <div className="flex flex-col items-center justify-center">
-          <label className="cursor-pointer">
-            <div className="w-32 h-32 rounded-full bg-secondary flex items-center justify-center border overflow-hidden">
-              {profilePreview || profileImageUrls[0] ? (
-                <img
-                  src={profilePreview || profileImageUrls[0]}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              ) : isProfileUploading ? (
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500" />
-              ) : (
-                <Camera size={32} className="text-gray-500" />
-              )}
-            </div>
-            <input
-              type="file"
-              className="hidden"
-              id="upload-images"
-              accept="image/*"
-              onChange={(e) =>
-                handleProfileImageChange(e.target.files?.[0] || null)
-              }
-              disabled={isProfileUploading}
-            />
-          </label>
+          <div className="relative">
+            <label className="cursor-pointer">
+              <div className="w-32 h-32 rounded-full bg-secondary flex items-center justify-center border overflow-hidden relative group">
+                {profilePreview ? (
+                  <img
+                    src={profilePreview}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : isProfileUploading ? (
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500" />
+                ) : (
+                  <Camera size={32} className="text-gray-500" />
+                )}
+              </div>
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={(e) =>
+                  handleProfileImageChange(e.target.files?.[0] || null)
+                }
+              />
+            </label>
+          </div>
           <p className="text-xs font-semibold mt-2">Profile Photo*</p>
         </div>
 
         <div className="mt-10">
-          {/* General Information */}
-          <SectionTitle>General Information</SectionTitle>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <InputWrapper label="Driver Name*" error={errors.raider_name?.message}>
-              <Input
-                {...register("raider_name", { required: "Driver Name is required" })}
-              />
-            </InputWrapper>
-            <InputWrapper
-              label="Email Address*"
-              error={errors.email_address?.message}
-            >
-              <Input
-                {...register("email_address", {
-                  required: "Email Address is required",
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: "Invalid email address",
-                  },
-                })}
-              />
-            </InputWrapper>
-            <InputWrapper label="Password" error={errors.password?.message}>
-              <Input
-                type="password"
-                {...register("password")}
-              />
-            </InputWrapper>
-            <InputWrapper label="Contact Number*" error={errors.contact_number?.message}>
-              <PhoneInput
-                value={watch("contact_number")}
-                onChange={(val) => {
-                  setValue("contact_number", val, { shouldValidate: true });
-                }}
-              />
-              <input type="hidden" {...register("contact_number", { required: "Contact Number is required" })} />
-            </InputWrapper>
-            <InputWrapper label="Date of Birth*" error={errors.dob?.message}>
-              <Input
-                type="date"
-                {...register("dob", { required: "Date of Birth is required" })}
-              />
-            </InputWrapper>
-            <InputWrapper label="Select Gender*" error={errors.gender?.message}>
-              <select
-                {...register("gender", { required: "Gender is required" })}
-                className="w-full border bg-secondary rounded p-2 text-sm"
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </InputWrapper>
-            <InputWrapper
-              label="Emergency Contact Name*"
-              error={errors.emergency_contact_name?.message}
-            >
-              <Input
-                {...register("emergency_contact_name", {
-                  required: "Emergency Contact Name is required",
-                })}
-              />
-            </InputWrapper>
-            <InputWrapper
-              label="Emergency Contact Number*"
-              error={errors.emergency_contact_number?.message}
-            >
-              <PhoneInput
-                value={watch("emergency_contact_number")}
-                onChange={(val) => {
-                  setValue("emergency_contact_number", val, { shouldValidate: true });
-                }}
-              />
-              <input type="hidden" {...register("emergency_contact_number", { required: "Emergency Contact Number is required" })} />
-            </InputWrapper>
-            <InputWrapper label="Driver Rank" error={errors.driver_rank?.message}>
-              <select
-                {...register("driver_rank")}
-                className="w-full border bg-secondary rounded p-2 text-sm"
-              >
-                <option value="">Select Rank</option>
-                {RANKS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-            </InputWrapper>
-          </div>
+          <GeneralInformation
+            register={register}
+            errors={errors}
+            watch={watch}
+            setValue={setValue}
+          />
 
-          {/* 1. Identity Card */}
-          <SectionTitle>Identity Card</SectionTitle>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <InputWrapper label="NRIC Number*" error={errors.identity_card_number?.message}>
-              <Input
-                {...register("identity_card_number", {
-                  required: "NRIC is required",
-                })}
-              />
-            </InputWrapper>
-            <InputWrapper
-              label="Issue Date*"
-              error={errors.identity_card_issue_date?.message}
-            >
-              <Input
-                type="date"
-                {...register("identity_card_issue_date", {
-                  required: "Issue date is required",
-                })}
-              />
-            </InputWrapper>
-          </div>
+          <IdentityCardSection
+            register={register}
+            errors={errors}
+            watch={watch}
+            setValue={setValue}
+          />
 
-          {/* 2. Driving License */}
-          <SectionTitle>Driving License</SectionTitle>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <InputWrapper
-              label="Driving License Number*"
-              error={errors.driving_license_number?.message}
-            >
-              <Input
-                {...register("driving_license_number", {
-                  required: "License number is required",
-                })}
-              />
-            </InputWrapper>
-            <InputWrapper
-              label="Issue Date*"
-              error={errors.driving_license_issue_date?.message}
-            >
-              <Input
-                type="date"
-                {...register("driving_license_issue_date", {
-                  required: "Issue date is required",
-                })}
-              />
-            </InputWrapper>
-            <InputWrapper
-              label="Expiry Date*"
-              error={errors.driving_license_expire_date?.message}
-            >
-              <Input
-                type="date"
-                {...register("driving_license_expire_date", {
-                  required: "Expiry date is required",
-                })}
-              />
-            </InputWrapper>
-            <InputWrapper label="License Class*" error={errors.license_class?.message}>
-              <select
-                {...register("license_class", {
-                  required: "License class is required",
-                })}
-                className="w-full border bg-secondary rounded p-2 text-sm"
-              >
-                <option value="">Select Class</option>
-                {LICENSE_CLASSES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </InputWrapper>
-          </div>
+          <DrivingLicenseSection
+            register={register}
+            errors={errors}
+            watch={watch}
+            setValue={setValue}
+          />
 
-          {/* 3. Vehicle Details */}
-          <SectionTitle>Vehicle Details</SectionTitle>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <InputWrapper
-              label="Vehicle Plate Number*"
-              error={errors.vehicle_plate_number?.message}
-            >
-              <Input
-                {...register("vehicle_plate_number", {
-                  required: "Plate number is required",
-                })}
-              />
-            </InputWrapper>
-            <InputWrapper label="Vehicle Type*" error={errors.vehicle_type_id?.message}>
-              <select
-                {...register("vehicle_type_id", {
-                  required: "Vehicle type is required",
-                })}
-                className="w-full border bg-secondary rounded p-2 text-sm"
-              >
-                <option value="">Select Type</option>
-                {vehicleTypesResponse?.data?.data?.map((v: any) => (
-                  <option key={v.id} value={v.id}>
-                    {v.vehicle_name}
-                  </option>
-                ))}
-              </select>
-            </InputWrapper>
-            <InputWrapper label="Vehicle Brand*" error={errors.vehicle_brand?.message}>
-              <Input
-                {...register("vehicle_brand", { required: "Brand is required" })}
-              />
-            </InputWrapper>
-            <InputWrapper label="Vehicle Model*" error={errors.vehicle_model?.message}>
-              <Input
-                {...register("vehicle_model", { required: "Model is required" })}
-              />
-            </InputWrapper>
-            <InputWrapper
-              label="Registration Date*"
-              error={errors.registration_date?.message}
-            >
-              <Input
-                type="date"
-                {...register("registration_date", {
-                  required: "Registration date is required",
-                })}
-              />
-            </InputWrapper>
-          </div>
+          <VehicleDetailsSection
+            register={register}
+            errors={errors}
+            watch={watch}
+            setValue={setValue}
+            vehicleTypesResponse={vehicleTypesResponse}
+          />
 
-          {/* 4. Vehicle Log Card */}
-          <SectionTitle>Vehicle Log Card</SectionTitle>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <InputWrapper label="Chassis Number*" error={errors.chassis_number?.message}>
-              <Input
-                {...register("chassis_number", {
-                  required: "Chassis number is required",
-                })}
-              />
-            </InputWrapper>
-          </div>
+          <VehicleLogCardSection
+            register={register}
+            errors={errors}
+            watch={watch}
+            setValue={setValue}
+          />
 
-          {/* 5. Vehicle Insurance Policy */}
-          <SectionTitle>Vehicle Insurance Policy</SectionTitle>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <InputWrapper
-              label="Insurance Policy Number*"
-              error={errors.insurance_policy_number?.message}
-            >
-              <Input
-                {...register("insurance_policy_number", {
-                  required: "Policy number is required",
-                })}
-              />
-            </InputWrapper>
-            <InputWrapper
-              label="Issue Date*"
-              error={errors.insurance_issue_date?.message}
-            >
-              <Input
-                type="date"
-                {...register("insurance_issue_date", {
-                  required: "Issue date is required",
-                })}
-              />
-            </InputWrapper>
-            <InputWrapper
-              label="Expiry Date*"
-              error={errors.insurance_expiry_date?.message}
-            >
-              <Input
-                type="date"
-                {...register("insurance_expiry_date", {
-                  required: "Expiry date is required",
-                })}
-              />
-            </InputWrapper>
-          </div>
+          <VehicleInsurancePolicySection
+            register={register}
+            errors={errors}
+            watch={watch}
+            setValue={setValue}
+          />
 
-          {/* 6. Current Address */}
-          <SectionTitle>Current Address</SectionTitle>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <InputWrapper label="Postal Code*" error={errors.current_postal_code?.message}>
-              <div className="relative">
-                <Input
-                  {...register("current_postal_code", {
-                    required: "Postal code is required",
-                  })}
-                  onChange={(e) => {
-                    register("current_postal_code").onChange(e);
-                    const val = e.target.value;
-                    clearTimeout(debounceTimers.current["currentpostal"]);
-                    setShowPostalSuggestions((prev) => ({
-                      ...prev,
-                      currentpostal: false,
-                    }));
-                    debounceTimers.current["currentpostal"] = setTimeout(() => {
-                      if (val.trim().length >= 3) {
-                        fetchAddressFromPostal(val, "currentpostal");
-                      }
-                    }, 500);
-                  }}
-                />
-                {isLoadingPostal === "currentpostal" && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500" />
-                  </div>
-                )}
-                {showPostalSuggestions["currentpostal"] &&
-                  postalSuggestions["currentpostal"]?.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-72 overflow-y-auto">
-                      <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-b">
-                        Suggested Addresses
-                      </div>
-                      {postalSuggestions["currentpostal"].map((s, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          className="w-full text-left px-4 py-3 hover:bg-[#FFFAE6] border-b last:border-0"
-                          onClick={() => {
-                            setValue("current_postal_code", s.postal_code);
-                            setValue("current_address", s.address);
-                            setShowPostalSuggestions((prev) => ({
-                              ...prev,
-                              currentpostal: false,
-                            }));
-                          }}
-                        >
-                          {s.displayLines.map((line, idx) => (
-                            <p
-                              key={idx}
-                              className={
-                                idx === 0
-                                  ? "text-sm font-semibold text-gray-900 leading-tight"
-                                  : "text-xs text-gray-500 leading-tight mt-0.5"
-                              }
-                            >
-                              <span className="block">{line}</span>
-                            </p>
-                          ))}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-              </div>
-            </InputWrapper>
-            <InputWrapper label="Address*" error={errors.current_address?.message}>
-              <Input
-                {...register("current_address", { required: "Address is required" })}
-              />
-            </InputWrapper>
-            <InputWrapper
-              label="Apartment, Suite, Unit, Building, Floor, etc."
-              error={errors.current_unit?.message}
-            >
-              <Input {...register("current_unit")} />
-            </InputWrapper>
-            <InputWrapper label="Country" error={errors.current_country?.message}>
-              <select
-                {...register("current_country")}
-                className="w-full border bg-secondary rounded p-2 text-sm"
-              >
-                {COUNTRIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </InputWrapper>
-          </div>
+          <AddressSection
+            register={register}
+            errors={errors}
+            watch={watch}
+            setValue={setValue}
+            setModalTarget={setModalTarget}
+          />
 
-          {/* 7. Permanent Address */}
-          <SectionTitle>Permanent Address</SectionTitle>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <InputWrapper label="Postal Code*" error={errors.permanent_postal_code?.message}>
-              <div className="relative">
-                <Input
-                  {...register("permanent_postal_code", {
-                    required: "Postal code is required",
-                  })}
-                  onChange={(e) => {
-                    register("permanent_postal_code").onChange(e);
-                    const val = e.target.value;
-                    clearTimeout(debounceTimers.current["permanentpostal"]);
-                    setShowPostalSuggestions((prev) => ({
-                      ...prev,
-                      permanentpostal: false,
-                    }));
-                    debounceTimers.current["permanentpostal"] = setTimeout(() => {
-                      if (val.trim().length >= 3) {
-                        fetchAddressFromPostal(val, "permanentpostal");
-                      }
-                    }, 500);
-                  }}
-                />
-                {isLoadingPostal === "permanentpostal" && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500" />
-                  </div>
-                )}
-                {showPostalSuggestions["permanentpostal"] &&
-                  postalSuggestions["permanentpostal"]?.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-72 overflow-y-auto">
-                      <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-b">
-                        Suggested Addresses
-                      </div>
-                      {postalSuggestions["permanentpostal"].map((s, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          className="w-full text-left px-4 py-3 hover:bg-[#FFFAE6] border-b last:border-0"
-                          onClick={() => {
-                            setValue("permanent_postal_code", s.postal_code);
-                            setValue("permanent_address", s.address);
-                            setShowPostalSuggestions((prev) => ({
-                              ...prev,
-                              permanentpostal: false,
-                            }));
-                          }}
-                        >
-                          {s.displayLines.map((line, idx) => (
-                            <p
-                              key={idx}
-                              className={
-                                idx === 0
-                                  ? "text-sm font-semibold text-gray-900 leading-tight"
-                                  : "text-xs text-gray-500 leading-tight mt-0.5"
-                              }
-                            >
-                              <span className="block">{line}</span>
-                            </p>
-                          ))}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-              </div>
-            </InputWrapper>
-            <InputWrapper label="Address*" error={errors.permanent_address?.message}>
-              <Input
-                {...register("permanent_address", { required: "Address is required" })}
-              />
-            </InputWrapper>
-            <InputWrapper
-              label="Apartment, Suite, Unit, Building, Floor, etc."
-              error={errors.permanent_unit?.message}
-            >
-              <Input {...register("permanent_unit")} />
-            </InputWrapper>
-            <InputWrapper label="Country" error={errors.permanent_country?.message}>
-              <select
-                {...register("permanent_country")}
-                className="w-full border bg-secondary rounded p-2 text-sm"
-              >
-                {COUNTRIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </InputWrapper>
-          </div>
+          <BankInformationSection
+            register={register}
+            errors={errors}
+            watch={watch}
+            setValue={setValue}
+          />
 
-          {/* 8. Bank Details */}
-          <SectionTitle>Bank Details</SectionTitle>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <InputWrapper label="Bank Name" error={errors.bank_name?.message}>
-              <Input {...register("bank_name")} />
-            </InputWrapper>
-            <InputWrapper label="Account Number" error={errors.account_number?.message}>
-              <Input {...register("account_number")} />
-            </InputWrapper>
-          </div>
+          <DocumentUploadSections
+            documentUrls={documentUrls}
+            uploadingDocs={uploadingDocs}
+            documentErrors={documentErrors}
+            handleDocumentChange={handleDocumentChange}
+          />
         </div>
 
-        {/* Document Upload Sections */}
-        <div className="mt-10 space-y-10">
-          <div>
-            <SectionTitle>Identity Card Documents*</SectionTitle>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              <UploadBox
-                label="NRIC Front*"
-                onChange={(f) => handleDocumentChange("nricFront", f)}
-                error={documentErrors.nricFront}
-                isUploading={uploadingDocs.has("nricFront")}
-              />
-              <UploadBox
-                label="NRIC Back*"
-                onChange={(f) => handleDocumentChange("nricBack", f)}
-                error={documentErrors.nricBack}
-                isUploading={uploadingDocs.has("nricBack")}
-              />
-            </div>
-          </div>
-
-          <div>
-            <SectionTitle>Driving License Documents*</SectionTitle>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              <UploadBox
-                label="Driving License Front*"
-                onChange={(f) => handleDocumentChange("licenseFront", f)}
-                error={documentErrors.licenseFront}
-                isUploading={uploadingDocs.has("licenseFront")}
-              />
-              <UploadBox
-                label="Driving License Back*"
-                onChange={(f) => handleDocumentChange("licenseBack", f)}
-                error={documentErrors.licenseBack}
-                isUploading={uploadingDocs.has("licenseBack")}
-              />
-            </div>
-          </div>
-
-          <div>
-            <SectionTitle>Vehicle Photos*</SectionTitle>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              <UploadBox
-                label="Front View of Vehicle*"
-                onChange={(f) => handleDocumentChange("vehicleFront", f)}
-                error={documentErrors.vehicleFront}
-                isUploading={uploadingDocs.has("vehicleFront")}
-              />
-              <UploadBox
-                label="Rear View of Vehicle*"
-                onChange={(f) => handleDocumentChange("vehicleRear", f)}
-                error={documentErrors.vehicleRear}
-                isUploading={uploadingDocs.has("vehicleRear")}
-              />
-              <UploadBox
-                label="Driver Side View*"
-                onChange={(f) => handleDocumentChange("driverSide", f)}
-                error={documentErrors.driverSide}
-                isUploading={uploadingDocs.has("driverSide")}
-              />
-              <UploadBox
-                label="Passenger Side View*"
-                onChange={(f) => handleDocumentChange("passengerSide", f)}
-                error={documentErrors.passengerSide}
-                isUploading={uploadingDocs.has("passengerSide")}
-              />
-            </div>
-          </div>
-
-          <div>
-            <SectionTitle>Vehicle Documents*</SectionTitle>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              <UploadBox
-                label="Vehicle Log Card*"
-                onChange={(f) => handleDocumentChange("vehicleLog", f)}
-                error={documentErrors.vehicleLog}
-                isUploading={uploadingDocs.has("vehicleLog")}
-                buttonText="Upload"
-              />
-              <UploadBox
-                label="Insurance Policy*"
-                onChange={(f) => handleDocumentChange("insurancePolicy", f)}
-                error={documentErrors.insurancePolicy}
-                isUploading={uploadingDocs.has("insurancePolicy")}
-                buttonText="Upload"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Submit Button */}
         <div className="flex justify-center mt-10">
           <Button
             className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-10 py-3 text-lg rounded-lg"
             onClick={handleSubmit(onSubmit)}
             disabled={isLoading || uploadingDocs.size > 0 || isProfileUploading}
           >
-            {isLoading || uploadingDocs.size > 0 || isProfileUploading
-              ? "Adding..."
-              : "Add Now"}
+            {isLoading || uploadingDocs.size > 0 || isProfileUploading ? "Creating..." : "Add Now"}
           </Button>
         </div>
+
+        <MapModal
+          isOpen={!!modalTarget}
+          onClose={() => setModalTarget(null)}
+          onConfirm={(resolved) => handleModalConfirm(resolved, modalTarget!)}
+          initialPostalCode={
+            modalTarget === "current"
+              ? watch("current_postal_code")
+              : watch("permanent_postal_code")
+          }
+        />
       </div>
     </div>
   );
