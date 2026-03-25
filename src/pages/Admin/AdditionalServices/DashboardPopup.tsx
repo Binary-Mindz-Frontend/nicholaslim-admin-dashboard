@@ -11,6 +11,7 @@ import {
 import DashboardPopupDialog from "@/components/Dashboard/DashboardPopup/DashboardPopupDialog"
 import DashboardPopupTable from "@/components/Dashboard/DashboardPopup/DashboardPopupTable"
 import DeleteConfirmationModal from "@/pages/SupportAndDisputes/DeleteConfirmationModal/DeleteConfirmationModal";
+import NewDynamicChangeLogTable from "@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable"
 
 const DashboardPopup = () => {
   const [openDialog, setOpenDialog] = useState(false)
@@ -111,11 +112,11 @@ const DashboardPopup = () => {
         </Button>
       </div>
 
-      <DashboardPopupTable 
-        data={popups} 
-        onEdit={openEdit} 
-        onDelete={openDelete} 
-        isLoading={isLoading} 
+      <DashboardPopupTable
+        data={popups}
+        onEdit={openEdit}
+        onDelete={openDelete}
+        isLoading={isLoading}
       />
 
       <DashboardPopupDialog
@@ -133,8 +134,12 @@ const DashboardPopup = () => {
         onConfirm={handleDeleteConfirm}
         isLoading={isDeleting}
       />
+
+      <div>
+        <NewDynamicChangeLogTable entityType="DashboardPopup" />
+      </div>
     </div>
-  )
+  );
 }
 
 export default DashboardPopup
