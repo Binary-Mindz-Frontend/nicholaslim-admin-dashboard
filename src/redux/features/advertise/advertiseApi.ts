@@ -109,9 +109,10 @@ export const advertiseApi = baseApi.injectEndpoints({
     }),
 
     getAllAdvertisesLogs: builder.query({
-      query: () => ({
+      query: (query) => ({
         url: "/advertise/logs",
         method: "GET",
+        params: query
       }),
       providesTags: ["Advertisements"],
     })
