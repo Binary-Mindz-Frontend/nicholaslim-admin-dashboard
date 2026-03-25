@@ -15,7 +15,7 @@ import { useContentDataHandler } from "./components/ContentDataHandler";
 import ContentTabs from "./components/ContentTabs";
 import ContentSection from "./components/ContentSection";
 import ContentModals from "./components/ContentModals";
-import { DynamicChangeLogTable } from "@/components/Shared/DynamicChangeLogTable/DynamicChangeLogTable";
+import { ContentLogTable } from "@/components/Shared/DynamicChangeLogTable/ContentLogTable";
 import { contentLogColumns } from "./components/contentLogColumns";
 import { tabItems } from "@/types/contentManagementType";
 
@@ -575,14 +575,10 @@ export default function ContentManagementApp() {
       />
 
       <div className="mt-6">
-        <DynamicChangeLogTable
+        <ContentLogTable
           columns={contentLogColumns}
-          data={
-            apiHooks.contentLogs?.data?.filter(
-              (item: any) => item.faqFor === faq_for,
-            ) || []
-          }
-          isLoading={apiHooks.isLoading}
+          activeTab={activeTab}
+          activeTabByRoute={activeTabByRoute}
         />
       </div>
     </div>

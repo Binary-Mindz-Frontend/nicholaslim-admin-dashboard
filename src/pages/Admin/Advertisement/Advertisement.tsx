@@ -1,17 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import AdvertiseManagementTop from "./components/AddTop";
 import PerformanceTrendsChart from "./components/PerformanceTrend";
 import CreateNewCampaign from "./components/CreateNewCampaign";
 import AdvertisementsTable from "./components/AdvertismentList";
-import { useGetAllAdvertisesLogsQuery } from "@/redux/features/advertise/advertiseApi";
-import { DynamicChangeLogTable } from "@/components/Shared/DynamicChangeLogTable/DynamicChangeLogTable";
+import { AdvertisementLogTable } from "@/components/Shared/DynamicChangeLogTable/AdvertisementLogTable";
 
 export default function Advertisement() {
   const [activeTab, setActiveTab] = useState<"USER" | "RAIDER">("USER");
-
-  const { data: allAdvertisesLogs, isLoading } =
-    useGetAllAdvertisesLogsQuery("");
 
   const advertiseLogColumns = [
     {
@@ -143,39 +138,12 @@ export default function Advertisement() {
 
       <AdvertisementsTable activeTab={activeTab} />
 
-      {activeTab === "USER" &&
-        allAdvertisesLogs?.data?.filter(
-          (item: { createFor: string }) => item.createFor === "USER",
-        ) && (
-          <div className="mt-12">
-            <DynamicChangeLogTable
-              columns={advertiseLogColumns}
-              data={
-                allAdvertisesLogs?.data?.filter(
-                  (item: { createFor: string }) => item.createFor === "USER",
-                ) || []
-              }
-              isLoading={isLoading}
-            />
-          </div>
-        )}
-
-      {activeTab === "RAIDER" &&
-        allAdvertisesLogs?.data?.filter(
-          (item: { createFor: string }) => item.createFor === "RAIDER",
-        ) && (
-          <div className="mt-12">
-            <DynamicChangeLogTable
-              columns={advertiseLogColumns}
-              data={
-                allAdvertisesLogs?.data?.filter(
-                  (item: { createFor: string }) => item.createFor === "RAIDER",
-                ) || []
-              }
-              isLoading={isLoading}
-            />
-          </div>
-        )}
+      <div className="mt-12">
+        <AdvertisementLogTable
+          columns={advertiseLogColumns}
+          createFor={activeTab}
+        />
+      </div>
     </div>
   );
 }

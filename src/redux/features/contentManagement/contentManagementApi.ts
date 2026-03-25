@@ -7,7 +7,7 @@ const contentManagementApi = baseApi.injectEndpoints({
         url: "/content-management",
         method: "GET",
       }),
-      providesTags: ["Content"],
+      providesTags: ["Content", "AdditionalServicesLogs"],
     }),
 
     getContentById: build.query({
@@ -15,7 +15,7 @@ const contentManagementApi = baseApi.injectEndpoints({
         url: `/content-management/${id}`,
         method: "GET",
       }),
-      providesTags: ["Content"],
+      providesTags: ["Content", "AdditionalServicesLogs"],
     }),
 
     addContent: build.mutation({
@@ -24,7 +24,7 @@ const contentManagementApi = baseApi.injectEndpoints({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Content"],
+      invalidatesTags: ["Content", "AdditionalServicesLogs"],
     }),
 
     updateContent: build.mutation({
@@ -33,7 +33,7 @@ const contentManagementApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: ["Content"],
+      invalidatesTags: ["Content", "AdditionalServicesLogs"],
     }),
 
     deleteContent: build.mutation({
@@ -41,15 +41,16 @@ const contentManagementApi = baseApi.injectEndpoints({
         url: `/content-management/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Content"],
+      invalidatesTags: ["Content", "AdditionalServicesLogs" ],
     }),
 
     getAllContentLogs: build.query({
-      query: () => ({
+      query: (params) => ({
         url: "/content-management/logs",
         method: "GET",
+        params
       }),
-      providesTags: ["Content"],
+      providesTags: ["Content", "AdditionalServicesLogs"],
     })
   }),
 });

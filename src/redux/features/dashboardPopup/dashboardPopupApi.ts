@@ -8,7 +8,7 @@ const dashboardPopupApi = baseApi.injectEndpoints({
         url: "/dashboard-popup",
         method: "GET",
       }),
-      providesTags: ["DashboardPopup"],
+      providesTags: ["DashboardPopup", "AdditionalServicesLogs"],
     }),
 
     getDashboardPopupById: builder.query({
@@ -16,7 +16,7 @@ const dashboardPopupApi = baseApi.injectEndpoints({
         url: `/dashboard-popup/${id}`,
         method: "GET",
       }),
-      providesTags: ["DashboardPopup"],
+      providesTags: ["DashboardPopup", "AdditionalServicesLogs"],
     }),
 
     addDashboardPopup: builder.mutation({
@@ -25,7 +25,7 @@ const dashboardPopupApi = baseApi.injectEndpoints({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["DashboardPopup"],
+      invalidatesTags: ["DashboardPopup", "AdditionalServicesLogs"],
     }),
 
     updateDashboardPopup: builder.mutation({
@@ -34,7 +34,7 @@ const dashboardPopupApi = baseApi.injectEndpoints({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["DashboardPopup"],
+      invalidatesTags: ["DashboardPopup", "AdditionalServicesLogs"],
     }),
 
     deleteDashboardPopup: builder.mutation({
@@ -42,7 +42,7 @@ const dashboardPopupApi = baseApi.injectEndpoints({
         url: `/dashboard-popup/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["DashboardPopup"],
+      invalidatesTags: ["DashboardPopup", "AdditionalServicesLogs"],
     }),
   }),
 });
