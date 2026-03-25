@@ -441,12 +441,12 @@ export const BankInformationSection = ({
   errors,
 }: FormSectionProps) => (
   <>
-    <SectionTitle>Bank Information</SectionTitle>
+    <SectionTitle>Bank Details</SectionTitle>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
       <InputWrapper label="Bank Name" error={errors.bank_name?.message}>
         <Input {...register("bank_name")} />
       </InputWrapper>
-      <InputWrapper label="Bank Account" error={errors.account_number?.message}>
+      <InputWrapper label="Account Number" error={errors.account_number?.message}>
         <Input {...register("account_number")} />
       </InputWrapper>
     </div>
@@ -468,18 +468,18 @@ export const DocumentUploadSections = ({
 }: DocumentUploadSectionProps) => (
   <div className="mt-10 space-y-10">
     <div>
-      <h2 className="font-semibold text-lg">Personal Documents</h2>
+      <h2 className="font-semibold text-lg">Identity Card Documents</h2>
       <p className="text-sm text-gray-600">Upload Your Identity Card</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <UploadBox
-          label="Front side photo of your Identity card"
+          label="NRIC Front"
           onChange={(file) => handleDocumentChange("nricFront", file)}
           isUploading={uploadingDocs.has("nricFront")}
           currentPreviewUrl={documentUrls.nricFront}
           error={documentErrors.nricFront}
         />
         <UploadBox
-          label="Back side photo of your Identity card"
+          label="NRIC Back"
           onChange={(file) => handleDocumentChange("nricBack", file)}
           isUploading={uploadingDocs.has("nricBack")}
           currentPreviewUrl={documentUrls.nricBack}
@@ -489,18 +489,18 @@ export const DocumentUploadSections = ({
     </div>
 
     <div>
-      <h2 className="font-semibold text-lg">Driving License</h2>
+      <h2 className="font-semibold text-lg">Driving License Documents</h2>
       <p className="text-sm text-gray-600">Upload Your License</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <UploadBox
-          label="Front of Driving License"
+          label="Driving License Front"
           onChange={(file) => handleDocumentChange("licenseFront", file)}
           isUploading={uploadingDocs.has("licenseFront")}
           currentPreviewUrl={documentUrls.licenseFront}
           error={documentErrors.licenseFront}
         />
         <UploadBox
-          label="Back of Driving License"
+          label="Driving License Back"
           onChange={(file) => handleDocumentChange("licenseBack", file)}
           isUploading={uploadingDocs.has("licenseBack")}
           currentPreviewUrl={documentUrls.licenseBack}
@@ -514,28 +514,28 @@ export const DocumentUploadSections = ({
       <p className="text-sm text-gray-600">Upload Your Vehicle Images</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <UploadBox
-          label="Vehicle Front Side"
+          label="Front View of Vehicle"
           onChange={(file) => handleDocumentChange("vehicleFront", file)}
           isUploading={uploadingDocs.has("vehicleFront")}
           currentPreviewUrl={documentUrls.vehicleFront}
           error={documentErrors.vehicleFront}
         />
         <UploadBox
-          label="Vehicle Back Side"
+          label="Rear View of Vehicle"
           onChange={(file) => handleDocumentChange("vehicleRear", file)}
           isUploading={uploadingDocs.has("vehicleRear")}
           currentPreviewUrl={documentUrls.vehicleRear}
           error={documentErrors.vehicleRear}
         />
         <UploadBox
-          label="Driver Side"
+          label="Driver Side View"
           onChange={(file) => handleDocumentChange("driverSide", file)}
           isUploading={uploadingDocs.has("driverSide")}
           currentPreviewUrl={documentUrls.driverSide}
           error={documentErrors.driverSide}
         />
         <UploadBox
-          label="Passenger Side"
+          label="Passenger Side View"
           onChange={(file) => handleDocumentChange("passengerSide", file)}
           isUploading={uploadingDocs.has("passengerSide")}
           currentPreviewUrl={documentUrls.passengerSide}
@@ -549,14 +549,14 @@ export const DocumentUploadSections = ({
       <p className="text-sm text-gray-600">Upload Vehicle Log & Policy Documents</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <UploadBox
-          label="Vehicle Log Photo"
+          label="Vehicle Log Card"
           onChange={(file) => handleDocumentChange("vehicleLog", file)}
           isUploading={uploadingDocs.has("vehicleLog")}
           currentPreviewUrl={documentUrls.vehicleLog}
           error={documentErrors.vehicleLog}
         />
         <UploadBox
-          label="Vehicle Policy Photo"
+          label="Insurance Policy"
           onChange={(file) => handleDocumentChange("insurancePolicy", file)}
           isUploading={uploadingDocs.has("insurancePolicy")}
           currentPreviewUrl={documentUrls.insurancePolicy}
