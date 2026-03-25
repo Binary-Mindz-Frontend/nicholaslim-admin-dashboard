@@ -430,14 +430,14 @@ export const DocumentUploadSections = ({
       <SectionTitle>Driving License Documents*</SectionTitle>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <UploadBox
-          label="Front Side of Driving License*"
+          label="Driving License Front*"
           onChange={(f) => handleDocumentChange("licenseFront", f)}
           currentPreviewUrl={documentUrls.licenseFront}
           error={documentErrors.licenseFront}
           isUploading={uploadingDocs.has("licenseFront")}
         />
         <UploadBox
-          label="Back Side of Driving License*"
+          label="Driving License Back*"
           onChange={(f) => handleDocumentChange("licenseBack", f)}
           currentPreviewUrl={documentUrls.licenseBack}
           error={documentErrors.licenseBack}
