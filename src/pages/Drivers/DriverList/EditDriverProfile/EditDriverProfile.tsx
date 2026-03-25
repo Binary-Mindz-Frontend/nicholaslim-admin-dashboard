@@ -478,6 +478,11 @@ const MapModal: React.FC<MapModalProps> = ({
 
     mapRef.current = map;
 
+    // Ensure map renders correctly by recalculating its size after a short delay
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+
     map.on("click", async (e: { latlng: { lat: number; lng: number } }) => {
       const { lat, lng } = e.latlng;
       dropPin(lat, lng);
@@ -504,7 +509,7 @@ const MapModal: React.FC<MapModalProps> = ({
       initialSearchDoneRef.current = true;
       runSearch(initialPostalCode);
     }
-  }, [mapReady, initialPostalCode, runSearch]);
+  }, [mapReady, initialPostalCode, runSearch, isOpen]);
 
   function selectSuggestion(s: AddressSuggestion) {
     setPending({
