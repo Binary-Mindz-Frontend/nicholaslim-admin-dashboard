@@ -289,7 +289,11 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
             )}
           </p>
           <p className="text-xs text-gray-500">
-            Online: {row.is_online ? "Yes" : "No"}
+            {row.is_online ? (
+              <span className="text-green-600 font-medium">Online</span>
+            ) : (
+              <span className="font-medium">Offline</span>
+            )}
           </p>
           {row.isSuspended && (
             <p className="text-xs text-red-500">Suspended</p>
