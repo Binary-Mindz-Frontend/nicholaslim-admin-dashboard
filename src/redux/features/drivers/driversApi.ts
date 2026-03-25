@@ -42,7 +42,7 @@ const driversApi = baseApi.injectEndpoints({
                     method: "GET",
                 };
             },
-            providesTags: ["RiderProfiles"],
+            providesTags: ["RiderProfiles", "AdditionalServicesLogs"],
         }),
 
         getApprovedRiderProfiles: builder.query({
@@ -73,7 +73,7 @@ const driversApi = baseApi.injectEndpoints({
                     method: "GET",
                 };
             },
-            providesTags: ["RiderProfiles"],
+            providesTags: ["RiderProfiles", "AdditionalServicesLogs"],
         }),
 
         getGoinReqestRiderProfiles: builder.query({
@@ -111,7 +111,7 @@ const driversApi = baseApi.injectEndpoints({
                     method: "GET",
                 };
             },
-            providesTags: ["RiderProfiles"],
+            providesTags: ["RiderProfiles", "AdditionalServicesLogs"],
         }),
 
 
@@ -140,7 +140,7 @@ const driversApi = baseApi.injectEndpoints({
                 };
                 return request;
             },
-            invalidatesTags: ["RiderProfiles"],
+            invalidatesTags: ["RiderProfiles", "AdditionalServicesLogs"],
         }),
 
         addRiderProfile: builder.mutation({
@@ -152,7 +152,7 @@ const driversApi = baseApi.injectEndpoints({
                     'Content-Type': 'application/json',
                 },
             }),
-            invalidatesTags: ["RiderProfiles"],
+            invalidatesTags: ["RiderProfiles", "AdditionalServicesLogs"],
         }),
 
         updateRiderProfile: builder.mutation({
@@ -161,7 +161,7 @@ const driversApi = baseApi.injectEndpoints({
                 method: "PATCH",
                 body: data,
             }),
-            invalidatesTags: ["RiderProfiles"],
+            invalidatesTags: ["RiderProfiles", "AdditionalServicesLogs"],
         }),
 
         unsuspendRiderProfile: builder.mutation({
@@ -169,7 +169,7 @@ const driversApi = baseApi.injectEndpoints({
                 url: `/raider-profile/unsuspend/${id}`,
                 method: "PATCH",
             }),
-            invalidatesTags: ["RiderProfiles"],
+            invalidatesTags: ["RiderProfiles", "AdditionalServicesLogs"],
         }),
 
         suspendRiderProfile: builder.mutation({
@@ -178,7 +178,7 @@ const driversApi = baseApi.injectEndpoints({
                 method: "PATCH",
                 body: data,
             }),
-            invalidatesTags: ["RiderProfiles"],
+            invalidatesTags: ["RiderProfiles", "AdditionalServicesLogs"],
         }),
 
         verifyRiderProfile: builder.mutation<
@@ -195,6 +195,7 @@ const driversApi = baseApi.injectEndpoints({
             invalidatesTags: ({ raiderId }) => [
                 { type: "RiderProfiles", id: "LIST" },
                 { type: "RiderProfiles", id: raiderId },
+                { type: "AdditionalServicesLogs", id: "LIST" },
             ],
         }),
 
@@ -204,7 +205,7 @@ const driversApi = baseApi.injectEndpoints({
                 method: "GET",
             }),
 
-            providesTags: (id) => [{ type: "RiderProfiles", id }],
+            providesTags: (id) => [{ type: "RiderProfiles", id }, "AdditionalServicesLogs"],
         }),
 
         getUserOrderHistory: builder.query({
@@ -212,7 +213,7 @@ const driversApi = baseApi.injectEndpoints({
                 url: `/order/user-history/${id}?page=${page}&limit=${limit}`,
                 method: "GET",
             }),
-            providesTags: ({ id }) => [{ type: "RiderProfiles", id }],
+            providesTags: ({ id }) => [{ type: "RiderProfiles", id }, "AdditionalServicesLogs"],
         }),
 
     }),
