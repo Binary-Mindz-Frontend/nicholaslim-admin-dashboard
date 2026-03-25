@@ -86,15 +86,15 @@ export default function StandardCommissionRate({
       const response = await onDeleteCommissionRate(deleteModal.ruleId);
 
       if (response?.success) {
-        toast.success(response.message || "Rule deleted successfully");
+        // toast.success(response.message || "Rule deleted successfully");
         const newRules = rules.filter((_, i) => i !== deleteModal.ruleIndex);
         setRules(newRules);
       } else {
-        toast.error(response?.message || "Failed to delete rule");
+        // toast.error(response?.message || "Failed to delete rule");
       }
     } catch (error: any) {
       console.error("Failed to delete rule:", error);
-      toast.error(error?.data?.message || "Failed to delete rule");
+      // toast.error(error?.data?.message || "Failed to delete rule");
     } finally {
       setDeleteModal({
         isOpen: false,
@@ -190,16 +190,16 @@ export default function StandardCommissionRate({
         messages.push(`Failed to update ${updateErrorCount} rule(s)`);
 
       if (messages.length > 0) {
-        const summary = messages.join(", ");
+        // const summary = messages.join(", ");
         if (newSuccessCount > 0 || updateSuccessCount > 0) {
-          toast.success(summary);
+          // toast.success(summary);
         } else {
-          toast.error(summary);
+          // toast.error(summary);
         }
       }
     } catch (error) {
       console.error("Failed to save rules:", error);
-      toast.error("Failed to save commission rates. Please try again.");
+      // toast.error("Failed to save commission rates. Please try again.");
     } finally {
       setIsLoading(false);
     }

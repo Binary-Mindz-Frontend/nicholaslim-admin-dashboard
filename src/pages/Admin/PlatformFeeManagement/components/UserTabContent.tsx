@@ -6,35 +6,8 @@ interface UserTabContentProps {
   activeTab: "USER" | "RAIDER";
   userFeeStructureData: any[];
   dynamicSurgeData: any[];
-  onAddFeeStructure: (data: {
-    feeName: string;
-    amount: number;
-    serviceAreaId: number;
-    appliesTo:
-      | "ALL_ORDERS"
-      | "ORDER_LESS"
-      | "EXPRESS_ORDERS"
-      | "SCHEDULED_ORDERS"
-      | "STACKED_ORDERS"
-      | "STANDARD_ORDERS";
-    applicableUser: "USER" | "RAIDER";
-    conditionValue?: number;
-  }) => Promise<any>;
-  onUpdateFeeStructure: (data: {
-    id: number;
-    feeName: string;
-    amount: number;
-    serviceAreaId: number;
-    appliesTo:
-      | "ALL_ORDERS"
-      | "ORDER_LESS"
-      | "EXPRESS_ORDERS"
-      | "SCHEDULED_ORDERS"
-      | "STACKED_ORDERS"
-      | "STANDARD_ORDERS";
-    applicableUser: "USER" | "RAIDER";
-    conditionValue?: number;
-  }) => Promise<any>;
+  onAddFeeStructure: (data: any) => Promise<any>;
+  onUpdateFeeStructure: (data: any) => Promise<any>;
   onDeleteFeeStructure: (id: number) => Promise<any>;
   onAddSurgeRule: (data: {
     ruleName: string;

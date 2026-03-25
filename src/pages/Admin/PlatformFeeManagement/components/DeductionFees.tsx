@@ -88,15 +88,15 @@ export default function DeductionFees({
       const response = await onDeleteDeductionFee(deleteModal.feeId);
 
       if (response?.success) {
-        toast.success(response.message || "Fee deleted successfully");
+        // toast.success(response.message || "Fee deleted successfully");
         const newFees = fees.filter((_, i) => i !== deleteModal.feeIndex);
         setFees(newFees);
       } else {
-        toast.error(response?.message || "Failed to delete fee");
+        // toast.error(response?.message || "Failed to delete fee");
       }
     } catch (error: any) {
       console.error("Failed to delete fee:", error);
-      toast.error(error?.data?.message || "Failed to delete fee");
+      // toast.error(error?.data?.message || "Failed to delete fee");
     } finally {
       setDeleteModal({
         isOpen: false,
@@ -185,16 +185,16 @@ export default function DeductionFees({
         messages.push(`Failed to update ${updateErrorCount} fee(s)`);
 
       if (messages.length > 0) {
-        const summary = messages.join(", ");
+        // const summary = messages.join(", ");
         if (newSuccessCount > 0 || updateSuccessCount > 0) {
-          toast.success(summary);
+          // toast.success(summary);
         } else {
-          toast.error(summary);
+          // toast.error(summary);
         }
       }
     } catch (error) {
       console.error("Failed to save fees:", error);
-      toast.error("Failed to save deduction fees. Please try again.");
+      // toast.error("Failed to save deduction fees. Please try again.");
     } finally {
       setIsLoading(false);
     }

@@ -11,17 +11,7 @@ import {
 } from "@/types/userFeeStructureType";
 import { useGetServiceZonesQuery } from "@/redux/features/serviceZone/serviceZoneApi";
 
-// Define all order types as a constant for reuse
-const ORDER_TYPES = [
-  { value: "ALL_ORDERS", label: "All Orders" },
-  { value: "ORDER_LESS", label: "Order Less Than" },
-  { value: "EXPRESS_ORDERS", label: "Express Orders" },
-  { value: "SCHEDULED_ORDERS", label: "Scheduled Orders" },
-  { value: "STACKED_ORDERS", label: "Stacked Orders" },
-  { value: "STANDARD_ORDERS", label: "Standard Orders" },
-] as const;
-
-type OrderType = (typeof ORDER_TYPES)[number]["value"];
+// No longer using fixed order types
 
 export default function UserFeeStructure({
   feeStructureData,
@@ -68,9 +58,14 @@ export default function UserFeeStructure({
           amount: fee.amount,
           displayAmount: fee.amount.toString(),
           serviceAreaId: fee.service_area_id,
-          appliesTo: fee.applies_to as OrderType,
+          appliesTo: fee.applies_to,
           applicableUser: fee.applicable_user,
           conditionValue: fee.condition_value || 0,
+          ruleKey: fee.rule_key || "",
+          ruleOperator: fee.rule_operator || "",
+          ruleValue: fee.rule_value || "",
+          conditionUnit: fee.condition_unit || "BDT",
+          isActive: fee.is_active ?? true,
         }));
 
       setFees(filteredFees);
@@ -86,9 +81,14 @@ export default function UserFeeStructure({
         amount: 0,
         displayAmount: "",
         serviceAreaId: null,
-        appliesTo: "ALL_ORDERS",
+        appliesTo: "DELIVERY_TYPE",
         applicableUser: applicableUser,
         conditionValue: 0,
+        ruleKey: "delivery_type",
+        ruleOperator: "=",
+        ruleValue: "",
+        conditionUnit: "BDT",
+        isActive: true,
       },
     ]);
   };
@@ -143,7 +143,7 @@ export default function UserFeeStructure({
   const handleFeeChange = (
     index: number,
     field: keyof FeeStructure,
-    value: string | number | null | OrderType,
+    value: string | number | null | boolean,
   ) => {
     const newFees = [...fees];
 
@@ -161,9 +161,7 @@ export default function UserFeeStructure({
     } else if (field === "appliesTo") {
       newFees[index] = {
         ...newFees[index],
-        [field]: value as OrderType,
-        conditionValue:
-          value === "ORDER_LESS" ? newFees[index].conditionValue : 0,
+        [field]: value as string,
       };
     } else if (field === "serviceAreaId") {
       newFees[index] = { ...newFees[index], [field]: value as number | null };
@@ -188,18 +186,6 @@ export default function UserFeeStructure({
     }
   };
 
-  const handleConditionValueChange = (index: number, value: string) => {
-    const newFees = [...fees];
-    const isValid = /^[\$]?\d*(\.\d+)?$/.test(value) || value === "";
-
-    if (isValid) {
-      newFees[index] = {
-        ...newFees[index],
-        conditionValue: parseFloat(value) || 0,
-      };
-      setFees(newFees);
-    }
-  };
 
   const handleSaveAll = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,16 +203,18 @@ export default function UserFeeStructure({
       for (const fee of newFees) {
         if (fee.feeName.trim() && fee.amount > 0 && fee.serviceAreaId) {
           const requestData: any = {
-            feeName: fee.feeName,
+            fee_name: fee.feeName,
             amount: fee.amount,
-            serviceAreaId: fee.serviceAreaId,
-            appliesTo: fee.appliesTo,
-            applicableUser: fee.applicableUser,
+            service_area_id: fee.serviceAreaId,
+            applies_to: fee.appliesTo,
+            applicable_user: fee.applicableUser,
+            rule_key: fee.ruleKey,
+            rule_operator: fee.ruleOperator,
+            rule_value: fee.ruleValue,
+            condition_value: fee.conditionValue,
+            condition_unit: fee.conditionUnit,
+            is_active: fee.isActive,
           };
-
-          if (fee.appliesTo === "ORDER_LESS" && fee.conditionValue) {
-            requestData.conditionValue = fee.conditionValue;
-          }
 
           try {
             await onAddFeeStructure(requestData);
@@ -247,16 +235,18 @@ export default function UserFeeStructure({
         ) {
           const requestData: any = {
             id: fee.id,
-            feeName: fee.feeName,
+            fee_name: fee.feeName,
             amount: fee.amount,
-            serviceAreaId: fee.serviceAreaId,
-            appliesTo: fee.appliesTo,
-            applicableUser: fee.applicableUser,
+            service_area_id: fee.serviceAreaId,
+            applies_to: fee.appliesTo,
+            applicable_user: fee.applicableUser,
+            rule_key: fee.ruleKey,
+            rule_operator: fee.ruleOperator,
+            rule_value: fee.ruleValue,
+            condition_value: fee.conditionValue,
+            condition_unit: fee.conditionUnit,
+            is_active: fee.isActive,
           };
-
-          if (fee.appliesTo === "ORDER_LESS" && fee.conditionValue) {
-            requestData.conditionValue = fee.conditionValue;
-          }
 
           try {
             await onUpdateFeeStructure(requestData);
@@ -279,11 +269,11 @@ export default function UserFeeStructure({
         messages.push(`Failed to update ${updateErrorCount} fee(s)`);
 
       if (messages.length > 0) {
-        const summary = messages.join(", ");
+        // const summary = messages.join(", ");
         if (newSuccessCount > 0 || updateSuccessCount > 0) {
-          toast.success(summary);
+          // toast.success(summary);
         } else {
-          toast.error(summary);
+          // toast.error(summary);
         }
       }
     } catch (error) {
@@ -325,25 +315,28 @@ export default function UserFeeStructure({
           </button>
         </div>
 
-        <form onSubmit={handleSaveAll} className="space-y-4">
-          <div className="hidden md:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_40px] gap-4 mb-2 text-sm font-semibold text-gray-600">
+        <form onSubmit={handleSaveAll} className="space-y-6">
+          <div className="hidden md:grid grid-cols-[1.2fr_0.8fr_0.8fr_1fr_1.5fr_0.8fr_0.8fr_50px_40px] gap-3 mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
             <div>Fee Name</div>
             <div>Amount</div>
+            <div>Unit</div>
             <div>Service Area</div>
-            <div>Applies to</div>
-            <div>Condition Value</div>
+            <div>Rule (Key | Op | Value)</div>
+            <div>Applies To</div>
+            <div>Cond. Val</div>
+            <div className="text-center">Active</div>
             <div className="w-10"></div>
           </div>
 
           {fees.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-12 rounded-2xl text-gray-400">
               No fee structure found. Click "Add Fee" to create one.
             </div>
           ) : (
             fees.map((fee, index) => (
               <div
                 key={fee.id || `new-${index}`}
-                className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1fr_1fr_40px] gap-4 items-center"
+                className="grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr_0.8fr_1fr_1.5fr_0.8fr_0.8fr_50px_40px] gap-3 items-center bg-gray-50/50 p-4 md:p-0 md:bg-transparent rounded-xl md:rounded-none border md:border-0 border-gray-100 mb-4 md:mb-0"
               >
                 <input
                   type="text"
@@ -363,11 +356,25 @@ export default function UserFeeStructure({
                   onChange={(e) =>
                     handleDisplayAmountChange(index, e.target.value)
                   }
-                  placeholder="Amount (e.g., 3.99, 10%, $2.5)"
+                  placeholder="Amount"
                   className={inputClasses}
                   required
                   disabled={isLoading}
                 />
+
+                <select
+                  value={fee.conditionUnit}
+                  onChange={(e) =>
+                    handleFeeChange(index, "conditionUnit", e.target.value)
+                  }
+                  className={selectClasses}
+                  disabled={isLoading}
+                >
+                  <option value="BDT">BDT</option>
+                  <option value="KM">KM</option>
+                  <option value="ORDER_AMOUNT">Order Amt</option>
+                  <option value="PERCENTAGE">%</option>
+                </select>
 
                 <select
                   value={fee.serviceAreaId || ""}
@@ -382,7 +389,7 @@ export default function UserFeeStructure({
                   required
                   disabled={isLoading}
                 >
-                  <option value="">Select Service Area</option>
+                  <option value="">Area</option>
                   {serviceZones.map((zone: any) => (
                     <option key={zone.id} value={zone.id}>
                       {zone.name}
@@ -390,42 +397,66 @@ export default function UserFeeStructure({
                   ))}
                 </select>
 
-                <select
-                  value={fee.appliesTo}
-                  onChange={(e) =>
-                    handleFeeChange(
-                      index,
-                      "appliesTo",
-                      e.target.value as OrderType,
-                    )
-                  }
-                  className={selectClasses}
-                  disabled={isLoading}
-                >
-                  {ORDER_TYPES.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="grid grid-cols-[1fr_45px_1fr] gap-1">
+                  <input
+                    type="text"
+                    value={fee.ruleKey}
+                    onChange={(e) => handleFeeChange(index, "ruleKey", e.target.value)}
+                    placeholder="Key"
+                    className={`${inputClasses} px-2 py-2 text-xs`}
+                    disabled={isLoading}
+                  />
+                  <select
+                    value={fee.ruleOperator}
+                    onChange={(e) => handleFeeChange(index, "ruleOperator", e.target.value)}
+                    className={`${selectClasses} px-1 py-2 text-xs`}
+                    disabled={isLoading}
+                  >
+                    <option value="=">=</option>
+                    <option value=">">&gt;</option>
+                    <option value="<">&lt;</option>
+                    <option value=">=">&gt;=</option>
+                    <option value="<=">&lt;=</option>
+                  </select>
+                  <input
+                    type="text"
+                    value={fee.ruleValue}
+                    onChange={(e) => handleFeeChange(index, "ruleValue", e.target.value)}
+                    placeholder="Val"
+                    className={`${inputClasses} px-2 py-2 text-xs`}
+                    disabled={isLoading}
+                  />
+                </div>
 
-                <div>
-                  {fee.appliesTo === "ORDER_LESS" ? (
-                    <input
-                      type="text"
-                      value={fee.conditionValue || ""}
-                      onChange={(e) =>
-                        handleConditionValueChange(index, e.target.value)
-                      }
-                      placeholder="e.g., $15"
-                      className={inputClasses}
-                      disabled={isLoading}
-                    />
-                  ) : (
-                    <div className="px-4 py-3 text-gray-400 text-base">
-                      Not applicable
-                    </div>
-                  )}
+                <input
+                  type="text"
+                  value={fee.appliesTo}
+                  onChange={(e) => handleFeeChange(index, "appliesTo", e.target.value)}
+                  placeholder="Category"
+                  className={inputClasses}
+                  disabled={isLoading}
+                />
+
+                <input
+                  type="number"
+                  value={fee.conditionValue || ""}
+                  onChange={(e) =>
+                    handleFeeChange(index, "conditionValue", Number(e.target.value))
+                  }
+                  placeholder="Cond."
+                  className={inputClasses}
+                  disabled={isLoading}
+                />
+
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => handleFeeChange(index, "isActive", !fee.isActive)}
+                    className={`w-10 h-6 rounded-full transition-colors relative ${fee.isActive ? 'bg-green-500' : 'bg-gray-300'}`}
+                    disabled={isLoading}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${fee.isActive ? 'right-1' : 'left-1'}`} />
+                  </button>
                 </div>
 
                 <button
