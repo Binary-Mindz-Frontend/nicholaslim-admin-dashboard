@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Camera, Upload, X, ArrowLeft, Star, Medal, Wifi } from "lucide-react";
+import { Camera, Upload, X, ArrowLeft, Star, Medal, Wifi, Loader2, MapPin, CheckCircle2, Navigation, Search, ChevronRight } from "lucide-react";
 import toast from "react-hot-toast";
 import {
   useGetRiderProfileByIdQuery,
@@ -192,8 +192,46 @@ const UploadBox = ({
   );
 };
 
-// --- OneMap API Helpers ---
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const SG_CENTER: [number, number] = [1.3521, 103.8198];
 const ONEMAP_SEARCH = "https://www.onemap.gov.sg/api/common/elastic/search";
+const ONEMAP_REVERSE = "https://www.onemap.gov.sg/api/public/revgeocode";
+
+// ─── Leaflet Loader (singleton) ───────────────────────────────────────────────
+
+function loadLeaflet(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if ((window as any).L) { resolve(); return; }
+    if (!(window as any).__leafletCallbacks) (window as any).__leafletCallbacks = [];
+    (window as any).__leafletCallbacks.push(resolve);
+    if (document.getElementById("leaflet-css")) {
+      // CSS already injected, just wait for JS
+    } else {
+      const link = document.createElement("link");
+      link.id = "leaflet-css";
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+
+    if (document.getElementById("leaflet-js")) return;
+
+    const script = document.createElement("script");
+    script.id = "leaflet-js";
+    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    script.async = true;
+    script.onload = () => {
+      (window as any).__leafletLoaded = true;
+      (window as any).__leafletCallbacks?.forEach((cb: any) => cb());
+      (window as any).__leafletCallbacks = [];
+    };
+    script.onerror = () => reject(new Error("Leaflet failed to load"));
+    document.head.appendChild(script);
+  });
+}
+
+// ─── OneMap API Helpers ───────────────────────────────────────────────────────
 
 interface OneMapResult {
   SEARCHVAL: string;
@@ -208,38 +246,45 @@ interface OneMapResult {
   LONGITUDE: string;
 }
 
-interface OneMapSuggestion {
-  displayLines: string[];
-  label: string;
+interface ResolvedAddress {
   postal_code: string;
   address: string;
+  lat: number;
+  lng: number;
 }
 
-function formatOneMapResult(r: OneMapResult): OneMapSuggestion {
-  const lines: string[] = [];
+interface AddressSuggestion {
+  label: string;
+  building: string;
+  road: string;
+  postal_code: string;
+  lat: number;
+  lng: number;
+}
+
+function formatOneMapAddress(r: OneMapResult): string {
+  const parts: string[] = [];
   const building = r.BUILDING?.trim();
   if (building && building.toUpperCase() !== "NIL" && building !== r.BLK_NO) {
-    lines.push(building);
+    parts.push(building);
   }
-  const street = [r.BLK_NO?.trim(), r.ROAD_NAME?.trim()].filter(Boolean).join(" ");
-  if (street) lines.push(street);
+  const street = [r.BLK_NO?.trim(), r.ROAD_NAME?.trim()]
+    .filter(Boolean)
+    .join(" ");
+  if (street) parts.push(street);
   if (r.POSTAL && r.POSTAL !== "NIL") {
-    lines.push(`Singapore ${r.POSTAL}`);
+    parts.push(`Singapore ${r.POSTAL}`);
   } else {
-    lines.push("Singapore");
+    parts.push("Singapore");
   }
-  return {
-    displayLines: lines,
-    label: lines.join(", "),
-    postal_code: r.POSTAL !== "NIL" ? r.POSTAL : "",
-    address: lines.join("\n"),
-  };
+  return parts.join("\n");
 }
 
-async function fetchOneMapPage(
-  query: string,
-  page: number,
-): Promise<{ results: OneMapResult[]; totalNumPages: number }> {
+function formatOneMapAddressLine(r: OneMapResult): string {
+  return formatOneMapAddress(r).replace(/\n/g, ", ");
+}
+
+async function fetchOneMapPage(query: string, page: number): Promise<{ results: OneMapResult[]; totalNumPages: number }> {
   const url = `${ONEMAP_SEARCH}?searchVal=${encodeURIComponent(query)}&returnGeom=Y&getAddrDetails=Y&pageNum=${page}`;
   const res = await fetch(url);
   if (!res.ok) return { results: [], totalNumPages: 1 };
@@ -253,12 +298,525 @@ async function fetchOneMapPage(
 async function searchOneMap(query: string): Promise<OneMapResult[]> {
   const first = await fetchOneMapPage(query, 1);
   if (first.totalNumPages <= 1) return first.results;
-  const extraPages = Math.min(first.totalNumPages - 1, 4);
+  const extraPages = Math.min(first.totalNumPages - 1, 5);
   const rest = await Promise.all(
-    Array.from({ length: extraPages }, (_, i) => fetchOneMapPage(query, i + 2))
+    Array.from({ length: extraPages }, (_, i) => fetchOneMapPage(query, i + 2)),
   );
   return [first.results, ...rest.map((p) => p.results)].flat();
 }
+
+async function reverseOneMap(lat: number, lng: number): Promise<OneMapResult | null> {
+  const url = `${ONEMAP_REVERSE}?location=${lat},${lng}&buffer=40&addressType=All&otherFeatures=N`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const info = data.GeocodeInfo;
+  if (!info || !info.length) return null;
+  const g = info[0];
+  return {
+    SEARCHVAL: g.BUILDINGNAME || g.ROAD || "",
+    BLK_NO: g.BLOCK || "",
+    ROAD_NAME: g.ROAD || "",
+    BUILDING: g.BUILDINGNAME || "",
+    ADDRESS: g.ADDRESS || "",
+    POSTAL: g.POSTALCODE || "",
+    X: "",
+    Y: "",
+    LATITUDE: String(lat),
+    LONGITUDE: String(lng),
+  };
+}
+
+function toSuggestions(results: OneMapResult[]): AddressSuggestion[] {
+  const seen = new Set<string>();
+  return results
+    .filter((r: any) => r.POSTAL && r.POSTAL !== "NIL" && r.LATITUDE && r.LONGITUDE)
+    .map((r: any) => {
+      const label = formatOneMapAddressLine(r);
+      if (seen.has(label)) return null;
+      seen.add(label);
+      return {
+        label,
+        building: r.BUILDING?.toUpperCase() === "NIL" ? "" : r.BUILDING,
+        road: r.ROAD_NAME,
+        postal_code: r.POSTAL,
+        lat: parseFloat(r.LATITUDE),
+        lng: parseFloat(r.LONGITUDE),
+      } as AddressSuggestion;
+    })
+    .filter(Boolean) as AddressSuggestion[];
+}
+
+// ─── Interactive Map Modal ────────────────────────────────────────────────────
+
+interface MapModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (resolved: ResolvedAddress) => void;
+  initialPostalCode?: string;
+}
+
+const MapModal: React.FC<MapModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  initialPostalCode,
+}) => {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+
+  const [postalInput, setPostalInput] = useState("");
+  const [pending, setPending] = useState<ResolvedAddress | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const debounceRef = useRef<any>(0);
+  const initialSearchDoneRef = useRef(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setPostalInput(initialPostalCode ?? "");
+    setPending(null);
+    setError(null);
+    setMapReady(false);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    initialSearchDoneRef.current = false;
+
+    loadLeaflet()
+      .then(() => setMapReady(true))
+      .catch(() => setError("Failed to load map library."));
+
+    return () => {
+      clearTimeout(debounceRef.current);
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+        markerRef.current = null;
+      }
+    };
+  }, [isOpen, initialPostalCode]);
+
+  function dropPin(lat: number, lng: number) {
+    const L = (window as any).L;
+    if (!mapRef.current) return;
+    if (markerRef.current) {
+      markerRef.current.setLatLng([lat, lng]);
+    } else {
+      markerRef.current = L.marker([lat, lng]).addTo(mapRef.current);
+    }
+    mapRef.current.panTo([lat, lng]);
+  }
+
+  const runSearch = useCallback(async (query: string) => {
+    if (!query.trim() || query.trim().length < 3) return;
+    setSearching(true);
+    setError(null);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    try {
+      const results = await searchOneMap(query);
+      if (!results.length) {
+        setPending(null);
+        setError("No location found. Try a building name, road, or postal code.");
+        return;
+      }
+
+      const suggs = toSuggestions(results);
+
+      if (!suggs.length) {
+        setError("No results with valid postal codes found.");
+        return;
+      }
+
+      setSuggestions(suggs);
+      setShowSuggestions(true);
+
+      const first = suggs[0];
+      dropPin(first.lat, first.lng);
+      if (mapRef.current) mapRef.current.setZoom(17);
+
+      setPending({
+        postal_code: first.postal_code,
+        address: first.label,
+        lat: first.lat,
+        lng: first.lng,
+      });
+      setPostalInput(first.postal_code);
+    } catch {
+      setError("Search failed. Please try again.");
+    } finally {
+      setSearching(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!mapReady || !mapContainerRef.current || mapRef.current) return;
+
+    const L = (window as any).L;
+
+    const map = L.map(mapContainerRef.current, {
+      center: SG_CENTER,
+      zoom: 11,
+      zoomControl: true,
+    });
+
+    L.tileLayer(
+      "https://www.onemap.gov.sg/maps/tiles/Default/{z}/{x}/{y}.png",
+      {
+        attribution:
+          '<img src="https://www.onemap.gov.sg/web-assets/images/logo/om_logo.png" style="height:20px;width:20px;"/> OneMap | Map data &copy; contributors, <a href="http://SLA.gov.sg">Singapore Land Authority</a>',
+        maxZoom: 19,
+        minZoom: 11,
+      },
+    ).addTo(map);
+
+    mapRef.current = map;
+
+    map.on("click", async (e: { latlng: { lat: number; lng: number } }) => {
+      const { lat, lng } = e.latlng;
+      dropPin(lat, lng);
+      setSearching(true);
+      setError(null);
+      setShowSuggestions(false);
+      try {
+        const result = await reverseOneMap(lat, lng);
+        if (result) {
+          const address = formatOneMapAddressLine(result);
+          setPending({ postal_code: result.POSTAL, address, lat, lng });
+          setPostalInput(result.POSTAL || "");
+        } else {
+          setError("Couldn't detect address here. Try clicking nearby.");
+        }
+      } catch {
+        setError("Address lookup failed.");
+      } finally {
+        setSearching(false);
+      }
+    });
+
+    if (!initialSearchDoneRef.current && initialPostalCode && initialPostalCode.length >= 3) {
+      initialSearchDoneRef.current = true;
+      runSearch(initialPostalCode);
+    }
+  }, [mapReady, initialPostalCode, runSearch]);
+
+  function selectSuggestion(s: AddressSuggestion) {
+    setPending({
+      postal_code: s.postal_code,
+      address: s.label,
+      lat: s.lat,
+      lng: s.lng,
+    });
+    setPostalInput(s.postal_code);
+    dropPin(s.lat, s.lng);
+    if (mapRef.current) mapRef.current.setZoom(18);
+    setShowSuggestions(false);
+  }
+
+  const handlePostalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setPostalInput(val);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    clearTimeout(debounceRef.current);
+    if (val.trim().length >= 3) {
+      debounceRef.current = setTimeout(() => runSearch(val), 700);
+    } else {
+      setPending(null);
+    }
+  };
+
+  const handleSearchClick = () => {
+    clearTimeout(debounceRef.current);
+    runSearch(postalInput);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      clearTimeout(debounceRef.current);
+      runSearch(postalInput);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-9999 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div
+        className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden"
+        style={{ maxHeight: "90vh" }}
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-yellow-400 flex items-center justify-center shadow-sm">
+              <MapPin size={16} className="text-black" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900 leading-tight">
+                Select Location
+              </p>
+              <p className="text-xs text-gray-400 mt-px">
+                Search by postal code, building name, or road — powered by OneMap
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="px-6 py-3 bg-gray-50 border-b border-gray-100 shrink-0">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              />
+              <input
+                type="text"
+                value={postalInput}
+                onChange={handlePostalChange}
+                onKeyDown={handleKeyDown}
+                placeholder="e.g. 544750 or Compassvale or The Luxurie"
+                autoFocus
+                className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg
+                           focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleSearchClick}
+              disabled={searching || postalInput.trim().length < 3}
+              className="px-4 py-2.5 bg-yellow-400 hover:bg-yellow-500 disabled:opacity-40 disabled:cursor-not-allowed
+                         rounded-lg text-black font-semibold text-sm flex items-center gap-1.5 transition-colors shrink-0"
+            >
+              {searching ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Search size={14} />
+              )}
+              Search
+            </button>
+          </div>
+
+          {error ? (
+            <p className="mt-2 text-xs text-red-500 flex items-center gap-1">
+              <span>⚠</span> {error}
+            </p>
+          ) : (
+            <p className="mt-1.5 text-xs text-gray-400">
+              {showSuggestions
+                ? `${suggestions.length} address${suggestions.length !== 1 ? "es" : ""} found — pick one below or click the map.`
+                : "Search by postal code, building name, or road name."}
+            </p>
+          )}
+        </div>
+
+        {showSuggestions && suggestions.length > 0 && (
+          <div
+            className="px-6 py-3 border-b border-gray-100 bg-white shrink-0 overflow-y-auto"
+            style={{ maxHeight: "220px" }}
+          >
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
+              Results
+            </p>
+            <ul className="space-y-1">
+              {suggestions.map((s, i) => {
+                const isSelected =
+                  pending?.postal_code === s.postal_code &&
+                  pending?.address === s.label;
+                return (
+                  <li key={i}>
+                    <button
+                      type="button"
+                      onClick={() => selectSuggestion(s)}
+                      className={`w-full text-left flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm transition-all
+                        ${
+                          isSelected
+                            ? "bg-yellow-50 border border-yellow-300 text-gray-900"
+                            : "hover:bg-gray-50 border border-transparent text-gray-700"
+                        }`}
+                    >
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        <MapPin
+                          size={14}
+                          className={`shrink-0 mt-0.5 ${isSelected ? "text-yellow-500" : "text-gray-400"}`}
+                        />
+                        <div className="min-w-0">
+                          {s.building && (
+                            <p className="font-semibold text-gray-900 truncate leading-tight">
+                              {s.building}
+                            </p>
+                          )}
+                          <p className="text-gray-600 truncate text-xs leading-tight">
+                            {[s.road && `${s.road}`, `Singapore ${s.postal_code}`]
+                              .filter(Boolean)
+                              .join(", ")}
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronRight
+                        size={14}
+                        className={`shrink-0 ${isSelected ? "text-yellow-500" : "text-gray-300"}`}
+                      />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        <div className="relative shrink-0" style={{ height: "450px" }}>
+          {!mapReady && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-gray-100">
+              <Loader2 size={28} className="animate-spin text-yellow-400" />
+              <p className="text-sm text-gray-500">Loading map…</p>
+            </div>
+          )}
+          <div ref={mapContainerRef} className="w-full h-full" style={{ zIndex: 0 }} />
+
+          {mapReady && !pending && !searching && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none z-10">
+              <div className="bg-white/95 border border-gray-200 shadow rounded-full px-4 py-2 flex items-center gap-2 text-xs text-gray-500 whitespace-nowrap">
+                <MapPin size={12} className="text-yellow-500 shrink-0" />
+                Search or click the map to select
+              </div>
+            </div>
+          )}
+
+          {searching && (
+            <div className="absolute inset-0 bg-white/40 flex items-center justify-center pointer-events-none z-10">
+              <div className="bg-white rounded-xl shadow-md px-4 py-3 flex items-center gap-2 text-sm text-gray-600">
+                <Loader2 size={16} className="animate-spin text-yellow-500" />
+                Finding addresses…
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-100 shrink-0">
+          {pending ? (
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">
+                  Selected Address
+                </p>
+                <div className="text-sm font-semibold text-gray-900 leading-snug">
+                  {pending.address.split("\n").map((line, i) => (
+                    <p key={i} className={i === 0 ? "font-bold" : "font-normal text-gray-700"}>
+                      {line}
+                    </p>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Postal Code:{" "}
+                  <span className="font-medium">{pending.postal_code}</span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  onConfirm(pending);
+                  onClose();
+                }}
+                className="shrink-0 bg-yellow-400 hover:bg-yellow-500 text-black font-semibold text-sm px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-sm"
+              >
+                <CheckCircle2 size={16} />
+                Confirm
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 text-center py-0.5">
+              {searching
+                ? "Detecting address…"
+                : "No location selected yet. Search or click the map."}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── PostalCodeField ──────────────────────────────────────────────────────────
+
+const PostalCodeField: React.FC<{
+  postalCode: string;
+  address: string;
+  isDetecting?: boolean;
+  onChangeRequest: () => void;
+}> = ({ postalCode, address, isDetecting = false, onChangeRequest }) => (
+  <div>
+    <Label className="mb-2">Postal Code</Label>
+    <div className="flex items-center gap-2">
+      <div className="relative flex-1">
+        <Input
+          readOnly
+          value={isDetecting ? "" : postalCode}
+          placeholder={isDetecting ? "Detecting location…" : "Not set"}
+          className="pr-10 bg-gray-50 cursor-default select-none"
+        />
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+          {isDetecting ? (
+            <Loader2 className="h-4 w-4 animate-spin text-yellow-500" />
+          ) : postalCode ? (
+            <Navigation className="h-4 w-4 text-yellow-500" />
+          ) : null}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onChangeRequest}
+        disabled={isDetecting}
+        className="text-sm font-semibold text-yellow-600 hover:text-yellow-700 underline underline-offset-2 shrink-0 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        {postalCode ? "Change" : "Select"}
+      </button>
+    </div>
+    {!isDetecting && address && (
+      <p className="text-xs text-gray-500 mt-1 truncate">{address}</p>
+    )}
+  </div>
+);
+
+// ─── DetectingAddressInput ────────────────────────────────────────────────────
+
+const DetectingAddressInput: React.FC<{
+  value: string;
+  isDetecting: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+}> = ({ value, isDetecting, onChange, placeholder = "Auto-filled from map" }) => (
+  <div className="relative">
+    <Input
+      value={isDetecting ? "" : value}
+      onChange={onChange}
+      placeholder={isDetecting ? "Detecting your location…" : placeholder}
+      readOnly={isDetecting}
+      className={isDetecting ? "pr-10 bg-gray-50 cursor-not-allowed text-gray-400" : ""}
+      required={!isDetecting}
+    />
+    {isDetecting && (
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+        <Loader2 className="h-4 w-4 animate-spin text-yellow-500" />
+      </div>
+    )}
+  </div>
+);
 
 // --- Phone Input ---
 interface PhoneInputProps {
@@ -387,11 +945,7 @@ console.log("check driver data", driverResponse);
   const [profileImageUrls, setProfileImageUrls] = useState<string[]>([]);
   const [isProfileUploading, setIsProfileUploading] = useState(false);
 
-  // OneMap state
-  const [isLoadingPostal, setIsLoadingPostal] = useState<string | null>(null);
-  const [postalSuggestions, setPostalSuggestions] = useState<{ [key: string]: OneMapSuggestion[] }>({});
-  const [showPostalSuggestions, setShowPostalSuggestions] = useState<{ [key: string]: boolean }>({});
-  const debounceTimers = useRef<{ [key: string]: ReturnType<typeof setTimeout> }>({});
+  const [modalTarget, setModalTarget] = useState<string | null>(null);
 
   type DocumentKey =
     | "nricFront"
@@ -565,32 +1119,18 @@ console.log("check driver data", driverResponse);
     return map[gender] || gender;
   };
 
-  const fetchAddressFromPostal = useCallback(async (postalCode: string, fieldKey: string) => {
-    if (!postalCode || postalCode.length < 3) return;
-    setIsLoadingPostal(fieldKey);
-    try {
-      const results = await searchOneMap(postalCode);
-      if (results.length > 0) {
-        const seen = new Set<string>();
-        const suggestions: OneMapSuggestion[] = [];
-        for (const r of results) {
-          if (!r.POSTAL || r.POSTAL === "NIL") continue;
-          const key = `${r.POSTAL}-${r.BUILDING}-${r.BLK_NO}`;
-          if (seen.has(key)) continue;
-          seen.add(key);
-          suggestions.push(formatOneMapResult(r));
-        }
-        setPostalSuggestions(prev => ({ ...prev, [fieldKey]: suggestions }));
-        setShowPostalSuggestions(prev => ({ ...prev, [fieldKey]: suggestions.length > 0 }));
+  const handleModalConfirm = useCallback(
+    (resolved: ResolvedAddress, target: string) => {
+      if (target === "current") {
+        setValue("current_postal_code", resolved.postal_code);
+        setValue("current_address", resolved.address);
+      } else {
+        setValue("permanent_postal_code", resolved.postal_code);
+        setValue("permanent_address", resolved.address);
       }
-    } finally { setIsLoadingPostal(null); }
-  }, []);
-
-  const handleSelectSuggestion = (suggestion: OneMapSuggestion, pField: string, aField: string) => {
-    setValue(pField as any, suggestion.postal_code);
-    setValue(aField as any, suggestion.address);
-    setShowPostalSuggestions(prev => ({ ...prev, [pField]: false }));
-  };
+    },
+    [setValue],
+  );
 
   const onSubmit = async (data: any) => {
     if (!profileImageUrls.length) { toast.error("Profile photo is required!"); return; }
@@ -765,8 +1305,7 @@ console.log("driverResponse", driverResponse )
             <InputWrapper label="Chassis Number*" error={errors.chassis_number?.message}><Input {...register("chassis_number", { required: "Required" })} /></InputWrapper>
           </div>
 
-          <SectionTitle>Vehicle Insurance Policy</SectionTitle>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <SectionTitle>Vehicle Insurance Policy</SectionTitle>          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <InputWrapper label="Insurance Policy Number*" error={errors.insurance_policy_number?.message}><Input {...register("insurance_policy_number", { required: "Required" })} /></InputWrapper>
             <InputWrapper label="Issue Date*" error={errors.insurance_issue_date?.message}><Input type="date" {...register("insurance_issue_date", { required: "Required" })} /></InputWrapper>
             <InputWrapper label="Expiry Date*" error={errors.insurance_expiry_date?.message}><Input type="date" {...register("insurance_expiry_date", { required: "Required" })} /></InputWrapper>
@@ -774,37 +1313,21 @@ console.log("driverResponse", driverResponse )
 
           <SectionTitle>Current Address</SectionTitle>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="relative">
-            <InputWrapper label="Postal Code*" error={errors.current_postal_code?.message}>
-              <div className="relative">
-                <Input {...register("current_postal_code", { 
-                  required: "Required", 
-                  onChange: e => {
-                    const val = e.target.value;
-                    clearTimeout(debounceTimers.current["current"]);
-                    debounceTimers.current["current"] = setTimeout(() => fetchAddressFromPostal(val, "current"), 500);
-                  }
-                })} />
-                {isLoadingPostal === "current" && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500" />
-                  </div>
-                )}
-              </div>
+            <PostalCodeField
+              postalCode={watch("current_postal_code")}
+              address={watch("current_address")}
+              onChangeRequest={() => setModalTarget("current")}
+            />
+            <InputWrapper label="Address*" error={errors.current_address?.message}>
+              <DetectingAddressInput
+                value={watch("current_address")}
+                isDetecting={false}
+                onChange={(e) => setValue("current_address", e.target.value)}
+                placeholder="Auto-filled from map"
+              />
             </InputWrapper>
-              {showPostalSuggestions["current"] && (
-                <div className="absolute z-10 w-full bg-white border rounded shadow-lg max-h-40 overflow-y-auto mt-1">
-                  {postalSuggestions["current"]?.map((s, i) => (
-                    <div key={i} className="p-2 hover:bg-gray-100 cursor-pointer text-sm border-b" onClick={() => handleSelectSuggestion(s, "current_postal_code", "current_address")}>
-                      {s.label}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <InputWrapper label="Address*" error={errors.current_address?.message}><Input {...register("current_address", { required: "Required" })} /></InputWrapper>
-            <InputWrapper label="Apartment, Suite, Unit, etc."><Input {...register("current_unit")} /></InputWrapper>
-            <InputWrapper label="Country">
+            <InputWrapper label="Apartment, Suite, Unit, Building, Floor, etc." error={errors.current_unit?.message}><Input {...register("current_unit")} /></InputWrapper>
+            <InputWrapper label="Country" error={errors.current_country?.message}>
               <select {...register("current_country")} className="w-full border bg-secondary rounded p-2 text-sm">
                 {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -813,37 +1336,21 @@ console.log("driverResponse", driverResponse )
 
           <SectionTitle>Permanent Address</SectionTitle>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="relative">
-            <InputWrapper label="Postal Code*" error={errors.permanent_postal_code?.message}>
-              <div className="relative">
-                <Input {...register("permanent_postal_code", { 
-                  required: "Required", 
-                  onChange: e => {
-                    const val = e.target.value;
-                    clearTimeout(debounceTimers.current["permanent"]);
-                    debounceTimers.current["permanent"] = setTimeout(() => fetchAddressFromPostal(val, "permanent"), 500);
-                  }
-                })} />
-                {isLoadingPostal === "permanent" && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500" />
-                  </div>
-                )}
-              </div>
+            <PostalCodeField
+              postalCode={watch("permanent_postal_code")}
+              address={watch("permanent_address")}
+              onChangeRequest={() => setModalTarget("permanent")}
+            />
+            <InputWrapper label="Address*" error={errors.permanent_address?.message}>
+              <DetectingAddressInput
+                value={watch("permanent_address")}
+                isDetecting={false}
+                onChange={(e) => setValue("permanent_address", e.target.value)}
+                placeholder="Auto-filled from map"
+              />
             </InputWrapper>
-              {showPostalSuggestions["permanent"] && (
-                <div className="absolute z-10 w-full bg-white border rounded shadow-lg max-h-40 overflow-y-auto mt-1">
-                  {postalSuggestions["permanent"]?.map((s, i) => (
-                    <div key={i} className="p-2 hover:bg-gray-100 cursor-pointer text-sm border-b" onClick={() => handleSelectSuggestion(s, "permanent_postal_code", "permanent_address")}>
-                      {s.label}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <InputWrapper label="Address*" error={errors.permanent_address?.message}><Input {...register("permanent_address", { required: "Required" })} /></InputWrapper>
-            <InputWrapper label="Apartment, Suite, Unit, etc."><Input {...register("permanent_unit")} /></InputWrapper>
-            <InputWrapper label="Country">
+            <InputWrapper label="Apartment, Suite, Unit, Building, Floor, etc." error={errors.permanent_unit?.message}><Input {...register("permanent_unit")} /></InputWrapper>
+            <InputWrapper label="Country" error={errors.permanent_country?.message}>
               <select {...register("permanent_country")} className="w-full border bg-secondary rounded p-2 text-sm">
                 {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -891,6 +1398,16 @@ console.log("driverResponse", driverResponse )
             {isUpdating ? "Saving..." : "Save Changes"}
           </Button>
         </div>
+        <MapModal
+          isOpen={!!modalTarget}
+          onClose={() => setModalTarget(null)}
+          onConfirm={(resolved) => handleModalConfirm(resolved, modalTarget!)}
+          initialPostalCode={
+            modalTarget === "current"
+              ? watch("current_postal_code")
+              : watch("permanent_postal_code")
+          }
+        />
       </div>
     </div>
   );
