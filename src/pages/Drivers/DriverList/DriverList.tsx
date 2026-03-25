@@ -5,6 +5,7 @@ import DriverFilter from "@/components/Drivers/DriverFilter/DriverFilter";
 import AdminTablePagination from "@/components/Shared/CustomPagination/AdminTablePagination";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
+import NewDynamicChangeLogTable from "@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable";
 
 export default function DriverList() {
   // Direct filter states (no temporary states needed)
@@ -138,6 +139,9 @@ export default function DriverList() {
         </div>
       )}
 
+      <div>
+        <NewDynamicChangeLogTable entityType="Raider" />
+      </div>
     </div>
   );
 }
