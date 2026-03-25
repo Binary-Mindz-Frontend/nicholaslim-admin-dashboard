@@ -5,15 +5,14 @@ export interface FeeStructure {
   amount: number;
   displayAmount?: string;
   serviceAreaId: number | null;
-  appliesTo:
-    | "ALL_ORDERS"
-    | "ORDER_LESS"
-    | "EXPRESS_ORDERS"
-    | "SCHEDULED_ORDERS"
-    | "STACKED_ORDERS"
-    | "STANDARD_ORDERS";
+  appliesTo: string;
   applicableUser: "USER" | "RAIDER";
   conditionValue?: number;
+  ruleKey?: string;
+  ruleOperator?: string;
+  ruleValue?: string;
+  conditionUnit?: string;
+  isActive: boolean;
 }
 
 export interface UserFeeStructureProps {
