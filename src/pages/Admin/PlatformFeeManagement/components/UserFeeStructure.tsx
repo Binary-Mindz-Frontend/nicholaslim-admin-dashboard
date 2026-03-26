@@ -186,6 +186,40 @@ export default function UserFeeStructure({
     }
   };
 
+  const handleToggleActive = async (index: number) => {
+    const fee = fees[index];
+    const newStatus = !fee.isActive;
+
+    // Update local state first for instant feedback
+    const newFees = [...fees];
+    newFees[index] = { ...newFees[index], isActive: newStatus };
+    setFees(newFees);
+
+    if (fee.id) {
+      try {
+        const response = await onUpdateFeeStructure({
+          id: fee.id,
+          is_active: newStatus,
+        } as any);
+
+        if (!response?.success) {
+          // Revert local state on API failure
+          const revertFees = [...newFees];
+          revertFees[index] = { ...revertFees[index], isActive: fee.isActive };
+          setFees(revertFees);
+          toast.error(response?.message || "Failed to update status");
+        }
+      } catch (error) {
+        console.error("Failed to toggle status:", error);
+        toast.error("Failed to update status");
+        // Revert local state on error
+        const revertFees = [...newFees];
+        revertFees[index] = { ...revertFees[index], isActive: fee.isActive };
+        setFees(revertFees);
+      }
+    }
+  };
+
 
   const handleSaveAll = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -316,161 +350,179 @@ export default function UserFeeStructure({
         </div>
 
         <form onSubmit={handleSaveAll} className="space-y-6">
-          <div className="hidden md:grid grid-cols-[1.2fr_0.8fr_0.8fr_1fr_1.5fr_0.8fr_0.8fr_50px_40px] gap-3 mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-            <div>Fee Name</div>
-            <div>Amount</div>
-            <div>Unit</div>
-            <div>Service Area</div>
-            <div>Rule (Key | Op | Value)</div>
-            <div>Applies To</div>
-            <div>Cond. Val</div>
-            <div className="text-center">Active</div>
-            <div className="w-10"></div>
-          </div>
-
-          {fees.length === 0 ? (
-            <div className="text-center py-12 rounded-2xl text-gray-400">
-              No fee structure found. Click "Add Fee" to create one.
-            </div>
-          ) : (
-            fees.map((fee, index) => (
-              <div
-                key={fee.id || `new-${index}`}
-                className="grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr_0.8fr_1fr_1.5fr_0.8fr_0.8fr_50px_40px] gap-3 items-center bg-gray-50/50 p-4 md:p-0 md:bg-transparent rounded-xl md:rounded-none border md:border-0 border-gray-100 mb-4 md:mb-0"
-              >
-                <input
-                  type="text"
-                  value={fee.feeName}
-                  onChange={(e) =>
-                    handleFeeChange(index, "feeName", e.target.value)
-                  }
-                  placeholder="Fee Name"
-                  className={inputClasses}
-                  required
-                  disabled={isLoading}
-                />
-
-                <input
-                  type="text"
-                  value={fee.displayAmount || ""}
-                  onChange={(e) =>
-                    handleDisplayAmountChange(index, e.target.value)
-                  }
-                  placeholder="Amount"
-                  className={inputClasses}
-                  required
-                  disabled={isLoading}
-                />
-
-                <select
-                  value={fee.conditionUnit}
-                  onChange={(e) =>
-                    handleFeeChange(index, "conditionUnit", e.target.value)
-                  }
-                  className={selectClasses}
-                  disabled={isLoading}
-                >
-                  <option value="BDT">BDT</option>
-                  <option value="KM">KM</option>
-                  <option value="ORDER_AMOUNT">Order Amt</option>
-                  <option value="PERCENTAGE">%</option>
-                </select>
-
-                <select
-                  value={fee.serviceAreaId || ""}
-                  onChange={(e) =>
-                    handleFeeChange(
-                      index,
-                      "serviceAreaId",
-                      e.target.value ? Number(e.target.value) : null,
-                    )
-                  }
-                  className={selectClasses}
-                  required
-                  disabled={isLoading}
-                >
-                  <option value="">Area</option>
-                  {serviceZones.map((zone: any) => (
-                    <option key={zone.id} value={zone.id}>
-                      {zone.name}
-                    </option>
-                  ))}
-                </select>
-
-                <div className="grid grid-cols-[1fr_45px_1fr] gap-1">
-                  <input
-                    type="text"
-                    value={fee.ruleKey}
-                    onChange={(e) => handleFeeChange(index, "ruleKey", e.target.value)}
-                    placeholder="Key"
-                    className={`${inputClasses} px-2 py-2 text-xs`}
-                    disabled={isLoading}
-                  />
-                  <select
-                    value={fee.ruleOperator}
-                    onChange={(e) => handleFeeChange(index, "ruleOperator", e.target.value)}
-                    className={`${selectClasses} px-1 py-2 text-xs`}
-                    disabled={isLoading}
-                  >
-                    <option value="=">=</option>
-                    <option value=">">&gt;</option>
-                    <option value="<">&lt;</option>
-                    <option value=">=">&gt;=</option>
-                    <option value="<=">&lt;=</option>
-                  </select>
-                  <input
-                    type="text"
-                    value={fee.ruleValue}
-                    onChange={(e) => handleFeeChange(index, "ruleValue", e.target.value)}
-                    placeholder="Val"
-                    className={`${inputClasses} px-2 py-2 text-xs`}
-                    disabled={isLoading}
-                  />
-                </div>
-
-                <input
-                  type="text"
-                  value={fee.appliesTo}
-                  onChange={(e) => handleFeeChange(index, "appliesTo", e.target.value)}
-                  placeholder="Category"
-                  className={inputClasses}
-                  disabled={isLoading}
-                />
-
-                <input
-                  type="number"
-                  value={fee.conditionValue || ""}
-                  onChange={(e) =>
-                    handleFeeChange(index, "conditionValue", Number(e.target.value))
-                  }
-                  placeholder="Cond."
-                  className={inputClasses}
-                  disabled={isLoading}
-                />
-
-                <div className="flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => handleFeeChange(index, "isActive", !fee.isActive)}
-                    className={`w-10 h-6 rounded-full transition-colors relative ${fee.isActive ? 'bg-green-500' : 'bg-gray-300'}`}
-                    disabled={isLoading}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${fee.isActive ? 'right-1' : 'left-1'}`} />
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => openDeleteModal(index)}
-                  className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Remove fee"
-                  disabled={isLoading}
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+          <div className="overflow-x-auto pb-4">
+            <div className="min-w-[1000px]">
+              <div className="hidden md:grid grid-cols-[1.2fr_0.8fr_0.8fr_1fr_1.5fr_0.8fr_0.8fr_50px_40px] gap-3 mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                <div>Fee Name</div>
+                <div>Amount</div>
+                <div>Unit</div>
+                <div>Service Area</div>
+                <div>Rule (Key | Op | Value)</div>
+                <div>Applies To</div>
+                <div>Cond. Val</div>
+                <div className="text-center">Active</div>
+                <div className="w-10"></div>
               </div>
-            ))
-          )}
+
+              {fees.length === 0 ? (
+                <div className="text-center py-12 rounded-2xl text-gray-400">
+                  No fee structure found. Click "Add Fee" to create one.
+                </div>
+              ) : (
+                fees.map((fee, index) => (
+                  <div
+                    key={fee.id || `new-${index}`}
+                    className="grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr_0.8fr_1fr_1.5fr_0.8fr_0.8fr_50px_40px] gap-3 items-center bg-gray-50/50 p-4 md:p-0 md:bg-transparent rounded-xl md:rounded-none border md:border-0 border-gray-100 mb-4 md:mb-0 my-4"
+                  >
+                    <input
+                      type="text"
+                      value={fee.feeName}
+                      onChange={(e) =>
+                        handleFeeChange(index, "feeName", e.target.value)
+                      }
+                      placeholder="Fee Name"
+                      className={inputClasses}
+                      required
+                      disabled={isLoading}
+                    />
+
+                    <input
+                      type="text"
+                      value={fee.displayAmount || ""}
+                      onChange={(e) =>
+                        handleDisplayAmountChange(index, e.target.value)
+                      }
+                      placeholder="Amount"
+                      className={inputClasses}
+                      required
+                      disabled={isLoading}
+                    />
+
+                    <select
+                      value={fee.conditionUnit}
+                      onChange={(e) =>
+                        handleFeeChange(index, "conditionUnit", e.target.value)
+                      }
+                      className={selectClasses}
+                      disabled={isLoading}
+                    >
+                      <option value="BDT">BDT</option>
+                      <option value="KM">KM</option>
+                      <option value="ORDER_AMOUNT">Order Amt</option>
+                      {/* <option value="PERCENTAGE">%</option> */}
+                    </select>
+
+                    <select
+                      value={fee.serviceAreaId || ""}
+                      onChange={(e) =>
+                        handleFeeChange(
+                          index,
+                          "serviceAreaId",
+                          e.target.value ? Number(e.target.value) : null,
+                        )
+                      }
+                      className={selectClasses}
+                      required
+                      disabled={isLoading}
+                    >
+                      <option value="">Area</option>
+                      {serviceZones.map((zone: any) => (
+                        <option key={zone.id} value={zone.id}>
+                          {zone.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div className="grid grid-cols-[1fr_45px_1fr] gap-1">
+                      <input
+                        type="text"
+                        value={fee.ruleKey}
+                        onChange={(e) =>
+                          handleFeeChange(index, "ruleKey", e.target.value)
+                        }
+                        placeholder="Key"
+                        className={`${inputClasses} px-2 py-2 text-xs`}
+                        disabled={isLoading}
+                      />
+                      <select
+                        value={fee.ruleOperator}
+                        onChange={(e) =>
+                          handleFeeChange(index, "ruleOperator", e.target.value)
+                        }
+                        className={`${selectClasses} px-1 py-2 text-xs`}
+                        disabled={isLoading}
+                      >
+                        <option value="=">=</option>
+                        <option value=">">&gt;</option>
+                        <option value="<">&lt;</option>
+                        <option value=">=">&gt;=</option>
+                        <option value="<=">&lt;=</option>
+                      </select>
+                      <input
+                        type="text"
+                        value={fee.ruleValue}
+                        onChange={(e) =>
+                          handleFeeChange(index, "ruleValue", e.target.value)
+                        }
+                        placeholder="Val"
+                        className={`${inputClasses} px-2 py-2 text-xs`}
+                        disabled={isLoading}
+                      />
+                    </div>
+
+                    <input
+                      type="text"
+                      value={fee.appliesTo}
+                      onChange={(e) =>
+                        handleFeeChange(index, "appliesTo", e.target.value)
+                      }
+                      placeholder="Category"
+                      className={inputClasses}
+                      disabled={isLoading}
+                    />
+
+                    <input
+                      type="number"
+                      value={fee.conditionValue || ""}
+                      onChange={(e) =>
+                        handleFeeChange(
+                          index,
+                          "conditionValue",
+                          Number(e.target.value),
+                        )
+                      }
+                      placeholder="Cond."
+                      className={inputClasses}
+                      disabled={isLoading}
+                    />
+
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleActive(index)}
+                        className={`w-10 h-6 rounded-full transition-colors relative ${fee.isActive ? "bg-green-500" : "bg-gray-300"}`}
+                        disabled={isLoading}
+                      >
+                        <div
+                          className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${fee.isActive ? "right-1" : "left-1"}`}
+                        />
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => openDeleteModal(index)}
+                      className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Remove fee"
+                      disabled={isLoading}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
 
           {fees.length > 0 && (
             <div className="flex justify-center pt-4">
