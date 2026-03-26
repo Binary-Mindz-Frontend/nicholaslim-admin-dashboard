@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import AdvertiseManagementTop from "./components/AddTop";
 import PerformanceTrendsChart from "./components/PerformanceTrend";
