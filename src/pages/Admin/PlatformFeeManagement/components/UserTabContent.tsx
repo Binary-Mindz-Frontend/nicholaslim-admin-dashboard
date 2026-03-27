@@ -36,7 +36,7 @@ export default function UserTabContent({
   onDeleteFeeStructure,
   onAddSurgeRule,
   onUpdateSurgeRule,
-  onDeleteSurgeRule,
+  onDeleteSurgeRule,  
 }: UserTabContentProps) {
   return (
     <>
