@@ -75,7 +75,6 @@ export default function EditDriverProfile() {
   const [profileImageUrls, setProfileImageUrls] = useState<string[]>([]);
   const [isProfileUploading, setIsProfileUploading] = useState(false);
   const [modalTarget, setModalTarget] = useState<"current" | "permanent" | null>(null);
-
   const [documentUrls, setDocumentUrls] = useState<DocumentUrlState>({
     nricFront: "",
     nricBack: "",
@@ -105,6 +104,8 @@ export default function EditDriverProfile() {
     defaultValues: {
       raider_name: "",
       email_address: "",
+      password: "",
+      confirm_password: "",
       contact_number: "+65",
       dob: "",
       gender: "",
@@ -164,7 +165,7 @@ export default function EditDriverProfile() {
     if (driverResponse?.success && driverResponse.data) {
       const topLevelData = driverResponse.data;
       const d = topLevelData.registrations?.[0] || {};
-      
+
       if (!isResetRef.current) {
         reset({
           raider_name: d.raider_name || topLevelData.raider_name || "",
@@ -200,6 +201,8 @@ export default function EditDriverProfile() {
           permanent_country: mapCountryFromAPI(d.permanent_country),
           bank_name: d.bank_name || "",
           account_number: d.account_number || "",
+          password: topLevelData.password || d.password || "",
+          confirm_password: topLevelData.password || d.password || "",
         });
 
         if (d.driver_photos && d.driver_photos.length > 0) {
@@ -347,6 +350,7 @@ export default function EditDriverProfile() {
         raider_name: data.raider_name,
         contact_number: data.contact_number,
         email_address: data.email_address,
+        password: data.password || undefined,
         dob: formatDateToISO(data.dob),
         gender: mapGender(data.gender),
         driver_photos: profileImageUrls,

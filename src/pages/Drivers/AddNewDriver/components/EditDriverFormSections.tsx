@@ -25,7 +25,8 @@ export const GeneralInformation = ({
   errors,
   watch,
   setValue,
-}: FormSectionProps) => (
+}: FormSectionProps) => {
+  return (
   <>
     <SectionTitle>General Information</SectionTitle>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -113,7 +114,8 @@ export const GeneralInformation = ({
       </InputWrapper>
     </div>
   </>
-);
+  );
+};
 
 export const IdentityCardSection = ({ register, errors }: FormSectionProps) => (
   <>

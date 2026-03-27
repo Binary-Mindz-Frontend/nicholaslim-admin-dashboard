@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 import {
   SectionTitle,
@@ -26,7 +28,11 @@ export const GeneralInformation = ({
   errors,
   watch,
   setValue,
-}: FormSectionProps) => (
+}: FormSectionProps) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  return (
   <>
     <SectionTitle>General Information</SectionTitle>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -50,7 +56,42 @@ export const GeneralInformation = ({
         />
       </InputWrapper>
       <InputWrapper label="Password" error={errors.password?.message}>
-        <Input type="password" {...register("password")} />
+        <div className="relative">
+          <Input
+            type={showPassword ? "text" : "password"}
+            {...register("password")}
+            className="pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#F2A735] hover:text-[#d98a1f]"
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
+      </InputWrapper>
+      <InputWrapper
+        label="Confirm Password"
+        error={errors.confirm_password?.message}
+      >
+        <div className="relative">
+          <Input
+            type={showConfirmPassword ? "text" : "password"}
+            {...register("confirm_password", {
+              validate: (value: string) =>
+                value === watch("password") || "Passwords do not match",
+            })}
+            className="pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#F2A735] hover:text-[#d98a1f]"
+          >
+            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
       </InputWrapper>
       <InputWrapper
         label="Contact Number*"
@@ -130,7 +171,8 @@ export const GeneralInformation = ({
       </InputWrapper>
     </div>
   </>
-);
+  );
+};
 
 export const IdentityCardSection = ({ register, errors }: FormSectionProps) => (
   <>
@@ -285,14 +327,6 @@ export const VehicleDetailsSection = ({
           })}
         />
       </InputWrapper>
-    </div>
-  </>
-);
-
-export const VehicleLogCardSection = ({ register, errors }: FormSectionProps) => (
-  <>
-    <SectionTitle>Vehicle Log Card</SectionTitle>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
       <InputWrapper
         label="Chassis Number*"
         error={errors.chassis_number?.message}
@@ -306,6 +340,8 @@ export const VehicleLogCardSection = ({ register, errors }: FormSectionProps) =>
     </div>
   </>
 );
+
+export const VehicleLogCardSection = () => null;
 
 export const VehicleInsurancePolicySection = ({
   register,
@@ -546,10 +582,11 @@ export const DocumentUploadSections = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <UploadBox
           label="Vehicle Log Card*"
-          onChange={(file) => handleDocumentChange("vehicleLog", file)}
-          isUploading={uploadingDocs.has("vehicleLog")}
+          onChange={(f) => handleDocumentChange("vehicleLog", f)}
           currentPreviewUrl={documentUrls.vehicleLog}
           error={documentErrors.vehicleLog}
+          isUploading={uploadingDocs.has("vehicleLog")}
+          buttonText="Upload"
         />
         <UploadBox
           label="Insurance Policy*"

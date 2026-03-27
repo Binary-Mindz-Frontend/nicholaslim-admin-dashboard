@@ -57,7 +57,6 @@ export default function AddNewDriver() {
   type DocumentFileState = Record<DocumentKey, File | null>;
   type DocumentUrlState = Record<DocumentKey, string>;
   type DocumentErrorState = Record<DocumentKey, string | null>;
-
   const [, setDocuments] = useState<DocumentFileState>({
     nricFront: null,
     nricBack: null,
@@ -111,6 +110,7 @@ export default function AddNewDriver() {
       raider_name: "",
       email_address: "",
       password: "",
+      confirm_password: "",
       contact_number: "+65",
       dob: "",
       gender: "",
@@ -425,12 +425,7 @@ export default function AddNewDriver() {
             vehicleTypesResponse={vehicleTypesResponse}
           />
 
-          <VehicleLogCardSection
-            register={register}
-            errors={errors}
-            watch={watch}
-            setValue={setValue}
-          />
+          <VehicleLogCardSection />
 
           <VehicleInsurancePolicySection
             register={register}
