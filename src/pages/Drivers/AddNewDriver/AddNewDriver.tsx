@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Camera } from "lucide-react";
 import toast from "react-hot-toast";
@@ -142,11 +142,47 @@ export default function AddNewDriver() {
       bank_name: "",
       account_number: "",
       driver_rank: "",
+      same_as_current: false,
     },
   });
 
   const [addRiderProfile, { isLoading }] = useAddRiderProfileMutation();
   const { data: vehicleTypesResponse } = useGetVehicleTypesQuery({});
+
+  // Sync address logic
+  const sameAsCurrent = watch("same_as_current");
+  const currentPostal = watch("current_postal_code");
+  const currentAddress = watch("current_address");
+  const currentUnit = watch("current_unit");
+  const currentCountry = watch("current_country");
+
+  useEffect(() => {
+    if (sameAsCurrent) {
+      setValue("permanent_postal_code", currentPostal);
+      setValue("permanent_address", currentAddress);
+      setValue("permanent_unit", currentUnit);
+      setValue("permanent_country", currentCountry);
+    }
+  }, [
+    sameAsCurrent,
+    currentPostal,
+    currentAddress,
+    currentUnit,
+    currentCountry,
+    setValue,
+  ]);
+
+  // Handle unchecking the box
+  const prevSameAsCurrent = useRef(false);
+  useEffect(() => {
+    if (prevSameAsCurrent.current && !sameAsCurrent) {
+      setValue("permanent_postal_code", "");
+      setValue("permanent_address", "");
+      setValue("permanent_unit", "");
+      setValue("permanent_country", "Singapore");
+    }
+    prevSameAsCurrent.current = !!sameAsCurrent;
+  }, [sameAsCurrent, setValue]);
 
   const handleProfileImageChange = (file: File | null) => {
     setProfileFile(file);

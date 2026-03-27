@@ -137,8 +137,44 @@ export default function EditDriverProfile() {
       permanent_country: "Singapore",
       bank_name: "",
       account_number: "",
+      same_as_current: false,
     },
   });
+
+  // Sync address logic
+  const sameAsCurrent = watch("same_as_current");
+  const currentPostal = watch("current_postal_code");
+  const currentAddress = watch("current_address");
+  const currentUnit = watch("current_unit");
+  const currentCountry = watch("current_country");
+
+  useEffect(() => {
+    if (sameAsCurrent) {
+      setValue("permanent_postal_code", currentPostal);
+      setValue("permanent_address", currentAddress);
+      setValue("permanent_unit", currentUnit);
+      setValue("permanent_country", currentCountry);
+    }
+  }, [
+    sameAsCurrent,
+    currentPostal,
+    currentAddress,
+    currentUnit,
+    currentCountry,
+    setValue,
+  ]);
+
+  // Handle unchecking the box
+  const prevSameAsCurrentLocal = useRef(false);
+  useEffect(() => {
+    if (prevSameAsCurrentLocal.current && !sameAsCurrent) {
+      setValue("permanent_postal_code", "");
+      setValue("permanent_address", "");
+      setValue("permanent_unit", "");
+      setValue("permanent_country", "Singapore");
+    }
+    prevSameAsCurrentLocal.current = !!sameAsCurrent;
+  }, [sameAsCurrent, setValue]);
 
   const mapGenderFromAPI = (gender: string) => {
     if (!gender) return "";
@@ -203,6 +239,7 @@ export default function EditDriverProfile() {
           account_number: d.account_number || "",
           password: topLevelData.password || d.password || "",
           confirm_password: topLevelData.password || d.password || "",
+          same_as_current: false,
         });
 
         if (d.driver_photos && d.driver_photos.length > 0) {

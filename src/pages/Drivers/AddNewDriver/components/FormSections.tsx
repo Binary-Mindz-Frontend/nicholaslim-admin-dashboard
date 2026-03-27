@@ -434,6 +434,21 @@ export const AddressSection = ({
       </InputWrapper>
     </div>
 
+    <div className="flex items-center gap-2 mb-4 mt-8">
+      <input
+        type="checkbox"
+        id="same_as_current"
+        {...register("same_as_current")}
+        className="w-4 h-4 text-yellow-500 rounded border-gray-300 focus:ring-yellow-500 cursor-pointer"
+      />
+      <label
+        htmlFor="same_as_current"
+        className="text-sm font-medium text-gray-700 cursor-pointer"
+      >
+        Same as Current Address
+      </label>
+    </div>
+
     {/* Permanent Address */}
     <SectionTitle>Permanent Address</SectionTitle>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
