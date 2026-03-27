@@ -9,6 +9,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -42,7 +44,10 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
     reward_type: "FIXED",
     reward_value: "",
     claim_type: "AUTO",
-    serviceZoneId: "0",
+    claim_expire: "",
+    time_constant: "HOURS",
+    max_claim: "",
+    serviceZoneIds: [] as number[],
     metric: "COMPLETED_DELIVERIES",
     operator: "GTE",
     ruleValue: "",
@@ -71,7 +76,10 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
           ""
         ).toString(),
         claim_type: incentive.claim_type || "AUTO",
-        serviceZoneId: (incentive.serviceZoneId || "0").toString(),
+        claim_expire: incentive.claim_expire?.toString() || "",
+        time_constant: incentive.time_constant || "HOURS",
+        max_claim: incentive.max_claim?.toString() || incentive.max_clam?.toString() || "",
+        serviceZoneIds: incentive.serviceZones?.map((sz: any) => sz.id) || [],
         metric: incentive.rules?.[0]?.metric || "COMPLETED_DELIVERIES",
         operator: incentive.rules?.[0]?.operator || "GTE",
         ruleValue: (incentive.rules?.[0]?.value || "").toString(),
@@ -96,7 +104,10 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
       reward_type: formData.reward_type,
       reward_value: Number(formData.reward_value),
       claim_type: formData.claim_type,
-      serviceZoneId: Number(formData.serviceZoneId),
+      claim_expire: Number(formData.claim_expire),
+      time_constant: formData.time_constant,
+      max_claim: Number(formData.max_claim),
+      serviceZoneIds: formData.serviceZoneIds,
       rules: [
         {
           metric: formData.metric,
@@ -143,31 +154,80 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
             />
           </div>
 
-          {/* Zone & Driver Type */}
-          <div className="space-y-2">
-            <Label>Service Zone</Label>
-            <Select
-              value={formData.serviceZoneId}
-              onValueChange={(v) =>
-                setFormData({ ...formData, serviceZoneId: v })
+          <div className="space-y-2 col-span-2">
+            <Label>Description</Label>
+            <Textarea
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
               }
-            >
-              <SelectTrigger className="bg-gray-50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">All Zones (Default)</SelectItem>
-                {activeZones.map((zone: any) => (
-                  <SelectItem key={zone.id} value={zone.id.toString()}>
+              className="bg-gray-50"
+              placeholder="Incentive description"
+            />
+          </div>
+
+          <div className="space-y-2 col-span-2">
+            <Label>Service Zones</Label>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {activeZones.length > 0 && (
+                <Badge
+                  variant={
+                    formData.serviceZoneIds.length === activeZones.length
+                      ? "default"
+                      : "outline"
+                  }
+                  className="cursor-pointer"
+                  onClick={() => {
+                    if (formData.serviceZoneIds.length === activeZones.length) {
+                      setFormData({ ...formData, serviceZoneIds: [] });
+                    } else {
+                      setFormData({
+                        ...formData,
+                        serviceZoneIds: activeZones.map((z: any) => z.id),
+                      });
+                    }
+                  }}
+                >
+                  All Zones
+                </Badge>
+              )}
+              {activeZones.map((zone: any) => {
+                const isSelected = formData.serviceZoneIds.includes(zone.id);
+                return (
+                  <Badge
+                    key={zone.id}
+                    variant={isSelected ? "default" : "outline"}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      if (isSelected) {
+                        setFormData({
+                          ...formData,
+                          serviceZoneIds: formData.serviceZoneIds.filter(
+                            (id) => id !== zone.id
+                          ),
+                        });
+                      } else {
+                        setFormData({
+                          ...formData,
+                          serviceZoneIds: [...formData.serviceZoneIds, zone.id],
+                        });
+                      }
+                    }}
+                  >
                     {zone.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  </Badge>
+                );
+              })}
+              {activeZones.length === 0 && (
+                <span className="text-sm text-gray-500">
+                  No active zones available
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Driver Type</Label>
+            <Label>Vehicle Type</Label>
             <Select
               value={formData.driver_type}
               onValueChange={(v) =>
@@ -217,6 +277,67 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
               value={formData.reward_value}
               onChange={(e) =>
                 setFormData({ ...formData, reward_value: e.target.value })
+              }
+              className="bg-gray-50"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Claim Type</Label>
+            <Select
+              value={formData.claim_type}
+              onValueChange={(v) =>
+                setFormData({ ...formData, claim_type: v })
+              }
+            >
+              <SelectTrigger className="bg-gray-50">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="AUTO">AUTO</SelectItem>
+                <SelectItem value="MANUAL">MANUAL</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Claim Expire</Label>
+            <Input
+              type="number"
+              value={formData.claim_expire}
+              onChange={(e) =>
+                setFormData({ ...formData, claim_expire: e.target.value })
+              }
+              className="bg-gray-50"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Time Constant</Label>
+            <Select
+              value={formData.time_constant}
+              onValueChange={(v) =>
+                setFormData({ ...formData, time_constant: v })
+              }
+            >
+              <SelectTrigger className="bg-gray-50">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="MINUTES">MINUTES</SelectItem>
+                <SelectItem value="HOURS">HOURS</SelectItem>
+                <SelectItem value="DAYS">DAYS</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Max Claim</Label>
+            <Input
+              type="number"
+              value={formData.max_claim}
+              onChange={(e) =>
+                setFormData({ ...formData, max_claim: e.target.value })
               }
               className="bg-gray-50"
             />

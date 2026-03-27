@@ -97,7 +97,11 @@ const IncentivesList: React.FC = () => {
                   {/* Fixed Keys: item.name instead of item.incentive_name */}
                   <td className="px-4 py-3 font-medium">{item.name}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">
-                    {item.serviceZone?.name || "All Zones"}
+                    {item.serviceZones && item.serviceZones.length > 0
+                      ? item.serviceZones
+                          .map((sz: any) => sz.zoneName || sz.name)
+                          .join(", ")
+                      : "All Zones"}
                   </td>
                   <td className="px-4 py-3">{formatDate(item.start_date)}</td>
                   <td className="px-4 py-3">{formatDate(item.end_date)}</td>
