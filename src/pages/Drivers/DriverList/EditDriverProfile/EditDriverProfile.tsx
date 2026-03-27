@@ -75,7 +75,6 @@ export default function EditDriverProfile() {
   const [profileImageUrls, setProfileImageUrls] = useState<string[]>([]);
   const [isProfileUploading, setIsProfileUploading] = useState(false);
   const [modalTarget, setModalTarget] = useState<"current" | "permanent" | null>(null);
-
   const [documentUrls, setDocumentUrls] = useState<DocumentUrlState>({
     nricFront: "",
     nricBack: "",
@@ -105,6 +104,8 @@ export default function EditDriverProfile() {
     defaultValues: {
       raider_name: "",
       email_address: "",
+      password: "",
+      confirm_password: "",
       contact_number: "+65",
       dob: "",
       gender: "",
@@ -136,8 +137,44 @@ export default function EditDriverProfile() {
       permanent_country: "Singapore",
       bank_name: "",
       account_number: "",
+      same_as_current: false,
     },
   });
+
+  // Sync address logic
+  const sameAsCurrent = watch("same_as_current");
+  const currentPostal = watch("current_postal_code");
+  const currentAddress = watch("current_address");
+  const currentUnit = watch("current_unit");
+  const currentCountry = watch("current_country");
+
+  useEffect(() => {
+    if (sameAsCurrent) {
+      setValue("permanent_postal_code", currentPostal);
+      setValue("permanent_address", currentAddress);
+      setValue("permanent_unit", currentUnit);
+      setValue("permanent_country", currentCountry);
+    }
+  }, [
+    sameAsCurrent,
+    currentPostal,
+    currentAddress,
+    currentUnit,
+    currentCountry,
+    setValue,
+  ]);
+
+  // Handle unchecking the box
+  const prevSameAsCurrentLocal = useRef(false);
+  useEffect(() => {
+    if (prevSameAsCurrentLocal.current && !sameAsCurrent) {
+      setValue("permanent_postal_code", "");
+      setValue("permanent_address", "");
+      setValue("permanent_unit", "");
+      setValue("permanent_country", "Singapore");
+    }
+    prevSameAsCurrentLocal.current = !!sameAsCurrent;
+  }, [sameAsCurrent, setValue]);
 
   const mapGenderFromAPI = (gender: string) => {
     if (!gender) return "";
@@ -164,7 +201,7 @@ export default function EditDriverProfile() {
     if (driverResponse?.success && driverResponse.data) {
       const topLevelData = driverResponse.data;
       const d = topLevelData.registrations?.[0] || {};
-      
+
       if (!isResetRef.current) {
         reset({
           raider_name: d.raider_name || topLevelData.raider_name || "",
@@ -200,6 +237,9 @@ export default function EditDriverProfile() {
           permanent_country: mapCountryFromAPI(d.permanent_country),
           bank_name: d.bank_name || "",
           account_number: d.account_number || "",
+          password: topLevelData.password || d.password || "",
+          confirm_password: topLevelData.password || d.password || "",
+          same_as_current: false,
         });
 
         if (d.driver_photos && d.driver_photos.length > 0) {
@@ -347,6 +387,7 @@ export default function EditDriverProfile() {
         raider_name: data.raider_name,
         contact_number: data.contact_number,
         email_address: data.email_address,
+        password: data.password || undefined,
         dob: formatDateToISO(data.dob),
         gender: mapGender(data.gender),
         driver_photos: profileImageUrls,
