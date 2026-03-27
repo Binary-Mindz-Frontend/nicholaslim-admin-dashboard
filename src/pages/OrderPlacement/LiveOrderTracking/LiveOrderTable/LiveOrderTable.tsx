@@ -89,7 +89,9 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
               year: "numeric",
             })
           : "N/A",
-        delivery_type: item.delivery_type || "N/A",
+        delivery_type: typeof item.delivery_type === "object"
+          ? (item.delivery_type as any)?.name || "N/A"
+          : (item.delivery_type || "N/A"),
         order_status: item.order_status || "N/A",
         route_type: item.route_type || "N/A",
       }));

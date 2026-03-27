@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface TOrderHistory {
   id: number;
   userId: number;
@@ -41,7 +42,13 @@ export const useOrderHistoryColumns = (params: UseOrderHistoryParams) => {
   useEffect(() => {
     // Your response structure is data.data.data
     if (data?.data?.data) {
-      setOrders(data.data.data);
+      const mapped = data.data.data.map((item: any) => ({
+        ...item,
+        delivery_type: typeof item.delivery_type === "object"
+          ? item.delivery_type?.name || "N/A"
+          : (item.delivery_type || "N/A"),
+      }));
+      setOrders(mapped);
       // Access pagination total from the correct nesting
       setTotalItems(data.data.pagination?.total || data.data.data.length);
     }
