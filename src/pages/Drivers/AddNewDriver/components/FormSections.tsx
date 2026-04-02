@@ -231,7 +231,7 @@ export const DrivingLicenseSection = ({
           })}
         />
       </InputWrapper>
-      <InputWrapper
+      {/* <InputWrapper
         label="Expiry Date*"
         error={errors.driving_license_expire_date?.message}
       >
@@ -241,7 +241,7 @@ export const DrivingLicenseSection = ({
             required: "Expiry date is required",
           })}
         />
-      </InputWrapper>
+      </InputWrapper> */}
       <InputWrapper
         label="License Class*"
         error={errors.license_class?.message}
