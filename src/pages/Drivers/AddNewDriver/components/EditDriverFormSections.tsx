@@ -166,7 +166,7 @@ export const DrivingLicenseSection = ({
           {...register("driving_license_issue_date", { required: "Required" })}
         />
       </InputWrapper>
-      <InputWrapper
+      {/* <InputWrapper
         label="Expiry Date*"
         error={errors.driving_license_expire_date?.message}
       >
@@ -174,7 +174,7 @@ export const DrivingLicenseSection = ({
           type="date"
           {...register("driving_license_expire_date", { required: "Required" })}
         />
-      </InputWrapper>
+      </InputWrapper> */}
       <InputWrapper
         label="License Class*"
         error={errors.license_class?.message}

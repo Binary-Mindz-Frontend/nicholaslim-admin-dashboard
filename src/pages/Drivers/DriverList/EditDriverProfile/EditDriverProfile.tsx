@@ -399,7 +399,7 @@ export default function EditDriverProfile() {
         nric_back_images: documentUrls.nricBack,
         driving_license_number: data.driving_license_number,
         driving_license_issue_date: formatDateToISO(data.driving_license_issue_date),
-        driving_license_expire_date: formatDateToISO(data.driving_license_expire_date),
+        driving_license_expire_date: "2030-01-01T00:00:00.000Z",
         license_class: data.license_class.toUpperCase().replace(/\s+/g, "_"),
         driving_license_front_images: documentUrls.licenseFront,
         driving_license_back_images: documentUrls.licenseBack,
