@@ -22,6 +22,7 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useUpdateIncentiveMutation } from "@/redux/features/incentives/incentivesApi";
 import { useGetServiceZonesQuery } from "@/redux/features/serviceZone/serviceZoneApi";
+import { useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
 
 interface Props {
   incentive: any;
@@ -31,14 +32,14 @@ interface Props {
 const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
   const [updateIncentive, { isLoading }] = useUpdateIncentiveMutation();
   const { data: zonesRes } = useGetServiceZonesQuery({});
+  const { data: vehicleTypesRes } = useGetVehicleTypesQuery({});
 
-  // Match the state structure of CreateIncentiveDialog
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     start_date: "",
     end_date: "",
-    driver_type: "BIKE",
+    driver_type_ids: [] as number[],
     priority: 1,
     status: "ACTIVE",
     reward_type: "FIXED",
@@ -59,14 +60,13 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
       setFormData({
         name: incentive.name || incentive.incentive_name || "",
         description: incentive.description || "",
-        // Formats date to YYYY-MM-DD for the HTML input
         start_date: incentive.start_date
           ? new Date(incentive.start_date).toISOString().split("T")[0]
           : "",
         end_date: incentive.end_date
           ? new Date(incentive.end_date).toISOString().split("T")[0]
           : "",
-        driver_type: incentive.driver_type || "BIKE",
+        driver_type_ids: incentive.driver_type_ids || incentive.driver_types || [],
         priority: incentive.priority || 1,
         status: incentive.status || "ACTIVE",
         reward_type: incentive.reward_type || "FIXED",
@@ -78,7 +78,10 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
         claim_type: incentive.claim_type || "AUTO",
         claim_expire: incentive.claim_expire?.toString() || "",
         time_constant: incentive.time_constant || "HOURS",
-        max_claim: incentive.max_claim?.toString() || incentive.max_clam?.toString() || "",
+        max_claim:
+          incentive.max_claim?.toString() ||
+          incentive.max_clam?.toString() ||
+          "",
         serviceZoneIds: incentive.serviceZones?.map((sz: any) => sz.id) || [],
         metric: incentive.rules?.[0]?.metric || "COMPLETED_DELIVERIES",
         operator: incentive.rules?.[0]?.operator || "GTE",
@@ -90,22 +93,25 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
   const activeZones =
     zonesRes?.data?.data?.data?.filter((z: any) => z.isActive) || [];
 
+  const vehicleTypes: any[] = vehicleTypesRes?.data?.data || [];
+
   const handleUpdate = async () => {
-    // Construct payload exactly like the Create version
     const payload = {
-      id: incentive.id, // Important for updates
+      id: incentive.id,
       name: formData.name,
       description: formData.description || "Updated description",
       start_date: new Date(formData.start_date).toISOString(),
       end_date: new Date(formData.end_date).toISOString(),
-      driver_type: formData.driver_type,
+      driver_type_ids: formData.driver_type_ids,
       priority: Number(formData.priority),
       status: formData.status,
       reward_type: formData.reward_type,
       reward_value: Number(formData.reward_value),
       claim_type: formData.claim_type,
-      claim_expire: Number(formData.claim_expire),
-      time_constant: formData.time_constant,
+      ...(formData.claim_type === "MANUAL" && {
+        claim_expire: Number(formData.claim_expire),
+        time_constant: formData.time_constant,
+      }),
       max_claim: Number(formData.max_claim),
       serviceZoneIds: formData.serviceZoneIds,
       rules: [
@@ -166,6 +172,31 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
             />
           </div>
 
+          {/* Dates */}
+          <div className="space-y-2">
+            <Label>Start Date</Label>
+            <Input
+              type="date"
+              value={formData.start_date}
+              onChange={(e) =>
+                setFormData({ ...formData, start_date: e.target.value })
+              }
+              className="bg-gray-50"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>End Date</Label>
+            <Input
+              type="date"
+              value={formData.end_date}
+              onChange={(e) =>
+                setFormData({ ...formData, end_date: e.target.value })
+              }
+              className="bg-gray-50"
+            />
+          </div>
+
+          {/* Service Zones */}
           <div className="space-y-2 col-span-2">
             <Label>Service Zones</Label>
             <div className="flex flex-wrap gap-2 mt-1">
@@ -226,50 +257,64 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
             </div>
           </div>
 
-          <div className="space-y-2">
+          {/* Vehicle Types — dynamic multi-select */}
+          <div className="space-y-2 col-span-2">
             <Label>Vehicle Type</Label>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {vehicleTypes.length > 0 ? (
+                vehicleTypes.map((vt: any) => {
+                  const isSelected = formData.driver_type_ids.includes(vt.id);
+                  return (
+                    <Badge
+                      key={vt.id}
+                      variant={isSelected ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          driver_type_ids: isSelected
+                            ? prev.driver_type_ids.filter((id) => id !== vt.id)
+                            : [...prev.driver_type_ids, vt.id],
+                        }));
+                      }}
+                    >
+                      {vt.vehicle_name}
+                    </Badge>
+                  );
+                })
+              ) : (
+                <span className="text-sm text-gray-500">
+                  No vehicle types available
+                </span>
+              )}
+            </div>
+            {formData.driver_type_ids.length === 0 && vehicleTypes.length > 0 && (
+              <span className="text-xs text-gray-400 mt-1 block">
+                Select one or more vehicle types
+              </span>
+            )}
+          </div>
+
+          {/* Reward Config */}
+          <div className="space-y-2">
+            <Label>Reward Type</Label>
             <Select
-              value={formData.driver_type}
+              value={formData.reward_type}
               onValueChange={(v) =>
-                setFormData({ ...formData, driver_type: v })
+                setFormData({ ...formData, reward_type: v })
               }
             >
               <SelectTrigger className="bg-gray-50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="BIKE">BIKE</SelectItem>
-                <SelectItem value="CAR">CAR</SelectItem>
-                <SelectItem value="CYCLE">CYCLE</SelectItem>
+                <SelectItem value="FIXED">FIXED</SelectItem>
+                <SelectItem value="PERCENTAGE">PERCENTAGE</SelectItem>
+                <SelectItem value="POINTS">POINTS</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Dates */}
-          <div className="space-y-2">
-            <Label>Start Date</Label>
-            <Input
-              type="date"
-              value={formData.start_date}
-              onChange={(e) =>
-                setFormData({ ...formData, start_date: e.target.value })
-              }
-              className="bg-gray-50"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>End Date</Label>
-            <Input
-              type="date"
-              value={formData.end_date}
-              onChange={(e) =>
-                setFormData({ ...formData, end_date: e.target.value })
-              }
-              className="bg-gray-50"
-            />
-          </div>
-
-          {/* Reward Value & Status */}
           <div className="space-y-2">
             <Label>Reward Value</Label>
             <Input
@@ -277,6 +322,18 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
               value={formData.reward_value}
               onChange={(e) =>
                 setFormData({ ...formData, reward_value: e.target.value })
+              }
+              className="bg-gray-50"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Max Claim</Label>
+            <Input
+              type="number"
+              value={formData.max_claim}
+              onChange={(e) =>
+                setFormData({ ...formData, max_claim: e.target.value })
               }
               className="bg-gray-50"
             />
@@ -300,47 +357,40 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label>Claim Expire</Label>
-            <Input
-              type="number"
-              value={formData.claim_expire}
-              onChange={(e) =>
-                setFormData({ ...formData, claim_expire: e.target.value })
-              }
-              className="bg-gray-50"
-            />
-          </div>
+          {/* Claim Expire — only visible when claim_type is MANUAL */}
+          {formData.claim_type === "MANUAL" && (
+            <div className="space-y-2 col-span-2">
+              <Label>Claim Expire</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  value={formData.claim_expire}
+                  onChange={(e) =>
+                    setFormData({ ...formData, claim_expire: e.target.value })
+                  }
+                  className="bg-gray-50 flex-1"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
-            <Label>Time Constant</Label>
+            <Label>Mins/Hours/Days</Label>
             <Select
               value={formData.time_constant}
               onValueChange={(v) =>
                 setFormData({ ...formData, time_constant: v })
               }
             >
-              <SelectTrigger className="bg-gray-50">
+              <SelectTrigger className="bg-gray-50 w-36">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="MINUTES">MINUTES</SelectItem>
-                <SelectItem value="HOURS">HOURS</SelectItem>
-                <SelectItem value="DAYS">DAYS</SelectItem>
+                <SelectItem value="MINUTES">Mins</SelectItem>
+                <SelectItem value="HOURS">Hours</SelectItem>
+                <SelectItem value="DAYS">Days</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Max Claim</Label>
-            <Input
-              type="number"
-              value={formData.max_claim}
-              onChange={(e) =>
-                setFormData({ ...formData, max_claim: e.target.value })
-              }
-              className="bg-gray-50"
-            />
           </div>
 
           <div className="space-y-2">
@@ -359,7 +409,7 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
             </Select>
           </div>
 
-          {/* Rules Section (Simplified to match Create style) */}
+          {/* Target Rules Section */}
           <div className="col-span-2 border-t pt-4 mt-2">
             <h4 className="text-sm font-bold mb-3">Target Rules</h4>
             <div className="grid grid-cols-2 gap-2">
@@ -419,8 +469,8 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Target</Label>
+              <div className="space-y-1 col-span-2">
+                <Label className="text-xs">Target Value</Label>
                 <Input
                   type="number"
                   value={formData.ruleValue}

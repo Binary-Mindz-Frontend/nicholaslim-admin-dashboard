@@ -127,7 +127,7 @@ const VehicleTypes = () => {
 
       if (!result.success) {
         toast.dismiss();
-        toast.error(result.message);
+        toast.error(result.error.message);
         return;
       }
 
