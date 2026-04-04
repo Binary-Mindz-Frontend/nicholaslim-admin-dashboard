@@ -66,7 +66,9 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
         end_date: incentive.end_date
           ? new Date(incentive.end_date).toISOString().split("T")[0]
           : "",
-        driver_type_ids: incentive.driver_type_ids || incentive.driver_types || [],
+        driver_type_ids: incentive.driver_type_ids
+          ? incentive.driver_type_ids
+          : incentive.driver_types?.map((dt: any) => dt.id) || [],
         priority: incentive.priority || 1,
         status: incentive.status || "ACTIVE",
         reward_type: incentive.reward_type || "FIXED",
@@ -108,10 +110,12 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
       reward_type: formData.reward_type,
       reward_value: Number(formData.reward_value),
       claim_type: formData.claim_type,
+      time_constant: formData.time_constant,
+
       ...(formData.claim_type === "MANUAL" && {
         claim_expire: Number(formData.claim_expire),
-        time_constant: formData.time_constant,
       }),
+
       max_claim: Number(formData.max_claim),
       serviceZoneIds: formData.serviceZoneIds,
       rules: [
