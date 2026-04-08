@@ -11,6 +11,7 @@ import {
 import PromoCodeDialog from "@/components/Dashboard/PromoCode/PromoCodeDialog";
 import PromoCodeTable from "@/components/Dashboard/PromoCode/PromoCodeTable";
 import DeleteConfirmationModal from "@/pages/SupportAndDisputes/DeleteConfirmationModal/DeleteConfirmationModal";
+import NewDynamicChangeLogTable from "@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable";
 
 const PromoCode = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -131,6 +132,8 @@ const PromoCode = () => {
         onConfirm={handleDeleteConfirm}
         isLoading={isDeleting}
       />
+
+      <NewDynamicChangeLogTable entityType="PROMO_CODE" />
     </div>
   );
 };

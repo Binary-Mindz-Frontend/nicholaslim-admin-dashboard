@@ -9,6 +9,7 @@ import FilterSection from "./FilterSection/FilterSection";
 import Pagination from "./Pagination/Pagination";
 import DeleteConfirmationModal from "./DeleteConfirmationModal/DeleteConfirmationModal";
 import { useNavigate } from "react-router-dom";
+import NewDynamicChangeLogTable from "@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable";
 
 export default function SupportAndDisputes() {
   const navigate = useNavigate();
@@ -144,6 +145,8 @@ export default function SupportAndDisputes() {
         onConfirm={handleConfirmDelete}
         isLoading={isDeleting}
       />
+
+      <NewDynamicChangeLogTable entityType="Dispute" />
     </div>
   );
 }

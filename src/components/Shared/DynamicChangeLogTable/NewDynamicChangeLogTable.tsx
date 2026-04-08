@@ -101,9 +101,9 @@ const NewDynamicChangeLogTable = ({
       header: "Details",
       render: (row: any) => (
         <div className="flex flex-col gap-1 min-w-[200px]">
-          <span className="text-[10px] font-bold text-gray-400 uppercase leading-none">
+          {/* <span className="text-[10px] font-bold text-gray-400 uppercase leading-none">
             {row.entity_type?.replace("-", " ")}
-          </span>
+          </span> */}
           <div
             className="text-sm text-slate-700 font-medium"
             title={row.description}

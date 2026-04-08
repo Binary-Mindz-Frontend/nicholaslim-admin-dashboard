@@ -11,6 +11,7 @@ import {
 } from "@/redux/features/additionalServices/additionalServicesApi";
 import DeleteConfirmationModal from "@/pages/SupportAndDisputes/DeleteConfirmationModal/DeleteConfirmationModal";
 import AdditionalServiceDialog from "@/components/Dashboard/AdditionalService/AdditionalServiceDialog";
+import NewDynamicChangeLogTable from "@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable";
 
 const AdditionalService = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -138,6 +139,8 @@ const AdditionalService = () => {
         onConfirm={handleDeleteConfirm}
         isLoading={isDeleting}
       />
+
+      <NewDynamicChangeLogTable entityType="AdditionalService" />
     </div>
   );
 };

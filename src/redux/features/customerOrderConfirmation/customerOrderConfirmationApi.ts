@@ -26,6 +26,15 @@ const customerOrderConfirmationApi = baseApi.injectEndpoints({
       providesTags: ["CustomerOrderConfirmation"],
     }),
 
+    getCustomeOrderConfirmationLogs: build.query({
+      query: (query) => ({
+        url: `/customer-order-confirmation/logs`,
+        method: "GET",
+        params: query,
+      }),
+      providesTags: ["CustomerOrderConfirmation"],
+    }),
+
     updateCustomerOrderConfirmation: build.mutation({
       query: ({ id, data }) => ({
         url: `/customer-order-confirmation/${id}`,
@@ -41,5 +50,6 @@ export const {
   useGetCustomerOrderConfirmationQuery,
   useGetCustomerOrderConfirmationStatusQuery,
   useGetCustomerOrderConfirmationByIdQuery,
+  useGetCustomeOrderConfirmationLogsQuery,
   useUpdateCustomerOrderConfirmationMutation,
 } = customerOrderConfirmationApi;
