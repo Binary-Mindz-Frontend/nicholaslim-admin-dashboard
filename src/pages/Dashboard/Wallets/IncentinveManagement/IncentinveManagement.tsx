@@ -9,21 +9,38 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import CreateIncentiveDialog from "./CreateIncentive/CreateIncentiveDialog";
 import { useGetAllIncentiveLogsQuery } from "@/redux/features/incentives/incentivesApi";
-import { DynamicChangeLogTable } from "@/components/Shared/DynamicChangeLogTable/DynamicChangeLogTable";
+import SimpleChangeLogTable from "@/components/Shared/DynamicChangeLogTable/SimpleChangeLogTable";
 
 const IncentiveManagementPage: React.FC = () => {
   const [openCreate, setOpenCreate] = useState(false);
 
-  const { data: incentiveLogs, isLoading } =
-    useGetAllIncentiveLogsQuery(undefined);
+  // Pagination and Search State (matching the Customer Order file)
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState("");
+
+  const { data: logApiResponse, isLoading: isLogsLoading } =
+    useGetAllIncentiveLogsQuery({
+      page,
+      limit,
+      search: search || undefined,
+    });
+
+  // Extract logs and meta from the API response structure provided
+  const logs = logApiResponse?.data?.data || [];
+  const meta = logApiResponse?.data?.meta || {
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 1,
+  };
 
   const incentiveColumns = [
     {
       header: "Date",
-      accessor: "createdAt",
       render: (row: any, index: number) => (
         <div className="flex items-center gap-2">
-          <span className="font-medium">
+          <span className="font-medium text-slate-700 whitespace-nowrap">
             {new Date(row.createdAt).toLocaleDateString("en-GB", {
               day: "2-digit",
               month: "short",
@@ -32,7 +49,7 @@ const IncentiveManagementPage: React.FC = () => {
               minute: "2-digit",
             })}
           </span>
-          {index === 0 && (
+          {index === 0 && page === 1 && (
             <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold border border-amber-200">
               LATEST
             </span>
@@ -42,21 +59,24 @@ const IncentiveManagementPage: React.FC = () => {
     },
     {
       header: "Incentive Info",
-      accessor: "incentiveData", // Accessing the nested object
       render: (row: any) => (
-        <div className="flex flex-col">
-          <span className="font-bold text-slate-900">
+        <div className="flex flex-col gap-1 min-w-[200px]">
+          <span className="font-bold text-slate-900 leading-none">
             {row.incentiveData?.name || "N/A"}
           </span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 w-fit font-bold mt-1">
-            {row.incentiveData?.driver_type || "N/A"}
-          </span>
+          <div className="flex gap-1 items-center mt-1">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100 font-bold">
+              ID: {row.incentiveId}
+            </span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 font-bold uppercase">
+              {row.incentiveData?.claim_type}
+            </span>
+          </div>
         </div>
       ),
     },
     {
       header: "Reward",
-      accessor: "reward_value",
       render: (row: any) => (
         <div className="flex flex-col">
           <span className="font-bold text-green-600">
@@ -64,7 +84,7 @@ const IncentiveManagementPage: React.FC = () => {
             {row.incentiveData?.reward_value}
             {row.incentiveData?.reward_type === "PERCENTAGE" ? "%" : ""}
           </span>
-          <span className="text-[9px] text-gray-400">
+          <span className="text-[10px] text-gray-400 font-medium">
             {row.incentiveData?.reward_type}
           </span>
         </div>
@@ -72,21 +92,24 @@ const IncentiveManagementPage: React.FC = () => {
     },
     {
       header: "Changed By",
-      accessor: "changedByRole",
       render: (row: any) => (
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold border border-slate-200">
-            ID: {row.changedByAdminId || "SYS"}
+          <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-[11px] font-bold border border-slate-200 uppercase text-slate-600">
+            {row.changedByRole?.substring(0, 2) || "AD"}
           </div>
-          <span className="text-xs font-semibold text-slate-500 uppercase">
-            {row.changedByRole}
-          </span>
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold text-slate-900">
+              ID: {row.changedByAdminId || "SYS"}
+            </span>
+            <span className="text-[10px] text-slate-500 font-bold uppercase leading-none">
+              {row.changedByRole}
+            </span>
+          </div>
         </div>
       ),
     },
     {
-      header: "Log Status",
-      accessor: "status",
+      header: "Status",
       render: (row: any) => (
         <span
           className={`px-2 py-1 rounded-full text-[10px] font-bold border ${
@@ -123,12 +146,28 @@ const IncentiveManagementPage: React.FC = () => {
 
         <IncentivesList />
 
-        {/* Change Logs Section */}
+        {/* Updated Change Logs Section using SimpleChangeLogTable */}
         <div className="pt-8">
-          <DynamicChangeLogTable
+          <div className="mb-4">
+            <h3 className="text-lg font-bold text-gray-900">
+              Configuration Logs
+            </h3>
+            <p className="text-sm text-gray-500">
+              History of incentive adjustments and creation.
+            </p>
+          </div>
+
+          <SimpleChangeLogTable
+            logs={logs}
             columns={incentiveColumns}
-            data={incentiveLogs?.data || []}
-            isLoading={isLoading}
+            meta={meta}
+            isLoading={isLogsLoading}
+            page={page}
+            limit={limit}
+            search={search}
+            onPageChange={setPage}
+            onLimitChange={setLimit}
+            onSearchChange={setSearch}
           />
         </div>
 

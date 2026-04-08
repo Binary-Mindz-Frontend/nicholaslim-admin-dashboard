@@ -77,9 +77,10 @@ const coinManagementApi = baseApi.injectEndpoints({
     }),
 
     getCoinLogs: builder.query({
-      query: () => ({
+      query: (params) => ({
         url: "/coin-management/logs",
         method: "GET",
+        params,
       }),
       providesTags: ["Coins"],
     }),
