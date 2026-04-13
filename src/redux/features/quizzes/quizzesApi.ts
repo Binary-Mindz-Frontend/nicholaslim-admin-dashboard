@@ -45,9 +45,10 @@ const quizzesApi = baseApi.injectEndpoints({
     }),
 
     getAllQuizsLogs: builder.query({
-      query: () => ({
+      query: (params) => ({
         url: "/quizzes/logs",
         method: "GET",
+        params
       }),
       providesTags: ["Quizzes"],
     })

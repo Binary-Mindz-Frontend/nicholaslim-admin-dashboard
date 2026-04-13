@@ -1,13 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useState } from "react";
 import { useGetCoinLogsQuery } from "@/redux/features/coinManagement/coinManagementApi";
 import CoinSystem from "./_components/coint-system/CoinSystem";
 import UserCoinAudit from "./_components/user-coins/UserCoinAudit";
-import { DynamicChangeLogTable } from "@/components/Shared/DynamicChangeLogTable/DynamicChangeLogTable";
+import SimpleChangeLogTable from "@/components/Shared/DynamicChangeLogTable/SimpleChangeLogTable";
 
 const CoinPage = () => {
-  const { data: coinLogs, isLoading } = useGetCoinLogsQuery(null);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState("");
+
+  const { data: coinLogs, isLoading } = useGetCoinLogsQuery({
+    page,
+    limit,
+    search,
+  });
 
   const coinColumns = [
     {
@@ -22,7 +31,7 @@ const CoinPage = () => {
               year: "numeric",
             })}
           </span>
-          {index === 0 && (
+          {index === 0 && page === 1 && (
             <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold border border-amber-200 uppercase">
               Latest
             </span>
@@ -102,10 +111,24 @@ const CoinPage = () => {
       <UserCoinAudit />
 
       <div className="mx-6 sm:mx-12">
-        <DynamicChangeLogTable
+        <SimpleChangeLogTable
+          logs={coinLogs?.data?.data || []}
           columns={coinColumns}
-          data={coinLogs?.data || []}
+          meta={
+            coinLogs?.data?.meta || {
+              total: 0,
+              page: 1,
+              limit: 10,
+              totalPages: 0,
+            }
+          }
           isLoading={isLoading}
+          page={page}
+          limit={limit}
+          search={search}
+          onPageChange={setPage}
+          onLimitChange={setLimit}
+          onSearchChange={setSearch}
         />
       </div>
     </div>

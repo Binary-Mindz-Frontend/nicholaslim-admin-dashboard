@@ -96,6 +96,52 @@ const CreateIncentiveDialog: React.FC<Props> = ({
 
 
 
+  // const handleSubmit = async () => {
+  //   const payload = {
+  //     ...(incentiveToEdit && { id: incentiveToEdit.id }),
+  //     name: formData.name,
+  //     description: formData.description || "No description",
+  //     start_date: new Date(formData.start_date).toISOString(),
+  //     end_date: new Date(formData.end_date).toISOString(),
+  //     driver_type_ids: formData.driver_type_ids,
+  //     priority: Number(formData.priority),
+  //     status: formData.status,
+  //     reward_type: formData.reward_type,
+  //     reward_value: Number(formData.reward_value),
+  //     claim_type: formData.claim_type,
+  //     ...(formData.claim_type === "MANUAL" && {
+  //       claim_expire: Number(formData.claim_expire),
+  //       time_constant: formData.time_constant,
+  //     }),
+  //     max_claim: Number(formData.max_claim),
+  //     serviceZoneIds: formData.serviceZoneIds,
+  //     rules: [
+  //       {
+  //         metric: formData.metric,
+  //         operator: formData.operator,
+  //         value: Number(formData.ruleValue),
+  //       },
+  //     ],
+  //   };
+
+  //   try {
+  //     const res = incentiveToEdit
+  //       ? await updateIncentive(payload).unwrap()
+  //       : await createIncentive(payload).unwrap();
+
+  //     if (res.success) {
+  //       toast.success(res.message);
+  //       onOpenChange(false);
+  //     }
+
+  //     if (!res.success) {
+  //       toast.error(res.error.response.message);
+  //     }
+  //   } catch (error: any) {
+  //     toast.error(error?.data?.message || "Something went wrong");
+  //   }
+  // };
+
   const handleSubmit = async () => {
     const payload = {
       ...(incentiveToEdit && { id: incentiveToEdit.id }),
@@ -109,10 +155,12 @@ const CreateIncentiveDialog: React.FC<Props> = ({
       reward_type: formData.reward_type,
       reward_value: Number(formData.reward_value),
       claim_type: formData.claim_type,
+      time_constant: formData.time_constant,
+
       ...(formData.claim_type === "MANUAL" && {
         claim_expire: Number(formData.claim_expire),
-        time_constant: formData.time_constant,
       }),
+
       max_claim: Number(formData.max_claim),
       serviceZoneIds: formData.serviceZoneIds,
       rules: [
