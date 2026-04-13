@@ -78,6 +78,7 @@ const AdditionalService = () => {
           id: selectedId,
           ...payload,
         }).unwrap();
+
         if (result.success) {
           toast.success(result.message);
           setOpenDialog(false);
