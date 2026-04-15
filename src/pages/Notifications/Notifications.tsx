@@ -127,11 +127,11 @@ export default function NotificationComposer() {
   const sendImmediately = form.watch("sendImmediately");
 
   const getTargetRole = () => {
-    if (sendToAll) return "BOTH";
-    if (sendToDrivers && sendToUsers) return "BOTH";
+    if (sendToAll) return "ALL";
+    if (sendToDrivers && sendToUsers) return "ALL";
     if (sendToDrivers) return "RAIDER";
     if (sendToUsers) return "USER";
-    return "BOTH";
+    return "ALL";
   };
 
   const combineDateTimeToISO = (date: Date, timeString: string) => {
@@ -369,7 +369,7 @@ export default function NotificationComposer() {
                     onCheckedChange={handleSendToAllChange}
                   />
                   <span className="text-sm">
-                    {activeTab === "email" ? "Both" : "All"}
+                    {activeTab === "email" ? "All" : "All"}
                   </span>
                 </div>
               </div>
