@@ -147,15 +147,15 @@ const IncentiveManagementPage: React.FC = () => {
         <IncentivesList />
 
         {/* Updated Change Logs Section using SimpleChangeLogTable */}
-        <div className="pt-8">
-          <div className="mb-4">
+        <div>
+          {/* <div className="mb-4">
             <h3 className="text-lg font-bold text-gray-900">
               Configuration Logs
             </h3>
             <p className="text-sm text-gray-500">
               History of incentive adjustments and creation.
             </p>
-          </div>
+          </div> */}
 
           <SimpleChangeLogTable
             logs={logs}
