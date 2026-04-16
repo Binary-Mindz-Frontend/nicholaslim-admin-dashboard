@@ -9,10 +9,11 @@ import {
   useGetAllIncentivesQuery,
   useDeleteIncentiveMutation,
 } from "@/redux/features/incentives/incentivesApi";
-import UpdateIncentiveModal from "./UpdateIncentiveModal";
 import CustomPagination from "@/components/Shared/CustomPagination/CustomPagination";
+import CreateIncentiveDialog from "../CreateIncentive/CreateIncentiveDialog";
 
 const IncentivesList: React.FC = () => {
+  const [openModal, setOpenModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedIncentive, setSelectedIncentive] = useState<any>(null);
@@ -24,7 +25,7 @@ const IncentivesList: React.FC = () => {
 
   const [deleteIncentive] = useDeleteIncentiveMutation();
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <p className="p-4">Loading...</p>;
 
   const incentives = data?.data?.data || [];
   const totalItems = data?.data?.meta?.total || 0;
@@ -40,12 +41,19 @@ const IncentivesList: React.FC = () => {
     }
   };
 
-  const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString("en-US", {
+  const formatDate = (date: string) => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
+  };
+
+  const handleEditClick = (incentive: any) => {
+    setSelectedIncentive(incentive);
+    setOpenModal(true);
+  };
 
   const handleDeleteIncentive = async (id: string) => {
     const result = await Swal.fire({
@@ -55,6 +63,7 @@ const IncentivesList: React.FC = () => {
       showCancelButton: true,
       confirmButtonText: "Yes, delete it!",
       cancelButtonText: "Cancel",
+      confirmButtonColor: "#FF4D4F",
     });
 
     if (result.isConfirmed) {
@@ -70,9 +79,9 @@ const IncentivesList: React.FC = () => {
 
   return (
     <div className="mb-6 space-y-4">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto border rounded-lg">
         <table className="w-full">
-          <thead className="bg-[#FFD52B40] border border-[#FFD52B]">
+          <thead className="bg-[#FFD52B40] border-b border-[#FFD52B]">
             <tr>
               <th className="px-4 py-3 text-left">Incentive Name</th>
               <th className="px-4 py-3 text-left">Zone</th>
@@ -93,8 +102,10 @@ const IncentivesList: React.FC = () => {
               </tr>
             ) : (
               incentives.map((item: any) => (
-                <tr key={item.id}>
-                  {/* Fixed Keys: item.name instead of item.incentive_name */}
+                <tr
+                  key={item.id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
                   <td className="px-4 py-3 font-medium">{item.name}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {item.serviceZones && item.serviceZones.length > 0
@@ -103,8 +114,14 @@ const IncentivesList: React.FC = () => {
                           .join(", ")
                       : "All Zones"}
                   </td>
-                  <td className="px-4 py-3">{formatDate(item.start_date)}</td>
-                  <td className="px-4 py-3">{formatDate(item.end_date)}</td>
+                  <td className="px-4 py-3 text-sm">
+                    {formatDate(item.start_date)}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {item.recurring_type === "ONE_TIME"
+                      ? "N/A"
+                      : formatDate(item.end_date)}
+                  </td>
                   <td className="px-4 py-3 font-semibold text-emerald-600">
                     {item.reward_type === "FIXED" ? "$" : ""}
                     {item.reward_value}
@@ -117,7 +134,7 @@ const IncentivesList: React.FC = () => {
                         variant="ghost"
                         size="sm"
                         className="p-2 h-auto border cursor-pointer border-[#00BFFF] hover:bg-blue-50"
-                        onClick={() => setSelectedIncentive(item)}
+                        onClick={() => handleEditClick(item)}
                       >
                         <LuPencil size={16} className="text-[#00BFFF]" />
                       </Button>
@@ -135,7 +152,9 @@ const IncentivesList: React.FC = () => {
 
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-flex items-center justify-center font-medium text-xs rounded-sm ${getStatusColor(item.status)} h-7 w-24 uppercase`}
+                      className={`inline-flex items-center justify-center font-medium text-[10px] rounded-sm ${getStatusColor(
+                        item.status,
+                      )} h-6 w-20 uppercase`}
                     >
                       {item.status}
                     </span>
@@ -158,15 +177,17 @@ const IncentivesList: React.FC = () => {
         }}
       />
 
-      {selectedIncentive && (
-        <UpdateIncentiveModal
-          incentive={selectedIncentive}
-          onClose={() => {
+      <CreateIncentiveDialog
+        open={openModal}
+        onOpenChange={(open) => {
+          setOpenModal(open);
+          if (!open) {
             setSelectedIncentive(null);
-            refetch(); // Refresh list after modal closes
-          }}
-        />
-      )}
+            refetch();
+          }
+        }}
+        incentiveToEdit={selectedIncentive}
+      />
     </div>
   );
 };
