@@ -30,7 +30,7 @@ export interface RecipientData {
 export interface OrderFormData {
   route_type: string;
   isFixed: boolean;
-  delivery_type: string;
+  delivery_type_id: number;
   vehicle_type_id: number;
   collect_time: string;
   total_cost: number;
