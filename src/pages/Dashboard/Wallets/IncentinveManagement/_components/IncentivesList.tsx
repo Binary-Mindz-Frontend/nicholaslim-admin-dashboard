@@ -177,14 +177,13 @@ const IncentivesList: React.FC = () => {
         }}
       />
 
-      {/* Reusable Dialog for both Create (if added elsewhere) and Update */}
       <CreateIncentiveDialog
         open={openModal}
         onOpenChange={(open) => {
           setOpenModal(open);
           if (!open) {
             setSelectedIncentive(null);
-            refetch(); // Refresh list on close
+            refetch();
           }
         }}
         incentiveToEdit={selectedIncentive}
