@@ -17,11 +17,6 @@ import OrderSummary from "./OrderSummary";
 import RecipientManagement from "./RecipientManagement";
 import OrderConfiguration from "./OrderConfiguration";
 import { useOrderForm } from "@/hooks/useOrderForm";
-// import OrderConfiguration from "./components/OrderConfiguration";
-// import RecipientManagement from "./components/RecipientManagement";
-// import OrderSummary from "./components/OrderSummary";
-// import { useOrderForm } from "./hooks/useOrderForm";
-// import { PayType, PAY_TYPE_DISPLAY, DISPLAY_TO_PAY_TYPE } from "./types";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -41,17 +36,13 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     formData,
     setFormData,
     sender,
-    // setSender,
     recipients,
-    // setRecipients,
     selectedDeliveryType,
     setSelectedDeliveryType,
     selectedVehicle,
     setSelectedVehicle,
     collectTimeOption,
-    // setCollectTimeOption,
     scheduledDate,
-    // setScheduledDate,
     createdOrderId,
     setCreatedOrderId,
     orderTotalCost,
@@ -85,7 +76,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     if (vehicleTypes?.data?.data) {
       const vehicleId = formData.vehicle_type_id;
       const vehicle = vehicleTypes.data.data.find(
-        (item: any) => item.id === vehicleId
+        (item: any) => item.id === vehicleId,
       );
       if (vehicle) {
         setSelectedVehicle(vehicle);
@@ -93,30 +84,33 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     }
   }, [vehicleTypes, formData.vehicle_type_id]);
 
+  // Updated to sync via delivery_type_id
   useEffect(() => {
     if (deliveryType?.data?.data) {
-      const deliveryName = formData.delivery_type;
+      const deliveryId = formData.delivery_type_id;
       const delivery = deliveryType.data.data.find(
-        (item: any) => item.name === deliveryName
+        (item: any) => item.id === deliveryId,
       );
       if (delivery) {
         setSelectedDeliveryType(delivery);
       } else if (deliveryType.data.data.length > 0) {
-        setSelectedDeliveryType(deliveryType.data.data[0]);
+        // Default fallback if no ID matches
+        const defaultDelivery = deliveryType.data.data[0];
+        setSelectedDeliveryType(defaultDelivery);
         setFormData((prev: any) => ({
           ...prev,
-          delivery_type: deliveryType.data.data[0].name,
+          delivery_type_id: defaultDelivery.id,
         }));
       }
     }
-  }, [deliveryType, formData.delivery_type]);
+  }, [deliveryType, formData.delivery_type_id]);
 
   // Order placement function
   const placeOrderAfterCreation = useCallback(
     async (
       orderId: string,
       paymentMethod: string,
-      paymentMethodId?: string
+      paymentMethodId?: string,
     ) => {
       try {
         const placeOrderData: any = {
@@ -135,10 +129,12 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         const response = await placeOrder(placeOrderData);
 
         if (response?.data?.success) {
-         toast.success("Your order is confirmed and being prepared for shipment.");
+          toast.success(
+            "Your order is confirmed and being prepared for shipment.",
+          );
         } else if (response) {
           toast.error(
-            response?.data?.error?.message || "Failed to place order"
+            response?.data?.error?.message || "Failed to place order",
           );
         }
       } catch (error) {
@@ -146,7 +142,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
         toast.error("Order created but failed to place order");
       }
     },
-    [placeOrder]
+    [placeOrder],
   );
 
   // Order creation handler
@@ -160,7 +156,7 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
           selectedDeliveryType,
           selectedVehicle,
           collectTimeOption,
-          scheduledDate
+          scheduledDate,
         )
       ) {
         toast.error(`Please fill all required fields for recipient ${i + 1}`);
@@ -170,7 +166,6 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
 
     setIsSubmitting(true);
 
-    // Prepare destinations
     const destinations = [
       {
         contact_name: sender.contact_name,
@@ -190,11 +185,11 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
       })),
     ];
 
-    // Prepare order data
+    // Updated Payload to use delivery_type_id
     const orderData: any = {
       route_type: formData.route_type,
       isFixed: formData.isFixed,
-      delivery_type: selectedDeliveryType?.name || formData.delivery_type,
+      delivery_type_id: selectedDeliveryType?.id || formData.delivery_type_id,
       vehicle_type_id: selectedVehicle?.id || formData.vehicle_type_id,
       collect_time: collectTimeOption === "now" ? "ASAP" : "SCHEDULED",
       has_additional_services: formData.has_additional_services,
@@ -235,11 +230,10 @@ const IndivisualOrderTab = ({ data = {} }: IndivisualOrderTabProps) => {
     }
   };
 
-  // Order confirmation handler
   const handleConfirmOrder = async () => {
     if (!createdOrderId) {
       toast.error(
-        "Order information is missing. Please create the order first."
+        "Order information is missing. Please create the order first.",
       );
       return;
     }

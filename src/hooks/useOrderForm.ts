@@ -7,7 +7,7 @@ export const useOrderForm = () => {
   const [formData, setFormData] = useState({
     route_type: "ONE_WAY",
     isFixed: false,
-    delivery_type: "EXPRESS",
+    delivery_type_id: 1,
     vehicle_type_id: 1,
     collect_time: "ASAP",
     total_cost: 0,
