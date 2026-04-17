@@ -993,6 +993,14 @@ const MODULE_ACTIONS: Record<string, string[]> = {
     "update_rbac_role_permission",
     "just_admin",
   ],
+  surge_pricing_role: [
+    "create",
+    "read",
+    "delete",
+    "update",
+    "get_one",
+    "just_admin",
+  ],
 };
 
 // Keep for backward compatibility
@@ -1050,6 +1058,7 @@ const FRONTEND_TO_BACKEND_MODULES: Record<string, string> = {
   "Service Chat": "service_chat",
   "Dashboard Popup": "dashboard_popup",
   FAQ: "faq",
+  "Surge Pricing Role": "surge_pricing_role",
   RBAC: "rbac",
 };
 

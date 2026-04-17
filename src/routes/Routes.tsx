@@ -70,6 +70,7 @@ import ContactInfo from "@/pages/Admin/AdditionalServices/ContactInfo";
 import PromoCode from "@/pages/Admin/AdditionalServices/PromoCode";
 import DashboardChat from "@/pages/Admin/AdditionalServices/DashboardChat";
 import NotFound404 from "@/pages/NotFound404/NotFound404";
+import SurgePricingRole from "@/pages/SurgePricingRole/SurgePricingRole";
 
 const routes = createBrowserRouter([
   {
@@ -416,6 +417,10 @@ const routes = createBrowserRouter([
       {
         path: "dashboard-chat",
         element: <DashboardChat />,
+      },
+      {
+        path: "surge-pricing-role",
+        element: <SurgePricingRole />,
       },
     ],
   },

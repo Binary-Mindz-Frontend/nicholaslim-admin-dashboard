@@ -74,4 +74,5 @@ export enum Module {
     // order management
     ORDER_PLACEMENT = "order_placement", //order placement
     RAIDER_JOIN = "raider_join",
+    SURGE_PRICING_ROLE = "surge_pricing_role",
 }
