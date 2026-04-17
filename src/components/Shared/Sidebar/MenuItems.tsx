@@ -62,6 +62,12 @@ export const menuItems: MenuItem[] = [
             route: "/types-of-delivery",
           },
           {
+            id: "surge-pricing-role",
+            label: "Surge Pricing Role",
+            icon: null,
+            route: "/surge-pricing-role",
+          },
+          {
             id: "policy-management",
             label: "Policies",
             icon: null,
