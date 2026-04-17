@@ -179,6 +179,7 @@ export const menuToPermissionMapping: PermissionMapping = {
   users: [],
   drivers: [],
   "system-configuration": [],
+  "surge-pricing-role": ["surge_pricing_role"],
 };
 
 // Map menu IDs to additional modules that should be selected together
@@ -336,6 +337,10 @@ export const childRouteToParentMapping: Record<string, string> = {
   // Service Chat under support
   "service-chat": "support",
   "service-chat/:id": "support",
+
+  // Surge Pricing
+  "surge-pricing-role": "surge-pricing-role",
+  "surge-pricing-role/:id": "surge-pricing-role",
 };
 
 // Extract base route from dynamic route
@@ -382,6 +387,7 @@ export const extractBaseRoute = (route: string): string => {
     /^coin-system\/\d+$/,
     /^faq\/\d+$/,
     /^service-chat\/\d+$/,
+    /^surge-pricing-role\/\d+$/,
   ];
 
   for (const pattern of dynamicPatterns) {
@@ -430,6 +436,7 @@ export const isDynamicRoute = (route: string): boolean => {
     "dashboard-popup/:id",
     "dashboard-chat/:id",
     "contectinfo/:id",
+    "surge-pricing-role/:id",
   ];
 
   const cleanRoute = route.split("?")[0];

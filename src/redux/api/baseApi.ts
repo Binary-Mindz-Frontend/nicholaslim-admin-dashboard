@@ -155,6 +155,7 @@ export const baseApi = createApi({
     "Conversations",
     "Messages",
     "AdditionalServicesLogs",
+    "SurgePricingRules",
   ],
   endpoints: () => ({}),
 });
