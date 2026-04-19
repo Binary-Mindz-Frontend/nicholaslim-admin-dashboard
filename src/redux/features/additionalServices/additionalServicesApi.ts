@@ -124,6 +124,7 @@ const additionalServicesApi = baseApi.injectEndpoints({
         "Conversations",
         "Messages",
         "AdditionalServicesLogs",
+        "SurgePricingRules",
       ],
     }),
   }),
