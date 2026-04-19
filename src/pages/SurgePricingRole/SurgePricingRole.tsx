@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from '@/components/ui/button';
 import { Plus, Edit2, Loader2 } from 'lucide-react';
 import { FiTrash } from 'react-icons/fi';
@@ -13,6 +14,7 @@ import { SurgeRule } from '@/types/surgePricingRules';
 import SurgeRuleModal from './_components/SurgeRuleModal';
 import DeleteConfirmModal from './_components/DeleteConfirmModal';
 import TablePagination from '../Dashboard/_components/TablePagination';
+import NewDynamicChangeLogTable from '@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable';
 
 const SurgePricingRole: React.FC = () => {
   const [page, setPage] = useState(1);
@@ -111,10 +113,17 @@ const SurgePricingRole: React.FC = () => {
     <div className="min-h-screen p-4 md:p-6 bg-gray-50">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Surge Pricing Rules</h1>
-          <p className="text-sm text-gray-500">Manage your dynamic pricing based on demand ratios.</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Surge Pricing Rules
+          </h1>
+          <p className="text-sm text-gray-500">
+            Manage your dynamic pricing based on demand ratios.
+          </p>
         </div>
-        <Button onClick={handleAddClick} className="bg-primary hover:bg-primary/90 text-black flex gap-2 cursor-pointer">
+        <Button
+          onClick={handleAddClick}
+          className="bg-primary hover:bg-primary/90 text-black flex gap-2 cursor-pointer"
+        >
           <Plus className="h-4 w-4" /> Add Surge Rule
         </Button>
       </div>
@@ -138,17 +147,19 @@ const SurgePricingRole: React.FC = () => {
         />
       )}
 
-      <SurgeRuleModal 
-        isOpen={isFormModalOpen} 
-        onClose={() => setIsFormModalOpen(false)} 
-        initialData={selectedRule} 
+      <SurgeRuleModal
+        isOpen={isFormModalOpen}
+        onClose={() => setIsFormModalOpen(false)}
+        initialData={selectedRule}
       />
 
-      <DeleteConfirmModal 
-        isOpen={isDeleteModalOpen} 
-        onClose={() => setIsDeleteModalOpen(false)} 
-        id={ruleToDelete} 
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        id={ruleToDelete}
       />
+
+      <NewDynamicChangeLogTable entityType="SurgePricingRule" />
     </div>
   );
 };
