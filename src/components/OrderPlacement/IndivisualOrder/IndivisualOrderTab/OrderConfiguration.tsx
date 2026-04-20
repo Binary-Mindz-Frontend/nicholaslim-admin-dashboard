@@ -47,8 +47,8 @@ const OrderConfiguration: React.FC<OrderConfigurationProps> = ({
     if (!vehicle) return "";
     if (vehicle.dimension) return vehicle.dimension;
     if (vehicle.dimension_width && vehicle.dimension_height) {
-      let dim = `${vehicle.dimension_height}ft x ${vehicle.dimension_width}ft`;
-      if (vehicle.dimension_length) dim += ` x ${vehicle.dimension_length}ft`;
+      let dim = `${vehicle.dimension_height}m x ${vehicle.dimension_width}m`;
+      if (vehicle.dimension_length) dim += ` x ${vehicle.dimension_length}m`;
       return dim;
     }
     return "N/A";
