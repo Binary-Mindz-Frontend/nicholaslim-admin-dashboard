@@ -16,8 +16,8 @@ import {
   useGetDisputeByIdQuery,
   useResolveDisputeMutation,
 } from "@/redux/features/disputes/disputesApi";
-import { toast } from "sonner";
 import { useGetOwnProfileQuery } from "@/redux/features/users/usersApi";
+import toast from "react-hot-toast";
 
 const ViewSupport = () => {
   const { id } = useParams();
@@ -84,8 +84,15 @@ const ViewSupport = () => {
         adminId: adminId,
       };
 
-      await resolveDispute(resolveData).unwrap();
-      toast.success("Dispute resolved successfully");
+      const response = await resolveDispute(resolveData).unwrap();
+
+      if (!response.success) {
+        toast.error(response.message || "Failed to resolve dispute");
+        console.log(response);
+        return;
+      }
+
+      toast.success(response.message || "Dispute resolved successfully");
       refetch();
 
       setAdjustmentType("");
@@ -104,8 +111,14 @@ const ViewSupport = () => {
     }
 
     try {
-      await closeDisputeCase(id).unwrap();
-      toast.success("Dispute case closed successfully");
+      const response = await closeDisputeCase(id).unwrap();
+
+      if (!response.success) {
+        toast.error(response.message || "Failed to close dispute case");
+        return;
+      }
+
+      toast.success(response.message || "Dispute case closed successfully");
       navigate("/support");
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to close dispute case");
