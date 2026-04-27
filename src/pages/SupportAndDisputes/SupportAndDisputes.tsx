@@ -10,6 +10,7 @@ import Pagination from "./Pagination/Pagination";
 import DeleteConfirmationModal from "./DeleteConfirmationModal/DeleteConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import NewDynamicChangeLogTable from "@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable";
+import { Plus } from "lucide-react";
 
 export default function SupportAndDisputes() {
   const navigate = useNavigate();
@@ -145,6 +146,17 @@ export default function SupportAndDisputes() {
         onConfirm={handleConfirmDelete}
         isLoading={isDeleting}
       />
+
+      <div className="w-full mx-auto space-y-4 my-12 ">
+        {/* Header */}
+        <div className="pt-2 sm:py-2 flex items-center justify-between flex-wrap">
+          <h1 className="text-black text-2xl font-bold">Dispute Type</h1>
+          <button className="bg-[#FFCC00] rounded-md py-2 px-5 cursor-pointer hover:bg-[#FFD700] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed text-black flex items-center">
+            <Plus className="mr-2" />
+            Add Dispute
+          </button>
+        </div>
+      </div>
 
       <NewDynamicChangeLogTable entityType="Dispute" />
     </div>
