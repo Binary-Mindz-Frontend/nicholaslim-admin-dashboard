@@ -180,6 +180,9 @@ export const menuToPermissionMapping: PermissionMapping = {
   drivers: [],
   "system-configuration": [],
   "surge-pricing-role": ["surge_pricing_role"],
+
+  // Notification Management
+  "notification_management": ["notification_management"],
 };
 
 // Map menu IDs to additional modules that should be selected together
@@ -341,6 +344,10 @@ export const childRouteToParentMapping: Record<string, string> = {
   // Surge Pricing
   "surge-pricing-role": "surge-pricing-role",
   "surge-pricing-role/:id": "surge-pricing-role",
+
+  // Notification Management
+  "notification_management": "notification_management",
+  "notification_management/:id": "notification_management",
 };
 
 // Extract base route from dynamic route

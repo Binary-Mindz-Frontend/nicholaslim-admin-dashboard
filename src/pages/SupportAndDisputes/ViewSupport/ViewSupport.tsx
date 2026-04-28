@@ -264,7 +264,7 @@ const ViewSupport = () => {
               </div>
               <div className="flex items-center justify-between mb-3">
                 <p>Issue Type</p>
-                <p>{dispute.issueType.replace(/_/g, " ")}</p>
+                <p>{dispute.disputeType?.name || "N/A"}</p>
               </div>
               <div className="flex items-center justify-between mb-3">
                 <p>Priority</p>
