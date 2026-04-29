@@ -36,7 +36,7 @@ export default function StandardCommissionRate({
   const serviceZones = serviceZonesData?.data?.data?.data || [];
 
   useEffect(() => {
-    if (standardCommissionRateData) {
+    if (standardCommissionRateData && Array.isArray(standardCommissionRateData)) {
       setIsDataLoading(true);
       const filteredRules = standardCommissionRateData
         .filter((rate) => rate.applicable_user === applicableUser)

@@ -10,9 +10,9 @@ const userTypesApi = baseApi.injectEndpoints({
         limit = 10,
         sortBy = "createdAt",
         sortOrder = "asc",
+        search = "",
       }) => {
-
-        let url = `/users?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
+        let url = `/users?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}`;
 
         if (status) url += `&status=${status}`;
 
@@ -38,7 +38,6 @@ const userTypesApi = baseApi.injectEndpoints({
         sortBy = "createdAt",
         sortOrder = "asc",
       }) => {
-
         let url = `/users/only-users?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
 
         if (status) url += `&status=${status}`;
@@ -69,7 +68,6 @@ const userTypesApi = baseApi.injectEndpoints({
         sortBy = "createdAt",
         sortOrder = "asc",
       }) => {
-
         let url = `/users/web-portal?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
 
         if (status) url += `&status=${status}`;
@@ -184,7 +182,6 @@ const userTypesApi = baseApi.injectEndpoints({
       }),
       providesTags: ["UserTypes", "AdditionalServicesLogs"],
     }),
-
   }),
 });
 

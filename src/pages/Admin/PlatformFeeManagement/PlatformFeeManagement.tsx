@@ -67,7 +67,7 @@ export default function PlatformFeeManagement() {
 
   const filteredData = standardCommissionRateLogs?.data?.data || [];
 
-  const standardCommissionRateData = standardCommissionRate?.data;
+  const standardCommissionRateData = standardCommissionRate?.data?.data || standardCommissionRate?.data || [];
 
   // Driver Compensation Rules APIs
   const {
@@ -81,7 +81,7 @@ export default function PlatformFeeManagement() {
   const [deleteRaiderCompensationRole] =
     useDeleteRaiderCompensationRoleMutation();
 
-  const raiderCompensationRoleData = raiderCompensationRole?.data;
+  const raiderCompensationRoleData = raiderCompensationRole?.data?.data || raiderCompensationRole?.data || [];
 
   // Deduction Fees APIs
   const {
@@ -93,7 +93,7 @@ export default function PlatformFeeManagement() {
   const [updateRaiderDeductionFee] = useUpdateRaiderDeductionFeeMutation();
   const [deleteRaiderDeductionFee] = useDeleteRaiderDeductionFeeMutation();
 
-  const raiderDeductionFeeData = raiderDeductionFee?.data;
+  const raiderDeductionFeeData = raiderDeductionFee?.data?.data || raiderDeductionFee?.data || [];
 
   // User Fee Structure APIs
   const {
@@ -105,7 +105,7 @@ export default function PlatformFeeManagement() {
   const [updateUserFeeStructure] = useUpdateUserFeeStructureMutation();
   const [deleteUserFeeStructure] = useDeleteUserFeeStructureMutation();
 
-  const userFeeStructureData = userFeeStructure?.data;
+  const userFeeStructureData = userFeeStructure?.data?.data || userFeeStructure?.data || [];
 
   // Dynamic Surge Pricing APIs
   const {
@@ -117,7 +117,7 @@ export default function PlatformFeeManagement() {
   const [updateDynamicSurge] = useUpdateUserDynamicSurgeMutation();
   const [deleteDynamicSurge] = useDeleteUserDynamicSurgeMutation();
 
-  const dynamicSurgeData = dynamicSurge?.data;
+  const dynamicSurgeData = dynamicSurge?.data?.data || dynamicSurge?.data || [];
 
   const getTabClasses = (tab: "USER" | "RAIDER") =>
     `px-6 py-2 text-base font-medium rounded-full transition-colors cursor-pointer ${
