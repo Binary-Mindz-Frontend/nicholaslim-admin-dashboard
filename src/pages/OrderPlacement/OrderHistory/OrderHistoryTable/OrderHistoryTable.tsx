@@ -120,7 +120,7 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
       header: "ORDER ID",
       accessor: "orderId",
       cell: (row) => (
-        <span className="text-gray-700 font-medium">#{row.orderId}</span>
+        <span className="text-gray-700 font-medium">{row.orderId}</span>
       ),
     },
     {

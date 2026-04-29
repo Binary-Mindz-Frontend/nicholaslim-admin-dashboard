@@ -347,7 +347,11 @@ export const childRouteToParentMapping: Record<string, string> = {
 
   // Notification Management
   "notification_management": "notification_management",
-  "notification_management/:id": "notification_management",
+  "create-notification": "notification_management",
+  "create-notification-promotion": "notification_management",
+  "notification-list": "notification_management",
+  "notification-promotion-list": "notification_management",
+  "notification-log-history": "notification_management",
 };
 
 // Extract base route from dynamic route
@@ -395,6 +399,12 @@ export const extractBaseRoute = (route: string): string => {
     /^faq\/\d+$/,
     /^service-chat\/\d+$/,
     /^surge-pricing-role\/\d+$/,
+    /^notification_management\/\d+$/,
+    /^create-notification\/\d+$/,
+    /^create-notification-promotion\/\d+$/,
+    /^notification-list\/\d+$/,
+    /^notification-promotion-list\/\d+$/,
+    /^notification-log-history\/\d+$/,
   ];
 
   for (const pattern of dynamicPatterns) {
@@ -444,6 +454,12 @@ export const isDynamicRoute = (route: string): boolean => {
     "dashboard-chat/:id",
     "contectinfo/:id",
     "surge-pricing-role/:id",
+    "notification_management/:id",
+    "create-notification/:id",
+    "create-notification-promotion/:id",
+    "notification-list/:id",
+    "notification-promotion-list/:id",
+    "notification-log-history/:id",
   ];
 
   const cleanRoute = route.split("?")[0];
