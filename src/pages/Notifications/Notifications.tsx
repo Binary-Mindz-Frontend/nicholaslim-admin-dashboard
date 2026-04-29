@@ -1,18 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useState, KeyboardEvent } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Calendar as CalendarIcon,
   Bell,
-  Mail,
-  Globe,
-  Clock,
+  Smartphone,
+  X,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,75 +33,60 @@ import {
 import { cn } from "@/lib/utils";
 import { useAddNotificationMutation } from "@/redux/features/notificationServices/notificationServicesApi";
 
-// ------------------ ZOD SCHEMA
 const NotificationSchema = z.object({
-  channel: z.enum(["push", "email", "web"]),
-
+  channel: z.enum(["push", "in_app"]),
   title: z.string().min(1).max(80),
   message: z.string().min(1).max(200),
-
   sendToDrivers: z.boolean().optional(),
   sendToUsers: z.boolean().optional(),
   sendToAll: z.boolean().optional(),
-
   sendToWebPortal: z.boolean().optional(),
-
   sendImmediately: z.boolean().optional(),
   scheduleDate: z.date().optional(),
   scheduleTime: z.string().optional(),
+  orderId: z.string().optional(),
 });
 
 type NotificationType = z.infer<typeof NotificationSchema>;
 
-// Generate time options with minute-level granularity
-const generateTimeOptions = () => {
-  const times = [];
-  for (let hour = 0; hour < 24; hour++) {
-    for (let minute = 0; minute < 60; minute++) {
-      const formattedHour = hour.toString().padStart(2, "0");
-      const formattedMinute = minute.toString().padStart(2, "0");
-      times.push(`${formattedHour}:${formattedMinute}`);
-    }
-  }
-  return times;
-};
-
-const TIME_OPTIONS = generateTimeOptions();
+const TIME_OPTIONS = Array.from({ length: 24 * 60 }, (_, i) => {
+  const hour = Math.floor(i / 60)
+    .toString()
+    .padStart(2, "0");
+  const minute = (i % 60).toString().padStart(2, "0");
+  return `${hour}:${minute}`;
+});
 
 export default function NotificationComposer() {
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState<string>("09:00");
-  const [activeTab, setActiveTab] = useState<"push" | "email" | "web">("push");
+  const [activeTab, setActiveTab] = useState<"push" | "in_app">("push");
+
+  const [userIds, setUserIds] = useState<string[]>([]);
+  const [driverIds, setDriverIds] = useState<string[]>([]);
+  const [userInputValue, setUserInputValue] = useState("");
+  const [driverInputValue, setDriverInputValue] = useState("");
+
   const [addNotification, { isLoading }] = useAddNotificationMutation();
 
   const tabConfig = {
     push: {
       titleLabel: "Notification Title",
-      titlePlaceholder: "Enter title for notification",
-      messageLabel: "Notification Text",
+      titlePlaceholder: "Enter title for push notification",
+      messageLabel: "Notification Message",
       messagePlaceholder: "Enter your text here...",
-      footerText:
-        "Push notifications have a 200 character limit for optimal delivery",
-      submitText: "Send Notification",
+      footerText: "Push notifications have a 200 character limit",
+      submitText: "Send Push Notification",
       type: "PUSH_NOTIFICATION" as const,
     },
-    email: {
-      titleLabel: "Email Title",
-      titlePlaceholder: "Enter title for e-mail",
-      messageLabel: "Write E-mail",
-      messagePlaceholder: "Enter your text here...",
+    in_app: {
+      titleLabel: "In-App Title",
+      titlePlaceholder: "Enter title for in-app message",
+      messageLabel: "In-App Message",
+      messagePlaceholder: "Enter message content...",
       footerText: "",
-      submitText: "Send E-mail",
-      type: "EMAIL" as const,
-    },
-    web: {
-      titleLabel: "Announcement Title",
-      titlePlaceholder: "Enter announcement title",
-      messageLabel: "Announcement Message",
-      messagePlaceholder: "Write announcement message...",
-      footerText: "",
-      submitText: "Publish Announcement",
-      type: "WEB_ANNOUNCEMENT" as const,
+      submitText: "Send In-App Message",
+      type: "IN_APP" as const,
     },
   };
 
@@ -110,21 +94,25 @@ export default function NotificationComposer() {
     resolver: zodResolver(NotificationSchema),
     defaultValues: {
       channel: "push",
+      title: "",
+      message: "",
       sendToDrivers: false,
       sendToUsers: false,
       sendToAll: false,
       sendToWebPortal: false,
       sendImmediately: false,
       scheduleTime: "09:00",
+      orderId: "",
     },
   });
 
-  const currentTitle = form.watch("title") || "";
-  const currentMessage = form.watch("message") || "";
-  const sendToDrivers = form.watch("sendToDrivers");
-  const sendToUsers = form.watch("sendToUsers");
-  const sendToAll = form.watch("sendToAll");
-  const sendImmediately = form.watch("sendImmediately");
+  const { watch, setValue, register, handleSubmit, reset } = form;
+  const currentTitle = watch("title") || "";
+  const currentMessage = watch("message") || "";
+  const sendToDrivers = watch("sendToDrivers");
+  const sendToUsers = watch("sendToUsers");
+  const sendToAll = watch("sendToAll");
+  const sendImmediately = watch("sendImmediately");
 
   const getTargetRole = () => {
     if (sendToAll) return "ALL";
@@ -132,6 +120,31 @@ export default function NotificationComposer() {
     if (sendToDrivers) return "RAIDER";
     if (sendToUsers) return "USER";
     return "ALL";
+  };
+
+  const handleAddId = (
+    e: KeyboardEvent<HTMLInputElement>,
+    type: "user" | "driver",
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const value =
+        type === "user" ? userInputValue.trim() : driverInputValue.trim();
+      if (value) {
+        if (type === "user") {
+          setUserIds((prev) => [...new Set([...prev, value])]);
+          setUserInputValue("");
+        } else {
+          setDriverIds((prev) => [...new Set([...prev, value])]);
+          setDriverInputValue("");
+        }
+      }
+    }
+  };
+
+  const removeId = (id: string, type: "user" | "driver") => {
+    if (type === "user") setUserIds((prev) => prev.filter((i) => i !== id));
+    else setDriverIds((prev) => prev.filter((i) => i !== id));
   };
 
   const combineDateTimeToISO = (date: Date, timeString: string) => {
@@ -142,16 +155,39 @@ export default function NotificationComposer() {
   };
 
   const onSubmit = async (data: NotificationType) => {
-    toast.loading("Sending notification...");
+    const loadingToast = toast.loading("Sending notification...");
     try {
       const targetRole = getTargetRole();
-      const currentTabConfig = tabConfig[activeTab];
+
+      const rawUserIds = [...userIds];
+      if (userInputValue.trim()) rawUserIds.push(userInputValue.trim());
+
+      const rawDriverIds = [...driverIds];
+      if (driverInputValue.trim()) rawDriverIds.push(driverInputValue.trim());
+
+      const combinedIds = [...rawUserIds, ...rawDriverIds]
+        .map((id) => {
+          const numericPart = id.replace(/\D/g, "");
+          return numericPart ? Number(numericPart) : NaN;
+        })
+        .filter((id) => !isNaN(id));
+
+      console.log("Processing Payload IDs:", {
+        userIds,
+        driverIds,
+        userInputValue,
+        driverInputValue,
+        combinedIds,
+      });
 
       const payload: any = {
-        type: currentTabConfig.type,
+        type: tabConfig[activeTab].type,
+        category: "NOTIFICATION",
         title: data.title,
         message: data.message,
         target_role: targetRole,
+        target_user_ids: combinedIds,
+        orderId: data.orderId ? Number(data.orderId) : undefined,
       };
 
       if (data.scheduleDate && !data.sendImmediately && data.scheduleTime) {
@@ -159,84 +195,38 @@ export default function NotificationComposer() {
           data.scheduleDate,
           data.scheduleTime,
         );
+        payload.send_immediately = false;
       } else {
         payload.send_immediately = true;
       }
 
+      console.log("Final payload", payload);
+
       const result = await addNotification(payload).unwrap();
 
-      if (result.success) {
-        toast.dismiss();
-        toast.success(result.message || "Notification sent successfully!");
+      if (!result.success) {
+        toast.dismiss(loadingToast);
+        toast.error(result.message || "Failed to send notification");
+        return;
+      }
 
-        form.reset({
-          channel: activeTab,
-          title: "",
-          message: "",
-          sendToDrivers: false,
-          sendToUsers: false,
-          sendToAll: false,
-          sendToWebPortal: false,
-          sendImmediately: false,
-          scheduleDate: undefined,
-          scheduleTime: "09:00",
-        });
+      if (result.success) {
+        toast.dismiss(loadingToast);
+        toast.success(result.message || "Sent successfully!");
+
+        reset();
+        setUserIds([]);
+        setDriverIds([]);
+        setUserInputValue("");
+        setDriverInputValue("");
         setDate(undefined);
         setTime("09:00");
-      } else {
-        toast.dismiss();
-        toast.error(result.message || "Failed to send notification");
+        setActiveTab("push");
       }
     } catch (error: any) {
-      toast.dismiss();
-      console.error("Failed to send notification:", error);
+      toast.dismiss(loadingToast);
       toast.error(error?.data?.message || "Failed to send notification");
     }
-  };
-
-  const handleSendToAllChange = (checked: boolean) => {
-    form.setValue("sendToAll", checked);
-    if (checked) {
-      form.setValue("sendToDrivers", false);
-      form.setValue("sendToUsers", false);
-    }
-  };
-
-  const handleSendToDriversChange = (checked: boolean) => {
-    form.setValue("sendToDrivers", checked);
-    if (checked) {
-      form.setValue("sendToAll", false);
-    }
-  };
-
-  const handleSendToUsersChange = (checked: boolean) => {
-    form.setValue("sendToUsers", checked);
-    if (checked) {
-      form.setValue("sendToAll", false);
-    }
-  };
-
-  const handleSendImmediatelyChange = (checked: boolean) => {
-    form.setValue("sendImmediately", checked);
-    if (checked) {
-      form.setValue("scheduleDate", undefined);
-      form.setValue("scheduleTime", undefined);
-      setDate(undefined);
-      setTime("09:00");
-    }
-  };
-
-  const handleDateSelect = (selectedDate: Date | undefined) => {
-    if (!sendImmediately) {
-      setDate(selectedDate);
-      form.setValue("scheduleDate", selectedDate || undefined);
-      form.setValue("sendImmediately", false);
-    }
-  };
-
-  const handleTimeChange = (selectedTime: string) => {
-    setTime(selectedTime);
-    form.setValue("scheduleTime", selectedTime);
   };
 
   return (
@@ -245,67 +235,48 @@ export default function NotificationComposer() {
         <h1 className="text-black text-xl sm:text-2xl font-bold">
           Notifications & Communication
         </h1>
+
         <div className="p-4 sm:p-6 md:px-12 lg:px-20 xl:px-44 rounded-md space-y-6 sm:space-y-8 bg-white">
-          {/* HEADER */}
           <div>
             <h2 className="text-lg sm:text-xl font-semibold">
               Message Composer
             </h2>
             <p className="text-xs sm:text-sm text-gray-500 mt-1">
-              Create and schedule notifications across multiple channels
+              Create and schedule notifications
             </p>
           </div>
 
-          {/* CHANNEL TABS */}
           <Tabs
-            defaultValue="push"
-            onValueChange={(val) => {
-              setActiveTab(val as "push" | "email" | "web");
-              form.setValue("channel", val as "push" | "email" | "web");
+            value={activeTab}
+            onValueChange={(val: any) => {
+              setActiveTab(val);
+              setValue("channel", val);
             }}
           >
-            <TabsList className="w-full grid grid-cols-3 rounded-full bg-gray-100 p-1">
+            <TabsList className="w-full grid grid-cols-2 rounded-full bg-gray-100 p-1">
               <TabsTrigger
                 value="push"
-                className="rounded-full data-[state=active]:bg-yellow-400 data-[state=active]:text-black text-xs sm:text-sm px-2 sm:px-4"
+                className="rounded-full data-[state=active]:bg-yellow-400 data-[state=active]:text-black cursor-pointer"
               >
-                <Bell className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Push Notifications</span>
-                <span className="sm:hidden">Push</span>
+                <Bell className="h-4 w-4 mr-2" /> Push
               </TabsTrigger>
-
               <TabsTrigger
-                value="email"
-                className="rounded-full data-[state=active]:bg-yellow-400 data-[state=active]:text-black text-xs sm:text-sm px-2 sm:px-4"
+                value="in_app"
+                className="rounded-full data-[state=active]:bg-yellow-400 data-[state=active]:text-black cursor-pointer"
               >
-                <Mail className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Email/SMS</span>
-                <span className="sm:hidden">Email</span>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="web"
-                className="rounded-full data-[state=active]:bg-yellow-400 data-[state=active]:text-black text-xs sm:text-sm px-2 sm:px-4"
-              >
-                <Globe className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Web Announcement</span>
-                <span className="sm:hidden">Web</span>
+                <Smartphone className="h-4 w-4 mr-2" /> In-App
               </TabsTrigger>
             </TabsList>
-
-            <TabsContent value="push"></TabsContent>
-            <TabsContent value="email"></TabsContent>
-            <TabsContent value="web"></TabsContent>
           </Tabs>
 
-          {/* FORM */}
           <div className="space-y-6">
+            {/* Title */}
             <div>
               <Label className="text-sm">
                 {tabConfig[activeTab].titleLabel}
               </Label>
               <Input
-                {...form.register("title")}
+                {...register("title")}
                 placeholder={tabConfig[activeTab].titlePlaceholder}
                 maxLength={80}
                 className="mt-2"
@@ -321,90 +292,140 @@ export default function NotificationComposer() {
                 {tabConfig[activeTab].messageLabel}
               </Label>
               <Textarea
-                {...form.register("message")}
+                {...register("message")}
                 placeholder={tabConfig[activeTab].messagePlaceholder}
                 maxLength={200}
                 className="min-h-[130px] mt-2"
               />
-
               <p className="text-xs text-gray-400 text-right mt-1">
                 {currentMessage.length}/200
               </p>
-
-              {tabConfig[activeTab].footerText && (
-                <p className="text-xs text-gray-500 mt-1">
-                  {tabConfig[activeTab].footerText}
-                </p>
-              )}
             </div>
 
-            {/* Send to App */}
+            {/* NEW: User IDs Input */}
             <div className="space-y-2">
               <Label className="text-sm">
-                {activeTab === "email"
-                  ? "Send E-mails to"
-                  : "Send notifications to App"}
+                Target User IDs (Press Enter to add)
               </Label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {userIds.map((id) => (
+                  <span
+                    key={id}
+                    className="bg-gray-100 px-2 py-1 rounded-md text-xs flex items-center gap-1"
+                  >
+                    {id}{" "}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => removeId(id, "user")}
+                    />
+                  </span>
+                ))}
+              </div>
+              <Input
+                value={userInputValue}
+                onChange={(e) => setUserInputValue(e.target.value)}
+                onKeyDown={(e) => handleAddId(e, "user")}
+                placeholder="e.g. 101"
+              />
+            </div>
 
-              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            {/* NEW: Driver IDs Input */}
+            <div className="space-y-2">
+              <Label className="text-sm">
+                Target Driver IDs (Press Enter to add)
+              </Label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {driverIds.map((id) => (
+                  <span
+                    key={id}
+                    className="bg-gray-100 px-2 py-1 rounded-md text-xs flex items-center gap-1"
+                  >
+                    {id}{" "}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => removeId(id, "driver")}
+                    />
+                  </span>
+                ))}
+              </div>
+              <Input
+                value={driverInputValue}
+                onChange={(e) => setDriverInputValue(e.target.value)}
+                onKeyDown={(e) => handleAddId(e, "driver")}
+                placeholder="e.g. 505"
+              />
+            </div>
+
+            {/* NEW: Order ID Input */}
+            <div>
+              <Label className="text-sm">Order ID (Optional)</Label>
+              <Input
+                {...register("orderId")}
+                type="number"
+                placeholder="Enter Order ID"
+                className="mt-2"
+              />
+            </div>
+
+            {/* Roles Checkboxes */}
+            <div className="space-y-2">
+              <Label className="text-sm">Send to App Roles</Label>
+              <div className="flex flex-wrap items-center gap-4">
                 <div className="flex gap-2 items-center">
                   <Checkbox
                     checked={sendToDrivers}
-                    onCheckedChange={handleSendToDriversChange}
+                    onCheckedChange={(c: boolean) => {
+                      setValue("sendToDrivers", c);
+                      if (c) setValue("sendToAll", false);
+                    }}
                   />
                   <span className="text-sm">Drivers</span>
                 </div>
-
                 <div className="flex gap-2 items-center">
                   <Checkbox
                     checked={sendToUsers}
-                    onCheckedChange={handleSendToUsersChange}
+                    onCheckedChange={(c: boolean) => {
+                      setValue("sendToUsers", c);
+                      if (c) setValue("sendToAll", false);
+                    }}
                   />
                   <span className="text-sm">Users</span>
                 </div>
-
                 <div className="flex gap-2 items-center">
                   <Checkbox
                     checked={sendToAll}
-                    onCheckedChange={handleSendToAllChange}
+                    onCheckedChange={(c: boolean) => {
+                      setValue("sendToAll", c);
+                      if (c) {
+                        setValue("sendToDrivers", false);
+                        setValue("sendToUsers", false);
+                      }
+                    }}
                   />
                   <span className="text-sm">
-                    {activeTab === "email" ? "All" : "All"}
+                    {sendToDrivers || sendToUsers ? "All" : "None"}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Web Portal */}
-            {activeTab !== "email" && (
-              <div className="space-y-2">
-                <Label className="text-sm">
-                  Send notifications to Web Portal
-                </Label>
-
-                <div className="flex gap-2 items-center">
-                  <Checkbox {...form.register("sendToWebPortal")} />
-                  <span className="text-sm">Enable</span>
-                </div>
-              </div>
-            )}
-
-            {/* Send Immediately + Schedule */}
-            <div className="space-y-4">
+            {/* Schedule Section */}
+            <div className="space-y-4 pt-4 border-t">
               <div className="flex gap-2 items-center">
                 <Checkbox
                   checked={sendImmediately}
-                  onCheckedChange={handleSendImmediatelyChange}
+                  onCheckedChange={(c: boolean) => {
+                    setValue("sendImmediately", c);
+                    if (c) {
+                      setDate(undefined);
+                      setTime("09:00");
+                    }
+                  }}
                 />
-                <Label className="text-sm">
-                  {activeTab === "email"
-                    ? "Send Immediately"
-                    : "Send Immediately"}
-                </Label>
+                <Label className="text-sm">Send Immediately</Label>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Date Picker */}
                 <div className="flex flex-col space-y-2">
                   <Label className="text-sm">Select Date</Label>
                   <Popover>
@@ -413,73 +434,59 @@ export default function NotificationComposer() {
                         variant="outline"
                         disabled={sendImmediately}
                         className={cn(
-                          "w-full justify-start text-left font-normal text-sm",
+                          "w-full justify-start text-left font-normal",
                           !date && "text-muted-foreground",
-                          sendImmediately && "opacity-50 cursor-not-allowed",
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {date ? date.toLocaleDateString() : "Pick a date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0">
                       <Calendar
                         mode="single"
                         selected={date}
-                        onSelect={handleDateSelect}
+                        onSelect={(d) => {
+                          setDate(d);
+                          setValue("scheduleDate", d);
+                        }}
                         disabled={sendImmediately}
-                        initialFocus
                       />
                     </PopoverContent>
                   </Popover>
                 </div>
 
-                {/* Time Picker with Minute Precision */}
                 <div className="flex flex-col space-y-2">
-                  <Label className="text-sm">Select Time (HH:MM)</Label>
+                  <Label className="text-sm">Select Time</Label>
                   <Select
                     disabled={sendImmediately || !date}
                     value={time}
-                    onValueChange={handleTimeChange}
+                    onValueChange={(t) => {
+                      setTime(t);
+                      setValue("scheduleTime", t);
+                    }}
                   >
-                    <SelectTrigger
-                      className={cn(
-                        "w-full",
-                        (sendImmediately || !date) &&
-                          "opacity-50 cursor-not-allowed",
-                      )}
-                    >
-                      <SelectValue placeholder="Select time">
-                        <div className="flex items-center">
-                          <Clock className="mr-2 h-4 w-4" />
-                          {time || "Select time"}
-                        </div>
-                      </SelectValue>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="09:00" />
                     </SelectTrigger>
-                    <SelectContent
-                      className="max-h-[300px] overflow-y-auto"
-                      position="popper"
-                      sideOffset={5}
-                    >
-                      {TIME_OPTIONS.map((timeOption) => (
-                        <SelectItem key={timeOption} value={timeOption}>
-                          {timeOption}
-                        </SelectItem>
-                      ))}
+                    <SelectContent className="max-h-[200px]">
+                      {TIME_OPTIONS.filter((_, idx) => idx % 15 === 0).map(
+                        (opt) => (
+                          <SelectItem key={opt} value={opt}>
+                            {opt}
+                          </SelectItem>
+                        ),
+                      )}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {!date && "Select a date first to enable time selection"}
-                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Submit button */}
             <div className="w-full flex justify-center mt-6">
               <Button
-                onClick={form.handleSubmit(onSubmit)}
-                className="bg-yellow-400 text-black hover:bg-yellow-500 w-full sm:w-auto px-8"
+                onClick={handleSubmit(onSubmit)}
+                className="bg-yellow-400 text-black hover:bg-yellow-500 w-full sm:w-auto px-12 cursor-pointer"
                 disabled={isLoading}
               >
                 {isLoading ? "Sending..." : tabConfig[activeTab].submitText}

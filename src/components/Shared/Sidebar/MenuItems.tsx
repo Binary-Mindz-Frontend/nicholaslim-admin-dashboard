@@ -13,6 +13,7 @@ import {
   Map,
   LogOut,
   MonitorCog,
+  Bell,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -315,6 +316,44 @@ export const menuItems: MenuItem[] = [
   },
 
   {
+    id: "notification_management",
+    label: "Notification Management",
+    icon: <Bell className="w-5 h-5" />,
+    children: [
+      {
+        id: "notifications",
+        label: "Create Notification",
+        icon: null,
+        route: "/notifications",
+      },
+      {
+        id: "create-notification-promotion",
+        label: "Create Notification Promotion",
+        icon: null,
+        route: "/create-notification-promotion",
+      },
+      {
+        id: "notification-list",
+        label: "Notification List",
+        icon: null,
+        route: "/notification-list",
+      },
+      {
+        id: "notification-promotion-list",
+        label: "Notification Promotion List",
+        icon: null,
+        route: "/notification-promotion-list",
+      },
+      {
+        id: "notification-log-history",
+        label: "Notification Log History",
+        icon: null,
+        route: "/notification-log-history",
+      },
+    ],
+  },
+
+  {
     id: "support-communication",
     label: "Support & Communication",
     icon: <HelpCircle className="w-5 h-5" />,
@@ -337,12 +376,12 @@ export const menuItems: MenuItem[] = [
         icon: null,
         route: "/dashboard-chat",
       },
-      {
-        id: "notifications",
-        label: "Push Notification",
-        icon: null,
-        route: "/notifications",
-      },
+      // {
+      //   id: "notifications",
+      //   label: "Push Notification",
+      //   icon: null,
+      //   route: "/notifications",
+      // },
     ],
   },
 

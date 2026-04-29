@@ -38,6 +38,13 @@ import { DynamicChangeLogTable } from "@/components/Shared/DynamicChangeLogTable
 
 export default function PlatformFeeManagement() {
   const [activeTab, setActiveTab] = useState<"USER" | "RAIDER">("RAIDER");
+  const [filters, setFilters] = useState({
+    logType: undefined,
+    fromDate: undefined,
+    toDate: undefined,
+    page: 1,
+    limit: 10,
+  });
 
   // Standard Commission Rate APIs
   const {
@@ -51,8 +58,14 @@ export default function PlatformFeeManagement() {
   const [deleteStandardCommissionRate] =
     useDeleteStandardCommissionRateMutation();
 
+   const cleanParams = Object.fromEntries(
+     Object.entries(filters).filter(([_, v]) => Boolean(v)),
+   );
+
   const { data: standardCommissionRateLogs, isLoading } =
-    useGetAllStandardCommissionRateLogsQuery("");
+    useGetAllStandardCommissionRateLogsQuery(cleanParams);
+
+  const filteredData = standardCommissionRateLogs?.data?.data || [];
 
   const standardCommissionRateData = standardCommissionRate?.data;
 
@@ -240,10 +253,14 @@ export default function PlatformFeeManagement() {
                       service_area_id: data.serviceAreaId,
                     }).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to add commission rate");
+                      toast.error(
+                        response?.message || "Failed to add commission rate",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Commission rate added successfully");
+                    toast.success(
+                      response?.message || "Commission rate added successfully",
+                    );
                     standardRefetch();
                     return response;
                   } catch (error: any) {
@@ -261,10 +278,15 @@ export default function PlatformFeeManagement() {
                       service_area_id: data.serviceAreaId,
                     }).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to update commission rate");
+                      toast.error(
+                        response?.message || "Failed to update commission rate",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Commission rate updated successfully");
+                    toast.success(
+                      response?.message ||
+                        "Commission rate updated successfully",
+                    );
                     standardRefetch();
                     return response;
                   } catch (error: any) {
@@ -277,10 +299,15 @@ export default function PlatformFeeManagement() {
                     const response =
                       await deleteStandardCommissionRate(id).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to delete commission rate");
+                      toast.error(
+                        response?.message || "Failed to delete commission rate",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Commission rate deleted successfully");
+                    toast.success(
+                      response?.message ||
+                        "Commission rate deleted successfully",
+                    );
                     standardRefetch();
                     return response;
                   } catch (error: any) {
@@ -297,10 +324,15 @@ export default function PlatformFeeManagement() {
                       service_area_id: data.serviceAreaId,
                     }).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to add compensation rule");
+                      toast.error(
+                        response?.message || "Failed to add compensation rule",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Compensation rule added successfully");
+                    toast.success(
+                      response?.message ||
+                        "Compensation rule added successfully",
+                    );
                     raiderRefetch();
                     return response;
                   } catch (error: any) {
@@ -318,10 +350,16 @@ export default function PlatformFeeManagement() {
                       service_area_id: data.serviceAreaId,
                     }).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to update compensation rule");
+                      toast.error(
+                        response?.message ||
+                          "Failed to update compensation rule",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Compensation rule updated successfully");
+                    toast.success(
+                      response?.message ||
+                        "Compensation rule updated successfully",
+                    );
                     raiderRefetch();
                     return response;
                   } catch (error: any) {
@@ -334,10 +372,16 @@ export default function PlatformFeeManagement() {
                     const response =
                       await deleteRaiderCompensationRole(id).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to delete compensation rule");
+                      toast.error(
+                        response?.message ||
+                          "Failed to delete compensation rule",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Compensation rule deleted successfully");
+                    toast.success(
+                      response?.message ||
+                        "Compensation rule deleted successfully",
+                    );
                     raiderRefetch();
                     return response;
                   } catch (error: any) {
@@ -354,10 +398,14 @@ export default function PlatformFeeManagement() {
                       type: data.type,
                     }).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to add deduction fee");
+                      toast.error(
+                        response?.message || "Failed to add deduction fee",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Deduction fee added successfully");
+                    toast.success(
+                      response?.message || "Deduction fee added successfully",
+                    );
                     deductionRefetch();
                     return response;
                   } catch (error: any) {
@@ -375,10 +423,14 @@ export default function PlatformFeeManagement() {
                       type: data.type,
                     }).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to update deduction fee");
+                      toast.error(
+                        response?.message || "Failed to update deduction fee",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Deduction fee updated successfully");
+                    toast.success(
+                      response?.message || "Deduction fee updated successfully",
+                    );
                     deductionRefetch();
                     return response;
                   } catch (error: any) {
@@ -391,10 +443,14 @@ export default function PlatformFeeManagement() {
                     const response =
                       await deleteRaiderDeductionFee(id).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to delete deduction fee");
+                      toast.error(
+                        response?.message || "Failed to delete deduction fee",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Deduction fee deleted successfully");
+                    toast.success(
+                      response?.message || "Deduction fee deleted successfully",
+                    );
                     deductionRefetch();
                     return response;
                   } catch (error: any) {
@@ -403,15 +459,23 @@ export default function PlatformFeeManagement() {
                   }
                 }}
               />
-              <DynamicChangeLogTable
+              {/* <DynamicChangeLogTable
                 columns={feeLogColumns}
                 data={
-                  standardCommissionRateLogs?.data?.filter(
+                  standardCommissionRateLogs?.data?.data?.filter(
                     (item: { applicable_user: string }) =>
                       item.applicable_user === "RAIDER",
                   ) || []
                 }
                 isLoading={isLoading}
+              /> */}
+              <DynamicChangeLogTable
+                columns={feeLogColumns}
+                data={filteredData}
+                isLoading={isLoading}
+                filters={filters}
+                setFilters={setFilters}
+                meta={standardCommissionRateLogs?.data?.meta}
               />
             </div>
           ) : (
@@ -422,13 +486,17 @@ export default function PlatformFeeManagement() {
                 dynamicSurgeData={dynamicSurgeData || []}
                 onAddFeeStructure={async (data: any) => {
                   try {
-                    const response =
-                      await addUserFeeStructure(data).unwrap();
+                    const response = await addUserFeeStructure(data).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to add/update fee structure");
+                      toast.error(
+                        response?.message ||
+                          "Failed to add/update fee structure",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Fee structure action successful");
+                    toast.success(
+                      response?.message || "Fee structure action successful",
+                    );
                     userFeeStructureRefetch();
                     return response;
                   } catch (error: any) {
@@ -441,10 +509,15 @@ export default function PlatformFeeManagement() {
                     const response =
                       await updateUserFeeStructure(data).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to add/update fee structure");
+                      toast.error(
+                        response?.message ||
+                          "Failed to add/update fee structure",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Fee structure action successful");
+                    toast.success(
+                      response?.message || "Fee structure action successful",
+                    );
                     userFeeStructureRefetch();
                     return response;
                   } catch (error: any) {
@@ -456,10 +529,14 @@ export default function PlatformFeeManagement() {
                   try {
                     const response = await deleteUserFeeStructure(id).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to delete fee structure");
+                      toast.error(
+                        response?.message || "Failed to delete fee structure",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Fee structure deleted successfully");
+                    toast.success(
+                      response?.message || "Fee structure deleted successfully",
+                    );
                     userFeeStructureRefetch();
                     return response;
                   } catch (error: any) {
@@ -477,10 +554,14 @@ export default function PlatformFeeManagement() {
                       time_range: data.timeRange,
                     }).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to add/update surge rule");
+                      toast.error(
+                        response?.message || "Failed to add/update surge rule",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Surge rule action successful");
+                    toast.success(
+                      response?.message || "Surge rule action successful",
+                    );
                     dynamicSurgeRefetch();
                     return response;
                   } catch (error: any) {
@@ -499,10 +580,14 @@ export default function PlatformFeeManagement() {
                       time_range: data.timeRange,
                     }).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to add/update surge rule");
+                      toast.error(
+                        response?.message || "Failed to add/update surge rule",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Surge rule action successful");
+                    toast.success(
+                      response?.message || "Surge rule action successful",
+                    );
                     dynamicSurgeRefetch();
                     return response;
                   } catch (error: any) {
@@ -514,10 +599,14 @@ export default function PlatformFeeManagement() {
                   try {
                     const response = await deleteDynamicSurge(id).unwrap();
                     if (!response?.success) {
-                      toast.error(response?.message || "Failed to delete surge rule");
+                      toast.error(
+                        response?.message || "Failed to delete surge rule",
+                      );
                       return response;
                     }
-                    toast.success(response?.message || "Surge rule deleted successfully");
+                    toast.success(
+                      response?.message || "Surge rule deleted successfully",
+                    );
                     dynamicSurgeRefetch();
                     return response;
                   } catch (error: any) {
@@ -526,15 +615,23 @@ export default function PlatformFeeManagement() {
                   }
                 }}
               />
-              <DynamicChangeLogTable
+              {/* <DynamicChangeLogTable
                 columns={feeLogColumns}
                 data={
-                  standardCommissionRateLogs?.data?.filter(
+                  standardCommissionRateLogs?.data?.data?.filter(
                     (item: { applicable_user: string }) =>
                       item.applicable_user === "USER",
                   ) || []
                 }
                 isLoading={isLoading}
+              /> */}
+              <DynamicChangeLogTable
+                columns={feeLogColumns}
+                data={filteredData}
+                isLoading={isLoading}
+                filters={filters}
+                setFilters={setFilters}
+                meta={standardCommissionRateLogs?.data?.meta}
               />
             </div>
           )}
