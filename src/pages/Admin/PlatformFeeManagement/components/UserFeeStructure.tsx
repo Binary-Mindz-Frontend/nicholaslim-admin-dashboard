@@ -48,7 +48,7 @@ export default function UserFeeStructure({
 
   // Transform API data to match component state
   useEffect(() => {
-    if (feeStructureData) {
+    if (feeStructureData && Array.isArray(feeStructureData)) {
       setIsDataLoading(true);
       const filteredFees = feeStructureData
         .filter((fee) => fee.applicable_user === applicableUser)

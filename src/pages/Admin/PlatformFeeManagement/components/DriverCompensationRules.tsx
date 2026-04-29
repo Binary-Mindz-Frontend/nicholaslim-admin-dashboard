@@ -36,7 +36,7 @@ export default function DriverCompensationRules({
 
   // Transform API data to match component state
   useEffect(() => {
-    if (compensationRulesData) {
+    if (compensationRulesData && Array.isArray(compensationRulesData)) {
       setIsDataLoading(true);
       const filteredRules = compensationRulesData
         .filter((rate) => rate.applicable_user === "RAIDER")
