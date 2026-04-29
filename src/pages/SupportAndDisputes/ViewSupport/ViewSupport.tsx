@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useParams } from "react-router-dom";
-import { CircleX } from "lucide-react";
+import { ChevronLeft, CircleX } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -15,8 +16,8 @@ import {
   useGetDisputeByIdQuery,
   useResolveDisputeMutation,
 } from "@/redux/features/disputes/disputesApi";
-import { toast } from "sonner";
 import { useGetOwnProfileQuery } from "@/redux/features/users/usersApi";
+import toast from "react-hot-toast";
 
 const ViewSupport = () => {
   const { id } = useParams();
@@ -27,11 +28,11 @@ const ViewSupport = () => {
     isLoading,
     refetch,
   } = useGetDisputeByIdQuery(id || "");
+
   const [resolveDispute, { isLoading: isResolving }] =
     useResolveDisputeMutation();
   const [closeDisputeCase, { isLoading: isClosing }] =
     useCloseDisputeCaseMutation();
-
   const { data: userData } = useGetOwnProfileQuery("");
 
   const [adjustmentType, setAdjustmentType] = useState("");
@@ -39,6 +40,7 @@ const ViewSupport = () => {
   const [companyPercentage, setCompanyPercentage] = useState(60);
   const [driverPercentage, setDriverPercentage] = useState(40);
 
+  const dispute = disputeData?.data;
   const adminId = userData?.data?.adminProfiles?.[0]?.id;
 
   useEffect(() => {
@@ -50,6 +52,12 @@ const ViewSupport = () => {
       }
     }
   }, [amount, companyPercentage, driverPercentage]);
+
+  useEffect(() => {
+    if (dispute?.order?.total_cost && !amount) {
+      setAmount(dispute.order.total_cost.toString());
+    }
+  }, [dispute, amount]);
 
   const calculateAllocations = () => {
     const amt = Number(amount) || 0;
@@ -76,8 +84,15 @@ const ViewSupport = () => {
         adminId: adminId,
       };
 
-      await resolveDispute(resolveData).unwrap();
-      toast.success("Dispute resolved successfully");
+      const response = await resolveDispute(resolveData).unwrap();
+
+      if (!response.success) {
+        toast.error(response.message || "Failed to resolve dispute");
+        console.log(response);
+        return;
+      }
+
+      toast.success(response.message || "Dispute resolved successfully");
       refetch();
 
       setAdjustmentType("");
@@ -85,7 +100,6 @@ const ViewSupport = () => {
       setCompanyPercentage(60);
       setDriverPercentage(40);
     } catch (error: any) {
-      console.error("Failed to resolve dispute:", error);
       toast.error(error?.data?.message || "Failed to resolve dispute");
     }
   };
@@ -97,12 +111,66 @@ const ViewSupport = () => {
     }
 
     try {
-      await closeDisputeCase(id).unwrap();
-      toast.success("Dispute case closed successfully");
+      const response = await closeDisputeCase(id).unwrap();
+
+      if (!response.success) {
+        toast.error(response.message || "Failed to close dispute case");
+        return;
+      }
+
+      toast.success(response.message || "Dispute case closed successfully");
       navigate("/support");
     } catch (error: any) {
-      console.error("Failed to close dispute case:", error);
       toast.error(error?.data?.message || "Failed to close dispute case");
+    }
+  };
+
+  const handleCompanyPercentageChange = (value: string) => {
+    const numValue = parseInt(value) || 0;
+    if (numValue >= 0 && numValue <= 100) {
+      setCompanyPercentage(numValue);
+      setDriverPercentage(100 - numValue);
+    }
+  };
+
+  const formatPriority = (priority: string) => {
+    const map: Record<string, string> = {
+      HIGH: "High",
+      MEDIUM: "Medium",
+      LOW: "Low",
+    };
+    return map[priority] || priority;
+  };
+
+  const formatStatus = (status: string) => {
+    const map: Record<string, string> = {
+      PENDING: "Pending",
+      UNDER_REVIEW: "Under Review",
+      AWAITING_INFO: "Awaiting Info",
+      RESOLVED: "Resolved",
+      REJECTED: "Rejected",
+    };
+    return map[status] || status;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "HIGH":
+        return "text-red-600";
+      case "MEDIUM":
+        return "text-yellow-600";
+      case "LOW":
+        return "text-green-600";
+      default:
+        return "text-gray-600";
     }
   };
 
@@ -125,8 +193,6 @@ const ViewSupport = () => {
     );
   }
 
-  const dispute = disputeData?.data;
-
   if (!dispute) {
     return (
       <div className="px-8 sm:p-6 bg-[#F5F7FA]">
@@ -148,79 +214,27 @@ const ViewSupport = () => {
     );
   }
 
-  const formatPriority = (priority: string) => {
-    switch (priority) {
-      case "HIGH":
-        return "High";
-      case "MEDIUM":
-        return "Medium";
-      case "LOW":
-        return "Low";
-      default:
-        return priority;
-    }
-  };
-
-  const formatStatus = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return "Pending";
-      case "UNDER_REVIEW":
-        return "Under Review";
-      case "AWAITING_INFO":
-        return "Awaiting Info";
-      case "RESOLVED":
-        return "Resolved";
-      case "REJECTED":
-        return "Rejected";
-      default:
-        return status;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "HIGH":
-        return "text-red-600";
-      case "MEDIUM":
-        return "text-yellow-600";
-      case "LOW":
-        return "text-green-600";
-      default:
-        return "text-gray-600";
-    }
-  };
-
-  const handleCompanyPercentageChange = (value: string) => {
-    const numValue = parseInt(value) || 0;
-    if (numValue >= 0 && numValue <= 100) {
-      setCompanyPercentage(numValue);
-      setDriverPercentage(100 - numValue);
-    }
-  };
-
-  useEffect(() => {
-    if (dispute?.order?.total_cost && !amount) {
-      setAmount(dispute.order.total_cost.toString());
-    }
-  }, [dispute]);
-
   return (
     <div className="px-8 sm:p-6 bg-[#F5F7FA]">
       <div className="w-full mx-auto space-y-4 mb-6">
-        <div className="pt-2 sm:py-2 flex items-center justify-between">
-          <h1 className="text-black text-2xl font-bold">
-            Dispute #{dispute.id.toString().padStart(4, "0")}
-          </h1>
+        <div className="pt-2 sm:py-2 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            {/* Back Button */}
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 hover:bg-gray-200 rounded-md border cursor-pointer transition-colors group"
+              title="Go Back"
+            >
+              <ChevronLeft
+                size={24}
+                className="text-gray-600 group-hover:text-black"
+              />
+            </button>
+
+            <h1 className="text-black text-2xl font-bold">
+              Dispute #{dispute.id.toString().padStart(4, "0")}
+            </h1>
+          </div>
 
           <button
             onClick={handleCloseCase}
@@ -248,17 +262,14 @@ const ViewSupport = () => {
                 <p>Order ID</p>
                 <p className="font-semibold">ORD-{dispute.orderId}</p>
               </div>
-
               <div className="flex items-center justify-between mb-3">
                 <p>Issue Type</p>
-                <p>{dispute.issueType.replace(/_/g, " ")}</p>
+                <p>{dispute.disputeType?.name || "N/A"}</p>
               </div>
               <div className="flex items-center justify-between mb-3">
                 <p>Priority</p>
                 <p
-                  className={`font-semibold ${getPriorityColor(
-                    dispute.priority
-                  )}`}
+                  className={`font-semibold ${getPriorityColor(dispute.priority)}`}
                 >
                   {formatPriority(dispute.priority)}
                 </p>
@@ -293,7 +304,6 @@ const ViewSupport = () => {
               <h2 className="text-center text-lg font-semibold">
                 Financial Adjustment
               </h2>
-
               <div className="border rounded-lg p-6 bg-white shadow space-y-6">
                 <div className="flex flex-col gap-8">
                   <div className="space-y-6">
@@ -341,7 +351,7 @@ const ViewSupport = () => {
                           <Input
                             type="number"
                             placeholder="0.00"
-                            value={dispute.order?.total_cost}
+                            value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             disabled={dispute.status === "RESOLVED"}
                             className="pl-7"
@@ -420,7 +430,7 @@ const ViewSupport = () => {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between mt-8 pt-6 border-t">
+                <div className="flex items-center justify-between flex-wrap gap-6 mt-8 pt-6 border-t">
                   <p className="text-black font-medium">
                     Dispute ID: DISP#{dispute.id.toString().padStart(4, "0")}
                   </p>
@@ -463,7 +473,7 @@ const ViewSupport = () => {
                               <div className="text-gray-500 text-xs mb-1">
                                 Evidence {index + 1}
                               </div>
-                              <div className="text-xs text-gray-700 break-words">
+                              <div className="text-xs text-gray-700 wrap-break-word">
                                 {evidenceItem.length > 30
                                   ? `${evidenceItem.substring(0, 30)}...`
                                   : evidenceItem}
@@ -475,7 +485,7 @@ const ViewSupport = () => {
                           {index + 1}
                         </div>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
                 <div className="mt-4 text-center text-sm text-gray-500">
@@ -506,24 +516,22 @@ const ViewSupport = () => {
                       </span>
                     </div>
                   )}
-                  {dispute.userPercent !== undefined &&
-                    dispute.userPercent !== null && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">User Percentage:</span>
-                        <span className="font-medium">
-                          {dispute.userPercent}%
-                        </span>
-                      </div>
-                    )}
-                  {dispute.riderPercent !== undefined &&
-                    dispute.riderPercent !== null && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Rider Percentage:</span>
-                        <span className="font-medium">
-                          {dispute.riderPercent}%
-                        </span>
-                      </div>
-                    )}
+                  {dispute.userPercent !== undefined && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">User Percentage:</span>
+                      <span className="font-medium">
+                        {dispute.userPercent}%
+                      </span>
+                    </div>
+                  )}
+                  {dispute.riderPercent !== undefined && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Rider Percentage:</span>
+                      <span className="font-medium">
+                        {dispute.riderPercent}%
+                      </span>
+                    </div>
+                  )}
                   {dispute.resolvedBy && (
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600">

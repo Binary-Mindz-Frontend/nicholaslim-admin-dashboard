@@ -156,6 +156,7 @@ export const baseApi = createApi({
     "Messages",
     "AdditionalServicesLogs",
     "SurgePricingRules",
+    "DisputeTypes",
   ],
   endpoints: () => ({}),
 });

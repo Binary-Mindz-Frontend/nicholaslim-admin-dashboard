@@ -71,6 +71,11 @@ import PromoCode from "@/pages/Admin/AdditionalServices/PromoCode";
 import DashboardChat from "@/pages/Admin/AdditionalServices/DashboardChat";
 import NotFound404 from "@/pages/NotFound404/NotFound404";
 import SurgePricingRole from "@/pages/SurgePricingRole/SurgePricingRole";
+import CreateNotification from "@/pages/CreateNotification/CreateNotification";
+import CreateNotificationPromotion from "@/pages/CreateNotificationPromotion/CreateNotificationPromotion";
+import NotificationList from "@/pages/NotificationList/NotificationList";
+import NotificationPromotionList from "@/pages/NotificationPromotionList/NotificationPromotionList";
+import NotificationLogHistory from "@/pages/NotificationLogHistory/NotificationLogHistory";
 
 const routes = createBrowserRouter([
   {
@@ -421,6 +426,30 @@ const routes = createBrowserRouter([
       {
         path: "surge-pricing-role",
         element: <SurgePricingRole />,
+      },
+      {
+        path: "notification_management",
+        element: <Notifications />,
+      },
+      {
+        path: "create-notification",
+        element: <CreateNotification />,
+      },
+      {
+        path: "create-notification-promotion",
+        element: <CreateNotificationPromotion />,
+      },
+      {
+        path: "notification-list",
+        element: <NotificationList />,
+      },
+      {
+        path: "notification-promotion-list",
+        element: <NotificationPromotionList />,
+      },
+      {
+        path: "notification-log-history",
+        element: <NotificationLogHistory />,
       },
     ],
   },

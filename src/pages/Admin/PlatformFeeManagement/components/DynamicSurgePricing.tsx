@@ -80,7 +80,7 @@ export default function DynamicSurgePricing({
 
   // Transform API data to match component state
   useEffect(() => {
-    if (surgeRulesData) {
+    if (surgeRulesData && Array.isArray(surgeRulesData)) {
       setIsDataLoading(true);
       const filteredRules = surgeRulesData
         .filter((rule) => rule.applicable_user === applicableUser)

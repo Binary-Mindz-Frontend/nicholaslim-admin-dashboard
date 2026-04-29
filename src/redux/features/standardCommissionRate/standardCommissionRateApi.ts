@@ -45,9 +45,10 @@ const standardCommissionRateApi = baseApi.injectEndpoints({
     }),
 
     getAllStandardCommissionRateLogs: builder.query({
-      query: () => ({
+      query: (body) => ({
         url: "/standard-commission-rate/logs",
         method: "GET",
+        params: body,
       }),
       providesTags: ["StandardCommissionRate"],
     }),

@@ -31,7 +31,7 @@ export default function DeductionFees({
 
   // Transform API data to match component state
   useEffect(() => {
-    if (deductionFeesData) {
+    if (deductionFeesData && Array.isArray(deductionFeesData)) {
       setIsDataLoading(true);
       const filteredFees = deductionFeesData
         .filter((fee) => fee.applicable_user === "RAIDER")

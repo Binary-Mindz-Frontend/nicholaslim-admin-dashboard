@@ -7,52 +7,53 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 interface FilterSectionProps {
-  dateFilter: string;
-  setDateFilter: (value: string) => void;
-  
-  allFilter: string;
-  setAllFilter: (value: string) => void;
-  
   statusFilter: string;
   setStatusFilter: (value: string) => void;
-  
+  fromDate: string;
+  setFromDate: (value: string) => void;
+  toDate: string;
+  setToDate: (value: string) => void;
+  disputeTypeId: string;
+  setDisputeTypeId: (value: string) => void;
+  participantType: string;
+  setParticipantType: (value: string) => void;
   handleResetFilter: () => void;
+  disputeTypes: any[];
 }
 
 export default function FilterSection({
-//   dateFilter,
-//   setDateFilter,
-//   allFilter,
-//   setAllFilter,
   statusFilter,
   setStatusFilter,
+  fromDate,
+  setFromDate,
+  toDate,
+  setToDate,
+  disputeTypeId,
+  setDisputeTypeId,
+  participantType,
+  setParticipantType,
   handleResetFilter,
+  disputeTypes,
 }: FilterSectionProps) {
   return (
-    <div className="w-full bg-white rounded-md px-1 py-1">
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Filter By */}
-        <div
-          className="flex items-center gap-2 px-4 py-2 border border-yellow-400 rounded-md 
-          w-full sm:w-[48%] md:w-auto"
-        >
+    <div className="w-full bg-white rounded-md p-4 border border-gray-100 shadow-sm">
+      <div className="flex flex-wrap items-center gap-4">
+        {/* Label */}
+        <div className="flex items-center gap-2 px-3 py-2 border border-yellow-400 rounded-md bg-yellow-50/30">
           <Filter className="h-4 w-4" />
-          <span className="text-sm py-1 font-medium">Filter By</span>
+          <span className="text-sm font-bold">Filter By</span>
         </div>
 
-        {/* Status Filter */}
-        <div
-          className="px-4 py-1 border border-yellow-400 rounded-md 
-          w-full sm:w-[48%] md:w-auto"
-        >
+        {/* Status Select */}
+        <div className="">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-[150px] border-none shadow-none px-0">
+            <SelectTrigger className="border-yellow-400 focus:ring-yellow-400">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              {/* Remove empty value or use "all" as the value for "All Status" */}
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="PENDING">Pending</SelectItem>
               <SelectItem value="UNDER_REVIEW">Under Review</SelectItem>
@@ -63,17 +64,63 @@ export default function FilterSection({
           </Select>
         </div>
 
-        {/* Reset Button */}
-        <div className="px-4 py-1 border border-yellow-400 rounded-md w-full md:flex-1">
-          <Button
-            variant="ghost"
-            className="text-red-500 cursor-pointer hover:text-red-600 hover:bg-white flex items-center gap-2 w-full justify-start"
-            onClick={handleResetFilter}
-          >
-            <Repeat className="h-4 w-4" />
-            Reset Filter
-          </Button>
+        {/* Participant Type Select */}
+        <div className="">
+          <Select value={participantType} onValueChange={setParticipantType}>
+            <SelectTrigger className="border-yellow-400 focus:ring-yellow-400">
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="user">User</SelectItem>
+              <SelectItem value="rider">Driver</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
+        {/* Dispute Type Select */}
+        <div className="">
+          <Select value={disputeTypeId} onValueChange={setDisputeTypeId}>
+            <SelectTrigger className="border-yellow-400 focus:ring-yellow-400">
+              <SelectValue placeholder="Dispute Reason" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Reasons</SelectItem>
+              {disputeTypes.map((type) => (
+                <SelectItem key={type.id} value={type.id}>
+                  {type.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Date Inputs */}
+        <div className="flex items-center gap-2">
+          <Input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="border-yellow-400 w-auto h-10"
+          />
+          <span className="text-gray-400 text-sm">to</span>
+          <Input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="border-yellow-400 w-auto h-10"
+          />
+        </div>
+
+        {/* Reset Button */}
+        <Button
+          variant="ghost"
+          className="text-red-500 hover:text-red-600 hover:bg-red-50 flex items-center gap-2 ml-auto cursor-pointer"
+          onClick={handleResetFilter}
+        >
+          <Repeat className="h-4 w-4" />
+          Reset
+        </Button>
       </div>
     </div>
   );
