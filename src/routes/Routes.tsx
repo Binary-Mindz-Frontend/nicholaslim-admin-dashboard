@@ -76,6 +76,7 @@ import CreateNotificationPromotion from "@/pages/CreateNotificationPromotion/Cre
 import NotificationList from "@/pages/NotificationList/NotificationList";
 import NotificationPromotionList from "@/pages/NotificationPromotionList/NotificationPromotionList";
 import NotificationLogHistory from "@/pages/NotificationLogHistory/NotificationLogHistory";
+import DriverTierRole from "@/pages/DriverTierRole/DriverTierRole";
 
 const routes = createBrowserRouter([
   {
@@ -451,6 +452,10 @@ const routes = createBrowserRouter([
         path: "notification-log-history",
         element: <NotificationLogHistory />,
       },
+      {
+        path: "driver_tier_role",
+        element: <DriverTierRole />,
+      }
     ],
   },
 

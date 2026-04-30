@@ -101,6 +101,12 @@ export const menuItems: MenuItem[] = [
             route: "/driver-order-competition",
           },
           {
+            id: "driver_tier_role",
+            label: "Driver Tier Roles",
+            icon: null,
+            route: "/driver_tier_role",
+          },
+          {
             id: "quiz",
             label: "Quizzes",
             icon: null,
