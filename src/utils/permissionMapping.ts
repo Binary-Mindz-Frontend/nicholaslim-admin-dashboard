@@ -157,7 +157,6 @@ export const menuToPermissionMapping: PermissionMapping = {
   contectinfo: ["contact_info"],
   "contectinfo/:id": ["contact_info"],
 
-
   // Service Chat
   "service-chat": ["service_chat"],
   "service-chat/:id": ["service_chat"],
@@ -182,7 +181,10 @@ export const menuToPermissionMapping: PermissionMapping = {
   "surge-pricing-role": ["surge_pricing_role"],
 
   // Notification Management
-  "notification_management": ["notification_management"],
+  notification_management: ["notification_management"],
+
+  // Driver Tier
+  "driver_tier_role": ["driver_tier_role"],
 };
 
 // Map menu IDs to additional modules that should be selected together
@@ -346,12 +348,15 @@ export const childRouteToParentMapping: Record<string, string> = {
   "surge-pricing-role/:id": "surge-pricing-role",
 
   // Notification Management
-  "notification_management": "notification_management",
+  notification_management: "notification_management",
   "create-notification": "notification_management",
   "create-notification-promotion": "notification_management",
   "notification-list": "notification_management",
   "notification-promotion-list": "notification_management",
   "notification-log-history": "notification_management",
+
+  // Driver Tier
+  "driver_tier_role": "driver_tier_role",
 };
 
 // Extract base route from dynamic route
@@ -405,6 +410,7 @@ export const extractBaseRoute = (route: string): string => {
     /^notification-list\/\d+$/,
     /^notification-promotion-list\/\d+$/,
     /^notification-log-history\/\d+$/,
+    /^driver_tier_role\/\d+$/,
   ];
 
   for (const pattern of dynamicPatterns) {

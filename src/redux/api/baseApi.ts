@@ -157,6 +157,7 @@ export const baseApi = createApi({
     "AdditionalServicesLogs",
     "SurgePricingRules",
     "DisputeTypes",
+    "DriverTiers",
   ],
   endpoints: () => ({}),
 });
