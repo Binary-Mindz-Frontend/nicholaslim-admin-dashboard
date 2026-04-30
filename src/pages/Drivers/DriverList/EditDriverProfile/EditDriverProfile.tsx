@@ -10,6 +10,7 @@ import {
 } from "@/redux/features/drivers/driversApi";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
+import { useGetDriverTiersQuery } from "@/redux/features/driverTiers/driverTiersApi";
 
 import {
   Button,
@@ -68,9 +69,11 @@ export default function EditDriverProfile() {
   const navigate = useNavigate();
 
   const { data: driverResponse, isFetching } = useGetRiderProfileByIdQuery(id);
+  console.log(driverResponse)
   const [updateRiderProfile, { isLoading: isUpdating }] = useUpdateRiderProfileMutation();
   const [uploadImage] = useUploadImageMutation();
   const { data: vehicleTypesResponse } = useGetVehicleTypesQuery({});
+  const { data: driverTiersResponse } = useGetDriverTiersQuery({});
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [profileImageUrls, setProfileImageUrls] = useState<string[]>([]);
   const [isProfileUploading, setIsProfileUploading] = useState(false);
@@ -211,7 +214,7 @@ export default function EditDriverProfile() {
           gender: mapGenderFromAPI(d.gender),
           emergency_contact_name: d.emergency_contact_name || "",
           emergency_contact_number: d.emergency_contact_number || "+65",
-          driver_rank: topLevelData.rank || d.driver_rank || "",
+          driver_rank: topLevelData.tier?.id || d.tier?.id || "",
           identity_card_number: d.identity_card_number || "",
           identity_card_issue_date: d.identity_card_issue_date ? d.identity_card_issue_date.split("T")[0] : "",
           driving_license_number: d.driving_license_number || "",
@@ -428,7 +431,7 @@ export default function EditDriverProfile() {
         permanent_country: data.permanent_country,
         bank_name: data.bank_name,
         account_number: data.account_number,
-        driver_rank: data.driver_rank,
+        tier_id: Number(data.driver_rank),
       };
 
       await updateRiderProfile({ id: Number(id), data: formData }).unwrap();
@@ -508,7 +511,7 @@ export default function EditDriverProfile() {
             <div className="flex items-center gap-1.5 px-3 py-1 bg-[#F0F7FF] rounded-full border border-blue-200">
               <Medal className="text-blue-500" size={18} />
               <span className="text-gray-800 font-semibold">
-                {driverResponse?.data?.rank || "NO RANK"}
+                {driverResponse?.data?.tier?.name || "NO RANK"}
               </span>
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1 bg-[#F6FFF6] rounded-full border border-green-200">
@@ -526,6 +529,7 @@ export default function EditDriverProfile() {
             errors={errors}
             watch={watch}
             setValue={setValue}
+            driverTiersResponse={driverTiersResponse}
           />
           <IdentityCardSection
             register={register}
