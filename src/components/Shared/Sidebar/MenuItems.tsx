@@ -235,6 +235,18 @@ export const menuItems: MenuItem[] = [
     icon: <Wallet className="w-5 h-5" />,
     children: [
       {
+        id: "user-wallets-admin",
+        label: "User wallet (Admin)",
+        icon: null,
+        route: "/user-wallets-admin",
+      },
+      {
+        id: "driver-wallets-admin",
+        label: "Driver wallet (Admin)",
+        icon: null,
+        route: "/driver-wallets-admin",
+      },
+      {
         id: "wallet-user",
         label: "User wallets",
         icon: null,

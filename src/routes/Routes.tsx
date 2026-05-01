@@ -77,6 +77,8 @@ import NotificationList from "@/pages/NotificationList/NotificationList";
 import NotificationPromotionList from "@/pages/NotificationPromotionList/NotificationPromotionList";
 import NotificationLogHistory from "@/pages/NotificationLogHistory/NotificationLogHistory";
 import DriverTierRole from "@/pages/DriverTierRole/DriverTierRole";
+import UserWalletAdmin from "@/pages/Dashboard/Wallets/userWalletAdmin/UserWalletAdmin";
+import DriverWalletAdmin from "@/pages/Dashboard/Wallets/driverWalletAdmin/DriverWalletAdmin";
 
 const routes = createBrowserRouter([
   {
@@ -319,6 +321,14 @@ const routes = createBrowserRouter([
         element: <DriverWalletDetailsTable />,
       },
       {
+        path: "user-wallets-admin",
+        element: <UserWalletAdmin/>,
+      },
+      {
+        path: "driver-wallets-admin",
+        element: <DriverWalletAdmin/>,
+      },
+      {
         path: "incentive-management",
         element: <IncentiveManagementPage />,
       },
@@ -455,7 +465,7 @@ const routes = createBrowserRouter([
       {
         path: "driver_tier_role",
         element: <DriverTierRole />,
-      }
+      },
     ],
   },
 
@@ -477,7 +487,7 @@ const routes = createBrowserRouter([
   },
   {
     path: "*",
-    element: <NotFound404/>,
+    element: <NotFound404 />,
   },
 ]);
 

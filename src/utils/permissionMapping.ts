@@ -90,6 +90,13 @@ export const menuToPermissionMapping: PermissionMapping = {
   "wallet-user/:id": ["wallet_user", "user_wallet"],
   "wallet-driver/:id": ["wallet_driver", "raider_wallet"],
 
+  // User Wallets (Admin)
+  "user-wallets-admin": ["wallet_user", "user_wallet"],
+  "user-wallets-admin/:id": ["wallet_user", "user_wallet"],
+
+  "driver-wallets-admin": ["wallet_driver", "raider_wallet"],
+  "driver-wallets-admin/:id": ["wallet_driver", "raider_wallet"],
+
   // Coin System
   "coin-system": ["coin"],
   "coin-system/:id": ["coin"],
@@ -184,7 +191,7 @@ export const menuToPermissionMapping: PermissionMapping = {
   notification_management: ["notification_management"],
 
   // Driver Tier
-  "driver_tier_role": ["driver_tier_role"],
+  driver_tier_role: ["driver_tier_role"],
 };
 
 // Map menu IDs to additional modules that should be selected together
@@ -246,6 +253,12 @@ export const childRouteToParentMapping: Record<string, string> = {
   "wallet-driver": "wallet",
   "wallet-user/:id": "wallet",
   "wallet-driver/:id": "wallet",
+
+    // User Wallets (Admin)
+  "user-wallets-admin": "wallet",
+  "user-wallets-admin/:id": "wallet",
+  "driver-wallets-admin": "wallet",
+  "driver-wallets-admin/:id": "wallet",
 
   // Order Placement
   order: "order-placement",
@@ -411,6 +424,8 @@ export const extractBaseRoute = (route: string): string => {
     /^notification-promotion-list\/\d+$/,
     /^notification-log-history\/\d+$/,
     /^driver_tier_role\/\d+$/,
+    /^user-wallets-admin\/\d+$/,
+    /^driver-wallets-admin\/\d+$/,
   ];
 
   for (const pattern of dynamicPatterns) {
