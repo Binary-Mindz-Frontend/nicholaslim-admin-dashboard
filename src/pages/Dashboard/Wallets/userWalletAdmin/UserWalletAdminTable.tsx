@@ -2,28 +2,27 @@
 import type React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LuScanEye, LuArrowUpDown, LuX } from "react-icons/lu";
+import { LuArrowUpDown, LuX } from "react-icons/lu";
 import SCustomTable from "@/pages/Dashboard/_components/CutomTable";
-import { useNavigate } from "react-router-dom";
 import {
-  useRaiderGetWalletQuery,
+  useUserGetWalletAdminQuery,
   useAdjustWalletBalanceMutation,
 } from "@/redux/features/wallet/walletApi";
 import { FiSearch } from "react-icons/fi";
 import CustomPagination from "@/components/Shared/CustomPagination/CustomPagination";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 
-/**
- * Backend strictly requires reason to be one of:
- * REFUND, ADMIN_CORRECTION, PENALTY, LATE_ARRIVAL, SAFETY_VIOLATION, CANCELED_TRIP, OTHER
- */
-enum PenaltyReason {
-  PENALTY = "PENALTY",
+// Enums
+enum AdjustmentAction {
+  ADD_CREDIT_FUNDS = "ADD_CREDIT_FUNDS",
+  DEDUCT_MINUS_FUNDS = "DEDUCT_MINUS_FUNDS",
+}
+
+// Added PenaltyType Enum
+enum PenaltyType {
   LATE_ARRIVAL = "LATE_ARRIVAL",
   SAFETY_VIOLATION = "SAFETY_VIOLATION",
   CANCELED_TRIP = "CANCELED_TRIP",
-  REFUND = "REFUND",
-  ADMIN_CORRECTION = "ADMIN_CORRECTION",
   OTHER = "OTHER",
 }
 
@@ -35,33 +34,31 @@ interface Wallet {
   currentWalletBalance: number;
 }
 
-const DriverWalletAdminTable: React.FC = () => {
-  const navigate = useNavigate();
-
-  // --- Original Pagination & Filter State ---
+const UserWalletAdminTable: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [balanceSort, setBalanceSort] = useState<"asc" | "desc">("desc");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate] = useState("");
+  const [endDate] = useState("");
 
-  // --- Payout Modal & Adjustment State ---
+  // --- Modal & Adjustment State ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
   const [formData, setFormData] = useState({
+    adjustmentAction: "" as AdjustmentAction | "",
     amount: 0,
     orderId: "",
-    reason: PenaltyReason.PENALTY,
+    reason: "ADMIN_CORRECTION",
+    penaltyType: PenaltyType.OTHER, // Initialized with Enum
     additionalNotes: "",
-    isConfirmedByAdmin: false,
-    isNotify: false,
+    isConfirmedByAdmin: true,
+    isNotify: true,
   });
 
-  // --- API Hooks ---
-  const { data} = useRaiderGetWalletQuery({
-    role: "RAIDER",
+  const { data } = useUserGetWalletAdminQuery({
+    role: "USER",
     search: searchQuery || undefined,
     page: currentPage,
     limit: itemsPerPage,
@@ -73,101 +70,94 @@ const DriverWalletAdminTable: React.FC = () => {
   const [adjustBalance, { isLoading: isSubmitting }] =
     useAdjustWalletBalanceMutation();
 
-  const totalItems = data?.total || 0;
-  const displayData = data?.data || [];
-
-  const resetPage = () => setCurrentPage(1);
-
-  // --- Original Filter Handlers ---
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    resetPage();
-  };
-
-  const handleBalanceSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setBalanceSort(e.target.value as "asc" | "desc");
-    resetPage();
-  };
-
-  const handleClearFilters = () => {
-    setSearchQuery("");
-    setBalanceSort("desc");
-    setStartDate("");
-    setEndDate("");
-    resetPage();
-  };
-
-  const hasActiveFilters = searchQuery || startDate || endDate;
-
-  // --- Modal Logic ---
-  const handleOpenPayout = (row: Wallet) => {
+  const handleOpenModal = (row: Wallet, action?: AdjustmentAction) => {
     setSelectedWallet(row);
     setFormData({
-      amount: 0,
+      adjustmentAction: action || "",
+      amount: null as any,
       orderId: "",
-      reason: PenaltyReason.PENALTY,
+      reason: "ADMIN_CORRECTION",
+      penaltyType: PenaltyType.OTHER,
       additionalNotes: "",
-      isConfirmedByAdmin: false,
-      isNotify: false,
+      isConfirmedByAdmin: true,
+      isNotify: true,
     });
-    setShowPreview(false);
     setIsModalOpen(true);
+    setShowPreview(false);
   };
 
-  const handleAdjustmentSubmit = async () => {
-    if (!formData.isConfirmedByAdmin) {
-      return toast.error("Please confirm the adjustment");
-    }
-
+  const handleFinalSubmit = async () => {
+    if (!selectedWallet || !formData.adjustmentAction) return;
     try {
       const payload = {
-        userId: selectedWallet?.id,
-        amount: formData.amount,
-        reason: formData.reason, // Passed as requested by backend
-        orderId: formData.orderId || undefined,
-        additionalNotes: formData.additionalNotes,
-        isNotify: formData.isNotify,
+        userId: selectedWallet.id,
+        ...formData,
+        // Only send penaltyType if it's a deduction
+        penaltyType:
+          formData.adjustmentAction === AdjustmentAction.DEDUCT_MINUS_FUNDS
+            ? formData.penaltyType
+            : undefined,
+        status: "PENDING",
       };
-
-      await adjustBalance(payload).unwrap();
-      toast.success("Wallet balance updated successfully");
+      const res = await adjustBalance(payload).unwrap();
+      // console.log("Adjustment Response:", res.data.message);
+      // console.log("Adjustment Response 2nd:", res.message);
+      toast.success(res.message || "Wallet adjusted successfully");
       setIsModalOpen(false);
     } catch (err: any) {
-      // Handles the 400 Bad Request error message specifically
-      const errorMsg =
-        err?.data?.message?.[0] || err?.data?.message || "Adjustment failed";
-      toast.error(errorMsg);
+      toast.error(err?.message || "Something went wrong");
     }
   };
 
+  // ... (Keep columns and search filters the same)
   const columns = [
     { key: "id" as const, label: "User Id" },
-    { key: "username" as const, label: "Username" },
+    {
+      key: "username" as const,
+      label: "Username",
+      render: (val: string, row: Wallet) => (
+        <span
+          className="text-[#00BFFF] cursor-pointer hover:underline font-medium"
+          onClick={() => handleOpenModal(row)}
+        >
+          {val}
+        </span>
+      ),
+    },
     { key: "email" as const, label: "Email" },
     {
       key: "currentWalletBalance" as const,
       label: "Current Wallet Balance",
+      render: (value: number) => `$${value.toFixed(2)}`,
+    },
+    {
+      key: "totalWalletBalance" as const,
+      label: "Total Wallet Balance",
       render: (value: number) => `$${value}`,
     },
     {
       label: "Action",
       render: (_: any, row: Wallet) => (
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <Button
-            onClick={() => handleOpenPayout(row)}
+            onClick={() =>
+              handleOpenModal(row, AdjustmentAction.DEDUCT_MINUS_FUNDS)
+            }
             variant="outline"
             size="sm"
-            className="h-8 border-green-600 text-green-600 hover:bg-green-50 font-semibold"
+            className="h-8 border-red-600 text-red-600 hover:bg-red-50"
           >
-            Payout
+            Deduct Funds
           </Button>
           <Button
-            onClick={() => navigate(`/wallet-driver/${row.id}`)}
-            variant="ghost"
+            onClick={() =>
+              handleOpenModal(row, AdjustmentAction.ADD_CREDIT_FUNDS)
+            }
+            variant="outline"
             size="sm"
-            className="p-2 h-auto border cursor-pointer border-[#00BFFF] hover:bg-blue-100"
+            className="h-8 border-green-600 text-green-600 hover:bg-green-50"
           >
-            <LuScanEye size={16} className="text-[#00BFFF]" />
+            Credit Funds
           </Button>
         </div>
       ),
@@ -176,62 +166,53 @@ const DriverWalletAdminTable: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* ── Original Filter Bar ── */}
-      <div className="flex justify-between flex-wrap items-end gap-3">
+      {/* Search and Filters Section */}
+      <div className="flex justify-between flex-wrap gap-3">
         <div className="relative flex-1 max-w-xl">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             value={searchQuery}
-            onChange={handleSearchChange}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Search by username, email or phone..."
-            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-[#00BFFF]"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BFFF]"
           />
         </div>
-
         <div className="flex items-center gap-1.5">
           <LuArrowUpDown className="text-gray-400 shrink-0" size={15} />
           <select
             value={balanceSort}
-            onChange={handleBalanceSortChange}
+            onChange={(e) => {
+              setBalanceSort(e.target.value as "asc" | "desc");
+              setCurrentPage(1);
+            }}
             className="text-sm border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-[#00BFFF] cursor-pointer"
           >
             <option value="desc">Balance: High → Low</option>
             <option value="asc">Balance: Low → High</option>
           </select>
         </div>
-
-        {hasActiveFilters && (
-          <button
-            onClick={handleClearFilters}
-            className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700 border border-red-300 rounded-md px-3 py-2 transition-colors"
-          >
-            <LuX size={14} /> Clear
-          </button>
-        )}
       </div>
 
-      <SCustomTable columns={columns} data={displayData} />
+      <SCustomTable columns={columns} data={data?.data || []} />
 
       <CustomPagination
         currentPage={currentPage}
-        totalItems={totalItems}
+        totalItems={data?.total || 0}
         itemsPerPage={itemsPerPage}
         onPageChange={setCurrentPage}
-        onItemsPerPageChange={(items) => {
-          setItemsPerPage(items);
-          resetPage();
-        }}
+        onItemsPerPageChange={setItemsPerPage}
       />
 
-      {/* ── Adjustment Modal (Following image_b7c657.png) ── */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
-          <div className="bg-white rounded-md w-full max-w-md shadow-2xl overflow-hidden border">
-            {/* Modal Header */}
-            <div className="p-3 border-b flex justify-between items-center bg-white">
-              <h2 className="text-[11px] font-bold uppercase text-gray-800">
-                PERFORM BALANCE ADJUSTMENT for driver ID {selectedWallet?.id} (
+          <div className="bg-white rounded-md w-full max-w-lg shadow-2xl overflow-hidden border border-gray-300">
+            <div className="p-3 border-b bg-white flex justify-between items-center">
+              <h2 className="text-xs font-bold uppercase tracking-tight text-gray-800">
+                PERFORM BALANCE ADJUSTMENT for user ID {selectedWallet?.id} (
                 {selectedWallet?.username})
               </h2>
               <button
@@ -242,29 +223,42 @@ const DriverWalletAdminTable: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="p-5 space-y-5">
               {!showPreview ? (
                 <>
-                  {/* Adjustment Action - Locked to Deduct */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-700 uppercase mb-1">
+                  <div className="p-4 border rounded-md space-y-2">
+                    <label className="block text-[11px] font-bold text-gray-700 uppercase">
                       Adjustment Action
                     </label>
-                    <div className="w-full border rounded-md p-2 text-sm bg-gray-100 text-gray-600 font-medium cursor-not-allowed">
-                      Deduct/Minus Funds (Penalty)
-                    </div>
+                    <select
+                      className="w-full border rounded-md p-2 text-sm bg-gray-50 focus:ring-1 focus:ring-blue-400 outline-none"
+                      value={formData.adjustmentAction}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          adjustmentAction: e.target.value as AdjustmentAction,
+                        })
+                      }
+                    >
+                      <option value="">Select an option...</option>
+                      <option value={AdjustmentAction.ADD_CREDIT_FUNDS}>
+                        Add/Credit Funds
+                      </option>
+                      <option value={AdjustmentAction.DEDUCT_MINUS_FUNDS}>
+                        Deduct/Minus Funds
+                      </option>
+                    </select>
                   </div>
 
-                  {/* Form Container */}
-                  <div className="border rounded-md p-3 space-y-4">
-                    <h3 className="text-[11px] font-bold text-gray-500 uppercase border-b pb-1">
+                  <div className="p-4 border rounded-md space-y-4">
+                    <h3 className="text-[11px] font-bold text-gray-700 uppercase border-b pb-1">
                       Adjustment Details (Pre-Submit)
                     </h3>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[11px] font-semibold text-gray-600">
-                          Amount *
+                        <label className="block text-[11px] font-medium text-gray-600">
+                          Amount <span className="text-red-500">*</span>
                         </label>
                         <div className="relative mt-1">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
@@ -272,26 +266,25 @@ const DriverWalletAdminTable: React.FC = () => {
                           </span>
                           <input
                             type="number"
-                            className="w-full border rounded-md pl-7 pr-3 py-1.5 text-sm outline-none focus:border-red-300"
-                            placeholder="0.00"
-                            value={formData.amount || ""}
+                            value={formData.amount}
                             onChange={(e) =>
                               setFormData({
                                 ...formData,
                                 amount: Number(e.target.value),
                               })
                             }
+                            className="w-full border rounded-md pl-7 pr-3 py-2 text-sm outline-none focus:border-red-300"
+                            placeholder="0.00"
                           />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[11px] font-semibold text-gray-600">
-                          Trip/Order ID (Optional)
+                        <label className="block text-[11px] font-medium text-gray-600">
+                          Trip/Order ID{" "}
+                          <span className="text-gray-400">(Optional)</span>
                         </label>
                         <input
                           type="text"
-                          className="w-full border rounded-md mt-1 px-3 py-1.5 text-sm outline-none focus:border-blue-300"
-                          placeholder="1234567"
                           value={formData.orderId}
                           onChange={(e) =>
                             setFormData({
@@ -299,49 +292,76 @@ const DriverWalletAdminTable: React.FC = () => {
                               orderId: e.target.value,
                             })
                           }
+                          className="w-full border rounded-md mt-1 px-3 py-2 text-sm outline-none"
+                          placeholder="e.g. 1234567"
                         />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-semibold text-gray-600">
-                          Reason *
-                        </label>
-                        <select
-                          className="w-full border rounded-md mt-1 p-1.5 text-sm outline-none bg-white"
-                          value={formData.reason}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              reason: e.target.value as PenaltyReason,
-                            })
-                          }
-                        >
-                          <option value={PenaltyReason.PENALTY}>Penalty</option>
-                          <option value={PenaltyReason.LATE_ARRIVAL}>
-                            Late Arrival
-                          </option>
-                          <option value={PenaltyReason.SAFETY_VIOLATION}>
-                            Safety Violation
-                          </option>
-                          <option value={PenaltyReason.CANCELED_TRIP}>
-                            Canceled Trip
-                          </option>
-                          <option value={PenaltyReason.REFUND}>Refund</option>
-                          <option value={PenaltyReason.ADMIN_CORRECTION}>
-                            Admin Correction
-                          </option>
-                          <option value={PenaltyReason.OTHER}>Other</option>
-                        </select>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-[11px] font-medium text-gray-600">
+                            Reason for Adjustment{" "}
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            className="w-full border rounded-md mt-1 p-2 text-sm outline-none"
+                            value={formData.reason}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                reason: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="REFUND">Refund</option>
+                            <option value="ADMIN_CORRECTION">
+                              Admin Correction
+                            </option>
+                            <option value="OTHER">Other</option>
+                          </select>
+                        </div>
+
+                        {/* CONDITIONAL PENALTY TYPE SELECT */}
+                        {formData.adjustmentAction ===
+                          AdjustmentAction.DEDUCT_MINUS_FUNDS && (
+                          <div>
+                            <label className="block text-[11px] font-medium text-gray-600 text-red-600">
+                              Penalty Type{" "}
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              className="w-full border border-red-200 rounded-md mt-1 p-2 text-sm outline-none bg-red-50"
+                              value={formData.penaltyType}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  penaltyType: e.target.value as PenaltyType,
+                                })
+                              }
+                            >
+                              <option value={PenaltyType.LATE_ARRIVAL}>
+                                Late Arrival
+                              </option>
+                              <option value={PenaltyType.SAFETY_VIOLATION}>
+                                Safety Violation
+                              </option>
+                              <option value={PenaltyType.CANCELED_TRIP}>
+                                Canceled Trip
+                              </option>
+                              <option value={PenaltyType.OTHER}>Other</option>
+                            </select>
+                          </div>
+                        )}
                       </div>
+
                       <div>
-                        <label className="block text-[11px] font-semibold text-gray-600">
-                          Penalty Notes *
+                        <label className="block text-[11px] font-medium text-gray-600">
+                          Additional Notes{" "}
+                          <span className="text-gray-400">(new, optional)</span>
                         </label>
                         <textarea
-                          className="w-full border rounded-md mt-1 p-1.5 text-sm outline-none h-16 resize-none focus:border-blue-300"
-                          placeholder="Required if Penalty Type is 'Other'"
                           value={formData.additionalNotes}
                           onChange={(e) =>
                             setFormData({
@@ -349,15 +369,16 @@ const DriverWalletAdminTable: React.FC = () => {
                               additionalNotes: e.target.value,
                             })
                           }
+                          className={`w-full border rounded-md mt-1 p-2 text-sm outline-none resize-none ${formData.adjustmentAction === AdjustmentAction.DEDUCT_MINUS_FUNDS ? "h-[90px]" : "h-[42px]"}`}
                         />
                       </div>
                     </div>
 
-                    <div className="space-y-2 pt-1">
-                      <label className="flex items-center gap-2 cursor-pointer">
+                    {/* Checkboxes */}
+                    <div className="space-y-2 pt-2">
+                      <label className="flex items-start gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          className="accent-blue-500"
                           checked={formData.isConfirmedByAdmin}
                           onChange={(e) =>
                             setFormData({
@@ -365,15 +386,16 @@ const DriverWalletAdminTable: React.FC = () => {
                               isConfirmedByAdmin: e.target.checked,
                             })
                           }
+                          className="mt-1 accent-blue-500"
                         />
-                        <span className="text-[12px] font-medium text-gray-700">
-                          Confirmed by Admin *
+                        <span className="text-sm font-medium text-gray-700">
+                          Confirmed by Admin{" "}
+                          <span className="text-red-500">*</span>
                         </span>
                       </label>
                       <label className="flex items-start gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          className="mt-1 accent-blue-500"
                           checked={formData.isNotify}
                           onChange={(e) =>
                             setFormData({
@@ -381,13 +403,15 @@ const DriverWalletAdminTable: React.FC = () => {
                               isNotify: e.target.checked,
                             })
                           }
+                          className="mt-1 accent-blue-500"
                         />
                         <div>
-                          <p className="text-[12px] font-medium text-gray-700 leading-tight">
-                            Auto-trigger penalty message to driver
+                          <p className="text-sm font-medium text-gray-700 leading-tight">
+                            Auto-trigger notification to user/driver
                           </p>
-                          <p className="text-[10px] text-gray-400 leading-tight">
-                            Instant Push Notification and In-App message.
+                          <p className="text-[10px] text-gray-500 leading-tight">
+                            Checking this will automatically send an instant
+                            Push Notification and In-App message.
                           </p>
                         </div>
                       </label>
@@ -395,78 +419,80 @@ const DriverWalletAdminTable: React.FC = () => {
                   </div>
                 </>
               ) : (
-                /* ── Preview Summary Section ── */
-                <div className="space-y-4">
-                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-md">
-                    <h3 className="text-sm font-bold text-blue-800 mb-3 uppercase border-b border-blue-200 pb-1 text-center">
-                      Adjustment Preview
-                    </h3>
-                    <div className="grid grid-cols-2 gap-y-3 text-sm">
-                      <p className="text-gray-500 font-medium">Action Type:</p>
-                      <p className="font-bold text-red-600">DEDUCT FUNDS</p>
+                /* Summary Preview Section */
+                <div className="p-4 bg-blue-50 border border-blue-100 rounded-md space-y-2 text-sm">
+                  <p className="font-bold border-b pb-1 mb-2">
+                    SUMMARY PREVIEW
+                  </p>
+                  <p>
+                    <strong>Action:</strong>{" "}
+                    {formData.adjustmentAction?.replace(/_/g, " ")}
+                  </p>
+                  <p>
+                    <strong>Amount:</strong> ${formData.amount}
+                  </p>
+                  <p>
+                    <strong>Order ID:</strong> {formData.orderId || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Reason:</strong> {formData.reason}
+                  </p>
 
-                      <p className="text-gray-500 font-medium">Final Amount:</p>
-                      <p className="font-bold text-gray-800">
-                        ${formData.amount.toFixed(2)}
-                      </p>
+                  {/* PENALTY TYPE IN PREVIEW */}
+                  {formData.adjustmentAction ===
+                    AdjustmentAction.DEDUCT_MINUS_FUNDS && (
+                    <p className="text-red-600">
+                      <strong>Penalty:</strong>{" "}
+                      {formData.penaltyType.replace(/_/g, " ")}
+                    </p>
+                  )}
 
-                      <p className="text-gray-500 font-medium">Reason Code:</p>
-                      <p className="font-bold text-gray-800">
-                        {formData.reason}
-                      </p>
-
-                      <p className="text-gray-500 font-medium">
-                        Trip/Order ID:
-                      </p>
-                      <p className="text-gray-800">
-                        {formData.orderId || "Not Provided"}
-                      </p>
-
-                      <p className="text-gray-500 font-medium">Notification:</p>
-                      <p
-                        className={
-                          formData.isNotify
-                            ? "text-green-600 font-bold"
-                            : "text-gray-400"
-                        }
-                      >
-                        {formData.isNotify ? "Enabled" : "Disabled"}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-gray-400 text-center italic">
-                    Review the details above before confirming submission.
+                  <p>
+                    <strong>Notification:</strong>{" "}
+                    {formData.isNotify ? "Enabled" : "Disabled"}
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Modal Actions */}
-            <div className="p-3 border-t bg-gray-50 flex gap-2">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() =>
-                  showPreview ? setShowPreview(false) : setIsModalOpen(false)
-                }
-              >
-                {showPreview ? "Back to Edit" : "Cancel"}
-              </Button>
-              <Button
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-                onClick={() =>
-                  showPreview ? handleAdjustmentSubmit() : setShowPreview(true)
-                }
-                disabled={
-                  isSubmitting || (!showPreview && formData.amount <= 0)
-                }
-              >
-                {showPreview
-                  ? isSubmitting
-                    ? "Processing..."
-                    : "Confirm & Submit"
-                  : "Next: Preview"}
-              </Button>
+            <div className="p-4 border-t bg-gray-50 flex gap-2">
+              {!showPreview ? (
+                <>
+                  <Button
+                    variant="outline"
+                    className="flex-1 cursor-pointer"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-white cursor-pointer"
+                    onClick={() => setShowPreview(true)}
+                    disabled={
+                      !formData.adjustmentAction || formData.amount <= 0
+                    }
+                  >
+                    Next: Review Preview
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setShowPreview(false)}
+                  >
+                    Go Back
+                  </Button>
+                  <Button
+                    className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white cursor-pointer"
+                    onClick={handleFinalSubmit}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Adjustment"}
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -475,4 +501,4 @@ const DriverWalletAdminTable: React.FC = () => {
   );
 };
 
-export default DriverWalletAdminTable;
+export default UserWalletAdminTable;
