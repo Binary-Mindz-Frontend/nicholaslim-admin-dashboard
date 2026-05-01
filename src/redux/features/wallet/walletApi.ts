@@ -69,6 +69,16 @@ export const walletApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Wallets"],
     }),
+    // POST
+// /api/v1/admin/wallet/adjust
+    adjustWalletBalance: builder.mutation({
+      query: (payload) => ({
+        url: `/admin/wallet/adjust`,
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: ["Wallets"],
+    }),
   }),
 });
 
@@ -81,4 +91,5 @@ export const {
   useGetWalletCardsQuery,
   useWalletPayMutation,
   useDeleteTransactionMutation,
+  useAdjustWalletBalanceMutation
 } = walletApi;
