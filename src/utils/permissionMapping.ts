@@ -89,13 +89,15 @@ export const menuToPermissionMapping: PermissionMapping = {
   "wallet-driver": ["wallet_driver", "raider_wallet"],
   "wallet-user/:id": ["wallet_user", "user_wallet"],
   "wallet-driver/:id": ["wallet_driver", "raider_wallet"],
+  "user-wallets-admin": ["admin_user_wallet"],
+  "driver-wallets-admin": ["admin_raider_wallet"],
 
   // User Wallets (Admin)
-  "user-wallets-admin": ["wallet_user", "user_wallet"],
-  "user-wallets-admin/:id": ["wallet_user", "user_wallet"],
+  // "user-wallets-admin": ["wallet_user", "user_wallet"],
+  // "user-wallets-admin/:id": ["wallet_user", "user_wallet"],
 
-  "driver-wallets-admin": ["wallet_driver", "raider_wallet"],
-  "driver-wallets-admin/:id": ["wallet_driver", "raider_wallet"],
+  // "driver-wallets-admin": ["wallet_driver", "raider_wallet"],
+  // "driver-wallets-admin/:id": ["wallet_driver", "raider_wallet"],
 
   // Coin System
   "coin-system": ["coin"],
@@ -253,12 +255,14 @@ export const childRouteToParentMapping: Record<string, string> = {
   "wallet-driver": "wallet",
   "wallet-user/:id": "wallet",
   "wallet-driver/:id": "wallet",
+  "user-wallets-admin": "wallet",
+  "driver-wallets-admin": "wallet",
 
     // User Wallets (Admin)
-  "user-wallets-admin": "wallet",
-  "user-wallets-admin/:id": "wallet",
-  "driver-wallets-admin": "wallet",
-  "driver-wallets-admin/:id": "wallet",
+  // "user-wallets-admin": "wallet",
+  // "user-wallets-admin/:id": "wallet",
+  // "driver-wallets-admin": "wallet",
+  // "driver-wallets-admin/:id": "wallet",
 
   // Order Placement
   order: "order-placement",

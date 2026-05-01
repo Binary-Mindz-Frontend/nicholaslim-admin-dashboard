@@ -1001,6 +1001,9 @@ const MODULE_ACTIONS: Record<string, string[]> = {
     "get_one",
     "just_admin",
   ],
+  admin_user_wallet: ["read"],
+  admin_raider_wallet: ["read"],
+  driver_tier_role: ["create", "read", "update", "delete", "just_admin"],
 };
 
 // Keep for backward compatibility
@@ -1059,6 +1062,9 @@ const FRONTEND_TO_BACKEND_MODULES: Record<string, string> = {
   "Dashboard Popup": "dashboard_popup",
   FAQ: "faq",
   "Surge Pricing Role": "surge_pricing_role",
+  "User wallet (Admin)": "admin_user_wallet",
+  "Driver wallet (Admin)": "admin_raider_wallet",
+  "Driver Tier Role": "driver_tier_role",
   RBAC: "rbac",
 };
 

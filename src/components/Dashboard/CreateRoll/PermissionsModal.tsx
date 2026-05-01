@@ -37,7 +37,7 @@ import {
 } from "@/redux/features/roleBasedAccessControl/roleBasedAccessControlApi";
 import AssignUsersTab from "./AssignUsersTab";
 
-interface Permission {
+interface PermissionEntry {
   module: string;
   action: string;
 }
@@ -52,7 +52,7 @@ interface User {
 interface PermissionsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  permissions: Permission[];
+  permissions: PermissionEntry[];
   roleName: string;
   roleId: number;
   isLoading?: boolean;
@@ -174,7 +174,7 @@ const findParentPermissions = (
   menuId: string,
   moduleActions: Record<string, string[]>,
   tree: MenuNode[],
-): Permission[] => {
+): PermissionEntry[] => {
   const findNode = (nodes: MenuNode[], targetId: string): MenuNode | null => {
     for (const node of nodes) {
       if (node.id === targetId) return node;
@@ -192,7 +192,7 @@ const findParentPermissions = (
   if (!parentId) return [];
 
   const parentModules = getSelectionModules(parentId);
-  const permissions: Permission[] = [];
+  const permissions: PermissionEntry[] = [];
 
   for (const module of parentModules) {
     const actions = moduleActions[module] || [];
@@ -271,7 +271,7 @@ MENU_TREE.forEach((node) => {
 const getAllPermissionsForMenuItem = (
   menuId: string,
   moduleActions: Record<string, string[]>,
-): Permission[] => {
+): PermissionEntry[] => {
   const backendModules = getAllBackendModulesForMenuItem(menuId);
   const parentPermissions = findParentPermissions(
     menuId,
@@ -279,7 +279,7 @@ const getAllPermissionsForMenuItem = (
     MENU_TREE,
   );
 
-  const permissions: Permission[] = [];
+  const permissions: PermissionEntry[] = [];
 
   // Add the modules for this item and its children
   for (const module of backendModules) {
@@ -296,7 +296,7 @@ const getAllPermissionsForMenuItem = (
 // Helper to check if a menu or any of its children have any permission
 const hasAnyPermissionLocal = (
   menuId: string,
-  selectedPermissions: Permission[],
+  selectedPermissions: PermissionEntry[],
   moduleActions: Record<string, string[]>,
 ): boolean => {
   console.log(moduleActions, "moduleActions");
@@ -309,7 +309,7 @@ const hasAnyPermissionLocal = (
 // Helper to check if a menu and all its children have all permissions
 const hasAllPermissionsLocal = (
   menuId: string,
-  selectedPermissions: Permission[],
+  selectedPermissions: PermissionEntry[],
   moduleActions: Record<string, string[]>,
 ): boolean => {
   const backendModules = getAllBackendModulesForMenuItem(menuId);
@@ -329,7 +329,7 @@ const hasAllPermissionsLocal = (
 // Helper to check for partial permissions
 const hasPartialPermissionsLocal = (
   menuId: string,
-  selectedPermissions: Permission[],
+  selectedPermissions: PermissionEntry[],
   moduleActions: Record<string, string[]>,
 ): boolean => {
   const hasAny = hasAnyPermissionLocal(
@@ -348,7 +348,7 @@ const hasPartialPermissionsLocal = (
 // Recursive component to render menu tree with professional styling
 const MenuTreeItem: React.FC<{
   node: MenuNode;
-  selectedPermissions: Permission[];
+  selectedPermissions: PermissionEntry[];
   onToggle: (menuId: string, checked: boolean) => void;
   expandedNodes: Set<string>;
   onToggleExpand: (nodeId: string) => void;
@@ -493,7 +493,7 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
   roleId,
   isLoading = false,
 }) => {
-  const filterValidPermissions = (perms: Permission[]) =>
+  const filterValidPermissions = (perms: PermissionEntry[]) =>
     perms.filter(
       (p) =>
         p.action &&
@@ -502,7 +502,7 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
         ALL_ACTIVE_TREE_MODULES.has(p.module),
     );
 
-  const [selectedPermissions, setSelectedPermissions] = useState<Permission[]>(
+  const [selectedPermissions, setSelectedPermissions] = useState<PermissionEntry[]>(
     filterValidPermissions(permissions),
   );
   const [activeTab, setActiveTab] = useState<
@@ -659,7 +659,7 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
       });
 
       // Convert back to array format
-      const cleanPermissions: Permission[] = [];
+      const cleanPermissions: PermissionEntry[] = [];
       permissionMap.forEach((actions, module) => {
         actions.forEach((action: string) => {
           cleanPermissions.push({ module, action });

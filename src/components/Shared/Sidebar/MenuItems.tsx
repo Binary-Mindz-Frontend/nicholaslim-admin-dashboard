@@ -174,7 +174,6 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
-
   {
     id: "users",
     label: "Users",
@@ -370,7 +369,6 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
-
   {
     id: "support-communication",
     label: "Support & Communication",
