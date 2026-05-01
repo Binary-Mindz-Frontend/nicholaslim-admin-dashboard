@@ -84,6 +84,23 @@ const coinManagementApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Coins"],
     }),
+
+    getCoinBasePrice: builder.query({
+      query: () => ({
+        url: "/coin-management/base-price",
+        method: "GET",
+      }),
+      providesTags: ["Coins"],
+    }),
+
+    createCoinGift: builder.mutation({
+      query: (data) => ({
+        url: "/coin-management/gift",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Coins"],
+    }),
   }),
 });
 
@@ -97,4 +114,6 @@ export const {
   useDeleteCoinMutation,
   useRedeemCoinMutation,
   useGetCoinLogsQuery,
+  useGetCoinBasePriceQuery,
+  useCreateCoinGiftMutation,
 } = coinManagementApi;
