@@ -101,6 +101,12 @@ export const menuItems: MenuItem[] = [
             route: "/driver-order-competition",
           },
           {
+            id: "driver_tier_role",
+            label: "Driver Tier Roles",
+            icon: null,
+            route: "/driver_tier_role",
+          },
+          {
             id: "quiz",
             label: "Quizzes",
             icon: null,
@@ -168,7 +174,6 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
-
   {
     id: "users",
     label: "Users",
@@ -228,6 +233,18 @@ export const menuItems: MenuItem[] = [
     label: "Wallets & Payments",
     icon: <Wallet className="w-5 h-5" />,
     children: [
+      {
+        id: "user-wallets-admin",
+        label: "User wallet (Admin)",
+        icon: null,
+        route: "/user-wallets-admin",
+      },
+      {
+        id: "driver-wallets-admin",
+        label: "Driver wallet (Admin)",
+        icon: null,
+        route: "/driver-wallets-admin",
+      },
       {
         id: "wallet-user",
         label: "User wallets",
@@ -352,7 +369,6 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
-
   {
     id: "support-communication",
     label: "Support & Communication",

@@ -75,4 +75,14 @@ export enum Module {
     ORDER_PLACEMENT = "order_placement", //order placement
     RAIDER_JOIN = "raider_join",
     SURGE_PRICING_ROLE = "surge_pricing_role",
+    ADMIN_USER_WALLET = "admin_user_wallet",
+    ADMIN_RAIDER_WALLET = "admin_raider_wallet",
+    DRIVER_TIER_ROLE = "driver_tier_role",
+}
+
+export enum Permission {
+    READ = "read",
+    CREATE = "create",
+    UPDATE = "update",
+    DELETE = "delete",
 }

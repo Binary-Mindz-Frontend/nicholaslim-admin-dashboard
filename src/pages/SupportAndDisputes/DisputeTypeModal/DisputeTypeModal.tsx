@@ -17,7 +17,6 @@ export default function DisputeTypeModal({
   onClose,
   onSubmit,
   isLoading,
-//   initialData,
 }: DisputeTypeModalProps) {
   const [role, setRole] = useState("");
   const [name, setName] = useState("");

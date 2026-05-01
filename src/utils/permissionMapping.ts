@@ -89,6 +89,15 @@ export const menuToPermissionMapping: PermissionMapping = {
   "wallet-driver": ["wallet_driver", "raider_wallet"],
   "wallet-user/:id": ["wallet_user", "user_wallet"],
   "wallet-driver/:id": ["wallet_driver", "raider_wallet"],
+  "user-wallets-admin": ["admin_user_wallet"],
+  "driver-wallets-admin": ["admin_raider_wallet"],
+
+  // User Wallets (Admin)
+  // "user-wallets-admin": ["wallet_user", "user_wallet"],
+  // "user-wallets-admin/:id": ["wallet_user", "user_wallet"],
+
+  // "driver-wallets-admin": ["wallet_driver", "raider_wallet"],
+  // "driver-wallets-admin/:id": ["wallet_driver", "raider_wallet"],
 
   // Coin System
   "coin-system": ["coin"],
@@ -157,7 +166,6 @@ export const menuToPermissionMapping: PermissionMapping = {
   contectinfo: ["contact_info"],
   "contectinfo/:id": ["contact_info"],
 
-
   // Service Chat
   "service-chat": ["service_chat"],
   "service-chat/:id": ["service_chat"],
@@ -182,7 +190,10 @@ export const menuToPermissionMapping: PermissionMapping = {
   "surge-pricing-role": ["surge_pricing_role"],
 
   // Notification Management
-  "notification_management": ["notification_management"],
+  notification_management: ["notification_management"],
+
+  // Driver Tier
+  driver_tier_role: ["driver_tier_role"],
 };
 
 // Map menu IDs to additional modules that should be selected together
@@ -244,6 +255,14 @@ export const childRouteToParentMapping: Record<string, string> = {
   "wallet-driver": "wallet",
   "wallet-user/:id": "wallet",
   "wallet-driver/:id": "wallet",
+  "user-wallets-admin": "wallet",
+  "driver-wallets-admin": "wallet",
+
+    // User Wallets (Admin)
+  // "user-wallets-admin": "wallet",
+  // "user-wallets-admin/:id": "wallet",
+  // "driver-wallets-admin": "wallet",
+  // "driver-wallets-admin/:id": "wallet",
 
   // Order Placement
   order: "order-placement",
@@ -346,12 +365,15 @@ export const childRouteToParentMapping: Record<string, string> = {
   "surge-pricing-role/:id": "surge-pricing-role",
 
   // Notification Management
-  "notification_management": "notification_management",
+  notification_management: "notification_management",
   "create-notification": "notification_management",
   "create-notification-promotion": "notification_management",
   "notification-list": "notification_management",
   "notification-promotion-list": "notification_management",
   "notification-log-history": "notification_management",
+
+  // Driver Tier
+  "driver_tier_role": "driver_tier_role",
 };
 
 // Extract base route from dynamic route
@@ -405,6 +427,9 @@ export const extractBaseRoute = (route: string): string => {
     /^notification-list\/\d+$/,
     /^notification-promotion-list\/\d+$/,
     /^notification-log-history\/\d+$/,
+    /^driver_tier_role\/\d+$/,
+    /^user-wallets-admin\/\d+$/,
+    /^driver-wallets-admin\/\d+$/,
   ];
 
   for (const pattern of dynamicPatterns) {

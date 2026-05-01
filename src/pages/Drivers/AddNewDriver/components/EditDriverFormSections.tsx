@@ -4,7 +4,6 @@ import {
   InputWrapper,
   Input,
   PhoneInput,
-  RANKS,
   LICENSE_CLASSES,
   COUNTRIES,
   PostalCodeField,
@@ -18,6 +17,7 @@ export interface FormSectionProps {
   watch: any;
   setValue: any;
   vehicleTypesResponse?: any;
+  driverTiersResponse?: any;
 }
 
 export const GeneralInformation = ({
@@ -25,6 +25,7 @@ export const GeneralInformation = ({
   errors,
   watch,
   setValue,
+  driverTiersResponse,
 }: FormSectionProps) => {
   return (
   <>
@@ -105,9 +106,9 @@ export const GeneralInformation = ({
           className="w-full border bg-secondary rounded p-2 text-sm"
         >
           <option value="">Select Rank</option>
-          {RANKS.map((r) => (
-            <option key={r} value={r}>
-              {r}
+          {driverTiersResponse?.data?.map((tier: any) => (
+            <option key={tier.id} value={tier.id}>
+              {tier.name}
             </option>
           ))}
         </select>
