@@ -10,6 +10,7 @@ import {
 } from "@/redux/features/drivers/driversApi";
 import { useNavigate } from "react-router-dom";
 import { useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
+import { useGetDriverTiersQuery } from "@/redux/features/driverTiers/driverTiersApi";
 
 import {
   Button,
@@ -148,6 +149,7 @@ export default function AddNewDriver() {
 
   const [addRiderProfile, { isLoading }] = useAddRiderProfileMutation();
   const { data: vehicleTypesResponse } = useGetVehicleTypesQuery({});
+  const { data: driverTiersResponse } = useGetDriverTiersQuery({});
 
   // Sync address logic
   const sameAsCurrent = watch("same_as_current");
@@ -365,7 +367,7 @@ export default function AddNewDriver() {
         permanent_country: data.permanent_country,
         bank_name: data.bank_name,
         account_number: data.account_number,
-        driver_rank: data.driver_rank,
+        tier_id: Number(data.driver_rank),
       };
 
       const result = await addRiderProfile(formData).unwrap();
@@ -435,6 +437,7 @@ export default function AddNewDriver() {
             errors={errors}
             watch={watch}
             setValue={setValue}
+            driverTiersResponse={driverTiersResponse}
           />
 
           <IdentityCardSection
