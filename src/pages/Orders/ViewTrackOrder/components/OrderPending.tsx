@@ -22,8 +22,8 @@ export default function OrderPending({ data }: OrderPendingProps) {
   const getStatusStyles = (status: string) => {
     const s = status.toLowerCase();
     if (s === "pending" || s === "placed") return "bg-yellow-200 text-gray-900";
-    if (s === "processing" || s === "progress") return "bg-blue-200 text-gray-900";
-    if (s === "completed" || s === "delivered") return "bg-green-200 text-gray-900";
+    if (s === "processing" || s === "progress" || s === "ongoing") return "bg-blue-200 text-gray-900";
+    if (s === "completed" || s === "delivered" || s === "complete") return "bg-green-200 text-gray-900";
     return "bg-gray-200 text-gray-900";
   };
 
