@@ -79,12 +79,24 @@ import NotificationLogHistory from "@/pages/NotificationLogHistory/NotificationL
 import DriverTierRole from "@/pages/DriverTierRole/DriverTierRole";
 import UserWalletAdmin from "@/pages/Dashboard/Wallets/userWalletAdmin/UserWalletAdmin";
 import DriverWalletAdmin from "@/pages/Dashboard/Wallets/driverWalletAdmin/DriverWalletAdmin";
+import TitleUpdater from "@/components/Shared/TitleUpdater";
+import { Outlet } from "react-router-dom";
+
+const RootLayout = () => (
+  <>
+    <TitleUpdater />
+    <Outlet />
+  </>
+);
 
 const routes = createBrowserRouter([
   {
-    path: "/",
-    element: <DashboardLayoutWrapper />,
+    element: <RootLayout />,
     children: [
+      {
+        path: "/",
+        element: <DashboardLayoutWrapper />,
+        children: [
       {
         index: true,
         element: <Dashboard />,
@@ -485,9 +497,11 @@ const routes = createBrowserRouter([
     path: "/reset-password",
     element: <ResetPassword />,
   },
-  {
-    path: "*",
-    element: <NotFound404 />,
+      {
+        path: "*",
+        element: <NotFound404 />,
+      },
+    ],
   },
 ]);
 
