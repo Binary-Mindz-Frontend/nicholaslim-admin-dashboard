@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Outlet } from "react-router-dom";
 import Dashboard from "@/pages/Dashboard/Dashboard";
 import CreateRoll from "@/pages/Admin/CreateRoll/CreateRoll";
 import AddRemovePermission from "@/pages/Admin/AddRemovePermission/AddRemovePermission";
@@ -77,407 +77,420 @@ import NotificationList from "@/pages/NotificationList/NotificationList";
 import NotificationPromotionList from "@/pages/NotificationPromotionList/NotificationPromotionList";
 import NotificationLogHistory from "@/pages/NotificationLogHistory/NotificationLogHistory";
 import DriverTierRole from "@/pages/DriverTierRole/DriverTierRole";
+import TitleUpdater from "@/components/Shared/TitleUpdater";
+
+const RootLayout = () => (
+  <>
+    <TitleUpdater />
+    <Outlet />
+  </>
+);
 
 const routes = createBrowserRouter([
   {
-    path: "/",
-    element: <DashboardLayoutWrapper />,
+    element: <RootLayout />,
     children: [
       {
-        index: true,
-        element: <Dashboard />,
-      },
-      {
-        path: "create-edit-role",
-        element: <CreateRoll />,
-      },
-      {
-        path: "add-remove-permission",
-        element: <AddRemovePermission />,
+        path: "/",
+        element: <DashboardLayoutWrapper />,
+        children: [
+          {
+            index: true,
+            element: <Dashboard />,
+          },
+          {
+            path: "create-edit-role",
+            element: <CreateRoll />,
+          },
+          {
+            path: "add-remove-permission",
+            element: <AddRemovePermission />,
+          },
+
+          {
+            path: "users-app",
+            element: <UsersApp />,
+          },
+          {
+            path: "customize-profile",
+            element: <CustomizeProfile />,
+          },
+          {
+            path: "change-password",
+            element: <ChangePassword />,
+          },
+          {
+            path: "users-app/:id",
+            element: <UserProfile />,
+          },
+          {
+            path: "users-web-portal",
+            element: <UsersWebportal />,
+          },
+          {
+            path: "add-new-user",
+            element: <AddNewUser />,
+          },
+          {
+            path: "driver-list",
+            element: <DriverList />,
+          },
+          {
+            path: "driver-list/:id",
+            element: <EditDriverProfile />,
+          },
+          {
+            path: "add-new-driver",
+            element: <AddNewDriver />,
+          },
+          {
+            path: "new-join-request",
+            element: <NewJoinRequest />,
+          },
+          {
+            path: "service-area",
+            element: <VTPMserviceArea />,
+          },
+          {
+            path: "vehicle-types",
+            element: <VehicleTypes />,
+          },
+          {
+            path: "types-of-delivery",
+            element: <DeliveryTypesPage />,
+          },
+          {
+            path: "vehicle-pricing-page",
+            element: <AddVehiclePage />,
+          },
+          {
+            path: "policy-management",
+            element: <PolicyManagementPage />,
+          },
+          {
+            path: "users-app",
+            element: <UsersApp />,
+          },
+          {
+            path: "users-app/:id",
+            element: <UserProfile />,
+          },
+          {
+            path: "users-web-portal",
+            element: <UsersWebportal />,
+          },
+          {
+            path: "add-new-user",
+            element: <AddNewUser />,
+          },
+          {
+            path: "driver-list",
+            element: <DriverList />,
+          },
+          {
+            path: "driver-list/:id",
+            element: <EditDriverProfile />,
+          },
+
+          {
+            path: "add-new-driver",
+            element: <AddNewDriver />,
+          },
+          {
+            path: "new-join-request",
+            element: <NewJoinRequest />,
+          },
+          {
+            path: "join-request/:id",
+            element: <ViewDriverProfile />,
+          },
+          {
+            path: "raider-details/:id",
+            element: <ViewDriverProfile />,
+          },
+          {
+            path: "order-list",
+            element: <OrderList />,
+          },
+          {
+            path: "support",
+            element: <SupportAndDisputes />,
+          },
+          {
+            path: "support/view/:id",
+            element: <ViewSupport />,
+          },
+          {
+            path: "payments",
+            element: <Payments />,
+          },
+          {
+            path: "live-map",
+            element: <Livemap />,
+          },
+          {
+            path: "notifications",
+            element: <Notifications />,
+          },
+
+          {
+            path: "users-app",
+            element: <UsersApp />,
+          },
+          {
+            path: "users-app/:id",
+            element: <UserProfile />,
+          },
+          {
+            path: "users-web-portal",
+            element: <UsersWebportal />,
+          },
+          {
+            path: "add-new-user",
+            element: <AddNewUser />,
+          },
+          {
+            path: "driver-list",
+            element: <DriverList />,
+          },
+          {
+            path: "driver-list/:id",
+            element: <EditDriverProfile />,
+          },
+          {
+            path: "add-new-driver",
+            element: <AddNewDriver />,
+          },
+          {
+            path: "new-join-request",
+            element: <NewJoinRequest />,
+          },
+          {
+            path: "quiz",
+            element: <Quiz />,
+          },
+          {
+            path: "quiz-create-edit/:id",
+            element: <CreateOrEditQuiz />,
+          },
+          {
+            path: "advertisement",
+            element: <Advertisement />,
+          },
+          {
+            path: "platform-fee",
+            element: <PlatformFeeManagement />,
+          },
+          // {
+          //   path: "content-management-user",
+          //   element: <ContentManagementApp />,
+          // },
+          // {
+          //   path: "content-management-driver",
+          //   element: <ContentManagementApp />,
+          // },
+          {
+            path: "content-management",
+            element: <ContentManagementApp />,
+          },
+          {
+            path: "live-order-tracking",
+            element: <LiveOrderTracking />,
+          },
+          {
+            path: "order-history",
+            element: <OrderHistory />,
+          },
+          {
+            path: "payment-options",
+            element: <PaymentOptionsPage />,
+          },
+          {
+            path: "driver-order-competition",
+            element: <DriverOrderCompetition />,
+          },
+          {
+            path: "customer-order-confirmation",
+            element: <CustomerOrderConfirmation />,
+          },
+          {
+            path: "wallet-user",
+            element: <UserWallet />,
+          },
+          {
+            path: "wallet-user/:id",
+            element: <SingleUserWalletDetils />,
+          },
+          {
+            path: "wallet-driver",
+            element: <DriverWallet />,
+          },
+          {
+            path: "wallet-driver/:id",
+            element: <DriverWalletDetailsTable />,
+          },
+          {
+            path: "incentive-management",
+            element: <IncentiveManagementPage />,
+          },
+          {
+            path: "coin-system",
+            element: <CoinPage />,
+          },
+          {
+            path: "report-orders",
+            element: <Orders />,
+          },
+          {
+            path: "driver-performance",
+            element: <DriverPerformance />,
+          },
+          {
+            path: "customer-report",
+            element: <CustomerReport />,
+          },
+          {
+            path: "kpi",
+            element: <Kpis />,
+          },
+          {
+            path: "kpi",
+            element: <Kpis />,
+          },
+          {
+            path: "coins",
+            element: <Coins />,
+          },
+          {
+            path: "incentives",
+            element: <Incentive />,
+          },
+
+          // Order Placement
+          {
+            path: "order",
+            element: <Order />,
+          },
+          {
+            path: "live-order-tracking",
+            element: <LiveOrderTracking />,
+          },
+          {
+            path: "order-history",
+            element: <OrderHistory />,
+          },
+          {
+            path: "saved-order",
+            element: <SavedOrders />,
+          },
+          // {
+          //   path: "payment-options",
+          //   element: <PaymentOptions />,
+          // },
+          {
+            path: "order-confirm",
+            element: <OrderConfirmed />,
+          },
+          {
+            path: "favourite-drivers/:id",
+            element: <FavouriteDriversPage />,
+          },
+          {
+            path: "order-history/:id",
+            element: <OrderHistoryPage />,
+          },
+          {
+            path: "order/:id",
+            element: <ViewTrackOrder />,
+          },
+          {
+            path: "assign-driver/:id",
+            element: <DriverListTrack />,
+          },
+          {
+            path: "live-order-tracking/:id",
+            element: <ViewLiveTrackOrder />,
+          },
+          {
+            path: "add-funds",
+            element: <StripeWrapper />,
+          },
+          {
+            path: "additional-service",
+            element: <AdditionalService />,
+          },
+          {
+            path: "dashboard-popup",
+            element: <DashboardPopup />,
+          },
+          {
+            path: "contactinfo",
+            element: <ContactInfo />,
+          },
+          {
+            path: "promocode",
+            element: <PromoCode />,
+          },
+          {
+            path: "dashboard-chat",
+            element: <DashboardChat />,
+          },
+          {
+            path: "surge-pricing-role",
+            element: <SurgePricingRole />,
+          },
+          {
+            path: "notification_management",
+            element: <Notifications />,
+          },
+          {
+            path: "create-notification",
+            element: <CreateNotification />,
+          },
+          {
+            path: "create-notification-promotion",
+            element: <CreateNotificationPromotion />,
+          },
+          {
+            path: "notification-list",
+            element: <NotificationList />,
+          },
+          {
+            path: "notification-promotion-list",
+            element: <NotificationPromotionList />,
+          },
+          {
+            path: "notification-log-history",
+            element: <NotificationLogHistory />,
+          },
+          {
+            path: "driver_tier_role",
+            element: <DriverTierRole />,
+          }
+        ],
       },
 
       {
-        path: "users-app",
-        element: <UsersApp />,
+        path: "/login",
+        element: <Login />,
       },
       {
-        path: "customize-profile",
-        element: <CustomizeProfile />,
+        path: "/forgot-password",
+        element: <ForgotPassword />,
       },
       {
-        path: "change-password",
-        element: <ChangePassword />,
+        path: "/verify-otp",
+        element: <VerifyOtp />,
       },
       {
-        path: "users-app/:id",
-        element: <UserProfile />,
+        path: "/reset-password",
+        element: <ResetPassword />,
       },
       {
-        path: "users-web-portal",
-        element: <UsersWebportal />,
+        path: "*",
+        element: <NotFound404 />,
       },
-      {
-        path: "add-new-user",
-        element: <AddNewUser />,
-      },
-      {
-        path: "driver-list",
-        element: <DriverList />,
-      },
-      {
-        path: "driver-list/:id",
-        element: <EditDriverProfile />,
-      },
-      {
-        path: "add-new-driver",
-        element: <AddNewDriver />,
-      },
-      {
-        path: "new-join-request",
-        element: <NewJoinRequest />,
-      },
-      {
-        path: "service-area",
-        element: <VTPMserviceArea />,
-      },
-      {
-        path: "vehicle-types",
-        element: <VehicleTypes />,
-      },
-      {
-        path: "types-of-delivery",
-        element: <DeliveryTypesPage />,
-      },
-      {
-        path: "vehicle-pricing-page",
-        element: <AddVehiclePage />,
-      },
-      {
-        path: "policy-management",
-        element: <PolicyManagementPage />,
-      },
-      {
-        path: "users-app",
-        element: <UsersApp />,
-      },
-      {
-        path: "users-app/:id",
-        element: <UserProfile />,
-      },
-      {
-        path: "users-web-portal",
-        element: <UsersWebportal />,
-      },
-      {
-        path: "add-new-user",
-        element: <AddNewUser />,
-      },
-      {
-        path: "driver-list",
-        element: <DriverList />,
-      },
-      {
-        path: "driver-list/:id",
-        element: <EditDriverProfile />,
-      },
-
-      {
-        path: "add-new-driver",
-        element: <AddNewDriver />,
-      },
-      {
-        path: "new-join-request",
-        element: <NewJoinRequest />,
-      },
-      {
-        path: "join-request/:id",
-        element: <ViewDriverProfile />,
-      },
-      {
-        path: "raider-details/:id",
-        element: <ViewDriverProfile />,
-      },
-      {
-        path: "order-list",
-        element: <OrderList />,
-      },
-      {
-        path: "support",
-        element: <SupportAndDisputes />,
-      },
-      {
-        path: "support/view/:id",
-        element: <ViewSupport />,
-      },
-      {
-        path: "payments",
-        element: <Payments />,
-      },
-      {
-        path: "live-map",
-        element: <Livemap />,
-      },
-      {
-        path: "notifications",
-        element: <Notifications />,
-      },
-
-      {
-        path: "users-app",
-        element: <UsersApp />,
-      },
-      {
-        path: "users-app/:id",
-        element: <UserProfile />,
-      },
-      {
-        path: "users-web-portal",
-        element: <UsersWebportal />,
-      },
-      {
-        path: "add-new-user",
-        element: <AddNewUser />,
-      },
-      {
-        path: "driver-list",
-        element: <DriverList />,
-      },
-      {
-        path: "driver-list/:id",
-        element: <EditDriverProfile />,
-      },
-      {
-        path: "add-new-driver",
-        element: <AddNewDriver />,
-      },
-      {
-        path: "new-join-request",
-        element: <NewJoinRequest />,
-      },
-      {
-        path: "quiz",
-        element: <Quiz />,
-      },
-      {
-        path: "quiz-create-edit/:id",
-        element: <CreateOrEditQuiz />,
-      },
-      {
-        path: "advertisement",
-        element: <Advertisement />,
-      },
-      {
-        path: "platform-fee",
-        element: <PlatformFeeManagement />,
-      },
-      // {
-      //   path: "content-management-user",
-      //   element: <ContentManagementApp />,
-      // },
-      // {
-      //   path: "content-management-driver",
-      //   element: <ContentManagementApp />,
-      // },
-      {
-        path: "content-management",
-        element: <ContentManagementApp />,
-      },
-      {
-        path: "live-order-tracking",
-        element: <LiveOrderTracking />,
-      },
-      {
-        path: "order-history",
-        element: <OrderHistory />,
-      },
-      {
-        path: "payment-options",
-        element: <PaymentOptionsPage />,
-      },
-      {
-        path: "driver-order-competition",
-        element: <DriverOrderCompetition />,
-      },
-      {
-        path: "customer-order-confirmation",
-        element: <CustomerOrderConfirmation />,
-      },
-      {
-        path: "wallet-user",
-        element: <UserWallet />,
-      },
-      {
-        path: "wallet-user/:id",
-        element: <SingleUserWalletDetils />,
-      },
-      {
-        path: "wallet-driver",
-        element: <DriverWallet />,
-      },
-      {
-        path: "wallet-driver/:id",
-        element: <DriverWalletDetailsTable />,
-      },
-      {
-        path: "incentive-management",
-        element: <IncentiveManagementPage />,
-      },
-      {
-        path: "coin-system",
-        element: <CoinPage />,
-      },
-      {
-        path: "report-orders",
-        element: <Orders />,
-      },
-      {
-        path: "driver-performance",
-        element: <DriverPerformance />,
-      },
-      {
-        path: "customer-report",
-        element: <CustomerReport />,
-      },
-      {
-        path: "kpi",
-        element: <Kpis />,
-      },
-      {
-        path: "kpi",
-        element: <Kpis />,
-      },
-      {
-        path: "coins",
-        element: <Coins />,
-      },
-      {
-        path: "incentives",
-        element: <Incentive />,
-      },
-
-      // Order Placement
-      {
-        path: "order",
-        element: <Order />,
-      },
-      {
-        path: "live-order-tracking",
-        element: <LiveOrderTracking />,
-      },
-      {
-        path: "order-history",
-        element: <OrderHistory />,
-      },
-      {
-        path: "saved-order",
-        element: <SavedOrders />,
-      },
-      // {
-      //   path: "payment-options",
-      //   element: <PaymentOptions />,
-      // },
-      {
-        path: "order-confirm",
-        element: <OrderConfirmed />,
-      },
-      {
-        path: "favourite-drivers/:id",
-        element: <FavouriteDriversPage />,
-      },
-      {
-        path: "order-history/:id",
-        element: <OrderHistoryPage />,
-      },
-      {
-        path: "order/:id",
-        element: <ViewTrackOrder />,
-      },
-      {
-        path: "assign-driver/:id",
-        element: <DriverListTrack />,
-      },
-      {
-        path: "live-order-tracking/:id",
-        element: <ViewLiveTrackOrder />,
-      },
-      {
-        path: "add-funds",
-        element: <StripeWrapper />,
-      },
-      {
-        path: "additional-service",
-        element: <AdditionalService />,
-      },
-      {
-        path: "dashboard-popup",
-        element: <DashboardPopup />,
-      },
-      {
-        path: "contactinfo",
-        element: <ContactInfo />,
-      },
-      {
-        path: "promocode",
-        element: <PromoCode />,
-      },
-      {
-        path: "dashboard-chat",
-        element: <DashboardChat />,
-      },
-      {
-        path: "surge-pricing-role",
-        element: <SurgePricingRole />,
-      },
-      {
-        path: "notification_management",
-        element: <Notifications />,
-      },
-      {
-        path: "create-notification",
-        element: <CreateNotification />,
-      },
-      {
-        path: "create-notification-promotion",
-        element: <CreateNotificationPromotion />,
-      },
-      {
-        path: "notification-list",
-        element: <NotificationList />,
-      },
-      {
-        path: "notification-promotion-list",
-        element: <NotificationPromotionList />,
-      },
-      {
-        path: "notification-log-history",
-        element: <NotificationLogHistory />,
-      },
-      {
-        path: "driver_tier_role",
-        element: <DriverTierRole />,
-      }
     ],
-  },
-
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/forgot-password",
-    element: <ForgotPassword />,
-  },
-  {
-    path: "/verify-otp",
-    element: <VerifyOtp />,
-  },
-  {
-    path: "/reset-password",
-    element: <ResetPassword />,
-  },
-  {
-    path: "*",
-    element: <NotFound404/>,
   },
 ]);
 
