@@ -77,7 +77,7 @@ export default function CoinSummaryChart({ coinSummaryChart, isLoading }: CoinSu
             <XAxis dataKey="label" />
             <YAxis />
             <Tooltip 
-              formatter={(value) => [`${value.toLocaleString()} coins`, ""]}
+              formatter={(value) => [`${value?.toLocaleString()} coins`, ""]}
               labelFormatter={(label) => label}
             />
           </BarChart>

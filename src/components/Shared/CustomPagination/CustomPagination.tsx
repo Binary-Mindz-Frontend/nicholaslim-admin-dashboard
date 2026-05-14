@@ -67,7 +67,7 @@ const CustomPagination: React.FC<TablePaginationProps> = ({
       <div className="flex rounded-md shadow-sm overflow-hidden border border-[#FFD52B] bg-[#FFF5CC]">
         <div
           onClick={handlePrevious}
-          className="flex items-center justify-center px-3 py-2 border-r border-[#FFD52B] rounded-l-md"
+          className="flex items-center justify-center px-3 py-2 border-r border-[#FFD52B] rounded-l-md cursor-pointer"
         >
           <button
             disabled={currentPage === 1}
@@ -83,7 +83,7 @@ const CustomPagination: React.FC<TablePaginationProps> = ({
 
         <div
           onClick={handleNext}
-          className="flex items-center justify-center px-3 py-2 border-l border-[#FFD52B] rounded-r-md"
+          className="flex items-center justify-center px-3 py-2 border-l border-[#FFD52B] rounded-r-md cursor-pointer"
         >
           <button
             disabled={currentPage >= totalPages}

@@ -1,9 +1,11 @@
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { Column } from "@/components/Dashboard/DataTable/DataTable";
 import { Eye, Loader2, Pencil, Trash2 } from "lucide-react";
-import { useDeleteOrderMutation, useGetDriverOrdersQuery } from "@/redux/features/orders/ordersApi";
+import {
+  useDeleteOrderMutation,
+  useGetDriverOrdersQuery,
+} from "@/redux/features/orders/ordersApi";
 import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
@@ -70,35 +72,75 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
 
   const { data, isLoading, isError } = useGetDriverOrdersQuery(queryParams);
 
-  useEffect(() => {
-  const rawData = data?.data?.data || [];
-  // console.log(rawData);
-  if (rawData) {
-    const mappedOrders: TOrder[] = rawData.map((item: TOrderRaw) => ({
-      orderId: item.id?.toString() || "N/A",
-      customerName: item.user?.username || item.user?.phone || "N/A",
-      
-      // --- UPDATED THIS LINE ---
-      address: item.orderStops?.[0]?.address || "No Address Provided",
-      
-      date: item.created_at 
-        ? new Date(item.created_at).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          }) 
-        : "N/A",
-      delivery_type: typeof item.delivery_type === "object"
-        ? (item.delivery_type as any)?.name || "N/A"
-        : (item.delivery_type || "N/A"),
-      order_status: item.order_status || "N/A",
-      route_type: item.route_type || "N/A",
-    }));
+  const getStatusStyles = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case "PENDING":
+        return {
+          bg: "bg-[#F59E0B20]",
+          text: "text-[#F59E0B]",
+          label: "Pending",
+        };
+      case "ONGOING":
+      case "ACCEPTED":
+      case "IN_PROGRESS":
+        return {
+          bg: "bg-[#3B82F620]",
+          text: "text-[#3B82F6]",
+          label: "Ongoing",
+        };
+      case "COMPLETED":
+        return {
+          bg: "bg-[#22C55E20]",
+          text: "text-[#22C55E]",
+          label: "Completed",
+        };
+      case "CANCEL":
+      case "CANCELLED":
+      case "FAILED":
+        return {
+          bg: "bg-[#EF444420]",
+          text: "text-[#EF4444]",
+          label: "Cancelled",
+        };
+      default:
+        return {
+          bg: "bg-gray-100",
+          text: "text-gray-600",
+          label: status,
+        };
+    }
+  };
 
-    setOrders(mappedOrders);
-    setTotalItems(data?.data?.total || 0);
-  }
-}, [data]);
+  useEffect(() => {
+    const rawData = data?.data?.data || [];
+    // console.log(rawData);
+    if (rawData) {
+      const mappedOrders: TOrder[] = rawData.map((item: TOrderRaw) => ({
+        orderId: item.id?.toString() || "N/A",
+        customerName: item.user?.username || item.user?.phone || "N/A",
+
+        // --- UPDATED THIS LINE ---
+        address: item.orderStops?.[0]?.address || "No Address Provided",
+
+        date: item.created_at
+          ? new Date(item.created_at).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : "N/A",
+        delivery_type:
+          typeof item.delivery_type === "object"
+            ? (item.delivery_type as any)?.name || "N/A"
+            : item.delivery_type || "N/A",
+        order_status: item.order_status || "N/A",
+        route_type: item.route_type || "N/A",
+      }));
+
+      setOrders(mappedOrders);
+      setTotalItems(data?.data?.total || 0);
+    }
+  }, [data]);
 
   // --- DELETE EXECUTION ---
   const handleDeleteConfirm = async () => {
@@ -157,14 +199,28 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
         );
       },
     },
+    // {
+    //   header: "ORDER STATUS",
+    //   accessor: "order_status",
+    //   cell: (row) => (
+    //     <span className="px-4 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+    //       {row.order_status}
+    //     </span>
+    //   ),
+    // },
     {
       header: "ORDER STATUS",
       accessor: "order_status",
-      cell: (row) => (
-        <span className="px-4 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-          {row.order_status}
-        </span>
-      ),
+      cell: (row) => {
+        const { bg, text, label } = getStatusStyles(row.order_status);
+        return (
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-bold ${bg} ${text}`}
+          >
+            {label}
+          </span>
+        );
+      },
     },
     {
       header: "ACTION",
@@ -204,7 +260,11 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete order
-            <span className="font-bold text-black text-lg"> #{selectedOrderId}</span> from the system.
+            <span className="font-bold text-black text-lg">
+              {" "}
+              #{selectedOrderId}
+            </span>{" "}
+            from the system.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -231,5 +291,12 @@ export const useOrderColumns = (params: OrderFilters = {}) => {
     </AlertDialog>
   );
 
-  return { orderColumns, orders, isLoading, isError, totalItems, DeleteConfirmDialog };
+  return {
+    orderColumns,
+    orders,
+    isLoading,
+    isError,
+    totalItems,
+    DeleteConfirmDialog,
+  };
 };

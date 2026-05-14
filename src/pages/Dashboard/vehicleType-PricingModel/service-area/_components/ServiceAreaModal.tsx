@@ -271,7 +271,7 @@ const ServiceAreaModal = ({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="deliveryFee" className="flex items-center">
-                    Price Multiplier*{" "}
+                    Delivery Fee *{" "}
                     {/* <span className="text-red-500 ml-1">*</span> */}
                   </Label>
                   <Input
@@ -319,7 +319,7 @@ const ServiceAreaModal = ({
               </div>
 
               {/* Hiding Minimum Order Amount as per request */}
-              {/* <div>
+              <div>
                 <Label htmlFor="minOrderAmount">Minimum Order Amount ($)</Label>
                 <Input
                   id="minOrderAmount"
@@ -334,7 +334,7 @@ const ServiceAreaModal = ({
                   }
                   disabled={isLoading}
                 />
-              </div> */}
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -410,7 +410,7 @@ const ServiceAreaModal = ({
               </Label>
               <div
                 ref={mapRef}
-                className="w-full h-[500px] rounded-lg border mt-2"
+                className="w-full h-125 rounded-lg border mt-2"
               />
               <div className="mt-2 space-y-1">
                 <p className="text-sm text-gray-600">

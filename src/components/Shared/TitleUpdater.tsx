@@ -10,6 +10,7 @@ const TitleUpdater: React.FC = () => {
     const baseTitle = "Nicholaslim";
 
     if (label) {
+      // document.title = `${label} | ${baseTitle}`;
       document.title = `${label}`;
     } else {
       document.title = baseTitle;

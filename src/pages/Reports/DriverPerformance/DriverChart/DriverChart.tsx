@@ -46,7 +46,7 @@ export default function DriverPerformanceChart({
           />
           <YAxis axisLine={true} tickLine={false} tick={{ fill: "#444" }} />
           <Tooltip
-            formatter={(value: number) => [value, "Orders"]}
+            formatter={(value: any) => [value, "Orders"]}
             labelFormatter={(label) => `Week: ${label}`}
             contentStyle={{
               backgroundColor: "white",

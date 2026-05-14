@@ -219,7 +219,7 @@ const VTPMServiceArea = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[500px] rounded-lg overflow-hidden border">
+            <div className="h-125 rounded-lg overflow-hidden border">
               <GoogleMapDisplay
                 serviceAreas={serviceAreas}
                 selectedArea={selectedArea}
@@ -256,7 +256,7 @@ const VTPMServiceArea = () => {
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zone Name</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">City</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price Multiplier*</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Delivery Fee</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -275,7 +275,7 @@ const VTPMServiceArea = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{area.cityZone}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{area.deliveryFee}x</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">{area.deliveryFee}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">{area.priority}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div

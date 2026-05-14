@@ -197,7 +197,7 @@ export default function RevenueChart({
               domain={[0, maxValue * 1.1 || 1000]}
             />
             <Tooltip
-              formatter={(value: number) => [
+              formatter={(value: any) => [
                 `$${value.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,

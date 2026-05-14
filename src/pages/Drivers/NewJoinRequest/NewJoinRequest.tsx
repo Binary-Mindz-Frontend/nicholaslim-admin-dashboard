@@ -3,6 +3,7 @@ import CustomTable from "@/components/Dashboard/DataTable/DataTable";
 import { useRequestColumns } from "./RequestTable/RequestTable";
 import AdminTablePagination from "@/components/Shared/CustomPagination/AdminTablePagination";
 import DriverFilter from "@/components/Drivers/DriverFilter/DriverFilter";
+import NewDynamicChangeLogTable from "@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable";
 
 export default function NewJoinRequest() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -65,7 +66,9 @@ export default function NewJoinRequest() {
       <div className="w-full mx-auto space-y-4 mb-6">
         {/* Header Section */}
         <div className="pt-2 sm:py-2">
-          <h1 className="text-black text-2xl font-bold">Driver Join Requests</h1>
+          <h1 className="text-black text-2xl font-bold">
+            Driver Join Requests
+          </h1>
         </div>
 
         {/* Filter Section */}
@@ -109,6 +112,7 @@ export default function NewJoinRequest() {
           <p className="text-lg text-gray-500">No requests found</p>
         </div>
       )}
+      <NewDynamicChangeLogTable entityType="rider_approval" />
     </div>
   );
 }

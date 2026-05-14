@@ -4,36 +4,17 @@
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-// Google Maps types
-interface GoogleMap {
-  setCenter: (center: google.maps.LatLng | google.maps.LatLngLiteral) => void;
-  setZoom: (zoom: number) => void;
-  fitBounds: (bounds: google.maps.LatLngBounds) => void;
-  getZoom: () => number;
-}
-
-interface Marker {
-  setMap: (map: GoogleMap | null) => void;
-  setIcon: (icon: google.maps.Icon | google.maps.Symbol | null) => void;
-  setVisible: (visible: boolean) => void;
-  setPosition: (
-    position: google.maps.LatLng | google.maps.LatLngLiteral,
-  ) => void;
-  setTitle: (title: string) => void;
-}
-
 interface Vehicle {
-  id: string; // riderId
+  id: string;
   type: string;
   lat: number;
   lng: number;
   heading?: number;
-  icon: string;
   color: string;
-  orderId?: string;
-  riderId?: string;
-  vehicleType?: string;
-  lastUpdated?: string;
+  riderId: string;
+  vehicleName: string;
+  lastUpdated: string;
+  fullData: any;
 }
 
 interface Category {
@@ -41,99 +22,91 @@ interface Category {
   label: string;
   count: number;
   color: string;
-  markerColor: string;
 }
 
-interface FleetMapHeaderProps {
-  selectedOrderId?: string;
-}
-
-export default function FleetMapHeader({
-  // selectedOrderId,
-}: FleetMapHeaderProps) {
+export default function FleetMapHeader() {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<GoogleMap | null>(null);
-  const markersRef = useRef<Map<string, Marker>>(new Map());
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
+  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
   const adminSocketRef = useRef<Socket | null>(null);
 
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [categories, setCategories] = useState<Category[]>([
-    {
-      id: "all",
-      label: "All vehicles",
-      count: 0,
-      color: "bg-blue-500",
-      markerColor: "#3B82F6",
-    },
+    { id: "all", label: "All vehicles", count: 0, color: "#3B82F6" },
   ]);
 
-  // const { data: vehicleTypesResponse } = useGetVehicleTypesQuery({});
   const token = localStorage.getItem("accessToken");
 
   const initMap = () => {
     if (!mapRef.current || !window.google) return;
     const map = new google.maps.Map(mapRef.current, {
-      center: { lat: 1.3521, lng: 103.8198 },
+      // center: { lat: 23.7807, lng: 90.4006 }, // Singapore
+      center: { lat: 1.3521, lng: 103.8198 }, // Singapore
       zoom: 12,
       disableDefaultUI: true,
-      styles: [
-        {
-          featureType: "poi",
-          elementType: "labels",
-          stylers: [{ visibility: "off" }],
-        },
-      ],
     });
-    mapInstanceRef.current = map as GoogleMap;
+    mapInstanceRef.current = map;
+    infoWindowRef.current = new google.maps.InfoWindow();
+
+    map.addListener("click", () => {
+      infoWindowRef.current?.close();
+    });
   };
 
-  const getVehicleConfig = (vehicleType: string = "motorcycle") => {
-    const type = vehicleType.toLowerCase();
-    const configs: Record<string, { icon: string; color: string }> = {
-      motorcycle: { icon: "🏍", color: "#F97316" },
-      car: { icon: "🚗", color: "#22C55E" },
-      truck: { icon: "🚚", color: "#EF4444" },
-      van: { icon: "🚐", color: "#06B6D4" },
-    };
-    return configs[type] || configs.motorcycle;
+  const getVehicleColor = (name: string = "") => {
+    const n = name.toLowerCase();
+    if (n.includes("van")) return "#EF4444";
+    if (n.includes("car")) return "#22C55E";
+    if (n.includes("motorcycle")) return "#F97316";
+    return "#3B82F6";
   };
 
   const updateVehicleMarker = (vehicle: Vehicle) => {
     if (!mapInstanceRef.current) return;
 
-    const markerId = vehicle.riderId || vehicle.id;
+    const markerId = vehicle.riderId;
     let marker = markersRef.current.get(markerId);
     const position = { lat: vehicle.lat, lng: vehicle.lng };
-    const heading = vehicle.heading || 0;
 
     const iconSvg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-        <circle cx="24" cy="24" r="20" fill="${vehicle.color}" fill-opacity="0.9"/>
-        <g transform="rotate(${heading} 24 24)">
-          <polygon points="24,10 28,38 20,38" fill="white" fill-opacity="0.8"/>
-        </g>
-        <text x="24" y="26" font-family="Arial" font-size="14" text-anchor="middle" dy=".3em" fill="white" font-weight="bold">${vehicle.icon}</text>
-      </svg>
-    `;
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" fill="${vehicle.color}" stroke="white" stroke-width="2" />
+      </svg>`;
 
     const iconObj = {
       url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(iconSvg)}`,
-      scaledSize: new google.maps.Size(36, 36),
-      anchor: new google.maps.Point(18, 18),
+      scaledSize: new google.maps.Size(20, 20),
+      anchor: new google.maps.Point(10, 10),
     };
 
     if (!marker) {
-      const newMarker = new google.maps.Marker({
+      marker = new google.maps.Marker({
         position,
-        map: mapInstanceRef.current as any,
+        map: mapInstanceRef.current,
         icon: iconObj,
-        title: `Rider: ${vehicle.riderId}`,
       });
-      markersRef.current.set(markerId, newMarker as Marker);
+
+      marker.addListener("click", () => {
+        const content = `
+          <div style="padding: 12px; min-width: 150px; font-family: sans-serif;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 8px; padding-bottom: 4px;">
+              <h4 style="margin: 0; color: #1a1a1a;">Rider #${vehicle.riderId}</h4>
+            </div>
+            <p style="margin: 4px 0; font-size: 13px;"><b>Vehicle:</b> ${vehicle.vehicleName}</p>
+            <p style="margin: 4px 0; font-size: 13px;"><b>Max Load:</b> ${vehicle.fullData.vehicle_type?.max_load || "N/A"}</p>
+            <p style="margin: 4px 0; font-size: 13px;"><b>Base Price:</b> $${vehicle.fullData.vehicle_type?.base_price || "0"}</p>
+            <p style="margin: 8px 0 0 0; font-size: 11px; color: #666;">Last sync: ${vehicle.lastUpdated}</p>
+          </div>
+        `;
+        infoWindowRef.current?.setContent(content);
+        infoWindowRef.current?.open(mapInstanceRef.current, marker);
+      });
+
+      markersRef.current.set(markerId, marker);
     } else {
       marker.setPosition(position);
-      marker.setIcon(iconObj);
     }
   };
 
@@ -144,32 +117,30 @@ export default function FleetMapHeader({
       auth: { token: token || "" },
     });
 
-    // ONLY logic for real-time location update as requested
     adminSocketRef.current.on("admin:rider_location", (payload: any) => {
-      const { riderId, lat, lng, heading, orderId, vehicle_name } = payload;
-
-      const config = getVehicleConfig(vehicle_name);
+      const vName = payload.vehicle_type?.vehicle_name || "Unknown";
 
       const updatedVehicle: Vehicle = {
-        id: riderId,
-        riderId,
-        orderId,
-        lat: parseFloat(lat),
-        lng: parseFloat(lng),
-        heading: heading || 0,
-        type: (vehicle_name || "motorcycle").toLowerCase(),
-        vehicleType: vehicle_name || "Motorcycle",
-        icon: config.icon,
-        color: config.color,
+        id: payload.riderId.toString(),
+        riderId: payload.riderId.toString(),
+        lat: parseFloat(payload.lat),
+        lng: parseFloat(payload.lng),
+        heading: payload.heading,
+        vehicleName: vName,
+        type: vName.toLowerCase(),
+        color: getVehicleColor(vName),
         lastUpdated: new Date().toLocaleTimeString(),
+        fullData: payload,
       };
 
       setVehicles((prev) => {
-        const index = prev.findIndex((v) => v.riderId === riderId);
+        const index = prev.findIndex(
+          (v) => v.riderId === updatedVehicle.riderId,
+        );
         if (index > -1) {
-          const newVehicles = [...prev];
-          newVehicles[index] = updatedVehicle;
-          return newVehicles;
+          const newArr = [...prev];
+          newArr[index] = updatedVehicle;
+          return newArr;
         }
         return [...prev, updatedVehicle];
       });
@@ -179,34 +150,19 @@ export default function FleetMapHeader({
   };
 
   useEffect(() => {
-    const loadMap = () => {
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY`;
-      script.async = true;
-      script.onload = () => {
-        initMap();
-        initAdminSocket();
-      };
-      document.head.appendChild(script);
-    };
-
-    if (!window.google) loadMap();
-    else {
+    if (window.google) {
       initMap();
       initAdminSocket();
     }
-
     return () => {
       adminSocketRef.current?.disconnect();
     };
   }, []);
 
-  // Sync Categories UI based on live vehicles
   useEffect(() => {
     const counts: Record<string, number> = {};
     vehicles.forEach((v) => {
-      const t = v.type;
-      counts[t] = (counts[t] || 0) + 1;
+      counts[v.type] = (counts[v.type] || 0) + 1;
     });
 
     const newCats: Category[] = [
@@ -214,39 +170,36 @@ export default function FleetMapHeader({
         id: "all",
         label: "All vehicles",
         count: vehicles.length,
-        color: "bg-blue-500",
-        markerColor: "#3B82F6",
+        color: "#3B82F6",
       },
     ];
-
     Object.keys(counts).forEach((type) => {
-      const config = getVehicleConfig(type);
       newCats.push({
         id: type,
-        label: type.charAt(0).toUpperCase() + type.slice(1),
+        label: type.toUpperCase(),
         count: counts[type],
-        color: "bg-gray-500", // Dynamic mapping can be added here
-        markerColor: config.color,
+        color: getVehicleColor(type),
       });
     });
     setCategories(newCats);
   }, [vehicles]);
 
-  // Filter visibility
   useEffect(() => {
-    markersRef.current.forEach((marker, id) => {
-      const vehicle = vehicles.find((v) => v.riderId === id);
-      if (!vehicle) return;
-      marker.setVisible(
-        selectedCategory === "all" || vehicle.type === selectedCategory,
-      );
+    markersRef.current.forEach((marker, riderId) => {
+      const vehicle = vehicles.find((v) => v.riderId === riderId);
+      if (vehicle) {
+        const isVisible =
+          selectedCategory === "all" || vehicle.type === selectedCategory;
+        marker.setVisible(isVisible);
+        if (!isVisible) infoWindowRef.current?.close();
+      }
     });
   }, [selectedCategory, vehicles]);
 
   return (
-    <div className="w-full h-[800px] bg-white shadow-sm border border-border rounded-2xl flex flex-col mt-8 relative z-10">
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 justify-between px-6 py-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+    <div className="w-full h-200 bg-white shadow-sm border rounded-2xl flex flex-col mt-8 relative z-10 overflow-hidden">
+      <div className="flex flex-wrap items-start md:items-center gap-4 justify-between px-6 py-6 border-b">
+        <h1 className="text-2xl font-bold text-gray-800">
           Real-Time Fleet Map
         </h1>
         <div className="flex flex-wrap gap-3">
@@ -254,13 +207,17 @@ export default function FleetMapHeader({
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all ${
+              className={`px-4 py-2 rounded-lg border-2 transition-all flex items-center gap-2 ${
                 selectedCategory === cat.id
-                  ? "bg-yellow-200 border-yellow-400"
-                  : "bg-yellow-50 border-yellow-100"
+                  ? "bg-yellow-100 border-yellow-500"
+                  : "bg-gray-50 border-gray-200"
               }`}
             >
-              <span className="text-gray-700">
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: cat.color }}
+              />
+              <span className="font-medium text-gray-700">
                 {cat.label} ({cat.count})
               </span>
             </button>
@@ -268,12 +225,40 @@ export default function FleetMapHeader({
         </div>
       </div>
 
-      <div className="flex-1 relative m-6 rounded-lg overflow-hidden shadow-inner">
+      <div className="flex-1 relative">
         <div ref={mapRef} className="w-full h-full"></div>
-        <div className="absolute bottom-4 left-4 bg-white px-4 py-2 rounded-lg shadow-md z-30 font-medium">
-          Riders Online: {vehicles.length}
+        <div className="absolute bottom-6 left-6 bg-white px-4 py-2 rounded-full shadow-lg z-30 font-bold border border-yellow-400">
+          🟢 Online Riders: {vehicles.length}
         </div>
       </div>
+
+      {/* <div className="absolute top-24 right-6 bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-2xl z-30 w-72 max-h-[500px] overflow-y-auto border border-gray-100">
+        <h2 className="font-bold text-lg mb-3 border-b pb-2 text-gray-800">
+          Active Riders
+        </h2>
+        {vehicles
+          .filter(
+            (v) => selectedCategory === "all" || v.type === selectedCategory,
+          )
+          .map((v) => (
+            <div
+              key={v.riderId}
+              className="hover:bg-gray-50 p-2 rounded-lg cursor-pointer transition-colors border-b last:border-0 border-gray-100"
+            >
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-blue-600">
+                  ID: #{v.riderId}
+                </span>
+                <span className="text-[10px] bg-gray-200 px-2 py-0.5 rounded text-gray-600">
+                  {v.lastUpdated}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600">
+                Type: <span className="font-medium">{v.vehicleName}</span>
+              </p>
+            </div>
+          ))}
+      </div> */}
     </div>
   );
 }

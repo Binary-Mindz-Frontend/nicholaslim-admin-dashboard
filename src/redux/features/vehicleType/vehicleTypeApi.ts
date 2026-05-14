@@ -3,9 +3,10 @@ import { baseApi } from "@/redux/api/baseApi";
 const vehicleTypeApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getVehicleTypes: builder.query({
-      query: () => ({
+      query: (query) => ({
         url: "/admin/vehicle-types",
         method: "GET",
+        params: query,
       }),
       providesTags: ["VehicleType", "AdditionalServicesLogs"],
     }),
