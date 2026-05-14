@@ -102,16 +102,16 @@ export default function ServiceZoneDetailsModal({
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-gray-500">Price Multiplier*</p>
+                <p className="text-sm text-gray-500">Delivery Fee</p>
                 <p className="text-xl font-bold text-green-600">
-                  {zoneData.deliveryFee}x
+                  {zoneData.deliveryFee}
                 </p>
               </div>
               {/* Hiding Min Order Amount as per request */}
-              {/* <div>
+              <div>
                 <p className="text-sm text-gray-500">Min Order Amount</p>
                 <p className="text-xl font-bold">${zoneData.minOrderAmount}</p>
-              </div> */}
+              </div>
               <div>
                 <p className="text-sm text-gray-500">Priority</p>
                 <p className="text-2xl font-bold text-blue-600">

@@ -175,8 +175,8 @@ export default function IncentivesChart({
               />
 
               <Tooltip
-                formatter={(value: number) => value.toLocaleString()}
-                labelFormatter={(label: string) => `${label}`}
+                formatter={(value: any) => value.toLocaleString()}
+                labelFormatter={(label: any) => `${label}`}
               />
 
               <Legend

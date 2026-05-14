@@ -63,8 +63,8 @@ const UserCoinAudit = () => {
   const tableData = allUsersCoinHistory.map((user: any) => ({
     id: user.userId || user.id,
     username: user.name || user.username || "N/A",
-    total_coin_acc: user.acumulated_coin || user.totalCoins || 0,
-    current_coin_balance: user.totalCoin || user.currentBalance || 0,
+    total_coin_acc: user.total_coin_acc || user.totalCoins || 0,
+    current_coin_balance: user.current_coin_balance || user.currentBalance || 0,
     email: user.email || "N/A",
     phone: user.phone || "N/A",
   }));

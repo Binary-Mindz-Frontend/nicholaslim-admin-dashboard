@@ -84,7 +84,7 @@ export default function RevenueChart() {
                               dataPoint.dataKey === '2025' ? 'bg-blue-500' : 'bg-red-500'
                             }`}
                           >
-                            $ {dataPoint.value.toLocaleString()}
+                            $ {dataPoint?.value?.toLocaleString() || 0}
                           </div>
                         </div>
                       )
