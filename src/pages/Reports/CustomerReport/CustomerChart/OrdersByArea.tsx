@@ -82,7 +82,7 @@ export default function OrdersByArea({ zoneStats }: OrdersByAreaProps) {
               nameKey="zoneName"
               innerRadius={0}
               outerRadius={90}
-              label={({ zoneName, totalOrder, percentage }) => 
+              label={({ zoneName, totalOrder, percentage }: any) => 
                 `${zoneName}: ${totalOrder} (${percentage}%)`
               }
               labelLine={false}

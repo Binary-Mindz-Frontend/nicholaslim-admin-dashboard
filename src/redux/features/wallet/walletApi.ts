@@ -11,9 +11,26 @@ export const walletApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Wallets"],
     }),
+    userGetWalletAdmin: builder.query({
+      query: ({ role, search, page, limit, balanceSort }) => ({
+        url: `/wallet/user/wallet/admin`,
+        method: "GET",
+        params: { role, search, page, limit, balanceSort },
+      }),
+      providesTags: ["Wallets"],
+    }),
     raiderGetWallet: builder.query({
       query: ({ role, search, page, limit, balanceSort }) => ({
         url: `/wallet/raider/wallet`,
+        method: "GET",
+        params: { role, search, page, limit, balanceSort },
+      }),
+      providesTags: ["Wallets"],
+    }),
+
+    raiderGetWalletAdmin: builder.query({
+      query: ({ role, search, page, limit, balanceSort }) => ({
+        url: `/wallet/raider/wallet/admin`,
         method: "GET",
         params: { role, search, page, limit, balanceSort },
       }),
@@ -52,14 +69,27 @@ export const walletApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Wallets"],
     }),
+    // POST
+// /api/v1/admin/wallet/adjust
+    adjustWalletBalance: builder.mutation({
+      query: (payload) => ({
+        url: `/admin/wallet/adjust`,
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: ["Wallets"],
+    }),
   }),
 });
 
 export const {
   useUserGetWalletQuery,
   useRaiderGetWalletQuery,
+  useUserGetWalletAdminQuery,
+  useRaiderGetWalletAdminQuery,
   useGetWalletHistoryQuery,
   useGetWalletCardsQuery,
   useWalletPayMutation,
   useDeleteTransactionMutation,
+  useAdjustWalletBalanceMutation
 } = walletApi;

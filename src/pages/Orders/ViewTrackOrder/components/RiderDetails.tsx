@@ -11,11 +11,31 @@ export default function RiderDetails({ riderData, vehicleData }: RiderDetailsPro
   // Map data from the API response
   console.log("Rider Data in RiderDetails component:", riderData);
   console.log("Vehicle Data in RiderDetails component:", vehicleData);
-  const riderName = riderData?.assign_rider || "Not Assigned";
-  const riderImage = riderData?.image || placeholderImg;
-  const vehicleId = riderData?.vehicle_type_id || "N/A";
-  const vehicleName = riderData?.route_type;
-  // const riderPhone = riderData?.phone || "";
+  
+  // Safely handle potential object values for fields
+  const riderName = typeof riderData?.assign_rider === 'object'
+    ? (riderData.assign_rider.username || riderData.assign_rider.name || riderData.assign_rider.raider_name || "Assigned")
+    : (riderData?.assign_rider || "Not Assigned");
+
+  // Logic for latest driver image: assign_rider/assign_rider_id -> registrations -> driver_photos
+  const riderImage = riderData?.image || 
+                     riderData?.assign_rider?.image || 
+                     riderData?.assign_rider?.registrations?.[0]?.driver_photos?.[0] ||
+                     riderData?.assign_rider_id?.image ||
+                     riderData?.assign_rider_id?.registrations?.[0]?.driver_photos?.[0] ||
+                     placeholderImg;
+  
+  const vehicleId = typeof riderData?.vehicle_type_id === 'object' 
+    ? riderData.vehicle_type_id.id 
+    : (riderData?.vehicle_type_id || "N/A");
+    
+  const riderId = typeof riderData?.assign_rider_id === 'object'
+    ? riderData.assign_rider_id.id
+    : (riderData?.assign_rider_id || "N/A");
+
+  const vehicleName = typeof riderData?.route_type === 'object'
+    ? riderData.route_type.name
+    : riderData?.route_type;
 
   return (
     <div className="flex items-center justify-center bg-gray-100 mb-8">
@@ -54,7 +74,7 @@ export default function RiderDetails({ riderData, vehicleData }: RiderDetailsPro
               <span className="font-semibold">4.8/5</span>
               <span className="text-gray-500">(Verified Rider)</span>
             </div>
-            <span>ID: #{riderData?.assign_rider_id || "N/A"}</span>
+            <span>ID: #{riderId}</span>
           </div>
           {/* <span className="text-sm text-gray-700 my-3">Phone: {riderPhone}</span> */}
         </div>

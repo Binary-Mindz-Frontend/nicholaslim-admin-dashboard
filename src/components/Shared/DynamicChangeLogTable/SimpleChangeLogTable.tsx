@@ -122,7 +122,7 @@ const SimpleChangeLogTable = ({
 
       <CustomPagination
         currentPage={page}
-        totalItems={meta.total}
+        totalItems={meta?.total}
         itemsPerPage={limit}
         onPageChange={onPageChange}
         onItemsPerPageChange={onLimitChange}

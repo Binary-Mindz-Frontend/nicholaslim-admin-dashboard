@@ -10,14 +10,14 @@ export interface DeductionFeesProps {
   deductionFeesData: any[];
   onAddDeductionFee: (data: {
     deductionName: string;
-    amount: string;
+    amount: number;
     type: string;
     applicableUser: "USER" | "RAIDER";
   }) => Promise<void>;
   onUpdateDeductionFee: (data: {
     id: number;
     deductionName: string;
-    amount: string;
+    amount: number;
     type: string;
     applicableUser: "USER" | "RAIDER";
   }) => Promise<{ success: boolean; message: string }>;

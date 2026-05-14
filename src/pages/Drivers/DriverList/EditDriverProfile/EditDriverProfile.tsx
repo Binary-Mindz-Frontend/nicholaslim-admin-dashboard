@@ -72,7 +72,7 @@ export default function EditDriverProfile() {
   console.log(driverResponse)
   const [updateRiderProfile, { isLoading: isUpdating }] = useUpdateRiderProfileMutation();
   const [uploadImage] = useUploadImageMutation();
-  const { data: vehicleTypesResponse } = useGetVehicleTypesQuery({});
+  const { data: vehicleTypesResponse } = useGetVehicleTypesQuery({ isActive: true });
   const { data: driverTiersResponse } = useGetDriverTiersQuery({});
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [profileImageUrls, setProfileImageUrls] = useState<string[]>([]);
