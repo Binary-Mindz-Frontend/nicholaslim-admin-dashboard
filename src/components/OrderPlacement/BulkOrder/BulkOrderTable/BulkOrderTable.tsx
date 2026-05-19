@@ -8,7 +8,9 @@ import toast from "react-hot-toast";
 interface BulkOrder {
   id: number;
   order_status: string;
-  delivery_type: string;
+  delivery_type: {
+    name: string;
+  };
   total_cost: string;
   collect_time: string;
   scheduled_time: string | null;
@@ -223,7 +225,7 @@ const BulkOrdersTable = () => {
                         </td>
                         <td className="px-6 py-4 text-sm text-slate-700">
                           <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                            {order.delivery_type || "Standard"}
+                            {order.delivery_type?.name || "Standard"}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm">
