@@ -78,6 +78,8 @@ import NotificationPromotionList from "@/pages/NotificationPromotionList/Notific
 import NotificationLogHistory from "@/pages/NotificationLogHistory/NotificationLogHistory";
 import DriverTierRole from "@/pages/DriverTierRole/DriverTierRole";
 import TitleUpdater from "@/components/Shared/TitleUpdater";
+import PaymentCancel from "@/pages/PaymentCancel/PaymentCancel";
+import PaymentSuccess from "@/pages/PaymentSuccess/PaymentSuccess";
 
 const RootLayout = () => (
   <>
@@ -489,6 +491,14 @@ const routes = createBrowserRouter([
       {
         path: "*",
         element: <NotFound404 />,
+      },
+      {
+        path: "/success",
+        element: <PaymentSuccess />,
+      },
+      {
+        path: "/cancel",
+        element: <PaymentCancel />,
       },
     ],
   },
