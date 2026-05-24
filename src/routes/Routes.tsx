@@ -80,6 +80,8 @@ import DriverTierRole from "@/pages/DriverTierRole/DriverTierRole";
 import TitleUpdater from "@/components/Shared/TitleUpdater";
 import PaymentCancel from "@/pages/PaymentCancel/PaymentCancel";
 import PaymentSuccess from "@/pages/PaymentSuccess/PaymentSuccess";
+import UserWalletAdmin from "@/pages/Dashboard/Wallets/userWalletAdmin/UserWalletAdmin";
+import DriverWalletAdmin from "@/pages/Dashboard/Wallets/driverWalletAdmin/DriverWalletAdmin";
 
 const RootLayout = () => (
   <>
@@ -468,7 +470,15 @@ const routes = createBrowserRouter([
           {
             path: "driver_tier_role",
             element: <DriverTierRole />,
-          }
+          },
+          {
+            path: "user-wallets-admin",
+            element: <UserWalletAdmin />,
+          },
+          {
+            path: "driver-wallets-admin",
+            element: <DriverWalletAdmin />,
+          },
         ],
       },
 

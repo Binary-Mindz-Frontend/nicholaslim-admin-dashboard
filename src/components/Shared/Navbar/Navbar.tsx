@@ -5,19 +5,15 @@ import { Card } from "@/components/ui/card";
 import logo from "@/assets/images/logo.svg";
 import { useState, useEffect, useRef } from "react";
 import { useGetSearchbarQuery } from "@/redux/features/searchbar/searchbarApi";
-import { Link, useNavigate } from "react-router-dom";  
+import { Link, useNavigate } from "react-router-dom";
 import { useGetUserProfileQuery } from "@/redux/features/usersTypes/usersTypesApi";
 
 const Navbar = () => {
   const { data: user } = useGetUserProfileQuery("");
- const userName = user?.data?.username || "Guest";
+  const userName = user?.data?.username || "Guest";
   const userRole = user?.data?.roles?.[0]?.name || "User";
   const userImage = user?.data?.image;
 
-
-  // console.log("user info", user?.data?.id);
-  // console.log("user", user?.data );
-  
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -25,7 +21,6 @@ const Navbar = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // Inside your component, add this hook
   const navigate = useNavigate();
 
   // Debounce search term
@@ -42,23 +37,22 @@ const Navbar = () => {
     debouncedSearchTerm,
     {
       skip: !debouncedSearchTerm || debouncedSearchTerm.length < 2,
-    }
+    },
   );
 
-  
-
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
-      )
-        if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-          setIsProfileOpen(false);
-        }
-      {
+      const target = event.target as Node;
+
+      // Close search results if clicked outside search container
+      if (searchRef.current && !searchRef.current.contains(target)) {
         setShowResults(false);
+      }
+
+      // Close profile dropdown if clicked outside profile container
+      if (profileRef.current && !profileRef.current.contains(target)) {
+        setIsProfileOpen(false);
       }
     };
 
@@ -66,7 +60,7 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Show results when there's a search term
+  // Show results when there's a valid search term
   useEffect(() => {
     if (debouncedSearchTerm.length >= 2) {
       setShowResults(true);
@@ -160,43 +154,52 @@ const Navbar = () => {
                         </div>
                         <div className="space-y-2">
                           {orders.map((order: any) => (
-                            <Card
-                              key={order.id}
+                            
+                            <Link
+                            key={order.id}
+                              to={`/order/${order.id}`}
                               onClick={() => {
-                                navigate(`/order/${order.id}`);
                                 setShowResults(false);
                                 setSearchTerm("");
                               }}
-                              className="p-4 hover:bg-linear-to-r hover:from-yellow-50 hover:to-transparent cursor-pointer transition-all duration-200 hover:shadow-md hover:border-yellow-300 group"
+                              className="block" // Keeps the full card block clickable
                             >
-                              <div className="flex items-start justify-between">
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-2">
-                                    <p className="font-bold text-gray-900 group-hover:text-yellow-600 transition-colors">
-                                      Order #{order.id}
-                                    </p>
-                                    <span className="px-2 py-0.5 bg-green-100 text-green-600 text-xs font-semibold rounded-full">
-                                      {order.order_status}
-                                    </span>
+                              <Card
+                                
+                                className="p-4 hover:bg-linear-to-r hover:from-yellow-50 hover:to-transparent cursor-pointer transition-all duration-200 hover:shadow-md hover:border-yellow-300 group"
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <p className="font-bold text-gray-900 group-hover:text-yellow-600 transition-colors">
+                                        Order #{order.id}
+                                      </p>
+                                      <span className="px-2 py-0.5 bg-green-100 text-green-600 text-xs font-semibold rounded-full">
+                                        {order.order_status}
+                                      </span>
+                                    </div>
+                                    {order.total_cost && (
+                                      <p className="text-sm font-semibold text-gray-700">
+                                        $
+                                        {parseFloat(order.total_cost).toFixed(
+                                          2,
+                                        )}
+                                      </p>
+                                    )}
+                                    {order.delivery_type && (
+                                      <p className="text-xs text-gray-500">
+                                        {order.delivery_type?.name}
+                                      </p>
+                                    )}
                                   </div>
-                                  {order.total_cost && (
-                                    <p className="text-sm font-semibold text-gray-700">
-                                      ${parseFloat(order.total_cost).toFixed(2)}
-                                    </p>
-                                  )}
-                                  {order.delivery_type && (
-                                    <p className="text-xs text-gray-500">
-                                      {order.delivery_type}
-                                    </p>
-                                  )}
-                                </div>
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <div className="p-1.5 bg-yellow-100 rounded-lg">
-                                    <Package className="w-4 h-4 text-yellow-600" />
+                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="p-1.5 bg-yellow-100 rounded-lg">
+                                      <Package className="w-4 h-4 text-yellow-600" />
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            </Card>
+                              </Card>
+                            </Link>
                           ))}
                         </div>
                       </div>
@@ -266,7 +269,6 @@ const Navbar = () => {
                         </div>
                       </div>
                     )}
-
 
                     {/* Raiders Section */}
                     {raiders.length > 0 && (
@@ -354,27 +356,29 @@ const Navbar = () => {
                                   <div className="flex flex-col items-end gap-1">
                                     {raider.raider_status && (
                                       <span
-                                        className={`px-2.5 py-1 text-xs font-semibold rounded-full ${raider.raider_status === "ACTIVE"
-                                          ? "bg-green-100 text-green-700"
-                                          : raider.raider_status ===
-                                            "IN_ACTIVE"
-                                            ? "bg-red-100 text-red-700"
-                                            : "bg-yellow-100 text-yellow-700"
-                                          }`}
+                                        className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
+                                          raider.raider_status === "ACTIVE"
+                                            ? "bg-green-100 text-green-700"
+                                            : raider.raider_status ===
+                                                "IN_ACTIVE"
+                                              ? "bg-red-100 text-red-700"
+                                              : "bg-yellow-100 text-yellow-700"
+                                        }`}
                                       >
                                         {raider.raider_status}
                                       </span>
                                     )}
                                     {raider.raider_verificationFromAdmin && (
                                       <span
-                                        className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${raider.raider_verificationFromAdmin ===
+                                        className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${
+                                          raider.raider_verificationFromAdmin ===
                                           "APPROVED"
-                                          ? "bg-green-100 text-green-700"
-                                          : raider.raider_verificationFromAdmin ===
-                                            "PENDING"
-                                            ? "bg-yellow-100 text-yellow-700"
-                                            : "bg-red-100 text-red-700"
-                                          }`}
+                                            ? "bg-green-100 text-green-700"
+                                            : raider.raider_verificationFromAdmin ===
+                                                "PENDING"
+                                              ? "bg-yellow-100 text-yellow-700"
+                                              : "bg-red-100 text-red-700"
+                                        }`}
                                       >
                                         {raider.raider_verificationFromAdmin}
                                       </span>
@@ -400,7 +404,6 @@ const Navbar = () => {
         </div>
 
         {/* Right Section - 50% */}
-        {/* Right Section - 50% */}
         <div className="flex items-center justify-end gap-16 w-1/2">
           {/* Profile Wrapper */}
           <div className="relative" ref={profileRef}>
@@ -422,7 +425,6 @@ const Navbar = () => {
             {/* Dropdown Menu */}
             {isProfileOpen && (
               <div className="absolute right-0 mt-3 w-72 bg-white border border-gray-100 rounded-xl shadow-xl z-50 overflow-hidden">
-                {/* User Header Section (Matching Image Style) */}
                 <div className="p-6 bg-gray-50 flex flex-col items-center border-b border-gray-100">
                   <Avatar className="w-16 h-16 mb-3 ring-4 ring-white shadow-sm">
                     <AvatarImage src={userImage} alt={userName} />

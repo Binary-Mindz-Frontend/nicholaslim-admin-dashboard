@@ -34,8 +34,8 @@ const ViewTrackOrder = () => {
     // const [updateOrder, { isLoading: isUpdating }] = useUpdateOrderMutation();
 
     const order = response?.data;
-    console.log("Order data:", order);
-    console.log("Rider ID Value:", order?.assign_rider_id);
+    // console.log("Order data:", order);
+    // console.log("Rider ID Value:", order?.assign_rider_id);
 
     if (isLoading) return <div className="p-10 text-center">Loading...</div>;
     if (isError || !order) return <div className="p-10 text-center">Order not found.</div>;
