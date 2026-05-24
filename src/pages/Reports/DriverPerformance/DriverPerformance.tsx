@@ -20,6 +20,9 @@ import useExportData from "@/hooks/useExportData";
 export default function DriverPerformance() {
   const [selectedMonth, setSelectedMonth] = useState("THIS_MONTH");
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const {
     data: performanceData,
     isLoading: isChartLoading,
@@ -28,12 +31,14 @@ export default function DriverPerformance() {
   } = useGetDriverPerformanceGraphQuery(selectedMonth);
 
   const {
-    data: topDriversData = [],
+    data: topDriversResponse,
     isLoading: isTableLoading,
     isError: isTableError,
-  } = useGetDriverPerformanceTopQuery(200);
+  } = useGetDriverPerformanceTopQuery(500);
 
   const columns = useDriverColumns();
+
+  const topDriversData = topDriversResponse?.data || [];
 
   const transformDriverData = (apiData: any[]): any[] => {
     if (!apiData || !Array.isArray(apiData)) return [];
@@ -62,6 +67,12 @@ export default function DriverPerformance() {
   };
 
   const transformedData = transformDriverData(topDriversData);
+
+  const totalPages = Math.ceil(transformedData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+
+  const paginatedData = transformedData.slice(startIndex, endIndex);
 
   const handleMonthChange = (value: string) => {
     setSelectedMonth(value);
@@ -152,27 +163,38 @@ export default function DriverPerformance() {
           <div className="text-red-500">Error loading driver data</div>
         </div>
       ) : (
-        <CustomTable columns={columns} data={transformedData} />
-      )}
+        <div className="space-y-4">
+          <CustomTable columns={columns} data={paginatedData} />
 
-      {/* Download Report Section */}
-      {/* <div className="w-full bg-white p-6 my-5 rounded-xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-10">
-        <div>
-          <h2 className="text-lg font-semibold">Download Reports</h2>
-          <p className="text-sm text-gray-500">
-            Export comprehensive analytics reports for {selectedMonth === "THIS_MONTH" ? "This Month" : "Last Month"}
-          </p>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-end gap-2 pt-2 bg-white p-4 rounded-lg shadow-sm">
+              <span className="text-sm text-gray-600 mr-2">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="disabled:opacity-50 cursor-pointer"
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="disabled:opacity-50 cursor-pointer"
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
-
-        <Button 
-          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-          onClick={handleDownloadReport}
-          disabled={isChartLoading || isTableLoading}
-        >
-          <Download className="h-4 w-4" />
-          Download PDF Report
-        </Button>
-      </div> */}
+      )}
     </div>
   );
 }

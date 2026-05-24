@@ -1,4 +1,3 @@
-// DriverChart/DriverChart.tsx
 import {
   BarChart,
   Bar,
@@ -12,19 +11,25 @@ import {
 
 interface DriverPerformanceChartProps {
   selectedMonth?: string;
-  performanceData?: any[];
+  performanceData?: any; // API এর পুরো অবজেক্ট অথবা শুধু data অ্যারে দুইটাই হ্যান্ডেল করার জন্য any রাখা হলো
 }
 
 export default function DriverPerformanceChart({
   // selectedMonth,
-  performanceData = [],
+  performanceData,
 }: DriverPerformanceChartProps) {
+  // ১. API থেকে যদি পুরো রেসপন্স অবজেক্ট আসে (যার ভেতর .data আছে) অথবা সরাসরি অ্যারে আসে, দুইটাই হ্যান্ডেল করার জন্য:
+  const rawData =
+    performanceData?.data ||
+    (Array.isArray(performanceData) ? performanceData : []);
+
+  // ২. API এর সঠিক key (completedOrders, cancelledOrders) ম্যাপ করা হয়েছে
   const chartData =
-    performanceData.length > 0
-      ? performanceData.map((item: any) => ({
+    rawData.length > 0
+      ? rawData.map((item: any) => ({
           name: item.week,
-          completed: item.completedOrders || 0,
-          cancelled: item.cancelledOrders || 0,
+          completed: item.completedOrders || 0, // এখানে কি (key) পরিবর্তন করা হয়েছে
+          cancelled: item.cancelledOrders || 0, // এখানে কি (key) পরিবর্তন করা হয়েছে
         }))
       : [
           { name: "Week 1", completed: 0, cancelled: 0 },
