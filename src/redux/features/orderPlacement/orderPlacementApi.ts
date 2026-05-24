@@ -55,7 +55,13 @@ const orderEndpoints = baseApi.injectEndpoints({
     }),
 
     bulkOrderStatusPending: builder.mutation({
-      query: ({ orderIds, payType, paymentMethod, stripePaymentMethodId,  codCollectFrom, }) => ({
+      query: ({
+        orderIds,
+        payType,
+        paymentMethod,
+        stripePaymentMethodId,
+        codCollectFrom,
+      }) => ({
         url: "/order/bulk/status/pending", // Assuming this is the correct URL for updating status
         method: "PATCH",
         body: {
@@ -77,6 +83,7 @@ const orderEndpoints = baseApi.injectEndpoints({
           paymentMethod,
           paymentMethodId,
           codCollectFrom,
+          payType: "PAYMENT",
         },
       }),
       invalidatesTags: ["BulkOrders", "BulkOrdersTab"],

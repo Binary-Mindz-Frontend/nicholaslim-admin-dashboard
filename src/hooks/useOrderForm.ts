@@ -41,7 +41,9 @@ export const useOrderForm = () => {
 
   const [selectedDeliveryType, setSelectedDeliveryType] = useState<any>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
-  const [collectTimeOption, setCollectTimeOption] = useState<"now" | "schedule">("now");
+  const [collectTimeOption, setCollectTimeOption] = useState<
+    "now" | "schedule"
+  >("now");
   const [scheduledDate, setScheduledDate] = useState("");
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const [orderTotalCost, setOrderTotalCost] = useState<number | null>(null);
@@ -72,7 +74,7 @@ export const useOrderForm = () => {
 
       if (data.destinations && data.destinations.length > 0) {
         const senderData = data.destinations.find(
-          (dest: any) => dest.type === "SENDER"
+          (dest: any) => dest.type === "SENDER",
         );
         if (senderData) {
           setSender({
@@ -86,14 +88,14 @@ export const useOrderForm = () => {
         }
 
         const receiverDataList = data.destinations.filter(
-          (dest: any) => dest.type === "RECEIVER"
+          (dest: any) => dest.type === "RECEIVER",
         );
         if (receiverDataList.length > 0) {
           setRecipients(
             receiverDataList.map((receiverData: any, index: number) => ({
               id: `recipient-${index + 1}`,
               ...receiverData,
-            }))
+            })),
           );
         }
       }
@@ -171,34 +173,80 @@ export const useOrderForm = () => {
         }));
       }
     },
-    []
+    [],
   );
 
   const handleSenderInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: string) => {
+    (
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+      field: string,
+    ) => {
       const { value } = e.target;
       setSender((prev) => ({ ...prev, [field]: value }));
     },
-    []
+    [],
   );
 
   const handleRecipientInputChange = useCallback(
     (
       e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
       recipientId: string,
-      field: string
+      field: string,
     ) => {
       const { value } = e.target;
       setRecipients((prev) =>
         prev.map((recipient) =>
           recipient.id === recipientId
             ? { ...recipient, [field]: value }
-            : recipient
-        )
+            : recipient,
+        ),
       );
     },
-    []
+    [],
   );
+
+  // --- NEW FORM RESET FUNCTION ---
+  const formReset = useCallback(() => {
+    setFormData({
+      route_type: "ONE_WAY",
+      isFixed: false,
+      delivery_type_id: 1,
+      vehicle_type_id: 1,
+      collect_time: "ASAP",
+      total_cost: 0,
+      has_additional_services: false,
+      is_promo_used: false,
+      notify_favorite_raider: false,
+      pay_type: PayType.COD,
+      destinations: [],
+    });
+
+    setSender({
+      contact_name: "",
+      contact_number: "",
+      address: "",
+      floor_unit: "",
+      note_to_driver: "",
+      postal_code: "",
+    });
+
+    setRecipients([
+      {
+        id: "recipient-1",
+        contact_name: "",
+        contact_number: "",
+        address: "",
+        floor_unit: "",
+        note_to_driver: "",
+        postal_code: "",
+      },
+    ]);
+
+    setSelectedDeliveryType(null);
+    setSelectedVehicle(null);
+    setCollectTimeOption("now");
+    setScheduledDate("");
+  }, []);
 
   return {
     formData,
@@ -237,5 +285,6 @@ export const useOrderForm = () => {
     handleScheduledDateChange,
     handleSenderInputChange,
     handleRecipientInputChange,
+    formReset,
   };
-};
+};;
