@@ -1,10 +1,4 @@
-import {
-  PieChart,
-  Pie,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
+import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useState, useEffect } from "react";
 
 interface ZoneStat {
@@ -17,22 +11,19 @@ interface OrdersByAreaProps {
   zoneStats: ZoneStat[];
 }
 
-// Function to generate a random color
 const generateRandomColor = (): string => {
-  // Generate a random hex color
-  return `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
+  return `#${Math.floor(Math.random() * 16777215)
+    .toString(16)
+    .padStart(6, "0")}`;
 };
 
-// Function to generate colors with good contrast
 const generateColorPalette = (count: number): string[] => {
   const colors: string[] = [];
   const hueStep = 360 / count;
-  
   for (let i = 0; i < count; i++) {
     const hue = (hueStep * i) % 360;
     colors.push(`hsl(${hue}, 70%, 60%)`);
   }
-  
   return colors;
 };
 
@@ -46,27 +37,38 @@ export default function OrdersByArea({ zoneStats }: OrdersByAreaProps) {
     }
   }, [zoneStats]);
 
+  // Handle empty or missing arrays entirely
   if (!zoneStats || zoneStats.length === 0) {
     return (
       <div className="w-full bg-white p-6 rounded-xl shadow-sm">
         <h3 className="text-lg font-semibold mb-1">Orders by Area</h3>
         <p className="text-sm text-gray-500 mb-4">Geographic distribution</p>
-        <div className="w-full h-[280px] flex items-center justify-center text-gray-500">
+        <div className="w-full h-[280px] flex items-center justify-center text-gray-500 font-medium bg-gray-50 rounded-lg border border-dashed border-gray-200">
           No zone data available
         </div>
       </div>
     );
   }
 
-  // Calculate percentages
   const totalOrders = zoneStats.reduce((sum, zone) => sum + zone.totalOrder, 0);
+  const isAllZero = totalOrders === 0;
 
   // Format data for chart
-  const chartData = zoneStats.map((zone, index) => ({
-    ...zone,
-    color: colors[index] || generateRandomColor(),
-    percentage: totalOrders > 0 ? ((zone.totalOrder / totalOrders) * 100).toFixed(1) : 0,
-  }));
+  const chartData = zoneStats.map((zone, index) => {
+    const actualPercentage =
+      totalOrders > 0
+        ? ((zone.totalOrder / totalOrders) * 100).toFixed(1)
+        : "0.0";
+
+    return {
+      ...zone,
+      chartValue: isAllZero ? 1 : zone.totalOrder,
+      color: isAllZero
+        ? `hsl(${(360 / zoneStats.length) * index}, 30%, 80%)`
+        : colors[index] || generateRandomColor(),
+      percentage: actualPercentage,
+    };
+  });
 
   return (
     <div className="w-full bg-white p-6 rounded-xl shadow-sm">
@@ -78,23 +80,23 @@ export default function OrdersByArea({ zoneStats }: OrdersByAreaProps) {
           <PieChart>
             <Pie
               data={chartData}
-              dataKey="totalOrder"
+              dataKey="chartValue" // Bind rendering to the visual placeholder value
               nameKey="zoneName"
-              innerRadius={0}
+              innerRadius={60} // Optional: Looks cleaner as a Donut chart when empty
               outerRadius={90}
-              label={({ zoneName, totalOrder, percentage }: any) => 
+              label={({ zoneName, totalOrder, percentage }: any) =>
                 `${zoneName}: ${totalOrder} (${percentage}%)`
               }
-              labelLine={false}
+              labelLine={true}
             >
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip 
-              formatter={(value, name, props) => [
-                `${value} orders (${props.payload.percentage}%)`,
-                name
+            <Tooltip
+              formatter={(_value, name, props) => [
+                `${props.payload.totalOrder} orders (${props.payload.percentage}%)`,
+                name,
               ]}
             />
           </PieChart>
