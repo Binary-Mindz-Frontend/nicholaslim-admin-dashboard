@@ -756,6 +756,7 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
           <div>
             <Label className="mb-2">Name</Label>
             <Input
+              type="name"
               value={sender.contact_name}
               onChange={(e) => handleSenderInputChange(e, "contact_name")}
               placeholder="Enter Name"
@@ -857,6 +858,7 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
             <div>
               <Label className="mb-2">Number</Label>
               <Input
+              type="tel"
                 value={recipient.contact_number}
                 onChange={(e) =>
                   handleRecipientInputChange(e, recipient.id, "contact_number")
