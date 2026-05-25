@@ -101,7 +101,7 @@ export default function OrderFilter({
               <SelectItem value="COMPLETED">Completed</SelectItem>
               <SelectItem value="CANCELLED">Canceled</SelectItem>
               <SelectItem value="PENDING">Pending</SelectItem>
-              <SelectItem value="PROGRESS">Progress</SelectItem>
+              {/* <SelectItem value="PROGRESS">Progress</SelectItem> */}
               <SelectItem value="ONGOING">Ongoing</SelectItem>
             </SelectContent>
           </Select>
