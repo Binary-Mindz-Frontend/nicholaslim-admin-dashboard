@@ -12,7 +12,7 @@ export default function StatusTabFilter({
     { label: "Completed", value: "COMPLETED" },
     { label: "Cancelled", value: "CANCELLED" },
     { label: "Pending", value: "PENDING" },
-    { label: "Progress", value: "PROGRESS" },
+    // { label: "Progress", value: "PROGRESS" },
     { label: "Ongoing", value: "ONGOING" },
     { label: "Failed", value: "FAILED" },
   ];
