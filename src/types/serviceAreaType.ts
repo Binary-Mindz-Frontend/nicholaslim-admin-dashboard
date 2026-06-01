@@ -17,6 +17,7 @@ export interface ServiceArea {
 export interface ServiceAreaModalProps {
   isOpen: boolean;
   onClose: () => void;
+  apiResponse: any;
   editData: ServiceArea | null;
   onSave: (data: Partial<ServiceArea>) => void;
   isLoading?: boolean;
