@@ -15,6 +15,7 @@ declare global {
 const ServiceAreaModal = ({
   isOpen,
   onClose,
+  apiResponse,
   editData,
   onSave,
   isLoading = false,
@@ -27,7 +28,6 @@ const ServiceAreaModal = ({
     priority: 5,
     isActive: true,
     color: "#FF5733",
-    minOrderAmount: 0,
     notes: "",
     coordinates: [],
   });
@@ -35,6 +35,7 @@ const ServiceAreaModal = ({
   const mapRef = useRef<HTMLDivElement>(null);
   const drawingManagerRef = useRef<any>(null);
   const currentPolygonRef = useRef<any>(null);
+  const backgroundPolygonsRef = useRef<any[]>([]);
 
   useEffect(() => {
     if (editData) {
@@ -48,7 +49,6 @@ const ServiceAreaModal = ({
         priority: 5,
         isActive: true,
         color: "#FF5733",
-        minOrderAmount: 0,
         notes: "",
         coordinates: [],
       });
@@ -65,17 +65,62 @@ const ServiceAreaModal = ({
         drawingManagerRef.current.setMap(null);
         drawingManagerRef.current = null;
       }
+      backgroundPolygonsRef.current.forEach((poly) => poly.setMap(null));
+      backgroundPolygonsRef.current = [];
       return;
     }
 
     const initializeMap = () => {
       if (!mapRef.current || !window.google) return;
 
+      // ম্যাপ কনফিগারেশন - Zoom UI বাটন স্পষ্ট করার জন্য zoomControl যুক্ত করা হয়েছে
       const map = new window.google.maps.Map(mapRef.current, {
-        // center: { lat: 23.8103, lng: 90.4125 },
         center: { lat: 1.3521, lng: 103.8198 },
         zoom: 12,
         mapTypeControl: true,
+        zoomControl: true, // জুম বাটন এনাবল করা হলো
+        zoomControlOptions: {
+          // জুম বাটনটি ম্যাপের ডানদিকের নিচের কোণায় পজিশন করা হলো
+          position: window.google.maps.ControlPosition.RIGHT_BOTTOM,
+        },
+      });
+
+      backgroundPolygonsRef.current.forEach((poly) => poly.setMap(null));
+      backgroundPolygonsRef.current = [];
+
+      const rawZones = apiResponse?.data?.data?.data || [];
+
+      rawZones.forEach((zone: any) => {
+        if (editData && Number(zone.id) === Number(editData.id)) return;
+
+        if (zone.coordinates && zone.coordinates.length > 0) {
+          const bgPolygon = new window.google.maps.Polygon({
+            paths: zone.coordinates,
+            strokeColor: zone.color || "#6b7280",
+            strokeOpacity: 0.6,
+            strokeWeight: 1.5,
+            fillColor: zone.color || "#9ca3af",
+            fillOpacity: 0.15,
+            editable: false,
+            draggable: false,
+            map: map,
+          });
+
+          const infoWindow = new window.google.maps.InfoWindow({
+            content: `<div style="color: black; font-weight: 600; font-size: 13px; padding: 4px;">${zone.name || zone.zoneName}</div>`,
+          });
+
+          window.google.maps.event.addListener(
+            bgPolygon,
+            "click",
+            (event: any) => {
+              infoWindow.setPosition(event.latLng);
+              infoWindow.open(map);
+            },
+          );
+
+          backgroundPolygonsRef.current.push(bgPolygon);
+        }
       });
 
       const drawingManager = new window.google.maps.drawing.DrawingManager({
@@ -182,8 +227,9 @@ const ServiceAreaModal = ({
       if (drawingManagerRef.current) {
         drawingManagerRef.current.setMap(null);
       }
+      backgroundPolygonsRef.current.forEach((poly) => poly.setMap(null));
     };
-  }, [isOpen, formData.color, editData]);
+  }, [isOpen, formData.color, editData, apiResponse]);
 
   const updateCoordinates = (polygon: any) => {
     const path = polygon.getPath();
@@ -217,6 +263,14 @@ const ServiceAreaModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50000 p-4">
+      {/* নিচের স্টাইল ব্লকটি যুক্ত করা হয়েছে যাতে মডালের হাই z-index এর কারণে 
+        গুগল ম্যাপের জুম বাটন এবং কন্ট্রোল ইউজার ইন্টারফেস হাইড না হয়ে যায়।
+      */}
+      <style>{`
+        .gm-style-cc, .gmnoprint, .gm-control-active {
+          z-index: 50001 !important;
+        }
+      `}</style>
       <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-2xl font-bold">
@@ -271,8 +325,7 @@ const ServiceAreaModal = ({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="deliveryFee" className="flex items-center">
-                    Delivery Fee *{" "}
-                    {/* <span className="text-red-500 ml-1">*</span> */}
+                    Price Multiplier *{" "}
                   </Label>
                   <Input
                     id="deliveryFee"
@@ -316,24 +369,6 @@ const ServiceAreaModal = ({
                     ))}
                   </select>
                 </div>
-              </div>
-
-              {/* Hiding Minimum Order Amount as per request */}
-              <div>
-                <Label htmlFor="minOrderAmount">Minimum Order Amount ($)</Label>
-                <Input
-                  id="minOrderAmount"
-                  type="number"
-                  min="0"
-                  value={formData.minOrderAmount}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      minOrderAmount: parseFloat(e.target.value) || 0,
-                    })
-                  }
-                  disabled={isLoading}
-                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -385,7 +420,7 @@ const ServiceAreaModal = ({
                     setFormData({ ...formData, notes: e.target.value })
                   }
                   className="w-full p-2 border rounded"
-                  rows={3}
+                  rows={10}
                   disabled={isLoading}
                   placeholder="Add any additional notes about this service zone..."
                 />

@@ -53,7 +53,7 @@ const VTPMServiceArea = () => {
         priority: zone.priority,
         isActive: zone.isActive,
         color: zone.color || "#FF5733",
-        minOrderAmount: zone.minOrderAmmount,
+        // minOrderAmount: zone.minOrderAmmount,
         notes: zone.notes,
         coordinates: zone.coordinates || [],
         createdAt: zone.createdAt,
@@ -77,7 +77,7 @@ const VTPMServiceArea = () => {
         deliveryFee: data.deliveryFee || 0,
         priority: data.priority || 5,
         color: data.color || "#FF5733",
-        minOrderAmmount: data.minOrderAmount || 0,
+        // minOrderAmmount: data.minOrderAmount || 0,
         isActive: data.isActive !== false,
         notes: data.notes || "",
       };
@@ -191,12 +191,32 @@ const VTPMServiceArea = () => {
   return (
     <div className="min-h-screen p-4 md:p-6 bg-gray-50">
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900">Service Areas Configuration</h1>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Service Areas Configuration
+        </h1>
 
         <div className="flex flex-wrap justify-center gap-4">
-          <MetricCard title="Total Zones" value={totalZones} icon={MapPin} color="#0088FF" bgColor="#0088FF20" />
-          <MetricCard title="Active Zones" value={activeZones} icon={MapPin} color="#34C759" bgColor="#34C75920" />
-          <MetricCard title="Inactive Zones" value={inactiveZones} icon={MapPin} color="#FF3B30" bgColor="#FF3B3020" />
+          <MetricCard
+            title="Total Zones"
+            value={totalZones}
+            icon={MapPin}
+            color="#0088FF"
+            bgColor="#0088FF20"
+          />
+          <MetricCard
+            title="Active Zones"
+            value={activeZones}
+            icon={MapPin}
+            color="#34C759"
+            bgColor="#34C75920"
+          />
+          <MetricCard
+            title="Inactive Zones"
+            value={inactiveZones}
+            icon={MapPin}
+            color="#FF3B30"
+            bgColor="#FF3B3020"
+          />
         </div>
 
         <Card>
@@ -206,12 +226,18 @@ const VTPMServiceArea = () => {
                 <MapPin size={20} />
                 <span>Service Coverage Map</span>
                 {selectedArea && (
-                  <span className="text-sm font-normal text-gray-600">- Viewing: {selectedArea.name}</span>
+                  <span className="text-sm font-normal text-gray-600">
+                    - Viewing: {selectedArea.name}
+                  </span>
                 )}
               </div>
               <div className="flex gap-2">
                 {selectedArea && (
-                  <Button variant="outline" size="sm" onClick={() => setSelectedArea(null)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedArea(null)}
+                  >
                     Clear Selection
                   </Button>
                 )}
@@ -227,14 +253,17 @@ const VTPMServiceArea = () => {
               />
             </div>
             <p className="text-sm text-gray-500 mt-4 text-center">
-              Click on any zone to view details. Different colors represent different service areas.
+              Click on any zone to view details. Different colors represent
+              different service areas.
             </p>
           </CardContent>
         </Card>
 
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-900">Service Area List</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Service Area List
+            </h2>
             <Button
               onClick={() => {
                 setEditData(null);
@@ -254,12 +283,24 @@ const VTPMServiceArea = () => {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zone Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">City</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Delivery Fee</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Zone Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        City
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Price Multiplier
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Priority
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -267,16 +308,29 @@ const VTPMServiceArea = () => {
                       <tr key={area.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 rounded" style={{ backgroundColor: area.color }} />
+                            <div
+                              className="w-4 h-4 rounded"
+                              style={{ backgroundColor: area.color }}
+                            />
                             <div>
-                              <span className="font-medium block">{area.name}</span>
-                              <span className="text-xs text-gray-500">ID: {area.id}</span>
+                              <span className="font-medium block">
+                                {area.name}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                ID: {area.id}
+                              </span>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{area.cityZone}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{area.deliveryFee}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{area.priority}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {area.cityZone}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {area.deliveryFee}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {area.priority}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div
                             onClick={(e) => e.stopPropagation()}
@@ -285,13 +339,18 @@ const VTPMServiceArea = () => {
                           >
                             <Switch
                               checked={area.isActive}
-                              onCheckedChange={() => handleToggleStatus(area.id, area.isActive)}
+                              onCheckedChange={() =>
+                                handleToggleStatus(area.id, area.isActive)
+                              }
                               className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-gray-300 cursor-pointer"
                               disabled={isStatusUpdating}
                             />
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-semibold ${area.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-                                }`}
+                              className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                area.isActive
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-gray-100 text-gray-800"
+                              }`}
                             >
                               {area.isActive ? "Active" : "Inactive"}
                             </span>
@@ -339,7 +398,8 @@ const VTPMServiceArea = () => {
 
               {serviceAreas.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  No service zones found. Click "Add New Area" to create your first service zone.
+                  No service zones found. Click "Add New Area" to create your
+                  first service zone.
                 </div>
               )}
             </CardContent>
@@ -356,15 +416,23 @@ const VTPMServiceArea = () => {
                 Previous
               </Button>
               <span className="px-4 py-2 text-sm">
-                Page {currentPage} of {Math.ceil(serviceAreas.length / itemsPerPage)}
+                Page {currentPage} of{" "}
+                {Math.ceil(serviceAreas.length / itemsPerPage)}
               </span>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  setCurrentPage((p) => Math.min(Math.ceil(serviceAreas.length / itemsPerPage), p + 1))
+                  setCurrentPage((p) =>
+                    Math.min(
+                      Math.ceil(serviceAreas.length / itemsPerPage),
+                      p + 1,
+                    ),
+                  )
                 }
-                disabled={currentPage >= Math.ceil(serviceAreas.length / itemsPerPage)}
+                disabled={
+                  currentPage >= Math.ceil(serviceAreas.length / itemsPerPage)
+                }
               >
                 Next
               </Button>
@@ -379,6 +447,7 @@ const VTPMServiceArea = () => {
           setIsModalOpen(false);
           setEditData(null);
         }}
+        apiResponse={apiResponse}
         editData={editData}
         onSave={handleSave}
         isLoading={isCreating || isUpdating}
