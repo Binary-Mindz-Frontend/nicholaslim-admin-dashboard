@@ -1,12 +1,5 @@
 import { Filter, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface FilterSectionProps {
   raiderId: number | undefined;
@@ -30,12 +23,12 @@ export default function DriverFilter({
   setRaiderId,
   // raiderName,
   // setRaiderName,
-  verificationStatus,
-  setVerificationStatus,
+  // verificationStatus,
+  // setVerificationStatus,
   search,
   setSearch,
   handleResetFilter,
-  showApproved = true,
+  // showApproved = true,
 }: FilterSectionProps) {
   return (
     <div className="w-full bg-white rounded-md px-1 py-1">
@@ -84,7 +77,7 @@ export default function DriverFilter({
         </div> */}
 
         {/* Verification Status Dropdown */}
-        <div
+        {/* <div
           className="px-4 py-1 border border-yellow-400 rounded-md 
           w-full sm:w-[48%] md:w-auto"
         >
@@ -104,7 +97,7 @@ export default function DriverFilter({
               <SelectItem value="REJECTED">Rejected</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
 
         {/* Reset Button */}
         <div className="px-4 py-1 border border-yellow-400 rounded-md w-full md:flex-1">

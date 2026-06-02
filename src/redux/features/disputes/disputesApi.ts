@@ -59,6 +59,7 @@ const disputesApi = baseApi.injectEndpoints({
         companyPercent: number;
         riderPercent: number;
         adminId: number;
+        adminNote: string;
       }) => ({
         url: "/disputes/resolve",
         method: "POST",
