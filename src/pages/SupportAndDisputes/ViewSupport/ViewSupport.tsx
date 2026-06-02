@@ -18,6 +18,7 @@ import {
 } from "@/redux/features/disputes/disputesApi";
 import { useGetOwnProfileQuery } from "@/redux/features/users/usersApi";
 import toast from "react-hot-toast";
+import { Textarea } from "@/components/ui/textarea";
 
 const ViewSupport = () => {
   const { id } = useParams();
@@ -39,6 +40,7 @@ const ViewSupport = () => {
   const [amount, setAmount] = useState("");
   const [companyPercentage, setCompanyPercentage] = useState(60);
   const [driverPercentage, setDriverPercentage] = useState(40);
+  const [note, setNote] = useState("");
 
   const dispute = disputeData?.data;
   const adminId = userData?.data?.adminProfiles?.[0]?.id;
@@ -82,6 +84,7 @@ const ViewSupport = () => {
         companyPercent: companyPercentage,
         riderPercent: driverPercentage,
         adminId: adminId,
+        adminNote: note,
       };
 
       const response = await resolveDispute(resolveData).unwrap();
@@ -99,6 +102,7 @@ const ViewSupport = () => {
       setAmount("");
       setCompanyPercentage(60);
       setDriverPercentage(40);
+      setNote("");
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to resolve dispute");
     }
@@ -361,6 +365,19 @@ const ViewSupport = () => {
 
                       <div className="space-y-3">
                         <label className="text-sm font-medium block">
+                          Note
+                        </label>
+                        <Textarea
+                          value={note}
+                          onChange={(e) => setNote(e.target.value)}
+                          disabled={dispute.status === "RESOLVED"}
+                          placeholder="Enter a note..."
+                          className="resize-none"
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium block">
                           Company Allocation
                         </label>
                         <div className="flex items-center gap-4">
@@ -442,7 +459,7 @@ const ViewSupport = () => {
                       !adjustmentType ||
                       !amount
                     }
-                    className="bg-blue-600 text-white px-8 py-3 rounded-md hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    className="bg-yellow-500 text-black cursor-pointer px-8 py-3 rounded-md hover:bg-yellow-600 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                   >
                     {isResolving ? "Processing..." : "Proceed Adjustment"}
                   </button>
