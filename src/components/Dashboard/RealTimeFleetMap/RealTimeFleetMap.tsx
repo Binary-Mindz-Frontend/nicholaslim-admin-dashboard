@@ -1,6 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable prefer-const */
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
@@ -24,12 +23,17 @@ interface Category {
   color: string;
 }
 
+const OFFLINE_THRESHOLD_MS = 8000;
+const CLEANUP_INTERVAL_MS = 4000;
+
 export default function FleetMapHeader() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
   const adminSocketRef = useRef<Socket | null>(null);
+
+  const lastSeenRef = useRef<Map<string, number>>(new Map());
 
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -42,17 +46,13 @@ export default function FleetMapHeader() {
   const initMap = () => {
     if (!mapRef.current || !window.google) return;
     const map = new google.maps.Map(mapRef.current, {
-      // center: { lat: 23.7807, lng: 90.4006 }, // Singapore
-      center: { lat: 1.3521, lng: 103.8198 }, // Singapore
+      center: { lat: 1.3521, lng: 103.8198 },
       zoom: 12,
       disableDefaultUI: true,
     });
     mapInstanceRef.current = map;
     infoWindowRef.current = new google.maps.InfoWindow();
-
-    map.addListener("click", () => {
-      infoWindowRef.current?.close();
-    });
+    map.addListener("click", () => infoWindowRef.current?.close());
   };
 
   const getVehicleColor = (name: string = "") => {
@@ -61,6 +61,19 @@ export default function FleetMapHeader() {
     if (n.includes("car")) return "#22C55E";
     if (n.includes("motorcycle")) return "#F97316";
     return "#3B82F6";
+  };
+
+  const removeVehicle = (riderId: string) => {
+    // Remove marker from map
+    const marker = markersRef.current.get(riderId);
+    if (marker) {
+      marker.setMap(null);
+      markersRef.current.delete(riderId);
+    }
+    lastSeenRef.current.delete(riderId);
+
+    // Remove from vehicles state
+    setVehicles((prev) => prev.filter((v) => v.riderId !== riderId));
   };
 
   const updateVehicleMarker = (vehicle: Vehicle) => {
@@ -90,16 +103,15 @@ export default function FleetMapHeader() {
 
       marker.addListener("click", () => {
         const content = `
-          <div style="padding: 12px; min-width: 150px; font-family: sans-serif;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 8px; padding-bottom: 4px;">
-              <h4 style="margin: 0; color: #1a1a1a;">Rider #${vehicle.riderId}</h4>
-            </div>
-            <p style="margin: 4px 0; font-size: 13px;"><b>Vehicle:</b> ${vehicle.vehicleName}</p>
-            <p style="margin: 4px 0; font-size: 13px;"><b>Max Load:</b> ${vehicle.fullData.vehicle_type?.max_load || "N/A"}</p>
-            <p style="margin: 4px 0; font-size: 13px;"><b>Base Price:</b> $${vehicle.fullData.vehicle_type?.base_price || "0"}</p>
-            <p style="margin: 8px 0 0 0; font-size: 11px; color: #666;">Last sync: ${vehicle.lastUpdated}</p>
-          </div>
-        `;
+          <div style="padding:12px;min-width:150px;font-family:sans-serif;">
+            <h4 style="margin:0 0 8px;color:#1a1a1a;border-bottom:1px solid #eee;padding-bottom:4px;">
+              Rider #${vehicle.riderId}
+            </h4>
+            <p style="margin:4px 0;font-size:13px;"><b>Vehicle:</b> ${vehicle.vehicleName}</p>
+            <p style="margin:4px 0;font-size:13px;"><b>Max Load:</b> ${vehicle.fullData.vehicle_type?.max_load || "N/A"}</p>
+            <p style="margin:4px 0;font-size:13px;"><b>Base Price:</b> $${vehicle.fullData.vehicle_type?.base_price || "0"}</p>
+            <p style="margin:8px 0 0;font-size:11px;color:#666;">Last sync: ${vehicle.lastUpdated}</p>
+          </div>`;
         infoWindowRef.current?.setContent(content);
         infoWindowRef.current?.open(mapInstanceRef.current, marker);
       });
@@ -118,11 +130,21 @@ export default function FleetMapHeader() {
     });
 
     adminSocketRef.current.on("admin:rider_location", (payload: any) => {
+      const riderId = payload.riderId.toString();
       const vName = payload.vehicle_type?.vehicle_name || "Unknown";
+      const now = Date.now();
+
+      if (!lastSeenRef.current.has(riderId)) {
+        console.log(
+          `🟢 [${new Date().toLocaleTimeString()}] Rider #${riderId} came ONLINE (${vName})`,
+        );
+      }
+
+      lastSeenRef.current.set(riderId, now);
 
       const updatedVehicle: Vehicle = {
-        id: payload.riderId.toString(),
-        riderId: payload.riderId.toString(),
+        id: riderId,
+        riderId,
         lat: parseFloat(payload.lat),
         lng: parseFloat(payload.lng),
         heading: payload.heading,
@@ -134,9 +156,7 @@ export default function FleetMapHeader() {
       };
 
       setVehicles((prev) => {
-        const index = prev.findIndex(
-          (v) => v.riderId === updatedVehicle.riderId,
-        );
+        const index = prev.findIndex((v) => v.riderId === riderId);
         if (index > -1) {
           const newArr = [...prev];
           newArr[index] = updatedVehicle;
@@ -148,6 +168,29 @@ export default function FleetMapHeader() {
       updateVehicleMarker(updatedVehicle);
     });
   };
+
+  // ─── Heartbeat cleanup: evict stale vehicles ─────────────────────────────
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const staleRiderIds: string[] = [];
+
+      lastSeenRef.current.forEach((lastSeen, riderId) => {
+        if (now - lastSeen > OFFLINE_THRESHOLD_MS) {
+          staleRiderIds.push(riderId);
+        }
+      });
+
+      staleRiderIds.forEach((riderId) => {
+        console.log(
+          `🔴 [${new Date().toLocaleTimeString()}] Rider #${riderId} went OFFLINE (no ping for ${OFFLINE_THRESHOLD_MS / 1000}s)`,
+        );
+        removeVehicle(riderId);
+      });
+    }, CLEANUP_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (window.google) {
@@ -226,39 +269,11 @@ export default function FleetMapHeader() {
       </div>
 
       <div className="flex-1 relative">
-        <div ref={mapRef} className="w-full h-full"></div>
+        <div ref={mapRef} className="w-full h-full" />
         <div className="absolute bottom-6 left-6 bg-white px-4 py-2 rounded-full shadow-lg z-30 font-bold border border-yellow-400">
           🟢 Online Riders: {vehicles.length}
         </div>
       </div>
-
-      {/* <div className="absolute top-24 right-6 bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-2xl z-30 w-72 max-h-[500px] overflow-y-auto border border-gray-100">
-        <h2 className="font-bold text-lg mb-3 border-b pb-2 text-gray-800">
-          Active Riders
-        </h2>
-        {vehicles
-          .filter(
-            (v) => selectedCategory === "all" || v.type === selectedCategory,
-          )
-          .map((v) => (
-            <div
-              key={v.riderId}
-              className="hover:bg-gray-50 p-2 rounded-lg cursor-pointer transition-colors border-b last:border-0 border-gray-100"
-            >
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-blue-600">
-                  ID: #{v.riderId}
-                </span>
-                <span className="text-[10px] bg-gray-200 px-2 py-0.5 rounded text-gray-600">
-                  {v.lastUpdated}
-                </span>
-              </div>
-              <p className="text-sm text-gray-600">
-                Type: <span className="font-medium">{v.vehicleName}</span>
-              </p>
-            </div>
-          ))}
-      </div> */}
     </div>
   );
 }
