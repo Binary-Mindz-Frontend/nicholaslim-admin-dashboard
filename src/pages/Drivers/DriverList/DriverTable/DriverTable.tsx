@@ -125,20 +125,12 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
     {
       header: "Driver ID",
       accessor: "id",
-      cell: (row) => (
-        <p>
-          D{row.id}
-        </p>
-      ),
+      cell: (row) => <p>D{row.id}</p>,
     },
     {
       header: "Driver Name",
       accessor: "registrations",
-      cell: (row) => (
-        <p>
-          {row.registrations?.[0]?.raider_name || "N/A"}
-        </p>
-      ),
+      cell: (row) => <p>{row.registrations?.[0]?.raider_name || "N/A"}</p>,
     },
     {
       header: "Email",
@@ -188,11 +180,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       accessor: "registrations",
       cell: (row) => {
         const contact = row.registrations?.[0]?.contact_number || "";
-        return (
-          <span>
-            {contact ? contact : "N/A"}
-          </span>
-        );
+        return <span>{contact ? contact : "N/A"}</span>;
       },
     },
     {
@@ -209,12 +197,13 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       accessor: "raider_verificationFromAdmin",
       cell: (row) => (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${row.raider_verificationFromAdmin === "APPROVED"
-            ? "bg-green-100 text-green-800"
-            : row.raider_verificationFromAdmin === "PENDING"
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-red-100 text-red-800"
-            }`}
+          className={`px-3 py-1 rounded-full text-xs font-medium ${
+            row.raider_verificationFromAdmin === "APPROVED"
+              ? "bg-green-100 text-green-800"
+              : row.raider_verificationFromAdmin === "PENDING"
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-red-100 text-red-800"
+          }`}
         >
           {row.raider_verificationFromAdmin}
         </span>
@@ -225,12 +214,15 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
       accessor: "LoginType",
       cell: (row) => (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${row.LoginType === "ADMIN_SIGNIN"
-            ? "bg-yellow-300 text-black"
-            : "bg-gray-300 text-black"
-            }`}
+          className={`px-3 py-1 rounded-full text-xs font-medium ${
+            row.LoginType === "ADMIN_SIGNIN"
+              ? "bg-yellow-300 text-black"
+              : "bg-gray-300 text-black"
+          }`}
         >
-          {row.LoginType === "ADMIN_SIGNIN" ? "Assigned by Admin" : "Self Registered"}
+          {row.LoginType === "ADMIN_SIGNIN"
+            ? "Assigned by Admin"
+            : "Self Registered"}
         </span>
       ),
     },
@@ -248,7 +240,7 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
               <Star
                 key={i}
                 className="w-4 h-4 fill-yellow-400 text-yellow-400"
-              />
+              />,
             );
           } else if (rating >= i - 0.5) {
             // Half Star
@@ -256,21 +248,19 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
               <StarHalf
                 key={i}
                 className="w-4 h-4 fill-yellow-400 text-yellow-400"
-              />
+              />,
             );
           } else {
             // Empty Star
-            stars.push(
-              <Star
-                key={i}
-                className="w-4 h-4 text-gray-300"
-              />
-            );
+            stars.push(<Star key={i} className="w-4 h-4 text-gray-300" />);
           }
         }
 
         return (
-          <div className="flex items-center gap-0.5" title={`${rating.toFixed(1)} / 5`}>
+          <div
+            className="flex items-center gap-0.5"
+            title={`${rating.toFixed(1)} / 5`}
+          >
             {stars}
           </div>
         );
@@ -288,23 +278,33 @@ export const useDriverColumns = (params: UseDriverColumnsParams = {}) => {
               <span className="text-orange-600">Unavailable</span>
             )}
           </p>
-          <p className="text-xs text-gray-500">
+          {/* <p className="text-xs text-gray-500">
             {row.is_online ? (
               <span className="text-green-600 font-medium">Online</span>
             ) : (
               <span className="font-medium">Offline</span>
             )}
+          </p> */}
+          <p className="text-xs">
+            {row.is_online ? (
+              <span className="inline-flex items-center gap-1 font-medium text-green-700">
+                <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
+                Online
+              </span>
+            ) : (
+              <span className="font-medium text-gray-500">Offline</span>
+            )}
           </p>
-          {row.isSuspended && (
-            <p className="text-xs text-red-500">Suspended</p>
-          )}
+          {row.isSuspended && <p className="text-xs text-red-500">Suspended</p>}
         </div>
       ),
     },
     {
       header: "Action",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      cell: (row) => <DriverAction row={row as any} onDeleteSuccess={refetch} />,
+      cell: (row) => (
+        <DriverAction row={row as any} onDeleteSuccess={refetch} />
+      ),
     },
   ];
 
