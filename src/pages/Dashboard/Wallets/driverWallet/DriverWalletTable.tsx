@@ -82,18 +82,18 @@ const DriverWalletTable: React.FC = () => {
     {
       key: "currentWalletBalance" as const,
       label: "Current Wallet Balance",
-      render: (value: number) => `$${value}`,
+      render: (value: number) => `$${value.toFixed(2)}`,
     },
     {
       key: "totalWalletBalance" as const,
       label: "Total Wallet Balance",
-      render: (value: number) => `$${value}`,
+      render: (value: number) => `$${value.toFixed(2)}`,
     },
     {
       key: "totalBalanceUsed" as const,
       label: "Total Balance Used",
       render: (_: any, row: Wallet) =>
-        `$${row.totalWalletBalance - row.currentWalletBalance}`,
+        `$${(row.totalWalletBalance - row.currentWalletBalance).toFixed(2)}`,
     },
     {
       label: "Action",
