@@ -133,7 +133,7 @@ const UserWalletAdminTable: React.FC = () => {
     {
       key: "totalWalletBalance" as const,
       label: "Total Wallet Balance",
-      render: (value: number) => `$${value}`,
+      render: (value: number) => `$${value.toFixed(2)}`,
     },
     {
       label: "Action",
@@ -208,7 +208,7 @@ const UserWalletAdminTable: React.FC = () => {
       />
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-100 p-4">
           <div className="bg-white rounded-md w-full max-w-lg shadow-2xl overflow-hidden border border-gray-300">
             <div className="p-3 border-b bg-white flex justify-between items-center">
               <h2 className="text-xs font-bold uppercase tracking-tight text-gray-800">
@@ -327,7 +327,7 @@ const UserWalletAdminTable: React.FC = () => {
                         {formData.adjustmentAction ===
                           AdjustmentAction.DEDUCT_MINUS_FUNDS && (
                           <div>
-                            <label className="block text-[11px] font-medium text-gray-600 text-red-600">
+                            <label className="block text-[11px] font-medium text-red-600">
                               Penalty Type{" "}
                               <span className="text-red-500">*</span>
                             </label>
