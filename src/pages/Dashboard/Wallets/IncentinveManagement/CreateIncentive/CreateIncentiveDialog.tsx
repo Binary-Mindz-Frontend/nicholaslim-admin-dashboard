@@ -7,18 +7,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import {
@@ -27,6 +16,11 @@ import {
 } from "@/redux/features/incentives/incentivesApi";
 import { useGetServiceZonesQuery } from "@/redux/features/serviceZone/serviceZoneApi";
 import { useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
+import { GeneralSection } from "./components/GeneralSection";
+import { ScheduleSection } from "./components/ScheduleSection";
+import { ScopeSection } from "./components/ScopeSection";
+import { RewardSection } from "./components/RewardSection";
+import { TargetRulesSection } from "./components/TargetRulesSection";
 
 interface Props {
   open: boolean;
@@ -43,6 +37,28 @@ interface ScheduleData {
   day_of_month: number[];
   week_of_month: number[];
 }
+
+const formatToDateTimeLocal = (dateStr?: string) => {
+  if (!dateStr) return "";
+  try {
+    // If it's already a date-only string like YYYY-MM-DD, append T00:00
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      return `${dateStr}T00:00`;
+    }
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  } catch (e) {
+    return "";
+  }
+};
+
+
 
 const CreateIncentiveDialog: React.FC<Props> = ({
   open,
@@ -79,8 +95,7 @@ const CreateIncentiveDialog: React.FC<Props> = ({
     week_of_month: [],
   });
 
-  const [tempDayOfMonth, setTempDayOfMonth] = useState("");
-  const [tempWeekOfMonth, setTempWeekOfMonth] = useState("");
+
 
   const [createIncentive, { isLoading: isCreating }] =
     useCreateIncentiveMutation();
@@ -107,7 +122,7 @@ const CreateIncentiveDialog: React.FC<Props> = ({
     "Nov",
     "Dec",
   ];
-  const weekOfMonths = ["1", "2", "3", "4", "5"];
+
   // Updated days of week to match API expected values
   const daysOfWeekList = ["MON", "TUE", "WED", "THURS", "FRI", "SAT", "SUN"];
 
@@ -125,11 +140,14 @@ const CreateIncentiveDialog: React.FC<Props> = ({
         }
       }
 
+      const formattedStartDate = formatToDateTimeLocal(incentiveToEdit.start_date);
+      const formattedEndDate = formatToDateTimeLocal(incentiveToEdit.end_date);
+
       setFormData({
         name: incentiveToEdit.name || "",
         description: incentiveToEdit.description || "",
-        start_date: incentiveToEdit.start_date?.split("T")[0] || "",
-        end_date: incentiveToEdit.end_date?.split("T")[0] || "",
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
         driver_type_ids:
           incentiveToEdit.driver_types?.map((dt: any) => dt?.id || dt) || [],
         priority: incentiveToEdit.priority || 1,
@@ -154,8 +172,8 @@ const CreateIncentiveDialog: React.FC<Props> = ({
 
       setSchedule({
         recurring_type: incentiveToEdit.recurring_type || "ONE_TIME",
-        start_date: incentiveToEdit.start_date?.split("T")[0] || "",
-        end_date: incentiveToEdit.end_date?.split("T")[0] || "",
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
         days_of_week: daysOfWeek,
         month: incentiveToEdit.month || "Jan",
         day_of_month: incentiveToEdit.day_of_month || [],
@@ -191,75 +209,10 @@ const CreateIncentiveDialog: React.FC<Props> = ({
         day_of_month: [],
         week_of_month: [],
       });
-      setTempDayOfMonth("");
-      setTempWeekOfMonth("");
     }
   }, [incentiveToEdit, open]);
 
-  const handleAddDayOfMonth = () => {
-    if (tempDayOfMonth) {
-      const days = tempDayOfMonth
-        .split(",")
-        .map((d) => parseInt(d.trim()))
-        .filter((d) => !isNaN(d) && d >= 1 && d <= 31);
-      const uniqueDays = [...new Set([...schedule.day_of_month, ...days])];
-      setSchedule({ ...schedule, day_of_month: uniqueDays });
-      setTempDayOfMonth("");
-    }
-  };
 
-  const handleRemoveDayOfMonth = (day: number) => {
-    setSchedule({
-      ...schedule,
-      day_of_month: schedule.day_of_month.filter((d) => d !== day),
-    });
-  };
-
-  const handleAddWeekOfMonth = (week: string) => {
-    if (!week) {
-      toast.error("Please select a week");
-      return;
-    }
-    const weekNum = parseInt(week);
-    if (!schedule.week_of_month.includes(weekNum)) {
-      setSchedule({
-        ...schedule,
-        week_of_month: [...schedule.week_of_month, weekNum].sort(
-          (a, b) => a - b,
-        ),
-      });
-    }
-    setTempWeekOfMonth("");
-  };
-
-  const handleRemoveWeekOfMonth = (week: number) => {
-    setSchedule({
-      ...schedule,
-      week_of_month: schedule.week_of_month.filter((w) => w !== week),
-    });
-  };
-
-  const toggleDayOfWeek = (day: string) => {
-    if (schedule.days_of_week.includes(day)) {
-      setSchedule({
-        ...schedule,
-        days_of_week: schedule.days_of_week.filter((d) => d !== day),
-      });
-    } else {
-      setSchedule({
-        ...schedule,
-        days_of_week: [...schedule.days_of_week, day],
-      });
-    }
-  };
-
-  const handleSelectAllDays = () => {
-    if (schedule.days_of_week.length === daysOfWeekList.length) {
-      setSchedule({ ...schedule, days_of_week: [] });
-    } else {
-      setSchedule({ ...schedule, days_of_week: [...daysOfWeekList] });
-    }
-  };
 
   const validateMonthlyDates = (): boolean => {
     if (schedule.recurring_type !== "MONTHLY") return true;
@@ -283,18 +236,18 @@ const CreateIncentiveDialog: React.FC<Props> = ({
   const handleSubmit = async () => {
     if (schedule.recurring_type === "ONE_TIME") {
       if (!schedule.start_date) {
-        toast.error("Please select Start Date");
+        toast.error("Please select Start Date & Time");
         return;
       }
     } else {
       if (!schedule.start_date || !schedule.end_date) {
-        toast.error("Please select both Start and End dates");
+        toast.error("Please select both Start and End Date & Time");
         return;
       }
       const startDate = new Date(schedule.start_date);
       const endDate = new Date(schedule.end_date);
       if (startDate >= endDate) {
-        toast.error("End Date must be after the Start Date");
+        toast.error("End Date & Time must be after the Start Date & Time");
         return;
       }
     }
@@ -416,540 +369,35 @@ const CreateIncentiveDialog: React.FC<Props> = ({
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-4 py-4">
-          <div className="col-span-2 border-t pt-4">
-            <h4 className="md:text-lg font-bold">General</h4>
-          </div>
+          {/* General Section */}
+          <GeneralSection formData={formData} setFormData={setFormData} />
 
-          <div className="space-y-2 col-span-2">
-            <Label>Incentive Name</Label>
-            <Input
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              placeholder="Summer Bonus"
-            />
-          </div>
+          {/* Schedule Section */}
+          <ScheduleSection schedule={schedule} setSchedule={setSchedule} />
 
-          <div className="space-y-2 col-span-2">
-            <Label>Description</Label>
-            <Textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="Incentive description"
-            />
-          </div>
+          {/* Scope Section */}
+          <ScopeSection
+            formData={formData}
+            setFormData={setFormData}
+            activeZones={activeZones}
+            vehicleTypes={vehicleTypes}
+          />
 
-          <div className="col-span-2 border-t pt-4 mt-2">
-            <h4 className="md:text-lg font-bold">Schedule</h4>
-          </div>
+          {/* Reward Section */}
+          <RewardSection formData={formData} setFormData={setFormData} />
 
-          <div className="space-y-2 col-span-2">
-            <Label>Recurring Schedule</Label>
-            <Select
-              value={schedule.recurring_type}
-              onValueChange={(v) =>
-                setSchedule({
-                  ...schedule,
-                  recurring_type: v,
-                  days_of_week: [],
-                })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ONE_TIME">One-time</SelectItem>
-                <SelectItem value="DAILY">Daily</SelectItem>
-                <SelectItem value="WEEKLY">Weekly</SelectItem>
-                <SelectItem value="MONTHLY">Monthly</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {schedule.recurring_type === "ONE_TIME" ? (
-            <div className="space-y-2 col-span-2">
-              <Label>Start Date</Label>
-              <Input
-                type="date"
-                value={schedule.start_date}
-                onChange={(e) =>
-                  setSchedule({ ...schedule, start_date: e.target.value })
-                }
-              />
-            </div>
-          ) : (
-            <>
-              <div className="space-y-2">
-                <Label>Start Date</Label>
-                <Input
-                  type="date"
-                  value={schedule.start_date}
-                  onChange={(e) =>
-                    setSchedule({ ...schedule, start_date: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>End Date</Label>
-                <Input
-                  type="date"
-                  value={schedule.end_date}
-                  onChange={(e) =>
-                    setSchedule({ ...schedule, end_date: e.target.value })
-                  }
-                />
-              </div>
-            </>
-          )}
-
-          {schedule.recurring_type === "WEEKLY" && (
-            <div className="space-y-2 col-span-2">
-              <Label>Days of Week</Label>
-              <div className="flex flex-wrap gap-2 mt-1">
-                <Badge
-                  variant={
-                    schedule.days_of_week.length === daysOfWeekList.length
-                      ? "default"
-                      : "outline"
-                  }
-                  className="cursor-pointer"
-                  onClick={handleSelectAllDays}
-                >
-                  All Days
-                </Badge>
-                {daysOfWeekList.map((day) => (
-                  <Badge
-                    key={day}
-                    variant={
-                      schedule.days_of_week.includes(day)
-                        ? "default"
-                        : "outline"
-                    }
-                    className="cursor-pointer"
-                    onClick={() => toggleDayOfWeek(day)}
-                  >
-                    {day.charAt(0) + day.slice(1).toLowerCase()}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {schedule.recurring_type === "MONTHLY" && (
-            <>
-              <div className="space-y-2 col-span-2">
-                <Label>Month</Label>
-                <Select
-                  value={schedule.month}
-                  onValueChange={(v) => setSchedule({ ...schedule, month: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map((month) => (
-                      <SelectItem key={month} value={month}>
-                        {month}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2 col-span-2">
-                <Label>Days of Month</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="1,2,5,10"
-                    value={tempDayOfMonth}
-                    onChange={(e) => setTempDayOfMonth(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    onClick={handleAddDayOfMonth}
-                    variant="outline"
-                  >
-                    Add
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {schedule.day_of_month.map((day) => (
-                    <Badge
-                      key={day}
-                      variant="default"
-                      className="cursor-pointer"
-                      onClick={() => handleRemoveDayOfMonth(day)}
-                    >
-                      {day} ×
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2 col-span-2">
-                <Label>Week of Month</Label>
-                <div className="flex gap-2">
-                  <Select
-                    value={tempWeekOfMonth}
-                    onValueChange={setTempWeekOfMonth}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select week" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {weekOfMonths.map((week) => (
-                        <SelectItem key={week} value={week}>
-                          Week {week}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    type="button"
-                    onClick={() => handleAddWeekOfMonth(tempWeekOfMonth)}
-                    variant="outline"
-                  >
-                    Add
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {schedule.week_of_month.map((week) => (
-                    <Badge
-                      key={week}
-                      variant="default"
-                      className="cursor-pointer"
-                      onClick={() => handleRemoveWeekOfMonth(week)}
-                    >
-                      Week {week} ×
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2 col-span-2">
-                <Label>Days of Week</Label>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  <Badge
-                    variant={
-                      schedule.days_of_week.length === daysOfWeekList.length
-                        ? "default"
-                        : "outline"
-                    }
-                    className="cursor-pointer"
-                    onClick={handleSelectAllDays}
-                  >
-                    All Days
-                  </Badge>
-                  {daysOfWeekList.map((day) => (
-                    <Badge
-                      key={day}
-                      variant={
-                        schedule.days_of_week.includes(day)
-                          ? "default"
-                          : "outline"
-                      }
-                      className="cursor-pointer"
-                      onClick={() => toggleDayOfWeek(day)}
-                    >
-                      {day.charAt(0) + day.slice(1).toLowerCase()}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-
-          <div className="col-span-2">
-            <div className="border-t pt-4 mt-2 space-y-4">
-              <h4 className="md:text-lg font-bold mb-3">Scope</h4>
-
-              <div className="space-y-2 col-span-2">
-                <Label>Service Zones</Label>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {activeZones.length > 0 && (
-                    <Badge
-                      variant={
-                        formData.serviceZoneIds.length === activeZones.length
-                          ? "default"
-                          : "outline"
-                      }
-                      className="cursor-pointer"
-                      onClick={() => {
-                        if (
-                          formData.serviceZoneIds.length === activeZones.length
-                        ) {
-                          setFormData({ ...formData, serviceZoneIds: [] });
-                        } else {
-                          setFormData({
-                            ...formData,
-                            serviceZoneIds: activeZones.map((z: any) => z.id),
-                          });
-                        }
-                      }}
-                    >
-                      All Zones
-                    </Badge>
-                  )}
-                  {activeZones.map((zone: any) => {
-                    const isSelected = formData.serviceZoneIds.includes(
-                      zone.id,
-                    );
-                    return (
-                      <Badge
-                        key={zone.id}
-                        variant={isSelected ? "default" : "outline"}
-                        className="cursor-pointer"
-                        onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            serviceZoneIds: isSelected
-                              ? prev.serviceZoneIds.filter(
-                                  (id) => id !== zone.id,
-                                )
-                              : [...prev.serviceZoneIds, zone.id],
-                          }));
-                        }}
-                      >
-                        {zone.name}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="space-y-2 col-span-2">
-                <Label>Vehicle Type</Label>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {vehicleTypes.map((vt: any) => {
-                    const isSelected = formData.driver_type_ids.includes(vt.id);
-                    return (
-                      <Badge
-                        key={vt.id}
-                        variant={isSelected ? "default" : "outline"}
-                        className="cursor-pointer"
-                        onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            driver_type_ids: isSelected
-                              ? prev.driver_type_ids.filter(
-                                  (id) => id !== vt.id,
-                                )
-                              : [...prev.driver_type_ids, vt.id],
-                          }));
-                        }}
-                      >
-                        {vt.vehicle_name}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t pt-4 mt-2 space-y-4">
-              <h4 className="md:text-lg font-bold mb-3">Reward</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Reward Type</Label>
-                  <Select
-                    value={formData.reward_type}
-                    onValueChange={(v) =>
-                      setFormData({ ...formData, reward_type: v })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="FIXED">FIXED</SelectItem>
-                      <SelectItem value="PERCENTAGE">PERCENTAGE</SelectItem>
-                      <SelectItem value="POINTS">POINTS</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Reward Value</Label>
-                  <Input
-                    type="number"
-                    value={formData.reward_value}
-                    onChange={(e) =>
-                      setFormData({ ...formData, reward_value: e.target.value })
-                    }
-                    placeholder="50"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Max Claim</Label>
-                  <Input
-                    type="number"
-                    value={formData.max_claim}
-                    onChange={(e) =>
-                      setFormData({ ...formData, max_claim: e.target.value })
-                    }
-                    placeholder="5"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Claim Type</Label>
-                  <Select
-                    value={formData.claim_type}
-                    onValueChange={(v) =>
-                      setFormData({ ...formData, claim_type: v })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="AUTO">AUTO</SelectItem>
-                      <SelectItem value="MANUAL">MANUAL</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {formData.claim_type === "MANUAL" && (
-                  <>
-                    <div className="space-y-2 col-span-2">
-                      <Label>Claim Expire</Label>
-                      <Input
-                        type="number"
-                        value={formData.claim_expire}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            claim_expire: e.target.value,
-                          })
-                        }
-                        placeholder="2"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Mins/Hours/Days</Label>
-                      <Select
-                        value={formData.time_constant}
-                        onValueChange={(v) =>
-                          setFormData({ ...formData, time_constant: v })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="MINUTES">Mins</SelectItem>
-                          <SelectItem value="HOURS">Hours</SelectItem>
-                          <SelectItem value="DAYS">Days</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </>
-                )}
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(v) =>
-                      setFormData({ ...formData, status: v })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ACTIVE">ACTIVE</SelectItem>
-                      <SelectItem value="DISABLED">DISABLED</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-span-2 border-t pt-4 mt-2">
-            <h4 className="md:text-lg font-bold mb-3">Target Rules</h4>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs">Metric</Label>
-                <Select
-                  value={formData.metric}
-                  onValueChange={(v) => setFormData({ ...formData, metric: v })}
-                >
-                  <SelectTrigger className="text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="COMPLETED_DELIVERIES">
-                      Completed Deliveries
-                    </SelectItem>
-                    <SelectItem value="TOTAL_EARNINGS">
-                      Total Earnings
-                    </SelectItem>
-                    <SelectItem value="ONLINE_HOURS">Online Hours</SelectItem>
-                    <SelectItem value="ACCEPTED_ORDERS">
-                      Accepted Orders
-                    </SelectItem>
-                    <SelectItem value="ACCEPTANCE_RATE">
-                      Acceptance Rate (%)
-                    </SelectItem>
-                    <SelectItem value="CONSECUTIVE_TRIPS">
-                      Consecutive Trips
-                    </SelectItem>
-                    <SelectItem value="REFERRAL_COUNT">
-                      Referral Count
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Operator</Label>
-                <Select
-                  value={formData.operator}
-                  onValueChange={(v) =>
-                    setFormData({ ...formData, operator: v })
-                  }
-                >
-                  <SelectTrigger className="text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="GTE">
-                      Greater Than or Equal (&ge;)
-                    </SelectItem>
-                    <SelectItem value="LTE">
-                      Less Than or Equal (&le;)
-                    </SelectItem>
-                    <SelectItem value="EQ">Equal To (=)</SelectItem>
-                    <SelectItem value="GT">Greater Than (&gt;)</SelectItem>
-                    <SelectItem value="LT">Less Than (&lt;)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1 col-span-2">
-                <Label className="text-xs">Target Value</Label>
-                <Input
-                  type="number"
-                  value={formData.ruleValue}
-                  onChange={(e) =>
-                    setFormData({ ...formData, ruleValue: e.target.value })
-                  }
-                  placeholder="10"
-                />
-              </div>
-            </div>
-          </div>
+          {/* Target Rules Section */}
+          <TargetRulesSection formData={formData} setFormData={setFormData} />
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="cursor-pointer">
             Cancel
           </Button>
           <Button
             disabled={isCreating || isUpdating}
             onClick={handleSubmit}
-            className="text-black"
+            className="text-black cursor-pointer"
           >
             {isCreating || isUpdating
               ? "Saving..."
