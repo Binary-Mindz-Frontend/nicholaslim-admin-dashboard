@@ -23,8 +23,8 @@ interface Category {
   color: string;
 }
 
-const OFFLINE_THRESHOLD_MS = 8000;
-const CLEANUP_INTERVAL_MS = 4000;
+const OFFLINE_THRESHOLD_MS = 500;
+const CLEANUP_INTERVAL_MS = 500;
 
 export default function FleetMapHeader() {
   const mapRef = useRef<HTMLDivElement>(null);
