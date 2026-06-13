@@ -23,8 +23,8 @@ interface Category {
   color: string;
 }
 
-const OFFLINE_THRESHOLD_MS = 500;
-const CLEANUP_INTERVAL_MS = 1000;
+const OFFLINE_THRESHOLD_MS = 1000;
+const CLEANUP_INTERVAL_MS = 100;
 
 export default function FleetMapHeader() {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -132,15 +132,20 @@ export default function FleetMapHeader() {
     adminSocketRef.current.on("admin:rider_location", (payload: any) => {
       const riderId = payload.riderId.toString();
       const vName = payload.vehicle_type?.vehicle_name || "Unknown";
-      const now = Date.now();
 
-      if (!lastSeenRef.current.has(riderId)) {
-        console.log(
-          `🟢 [${new Date().toLocaleTimeString()}] Rider #${riderId} came ONLINE (${vName})`,
-        );
-      }
+      lastSeenRef.current.set(riderId, Date.now());
 
-      lastSeenRef.current.set(riderId, now);
+      // if (!lastSeenRef.current.has(riderId)) {
+      //   console.log(
+      //     `🟢 [${new Date().toLocaleTimeString()}] Rider #${riderId} came ONLINE (${vName})`,
+      //   );
+      // }
+
+      // lastSeenRef.current.set(riderId, now);
+
+      console.log(
+        `🟢 [${new Date().toLocaleTimeString()}] Rider #${riderId} location updated`,
+      );
 
       const updatedVehicle: Vehicle = {
         id: riderId,
@@ -182,9 +187,7 @@ export default function FleetMapHeader() {
       });
 
       staleRiderIds.forEach((riderId) => {
-        console.log(
-          `🔴 [${new Date().toLocaleTimeString()}] Rider #${riderId} went OFFLINE (no ping for ${OFFLINE_THRESHOLD_MS / 1000}s)`,
-        );
+        console.log(`🔴 Rider ${riderId} OFFLINE`);
         removeVehicle(riderId);
       });
     }, CLEANUP_INTERVAL_MS);
