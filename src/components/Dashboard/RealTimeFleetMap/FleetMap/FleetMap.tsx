@@ -329,7 +329,7 @@ const FleetMap: React.FC = () => {
       }
 
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+      script.src = `https://maps.googleapis.com/maps/api/js?v=3.64&key=${apiKey}`;
       script.async = true;
       script.defer = true;
 

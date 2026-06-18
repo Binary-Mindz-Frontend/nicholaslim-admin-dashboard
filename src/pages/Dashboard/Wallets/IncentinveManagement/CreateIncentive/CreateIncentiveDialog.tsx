@@ -58,8 +58,6 @@ const formatToDateTimeLocal = (dateStr?: string) => {
   }
 };
 
-
-
 const CreateIncentiveDialog: React.FC<Props> = ({
   open,
   onOpenChange,
@@ -80,9 +78,25 @@ const CreateIncentiveDialog: React.FC<Props> = ({
     time_constant: "HOURS",
     max_claim: "",
     serviceZoneIds: [] as number[],
-    metric: "COMPLETED_DELIVERIES",
-    operator: "GTE",
-    ruleValue: "",
+    ruleGroups: [
+      {
+        label: "Group A",
+        rules: [
+          {
+            metric: "COMPLETED_DELIVERIES",
+            operator: "GTE",
+            value: "" as string | number,
+          },
+        ],
+      },
+    ] as {
+      label: string;
+      rules: {
+        metric: string;
+        operator: string;
+        value: string | number;
+      }[];
+    }[],
   });
 
   const [schedule, setSchedule] = useState<ScheduleData>({
@@ -94,8 +108,6 @@ const CreateIncentiveDialog: React.FC<Props> = ({
     day_of_month: [],
     week_of_month: [],
   });
-
-
 
   const [createIncentive, { isLoading: isCreating }] =
     useCreateIncentiveMutation();
@@ -140,8 +152,42 @@ const CreateIncentiveDialog: React.FC<Props> = ({
         }
       }
 
-      const formattedStartDate = formatToDateTimeLocal(incentiveToEdit.start_date);
+      const formattedStartDate = formatToDateTimeLocal(
+        incentiveToEdit.start_date,
+      );
       const formattedEndDate = formatToDateTimeLocal(incentiveToEdit.end_date);
+
+      let initialRuleGroups = incentiveToEdit.ruleGroups || [];
+      if (
+        initialRuleGroups.length === 0 &&
+        incentiveToEdit.rules &&
+        incentiveToEdit.rules.length > 0
+      ) {
+        initialRuleGroups = [
+          {
+            label: "Group A",
+            rules: incentiveToEdit.rules.map((r: any) => ({
+              metric: r.metric || "COMPLETED_DELIVERIES",
+              operator: r.operator || "GTE",
+              value: r.value?.toString() || "",
+            })),
+          },
+        ];
+      }
+      if (initialRuleGroups.length === 0) {
+        initialRuleGroups = [
+          {
+            label: "Group A",
+            rules: [
+              {
+                metric: "COMPLETED_DELIVERIES",
+                operator: "GTE",
+                value: "",
+              },
+            ],
+          },
+        ];
+      }
 
       setFormData({
         name: incentiveToEdit.name || "",
@@ -165,9 +211,7 @@ const CreateIncentiveDialog: React.FC<Props> = ({
           incentiveToEdit.serviceZones?.map((sz: any) => sz.id) ||
           incentiveToEdit.serviceZoneIds ||
           [],
-        metric: incentiveToEdit.rules?.[0]?.metric || "COMPLETED_DELIVERIES",
-        operator: incentiveToEdit.rules?.[0]?.operator || "GTE",
-        ruleValue: incentiveToEdit.rules?.[0]?.value?.toString() || "",
+        ruleGroups: initialRuleGroups,
       });
 
       setSchedule({
@@ -195,9 +239,18 @@ const CreateIncentiveDialog: React.FC<Props> = ({
         time_constant: "HOURS",
         max_claim: "",
         serviceZoneIds: [],
-        metric: "COMPLETED_DELIVERIES",
-        operator: "GTE",
-        ruleValue: "",
+        ruleGroups: [
+          {
+            label: "Group A",
+            rules: [
+              {
+                metric: "COMPLETED_DELIVERIES",
+                operator: "GTE",
+                value: "",
+              },
+            ],
+          },
+        ],
       });
 
       setSchedule({
@@ -211,8 +264,6 @@ const CreateIncentiveDialog: React.FC<Props> = ({
       });
     }
   }, [incentiveToEdit, open]);
-
-
 
   const validateMonthlyDates = (): boolean => {
     if (schedule.recurring_type !== "MONTHLY") return true;
@@ -286,13 +337,14 @@ const CreateIncentiveDialog: React.FC<Props> = ({
       time_constant: formData.time_constant,
       max_claim: Number(formData.max_claim),
       serviceZoneIds: formData.serviceZoneIds,
-      rules: [
-        {
-          metric: formData.metric,
-          operator: formData.operator,
-          value: Number(formData.ruleValue),
-        },
-      ],
+      ruleGroups: formData.ruleGroups.map((g: any) => ({
+        label: g.label || "Group",
+        rules: g.rules.map((r: any) => ({
+          metric: r.metric,
+          operator: r.operator,
+          value: Number(r.value) || 0,
+        })),
+      })),
     };
     if (schedule.recurring_type !== "ONE_TIME") {
       payload.end_date = new Date(schedule.end_date).toISOString();
@@ -361,7 +413,7 @@ const CreateIncentiveDialog: React.FC<Props> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[700px] sm:max-w-[728px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {incentiveToEdit ? "Edit" : "Create"} Incentive
@@ -391,7 +443,11 @@ const CreateIncentiveDialog: React.FC<Props> = ({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="cursor-pointer">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="cursor-pointer"
+          >
             Cancel
           </Button>
           <Button

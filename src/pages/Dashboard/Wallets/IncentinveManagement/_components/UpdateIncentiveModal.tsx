@@ -23,6 +23,7 @@ import toast from "react-hot-toast";
 import { useUpdateIncentiveMutation } from "@/redux/features/incentives/incentivesApi";
 import { useGetServiceZonesQuery } from "@/redux/features/serviceZone/serviceZoneApi";
 import { useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
+import { TargetRulesSection } from "../CreateIncentive/components/TargetRulesSection";
 
 interface Props {
   incentive: any;
@@ -49,14 +50,62 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
     time_constant: "HOURS",
     max_claim: "",
     serviceZoneIds: [] as number[],
-    metric: "COMPLETED_DELIVERIES",
-    operator: "GTE",
-    ruleValue: "",
+    ruleGroups: [
+      {
+        label: "Group A",
+        rules: [
+          {
+            metric: "COMPLETED_DELIVERIES",
+            operator: "GTE",
+            value: "" as string | number,
+          },
+        ],
+      },
+    ] as {
+      label: string;
+      rules: {
+        metric: string;
+        operator: string;
+        value: string | number;
+      }[];
+    }[],
   });
 
   // Pre-fill data when the modal opens
   useEffect(() => {
     if (incentive) {
+      let initialRuleGroups = incentive.ruleGroups || [];
+      if (
+        initialRuleGroups.length === 0 &&
+        incentive.rules &&
+        incentive.rules.length > 0
+      ) {
+        initialRuleGroups = [
+          {
+            label: "Group A",
+            rules: incentive.rules.map((r: any) => ({
+              metric: r.metric || "COMPLETED_DELIVERIES",
+              operator: r.operator || "GTE",
+              value: r.value?.toString() || "",
+            })),
+          },
+        ];
+      }
+      if (initialRuleGroups.length === 0) {
+        initialRuleGroups = [
+          {
+            label: "Group A",
+            rules: [
+              {
+                metric: "COMPLETED_DELIVERIES",
+                operator: "GTE",
+                value: "",
+              },
+            ],
+          },
+        ];
+      }
+
       setFormData({
         name: incentive.name || incentive.incentive_name || "",
         description: incentive.description || "",
@@ -85,9 +134,7 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
           incentive.max_clam?.toString() ||
           "",
         serviceZoneIds: incentive.serviceZones?.map((sz: any) => sz.id) || [],
-        metric: incentive.rules?.[0]?.metric || "COMPLETED_DELIVERIES",
-        operator: incentive.rules?.[0]?.operator || "GTE",
-        ruleValue: (incentive.rules?.[0]?.value || "").toString(),
+        ruleGroups: initialRuleGroups,
       });
     }
   }, [incentive]);
@@ -118,13 +165,14 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
 
       max_claim: Number(formData.max_claim),
       serviceZoneIds: formData.serviceZoneIds,
-      rules: [
-        {
-          metric: formData.metric,
-          operator: formData.operator,
-          value: Number(formData.ruleValue),
-        },
-      ],
+      ruleGroups: formData.ruleGroups.map((g: any) => ({
+        label: g.label || "Group",
+        rules: g.rules.map((r: any) => ({
+          metric: r.metric,
+          operator: r.operator,
+          value: Number(r.value) || 0,
+        })),
+      })),
     };
 
     try {
@@ -144,7 +192,7 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
+      <DialogContent className="max-w-[700px] sm:max-w-[728px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
             Update Incentive
@@ -238,7 +286,7 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
                         setFormData({
                           ...formData,
                           serviceZoneIds: formData.serviceZoneIds.filter(
-                            (id) => id !== zone.id
+                            (id) => id !== zone.id,
                           ),
                         });
                       } else {
@@ -292,11 +340,12 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
                 </span>
               )}
             </div>
-            {formData.driver_type_ids.length === 0 && vehicleTypes.length > 0 && (
-              <span className="text-xs text-gray-400 mt-1 block">
-                Select one or more vehicle types
-              </span>
-            )}
+            {formData.driver_type_ids.length === 0 &&
+              vehicleTypes.length > 0 && (
+                <span className="text-xs text-gray-400 mt-1 block">
+                  Select one or more vehicle types
+                </span>
+              )}
           </div>
 
           {/* Reward Config */}
@@ -347,9 +396,7 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
             <Label>Claim Type</Label>
             <Select
               value={formData.claim_type}
-              onValueChange={(v) =>
-                setFormData({ ...formData, claim_type: v })
-              }
+              onValueChange={(v) => setFormData({ ...formData, claim_type: v })}
             >
               <SelectTrigger className="bg-gray-50">
                 <SelectValue />
@@ -414,78 +461,7 @@ const UpdateIncentiveModal = ({ incentive, onClose }: Props) => {
           </div>
 
           {/* Target Rules Section */}
-          <div className="col-span-2 border-t pt-4 mt-2">
-            <h4 className="text-sm font-bold mb-3">Target Rules</h4>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs">Metric</Label>
-                <Select
-                  value={formData.metric}
-                  onValueChange={(v) => setFormData({ ...formData, metric: v })}
-                >
-                  <SelectTrigger className="text-xs">
-                    <SelectValue placeholder="Select Metric" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="COMPLETED_DELIVERIES">
-                      Completed Deliveries
-                    </SelectItem>
-                    <SelectItem value="TOTAL_EARNINGS">
-                      Total Earnings
-                    </SelectItem>
-                    <SelectItem value="ONLINE_HOURS">Online Hours</SelectItem>
-                    <SelectItem value="ACCEPTED_ORDERS">
-                      Accepted Orders
-                    </SelectItem>
-                    <SelectItem value="ACCEPTANCE_RATE">
-                      Acceptance Rate (%)
-                    </SelectItem>
-                    <SelectItem value="CONSECUTIVE_TRIPS">
-                      Consecutive Trips
-                    </SelectItem>
-                    <SelectItem value="REFERRAL_COUNT">
-                      Referral Count
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Operator</Label>
-                <Select
-                  value={formData.operator}
-                  onValueChange={(v) =>
-                    setFormData({ ...formData, operator: v })
-                  }
-                >
-                  <SelectTrigger className="text-xs">
-                    <SelectValue placeholder="Select Operator" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="GTE">
-                      Greater Than or Equal (&ge;)
-                    </SelectItem>
-                    <SelectItem value="LTE">
-                      Less Than or Equal (&le;)
-                    </SelectItem>
-                    <SelectItem value="EQ">Equal To (=)</SelectItem>
-                    <SelectItem value="GT">Greater Than (&gt;)</SelectItem>
-                    <SelectItem value="LT">Less Than (&lt;)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1 col-span-2">
-                <Label className="text-xs">Target Value</Label>
-                <Input
-                  type="number"
-                  value={formData.ruleValue}
-                  onChange={(e) =>
-                    setFormData({ ...formData, ruleValue: e.target.value })
-                  }
-                  className="bg-gray-50"
-                />
-              </div>
-            </div>
-          </div>
+          <TargetRulesSection formData={formData} setFormData={setFormData} />
         </div>
 
         <DialogFooter className="flex justify-end gap-3 mt-4">
