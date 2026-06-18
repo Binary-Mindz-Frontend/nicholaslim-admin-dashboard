@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { 
   useGetVehicleTypesQuery 
 } from "@/redux/features/vehicleType/vehicleTypeApi";
+import toast from "react-hot-toast";
 
 interface EditDeliveryTypeModalProps {
   isOpen: boolean;
@@ -31,6 +31,7 @@ const EditDeliveryTypeModal = ({
     delivery_time: 0,
     delivery_unit: "MINUTES",
     allow_stack: false,
+    extra_stop_surcharge: 0,
     priority: 1,
     vehicle_type_ids: [] as number[],
     is_active: true,
@@ -50,6 +51,7 @@ const EditDeliveryTypeModal = ({
         delivery_time: initialData.delivery_time,
         delivery_unit: initialData.delivery_unit,
         allow_stack: initialData.allow_stack,
+        extra_stop_surcharge: parseFloat(initialData.extra_stop_surcharge) || 0,
         priority: initialData.priority,
         vehicle_type_ids: vehicleTypeIds,
         is_active: initialData.is_active,
@@ -67,7 +69,7 @@ const EditDeliveryTypeModal = ({
     if (type === "number") {
       setFormData((prev) => ({
         ...prev,
-        [name]: parseFloat(value) || 0,
+        [name]: value,
       }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -93,10 +95,17 @@ const EditDeliveryTypeModal = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Ensure vehicle_type_ids is not empty as per API requirement
+    const priorityVal = Number(formData.priority) || 0;
+    if (priorityVal > 10) {
+      toast.error("Priority cannot be greater than 10");
+      return;
+    }
+    if (priorityVal < 1) {
+      toast.error("Priority cannot be less than 1");
+      return;
+    }
     if (formData.vehicle_type_ids.length === 0) {
-      alert("Please select at least one vehicle type.");
+      toast.error("Please select at least one vehicle type.");
       return;
     }
 
@@ -104,13 +113,14 @@ const EditDeliveryTypeModal = ({
       id: formData.id,
       name: formData.name,
       description: formData.description,
-      price_multiplier: formData.price_multiplier,
-      collection_time: formData.collection_time,
+      price_multiplier: Number(formData.price_multiplier) || 0,
+      collection_time: Number(formData.collection_time) || 0,
       collection_unit: formData.collection_unit,
-      delivery_time: formData.delivery_time,
+      delivery_time: Number(formData.delivery_time) || 0,
       delivery_unit: formData.delivery_unit,
       allow_stack: formData.allow_stack,
-      priority: formData.priority,
+      extra_stop_surcharge: Number(formData.extra_stop_surcharge) || 0,
+      priority: priorityVal,
       vehicle_type_ids: formData.vehicle_type_ids,
       is_active: formData.is_active,
     };
@@ -178,57 +188,59 @@ const EditDeliveryTypeModal = ({
               />
             </div>
 
-            {/* Collection Time */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Collection Time
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  step="0.01"
-                  name="collection_time"
-                  value={formData.collection_time}
-                  onChange={handleInputChange}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-                  required
-                />
-                <select
-                  name="collection_unit"
-                  value={formData.collection_unit}
-                  onChange={handleInputChange}
-                  className="w-28 px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="MINUTES">Min</option>
-                  <option value="HOURS">Hours</option>
-                </select>
+            <div className="col-span-2 space-y-4">
+              {/* Collection Time */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Collection Time
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="collection_time"
+                    value={formData.collection_time}
+                    onChange={handleInputChange}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                    required
+                  />
+                  <select
+                    name="collection_unit"
+                    value={formData.collection_unit}
+                    onChange={handleInputChange}
+                    className="w-28 px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="MINUTES">Min</option>
+                    <option value="HOURS">Hours</option>
+                  </select>
+                </div>
               </div>
-            </div>
 
-            {/* Delivery Time */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Delivery Time
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  step="0.01"
-                  name="delivery_time"
-                  value={formData.delivery_time}
-                  onChange={handleInputChange}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-                  required
-                />
-                <select
-                  name="delivery_unit"
-                  value={formData.delivery_unit}
-                  onChange={handleInputChange}
-                  className="w-28 px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="MINUTES">Min</option>
-                  <option value="HOURS">Hours</option>
-                </select>
+              {/* Delivery Time */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Delivery Time
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="delivery_time"
+                    value={formData.delivery_time}
+                    onChange={handleInputChange}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                    required
+                  />
+                  <select
+                    name="delivery_unit"
+                    value={formData.delivery_unit}
+                    onChange={handleInputChange}
+                    className="w-28 px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="MINUTES">Min</option>
+                    <option value="HOURS">Hours</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -240,6 +252,21 @@ const EditDeliveryTypeModal = ({
                 type="number"
                 name="priority"
                 value={formData.priority}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Extra Stop Surcharge
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                name="extra_stop_surcharge"
+                value={formData.extra_stop_surcharge}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 required
@@ -299,13 +326,13 @@ const EditDeliveryTypeModal = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-[#FFCC00] rounded-md font-bold hover:bg-[#FFD700]"
+              className="px-6 py-2 bg-[#FFCC00] rounded-md font-bold hover:bg-[#FFD700] cursor-pointer"
             >
               Update Delivery Type
             </button>

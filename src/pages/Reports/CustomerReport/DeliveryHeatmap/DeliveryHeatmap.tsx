@@ -291,7 +291,7 @@ const DeliveryHeatmap: React.FC<DeliveryHeatmapProps> = ({ heatmapData = [] }) =
       }
 
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry`;
+      script.src = `https://maps.googleapis.com/maps/api/js?v=3.64&key=${apiKey}&libraries=geometry`;
       script.async = true;
       script.defer = true;
       
