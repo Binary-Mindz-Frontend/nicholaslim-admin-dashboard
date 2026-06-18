@@ -82,6 +82,7 @@ import PaymentCancel from "@/pages/PaymentCancel/PaymentCancel";
 import PaymentSuccess from "@/pages/PaymentSuccess/PaymentSuccess";
 import UserWalletAdmin from "@/pages/Dashboard/Wallets/userWalletAdmin/UserWalletAdmin";
 import DriverWalletAdmin from "@/pages/Dashboard/Wallets/driverWalletAdmin/DriverWalletAdmin";
+import GlobalErrorBoundary from "@/components/Shared/GlobalErrorBoundary";
 
 const RootLayout = () => (
   <>
@@ -93,6 +94,7 @@ const RootLayout = () => (
 const routes = createBrowserRouter([
   {
     element: <RootLayout />,
+    errorElement: <GlobalErrorBoundary />,
     children: [
       {
         path: "/",
