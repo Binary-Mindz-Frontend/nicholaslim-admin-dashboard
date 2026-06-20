@@ -9,6 +9,7 @@ import {
   StandardCommissionRateProps,
 } from "@/types/standardCommissionRateType";
 import { useGetServiceZonesQuery } from "@/redux/features/serviceZone/serviceZoneApi";
+import SelectReact from "react-select";
 
 export default function StandardCommissionRate({
   standardCommissionRateData,
@@ -35,6 +36,28 @@ export default function StandardCommissionRate({
   const { data: serviceZonesData } = useGetServiceZonesQuery({});
   const serviceZones = serviceZonesData?.data?.data?.data || [];
 
+  const getServiceAreaIds = (item: any) => {
+    if (Array.isArray(item.serviceAreas)) {
+      if (item.serviceAreas.length === 0) {
+        return ["ALL"];
+      }
+      return item.serviceAreas.map((sa: any) => Number(sa.service_area_id || sa.serviceArea?.id || sa.id));
+    }
+    if (Array.isArray(item.service_area_ids) && item.service_area_ids.length > 0) {
+      return item.service_area_ids.map(Number);
+    }
+    if (item.service_area_id) {
+      return [Number(item.service_area_id)];
+    }
+    if (Array.isArray(item.service_areas) && item.service_areas.length > 0) {
+      return item.service_areas.map((a: any) => Number(a.id || a.service_area_id || a));
+    }
+    if (Array.isArray(item.serviceZones) && item.serviceZones.length > 0) {
+      return item.serviceZones.map((z: any) => Number(z.id || z.serviceZoneId || z));
+    }
+    return ["ALL"];
+  };
+
   useEffect(() => {
     if (standardCommissionRateData && Array.isArray(standardCommissionRateData)) {
       setIsDataLoading(true);
@@ -44,7 +67,7 @@ export default function StandardCommissionRate({
           id: rate.id,
           ruleName: rate.role_name,
           percentage: rate.commission_rate_delivery_fee,
-          serviceAreaId: rate.service_area_id,
+          serviceAreaIds: getServiceAreaIds(rate),
         }));
 
       setRules(filteredRules);
@@ -53,7 +76,7 @@ export default function StandardCommissionRate({
   }, [standardCommissionRateData, applicableUser]);
 
   const handleAddRule = () => {
-    setRules([...rules, { ruleName: "", percentage: 0, serviceAreaId: null }]);
+    setRules([...rules, { ruleName: "", percentage: 0, serviceAreaIds: ["ALL"] }]);
   };
 
   const openDeleteModal = (index: number) => {
@@ -109,7 +132,7 @@ export default function StandardCommissionRate({
   const handleRuleChange = (
     index: number,
     field: keyof CommissionRule,
-    value: string | number | null,
+    value: string | number | null | any,
   ) => {
     const newRules = [...rules];
 
@@ -119,13 +142,53 @@ export default function StandardCommissionRate({
         ...newRules[index],
         [field]: isNaN(numValue as number) ? 0 : numValue,
       };
-    } else if (field === "serviceAreaId") {
-      newRules[index] = { ...newRules[index], [field]: Number(value) }; ;
-    } else {
+    } else if (field === "serviceAreaIds") {
       newRules[index] = { ...newRules[index], [field]: value };
+    } else {
+      newRules[index] = { ...newRules[index], [field]: value as any };
     }
 
     setRules(newRules);
+  };
+
+  const zoneOptions = [
+    { value: "ALL", label: "All Service Areas" },
+    ...serviceZones.map((zone: any) => ({
+      value: zone.id,
+      label: zone.name,
+    })),
+  ];
+
+  const getSelectValue = (ruleServiceAreaIds: (string | number)[]) => {
+    if (!ruleServiceAreaIds || ruleServiceAreaIds.length === 0 || ruleServiceAreaIds.includes("ALL")) {
+      return [{ value: "ALL", label: "All Service Areas" }];
+    }
+    return ruleServiceAreaIds.map((id) => {
+      const zone = serviceZones.find((z: any) => z.id === id);
+      return {
+        value: id,
+        label: zone ? zone.name : `Area ${id}`,
+      };
+    });
+  };
+
+  const handleZoneChange = (index: number, selectedOptions: any) => {
+    let values = selectedOptions ? selectedOptions.map((opt: any) => opt.value) : [];
+    
+    if (values.includes("ALL") && values.length > 1) {
+      const hadAll = (rules[index].serviceAreaIds || []).includes("ALL");
+      if (!hadAll) {
+        values = ["ALL"];
+      } else {
+        values = values.filter((val: any) => val !== "ALL");
+      }
+    }
+    
+    if (values.length === 0) {
+      values = ["ALL"];
+    }
+
+    handleRuleChange(index, "serviceAreaIds", values);
   };
 
   const handleSaveAll = async (e: React.FormEvent) => {
@@ -142,12 +205,12 @@ export default function StandardCommissionRate({
       let updateErrorCount = 0;
 
       for (const rule of newRules) {
-        if (rule.ruleName.trim() && rule.percentage > 0 && rule.serviceAreaId) {
+        if (rule.ruleName.trim() && rule.percentage > 0 && rule.serviceAreaIds) {
           try {
             await onAddCommissionRate({
               ruleName: rule.ruleName,
               percentage: rule.percentage,
-              serviceAreaId: rule.serviceAreaId,
+              serviceAreaIds: rule.serviceAreaIds,
             });
             newSuccessCount++;
           } catch (error) {
@@ -162,14 +225,14 @@ export default function StandardCommissionRate({
           rule.id &&
           rule.ruleName.trim() &&
           rule.percentage > 0 &&
-          rule.serviceAreaId
+          rule.serviceAreaIds
         ) {
           try {
             await onUpdateCommissionRate({
               id: rule.id,
               ruleName: rule.ruleName,
               percentage: rule.percentage,
-              serviceAreaId: rule.serviceAreaId,
+              serviceAreaIds: rule.serviceAreaIds,
             });
             updateSuccessCount++;
           } catch (error) {
@@ -210,8 +273,7 @@ export default function StandardCommissionRate({
 
   const numberInputClasses = `${inputClasses} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`;
 
-  const selectClasses =
-    "w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:ring-yellow-500 focus:border-yellow-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none bg-white";
+
 
   if (isDataLoading) {
     return (
@@ -281,26 +343,15 @@ export default function StandardCommissionRate({
                   max="100"
                   step="0.01"
                 />
-                <select
-                  value={rule.serviceAreaId || ""}
-                  onChange={(e) =>
-                    handleRuleChange(
-                      index,
-                      "serviceAreaId",
-                      e.target.value ? Number(e.target.value) : null,
-                    )
-                  }
-                  className={selectClasses}
-                  required
-                  disabled={isLoading}
-                >
-                  <option value="">Select Service Area</option>
-                  {serviceZones.map((zone: any) => (
-                    <option key={zone.id} value={zone.id}>
-                      {zone.name}
-                    </option>
-                  ))}
-                </select>
+                <SelectReact
+                  isMulti
+                  options={zoneOptions}
+                  value={getSelectValue(rule.serviceAreaIds)}
+                  onChange={(selected) => handleZoneChange(index, selected)}
+                  className="w-full text-sm"
+                  isDisabled={isLoading}
+                  placeholder="Select Service Areas"
+                />
 
                 <button
                   type="button"

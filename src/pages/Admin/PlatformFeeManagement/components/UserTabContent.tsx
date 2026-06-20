@@ -9,21 +9,8 @@ interface UserTabContentProps {
   onAddFeeStructure: (data: any) => Promise<any>;
   onUpdateFeeStructure: (data: any) => Promise<any>;
   onDeleteFeeStructure: (id: number) => Promise<any>;
-  onAddSurgeRule: (data: {
-    ruleName: string;
-    priceMultiplier: number;
-    condition: string;
-    timeRange: string;
-    applicableUser: "USER" | "RAIDER";
-  }) => Promise<any>;
-  onUpdateSurgeRule: (data: {
-    id: number;
-    ruleName: string;
-    priceMultiplier: number;
-    condition: string;
-    timeRange: string;
-    applicableUser: "USER" | "RAIDER";
-  }) => Promise<any>;
+  onAddSurgeRule: (data: any) => Promise<any>;
+  onUpdateSurgeRule: (data: any) => Promise<any>;
   onDeleteSurgeRule: (id: number) => Promise<any>;
 }
 

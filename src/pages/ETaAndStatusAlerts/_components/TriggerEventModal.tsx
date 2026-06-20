@@ -128,8 +128,9 @@ export default function TriggerEventModal({ isOpen, onClose, initialData }: any)
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ETA_MINUTES">ETA_MINUTES</SelectItem>
-                  <SelectItem value="ORDER_STATUS">ORDER_STATUS</SelectItem>
+                  <SelectItem value="ORDER_STATUS">Order Status</SelectItem>
+                  <SelectItem value="ETA_MINUTES">ETA (Minutes)</SelectItem>
+                  <SelectItem value="ETA_KM">ETA (Kilometers)</SelectItem>
                 </SelectContent>
               </Select>
           </div>
@@ -181,6 +182,7 @@ export default function TriggerEventModal({ isOpen, onClose, initialData }: any)
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="ORDER_PLACED">Order Placed</SelectItem>
                 <SelectItem value="ASSIGNED">Assigned</SelectItem>
                 <SelectItem value="ARRIVED_AT_PICKUP">Arrived at Pickup</SelectItem>
                 <SelectItem value="IN_TRANSIT">In Transit</SelectItem>

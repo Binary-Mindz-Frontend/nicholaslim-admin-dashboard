@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface DeductionFee {
   id?: number;
   deductionName: string;
   amount: string;
   type: string;
   applicableUser: "USER" | "RAIDER";
+  serviceAreaIds: (string | number)[];
 }
 
 export interface DeductionFeesProps {
@@ -13,13 +15,15 @@ export interface DeductionFeesProps {
     amount: number;
     type: string;
     applicableUser: "USER" | "RAIDER";
-  }) => Promise<void>;
+    serviceAreaIds: (string | number)[];
+  }) => Promise<any>;
   onUpdateDeductionFee: (data: {
     id: number;
     deductionName: string;
     amount: number;
     type: string;
     applicableUser: "USER" | "RAIDER";
-  }) => Promise<{ success: boolean; message: string }>;
-  onDeleteDeductionFee: (id: number) => Promise<{ success: boolean; message: string }>;
+    serviceAreaIds: (string | number)[];
+  }) => Promise<any>;
+  onDeleteDeductionFee: (id: number) => Promise<any>;
 }
