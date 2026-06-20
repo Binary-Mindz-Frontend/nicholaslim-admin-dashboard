@@ -132,6 +132,8 @@ const additionalServicesApi = baseApi.injectEndpoints({
         "SurgePricingRules",
         "DisputeTypes",
         "DriverTiers",
+        "TriggerEvents",
+        "NotificationRules",
       ],
     }),
   }),

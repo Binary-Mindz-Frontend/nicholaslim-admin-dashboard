@@ -78,6 +78,8 @@ export enum Module {
     ADMIN_USER_WALLET = "admin_user_wallet",
     ADMIN_RAIDER_WALLET = "admin_raider_wallet",
     DRIVER_TIER_ROLE = "driver_tier_role",
+    ETA = "eta",
+    NOTIFICATION_RULE = "notification_rule",
 }
 
 export enum Permission {
@@ -85,4 +87,5 @@ export enum Permission {
     CREATE = "create",
     UPDATE = "update",
     DELETE = "delete",
+    GET_ONE = "get_one",
 }

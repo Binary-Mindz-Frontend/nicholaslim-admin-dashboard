@@ -80,6 +80,7 @@ const SurgePricingRole: React.FC = () => {
       label: "Status",
       render: (status: string, row: SurgeRule) => (
         <StatusSwitch
+          key={`${row.id}-${status}`}
           status={status === "ACTIVE" ? "Active" : "Inactive"}
           onChange={() => handleStatusChange(row.id)}
         />

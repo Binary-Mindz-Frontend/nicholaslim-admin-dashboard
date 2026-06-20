@@ -1004,6 +1004,8 @@ const MODULE_ACTIONS: Record<string, string[]> = {
   admin_user_wallet: ["read"],
   admin_raider_wallet: ["read"],
   driver_tier_role: ["create", "read", "update", "delete", "just_admin"],
+  eta: ["create", "read", "update", "delete", "get_one", "just_admin"],
+  notification_rule: ["create", "read", "update", "delete", "get_one", "just_admin"],
 };
 
 // Keep for backward compatibility
@@ -1065,6 +1067,8 @@ const FRONTEND_TO_BACKEND_MODULES: Record<string, string> = {
   "User wallet (Admin)": "admin_user_wallet",
   "Driver wallet (Admin)": "admin_raider_wallet",
   "Driver Tier Role": "driver_tier_role",
+  "ETA & Status Alerts": "eta",
+  "Automated Alert Rules": "notification_rule",
   RBAC: "rbac",
 };
 
