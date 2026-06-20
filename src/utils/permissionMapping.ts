@@ -194,6 +194,12 @@ export const menuToPermissionMapping: PermissionMapping = {
 
   // Driver Tier
   driver_tier_role: ["driver_tier_role"],
+
+  // ETA & Status Alerts
+  "eta_and_status_alerts": ["eta"],
+
+  // Automated Alert Rules
+  "automated_alert_rule": ["notification_rule"],
 };
 
 // Map menu IDs to additional modules that should be selected together
@@ -336,6 +342,10 @@ export const childRouteToParentMapping: Record<string, string> = {
   "policy-management": "service-configuration",
   "policy-management/:id": "service-configuration",
 
+  // ETA & Status Alerts
+  "eta_and_status_alerts": "service-configuration",
+  "eta_and_status_alerts/:id": "service-configuration",
+
   "revenue-configuration": "system-configuration",
   "platform-fee": "revenue-configuration",
   "platform-fee/:id": "revenue-configuration",
@@ -370,6 +380,8 @@ export const childRouteToParentMapping: Record<string, string> = {
   "create-notification-promotion": "notification_management",
   "notification-list": "notification_management",
   "notification-promotion-list": "notification_management",
+  "automated_alert_rule": "notification_management",
+  "automated_alert_rule/:id": "notification_management",
   "notification-log-history": "notification_management",
 
   // Driver Tier
@@ -430,6 +442,8 @@ export const extractBaseRoute = (route: string): string => {
     /^driver_tier_role\/\d+$/,
     /^user-wallets-admin\/\d+$/,
     /^driver-wallets-admin\/\d+$/,
+    /^eta_and_status_alerts\/\d+$/,
+    /^automated_alert_rule\/\d+$/,
   ];
 
   for (const pattern of dynamicPatterns) {
@@ -485,6 +499,8 @@ export const isDynamicRoute = (route: string): boolean => {
     "notification-list/:id",
     "notification-promotion-list/:id",
     "notification-log-history/:id",
+    "eta_and_status_alerts/:id",
+    "automated_alert_rule/:id",
   ];
 
   const cleanRoute = route.split("?")[0];

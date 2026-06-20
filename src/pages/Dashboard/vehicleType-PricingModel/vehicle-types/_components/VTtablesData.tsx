@@ -230,6 +230,7 @@ const VTtablesData: React.FC<VTtablesDataProps> = ({
       label: "Status",
       render: (isActive: boolean, row: Vehicle) => (
         <StatusSwitch
+          key={`${row.id}-${isActive}`}
           status={isActive ? "Active" : "Inactive"}
           onChange={(newStatus) => handleStatusChange(row.id, newStatus)}
         />

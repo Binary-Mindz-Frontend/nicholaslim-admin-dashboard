@@ -74,6 +74,12 @@ export const menuItems: MenuItem[] = [
             icon: null,
             route: "/policy-management",
           },
+          {
+            id: "eta_and_status_alerts",
+            label: "ETA & Status Alerts",
+            icon: null,
+            route: "/eta_and_status_alerts",
+          },
         ],
       },
       {
@@ -360,6 +366,12 @@ export const menuItems: MenuItem[] = [
         label: "Notification Promotion List",
         icon: null,
         route: "/notification-promotion-list",
+      },
+      {
+        id: "automated_alert_rule",
+        label: "Automated Alert Rules",
+        icon: null,
+        route: "/automated_alert_rule",
       },
       {
         id: "notification-log-history",

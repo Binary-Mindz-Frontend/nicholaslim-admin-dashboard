@@ -214,6 +214,7 @@ const DeliveryTypesTable: React.FC<DeliveryTypesTableProps> = ({
       label: "Status",
       render: (is_active: boolean, row: DeliveryType) => (
         <StatusSwitch
+          key={`${row.id}-${is_active}`}
           status={is_active ? "Active" : "Inactive"}
           onChange={(newStatus) => handleStatusChange(row.id.toString(), newStatus)}
         />

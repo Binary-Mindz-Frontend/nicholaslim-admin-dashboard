@@ -11,19 +11,21 @@ interface QuizTableProps {
   onAddQuestions: (id: number) => void;
 }
 
-const AllQuizShowTable: React.FC<QuizTableProps> = ({ 
-  quizzes, 
-  onEdit, 
-  onDelete, 
-  onToggleActive, 
-  onAddQuestions 
+const AllQuizShowTable: React.FC<QuizTableProps> = ({
+  quizzes,
+  onEdit,
+  onDelete,
+  onToggleActive,
+  onAddQuestions,
 }) => {
   if (quizzes.length === 0) {
     return (
       <div className="text-center py-16">
         <BookOpen className="w-16 h-16 mx-auto text-gray-300 mb-4" />
         <p className="text-gray-500 text-lg">No quiz found.</p>
-        <p className="text-gray-400 mt-2">Create your first quiz to get started!</p>
+        <p className="text-gray-400 mt-2">
+          Create your first quiz to get started!
+        </p>
       </div>
     );
   }
@@ -64,11 +66,18 @@ const AllQuizShowTable: React.FC<QuizTableProps> = ({
         </thead>
         <tbody className="bg-white divide-y divide-gray-100">
           {quizzes.map((quiz: any) => (
-            <tr key={quiz.id} className="hover:bg-yellow-50 transition-colors duration-150">
+            <tr
+              key={quiz.id}
+              className="hover:bg-yellow-50 transition-colors duration-150"
+            >
               <td className="px-8 py-5">
                 <div>
-                  <div className="font-semibold text-gray-800 text-lg">{quiz.title}</div>
-                  <div className="text-sm text-gray-500 mt-1">{quiz.description}</div>
+                  <div className="font-semibold text-gray-800 text-lg">
+                    {quiz.title}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {quiz.description}
+                  </div>
                 </div>
               </td>
               <td className="px-8 py-5">
@@ -77,13 +86,15 @@ const AllQuizShowTable: React.FC<QuizTableProps> = ({
                 </span>
               </td>
               <td className="px-8 py-5">
-                <span className={`px-3 py-1.5 text-xs rounded-full font-medium ${
-                  quiz.QuizOption.difficulty === 'easy' 
-                    ? 'bg-green-100 text-green-800'
-                    : quiz.QuizOption.difficulty === 'medium'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
+                <span
+                  className={`px-3 py-1.5 text-xs rounded-full font-medium ${
+                    quiz.QuizOption.difficulty === "easy"
+                      ? "bg-green-100 text-green-800"
+                      : quiz.QuizOption.difficulty === "medium"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
+                  }`}
+                >
                   {quiz.QuizOption.difficulty}
                 </span>
               </td>
@@ -95,6 +106,7 @@ const AllQuizShowTable: React.FC<QuizTableProps> = ({
               </td>
               <td className="px-8 py-5">
                 <StatusSwitch
+                  key={`${quiz.id}-${quiz.is_active}`}
                   status={quiz.is_active ? "Active" : "Inactive"}
                   onChange={(newStatus) => {
                     // Handle the status change
