@@ -83,6 +83,8 @@ import PaymentSuccess from "@/pages/PaymentSuccess/PaymentSuccess";
 import UserWalletAdmin from "@/pages/Dashboard/Wallets/userWalletAdmin/UserWalletAdmin";
 import DriverWalletAdmin from "@/pages/Dashboard/Wallets/driverWalletAdmin/DriverWalletAdmin";
 import GlobalErrorBoundary from "@/components/Shared/GlobalErrorBoundary";
+import ETaAndStatusAlerts from "@/pages/ETaAndStatusAlerts/ETaAndStatusAlerts";
+import AutomatedAlertRule from "@/pages/AutomatedAlertRule/AutomatedAlertRule";
 
 const RootLayout = () => (
   <>
@@ -481,6 +483,14 @@ const routes = createBrowserRouter([
             path: "driver-wallets-admin",
             element: <DriverWalletAdmin />,
           },
+          {
+            path: "eta_and_status_alerts",
+            element: <ETaAndStatusAlerts />
+          },
+          {
+            path: "automated_alert_rule",
+            element: <AutomatedAlertRule />
+          }
         ],
       },
 
