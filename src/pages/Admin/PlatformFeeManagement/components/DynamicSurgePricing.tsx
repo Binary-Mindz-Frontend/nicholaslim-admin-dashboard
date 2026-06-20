@@ -4,6 +4,8 @@ import { Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import LoadingSpinner from "@/components/Shared/LoadingSpinner/LoadingSpinner";
 import DeleteConfirmationModal from "@/components/Shared/DeleteConfirmationModal/DeleteConfirmationModal";
+import { useGetServiceZonesQuery } from "@/redux/features/serviceZone/serviceZoneApi";
+import SelectReact from "react-select";
 
 interface SurgeRule {
   id?: number;
@@ -13,6 +15,7 @@ interface SurgeRule {
   condition: string;
   timeRange: string;
   applicableUser: "USER" | "RAIDER";
+  serviceAreaIds: (string | number)[];
 }
 
 interface DynamicSurgePricingProps {
@@ -24,6 +27,7 @@ interface DynamicSurgePricingProps {
     condition: string;
     timeRange: string;
     applicableUser: "USER" | "RAIDER";
+    serviceAreaIds: (string | number)[];
   }) => Promise<void>;
   onUpdateSurgeRule: (data: {
     id: number;
@@ -32,8 +36,9 @@ interface DynamicSurgePricingProps {
     condition: string;
     timeRange: string;
     applicableUser: "USER" | "RAIDER";
-  }) => Promise<{ success: boolean; message: string }>;
-  onDeleteSurgeRule: (id: number) => Promise<{ success: boolean; message: string }>;
+    serviceAreaIds: (string | number)[];
+  }) => Promise<any>;
+  onDeleteSurgeRule: (id: number) => Promise<any>;
 }
 
 export default function DynamicSurgePricing({
@@ -78,6 +83,31 @@ export default function DynamicSurgePricing({
     return isNaN(num) ? "" : `${num}x`;
   };
 
+  const { data: serviceZonesData } = useGetServiceZonesQuery({});
+  const serviceZones = serviceZonesData?.data?.data?.data || [];
+
+  const getServiceAreaIds = (item: any) => {
+    if (Array.isArray(item.serviceAreas)) {
+      if (item.serviceAreas.length === 0) {
+        return ["ALL"];
+      }
+      return item.serviceAreas.map((sa: any) => Number(sa.service_area_id || sa.serviceArea?.id || sa.id));
+    }
+    if (Array.isArray(item.service_area_ids) && item.service_area_ids.length > 0) {
+      return item.service_area_ids.map(Number);
+    }
+    if (item.service_area_id) {
+      return [Number(item.service_area_id)];
+    }
+    if (Array.isArray(item.service_areas) && item.service_areas.length > 0) {
+      return item.service_areas.map((a: any) => Number(a.id || a.service_area_id || a));
+    }
+    if (Array.isArray(item.serviceZones) && item.serviceZones.length > 0) {
+      return item.serviceZones.map((z: any) => Number(z.id || z.serviceZoneId || z));
+    }
+    return ["ALL"];
+  };
+
   // Transform API data to match component state
   useEffect(() => {
     if (surgeRulesData && Array.isArray(surgeRulesData)) {
@@ -92,6 +122,7 @@ export default function DynamicSurgePricing({
           condition: rule.condition,
           timeRange: rule.time_range,
           applicableUser: rule.applicable_user,
+          serviceAreaIds: getServiceAreaIds(rule),
         }));
 
       setRules(filteredRules);
@@ -108,7 +139,8 @@ export default function DynamicSurgePricing({
         displayMultiplier: "",
         condition: "HIGH_DEMAND", 
         timeRange: "", 
-        applicableUser: applicableUser 
+        applicableUser: applicableUser,
+        serviceAreaIds: ["ALL"],
       },
     ]);
   };
@@ -164,7 +196,7 @@ export default function DynamicSurgePricing({
   const handleRuleChange = (
     index: number,
     field: keyof SurgeRule,
-    value: string | number
+    value: string | number | any
   ) => {
     const newRules = [...rules];
     
@@ -175,11 +207,53 @@ export default function DynamicSurgePricing({
         priceMultiplier: numValue,
         displayMultiplier: typeof value === 'string' ? value : formatMultiplierForDisplay(value)
       };
-    } else {
+    } else if (field === "serviceAreaIds") {
       newRules[index] = { ...newRules[index], [field]: value };
+    } else {
+      newRules[index] = { ...newRules[index], [field]: value as any };
     }
     
     setRules(newRules);
+  };
+
+  const zoneOptions = [
+    { value: "ALL", label: "All Service Areas" },
+    ...serviceZones.map((zone: any) => ({
+      value: zone.id,
+      label: zone.name,
+    })),
+  ];
+
+  const getSelectValue = (ruleServiceAreaIds: (string | number)[]) => {
+    if (!ruleServiceAreaIds || ruleServiceAreaIds.length === 0 || ruleServiceAreaIds.includes("ALL")) {
+      return [{ value: "ALL", label: "All Service Areas" }];
+    }
+    return ruleServiceAreaIds.map((id) => {
+      const zone = serviceZones.find((z: any) => z.id === id);
+      return {
+        value: id,
+        label: zone ? zone.name : `Area ${id}`,
+      };
+    });
+  };
+
+  const handleZoneChange = (index: number, selectedOptions: any) => {
+    let values = selectedOptions ? selectedOptions.map((opt: any) => opt.value) : [];
+    
+    if (values.includes("ALL") && values.length > 1) {
+      const hadAll = (rules[index].serviceAreaIds || []).includes("ALL");
+      if (!hadAll) {
+        values = ["ALL"];
+      } else {
+        values = values.filter((val: any) => val !== "ALL");
+      }
+    }
+    
+    if (values.length === 0) {
+      values = ["ALL"];
+    }
+
+    handleRuleChange(index, "serviceAreaIds", values);
   };
 
   const handleDisplayMultiplierChange = (index: number, value: string) => {
@@ -221,6 +295,7 @@ export default function DynamicSurgePricing({
               condition: rule.condition,
               timeRange: rule.timeRange,
               applicableUser: rule.applicableUser,
+              serviceAreaIds: rule.serviceAreaIds,
             });
             newSuccessCount++;
           } catch (error) {
@@ -241,6 +316,7 @@ export default function DynamicSurgePricing({
               condition: rule.condition,
               timeRange: rule.timeRange,
               applicableUser: rule.applicableUser,
+              serviceAreaIds: rule.serviceAreaIds,
             });
             updateSuccessCount++;
           } catch (error) {
@@ -307,11 +383,12 @@ export default function DynamicSurgePricing({
 
         <form onSubmit={handleSaveAll} className="space-y-4">
           {/* Header Row */}
-          <div className="hidden md:grid grid-cols-[1fr_1fr_1fr_1fr_40px] gap-4 mb-2 text-sm font-semibold text-gray-600">
+          <div className="hidden md:grid grid-cols-[1fr_1fr_1fr_1fr_1.2fr_40px] gap-4 mb-2 text-sm font-semibold text-gray-600">
             <div>Rule Name</div>
             <div>Price Multiplier</div>
             <div>Condition</div>
             <div>Time Range</div>
+            <div>Service Area</div>
             <div className="w-10"></div>
           </div>
 
@@ -324,7 +401,7 @@ export default function DynamicSurgePricing({
             rules.map((rule, index) => (
               <div
                 key={rule.id || `new-${index}`}
-                className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1fr_40px] gap-4 items-center"
+                className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1fr_1.2fr_40px] gap-4 items-center"
               >
                 <input
                   type="text"
@@ -371,6 +448,15 @@ export default function DynamicSurgePricing({
                   className={inputClasses}
                   required
                   disabled={isLoading}
+                />
+                <SelectReact
+                  isMulti
+                  options={zoneOptions}
+                  value={getSelectValue(rule.serviceAreaIds)}
+                  onChange={(selected) => handleZoneChange(index, selected)}
+                  className="w-full text-sm"
+                  isDisabled={isLoading}
+                  placeholder="Select Service Areas"
                 />
                 
                 {/* Delete Button Only */}

@@ -150,16 +150,28 @@ export default function PlatformFeeManagement() {
     {
       header: "Log Type & Area",
       accessor: "log_type",
-      render: (row: any) => (
-        <div className="flex flex-col">
-          <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded w-fit mb-1 leading-none uppercase">
-            {row.log_type.replace(/_/g, " ")}
-          </span>
-          <span className="text-sm font-semibold text-slate-900">
-            {row.service_area} Area
-          </span>
-        </div>
-      ),
+      render: (row: any) => {
+        const sAreas = row.serviceAreas || row.snapshot?.serviceAreas;
+        let areaDisplay = "All Service Areas";
+        if (Array.isArray(sAreas) && sAreas.length > 0) {
+          areaDisplay = sAreas
+            .map((sa: any) => sa.serviceArea?.name || sa.name || `Area ${sa.service_area_id || sa}`)
+            .join(", ");
+        } else if (row.service_area) {
+          areaDisplay = `${row.service_area} Area`;
+        }
+
+        return (
+          <div className="flex flex-col">
+            <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded w-fit mb-1 leading-none uppercase">
+              {row.log_type.replace(/_/g, " ")}
+            </span>
+            <span className="text-sm font-semibold text-slate-900">
+              {areaDisplay}
+            </span>
+          </div>
+        );
+      },
     },
     {
       header: "Snapshot Info",
@@ -246,12 +258,15 @@ export default function PlatformFeeManagement() {
                 raiderDeductionFeeData={raiderDeductionFeeData || []}
                 onAddCommissionRate={async (data: any) => {
                   try {
-                    const response = await addStandardCommissionRate({
+                    const payload: any = {
                       applicable_user: activeTab,
                       role_name: data.ruleName,
                       commission_rate_delivery_fee: data.percentage,
-                      service_area_id: data.serviceAreaId,
-                    }).unwrap();
+                    };
+                    if (data.serviceAreaIds && !data.serviceAreaIds.includes("ALL") && data.serviceAreaIds.length > 0) {
+                      payload.service_area_ids = data.serviceAreaIds.map(Number);
+                    }
+                    const response = await addStandardCommissionRate(payload).unwrap();
                     if (!response?.success) {
                       toast.error(
                         response?.message || "Failed to add commission rate",
@@ -270,13 +285,16 @@ export default function PlatformFeeManagement() {
                 }}
                 onUpdateCommissionRate={async (data: any) => {
                   try {
-                    const response = await updateStandardCommissionRate({
+                    const payload: any = {
                       id: data.id,
                       applicable_user: activeTab,
                       role_name: data.ruleName,
                       commission_rate_delivery_fee: data.percentage,
-                      service_area_id: data.serviceAreaId,
-                    }).unwrap();
+                    };
+                    if (data.serviceAreaIds && !data.serviceAreaIds.includes("ALL") && data.serviceAreaIds.length > 0) {
+                      payload.service_area_ids = data.serviceAreaIds.map(Number);
+                    }
+                    const response = await updateStandardCommissionRate(payload).unwrap();
                     if (!response?.success) {
                       toast.error(
                         response?.message || "Failed to update commission rate",
@@ -317,12 +335,15 @@ export default function PlatformFeeManagement() {
                 }}
                 onAddCompensationRule={async (data: any) => {
                   try {
-                    const response = await addRaiderCompensationRole({
+                    const payload: any = {
                       applicable_user: data.applicableUser,
                       scenario: data.scenario,
                       commission_rate_delivery_fee: data.percentage,
-                      service_area_id: data.serviceAreaId,
-                    }).unwrap();
+                    };
+                    if (data.serviceAreaIds && !data.serviceAreaIds.includes("ALL") && data.serviceAreaIds.length > 0) {
+                      payload.service_area_ids = data.serviceAreaIds.map(Number);
+                    }
+                    const response = await addRaiderCompensationRole(payload).unwrap();
                     if (!response?.success) {
                       toast.error(
                         response?.message || "Failed to add compensation rule",
@@ -342,13 +363,16 @@ export default function PlatformFeeManagement() {
                 }}
                 onUpdateCompensationRule={async (data: any) => {
                   try {
-                    const response = await updateRaiderCompensationRole({
+                    const payload: any = {
                       id: data.id,
                       applicable_user: data.applicableUser,
                       scenario: data.scenario,
                       commission_rate_delivery_fee: data.percentage,
-                      service_area_id: data.serviceAreaId,
-                    }).unwrap();
+                    };
+                    if (data.serviceAreaIds && !data.serviceAreaIds.includes("ALL") && data.serviceAreaIds.length > 0) {
+                      payload.service_area_ids = data.serviceAreaIds.map(Number);
+                    }
+                    const response = await updateRaiderCompensationRole(payload).unwrap();
                     if (!response?.success) {
                       toast.error(
                         response?.message ||
@@ -391,12 +415,16 @@ export default function PlatformFeeManagement() {
                 }}
                 onAddDeductionFee={async (data: any) => {
                   try {
-                    const response = await addRaiderDeductionFee({
+                    const payload: any = {
                       applicable_user: data.applicableUser,
                       deduction_name: data.deductionName,
                       amount: data.amount,
                       type: data.type,
-                    }).unwrap();
+                    };
+                    if (data.serviceAreaIds && !data.serviceAreaIds.includes("ALL") && data.serviceAreaIds.length > 0) {
+                      payload.service_area_ids = data.serviceAreaIds.map(Number);
+                    }
+                    const response = await addRaiderDeductionFee(payload).unwrap();
                     if (!response?.success) {
                       toast.error(
                         response?.message || "Failed to add deduction fee",
@@ -415,13 +443,17 @@ export default function PlatformFeeManagement() {
                 }}
                 onUpdateDeductionFee={async (data: any) => {
                   try {
-                    const response = await updateRaiderDeductionFee({
+                    const payload: any = {
                       id: data.id,
                       applicable_user: data.applicableUser,
                       deduction_name: data.deductionName,
                       amount: data.amount,
                       type: data.type,
-                    }).unwrap();
+                    };
+                    if (data.serviceAreaIds && !data.serviceAreaIds.includes("ALL") && data.serviceAreaIds.length > 0) {
+                      payload.service_area_ids = data.serviceAreaIds.map(Number);
+                    }
+                    const response = await updateRaiderDeductionFee(payload).unwrap();
                     if (!response?.success) {
                       toast.error(
                         response?.message || "Failed to update deduction fee",
@@ -486,7 +518,12 @@ export default function PlatformFeeManagement() {
                 dynamicSurgeData={dynamicSurgeData || []}
                 onAddFeeStructure={async (data: any) => {
                   try {
-                    const response = await addUserFeeStructure(data).unwrap();
+                    const { serviceAreaIds, ...rest } = data;
+                    const payload: any = { ...rest };
+                    if (serviceAreaIds && !serviceAreaIds.includes("ALL") && serviceAreaIds.length > 0) {
+                      payload.service_area_ids = serviceAreaIds.map(Number);
+                    }
+                    const response = await addUserFeeStructure(payload).unwrap();
                     if (!response?.success) {
                       toast.error(
                         response?.message ||
@@ -506,8 +543,13 @@ export default function PlatformFeeManagement() {
                 }}
                 onUpdateFeeStructure={async (data: any) => {
                   try {
+                    const { serviceAreaIds, ...rest } = data;
+                    const payload: any = { ...rest };
+                    if (serviceAreaIds && !serviceAreaIds.includes("ALL") && serviceAreaIds.length > 0) {
+                      payload.service_area_ids = serviceAreaIds.map(Number);
+                    }
                     const response =
-                      await updateUserFeeStructure(data).unwrap();
+                      await updateUserFeeStructure(payload).unwrap();
                     if (!response?.success) {
                       toast.error(
                         response?.message ||
@@ -546,13 +588,18 @@ export default function PlatformFeeManagement() {
                 }}
                 onAddSurgeRule={async (data: any) => {
                   try {
-                    const response = await addDynamicSurge({
+                    const payload: any = {
                       applicable_user: data.applicableUser,
                       role_name: data.ruleName,
                       price_multiplier: data.priceMultiplier,
                       condition: data.condition,
                       time_range: data.timeRange,
-                    }).unwrap();
+                      is_active: data.isActive,
+                    };
+                    if (data.serviceAreaIds && !data.serviceAreaIds.includes("ALL") && data.serviceAreaIds.length > 0) {
+                      payload.service_area_ids = data.serviceAreaIds.map(Number);
+                    }
+                    const response = await addDynamicSurge(payload).unwrap();
                     if (!response?.success) {
                       toast.error(
                         response?.message || "Failed to add/update surge rule",
@@ -571,14 +618,19 @@ export default function PlatformFeeManagement() {
                 }}
                 onUpdateSurgeRule={async (data: any) => {
                   try {
-                    const response = await updateDynamicSurge({
+                    const payload: any = {
                       id: data.id,
                       applicable_user: data.applicableUser,
                       role_name: data.ruleName,
                       price_multiplier: data.priceMultiplier,
                       condition: data.condition,
                       time_range: data.timeRange,
-                    }).unwrap();
+                      is_active: data.isActive,
+                    };
+                    if (data.serviceAreaIds && !data.serviceAreaIds.includes("ALL") && data.serviceAreaIds.length > 0) {
+                      payload.service_area_ids = data.serviceAreaIds.map(Number);
+                    }
+                    const response = await updateDynamicSurge(payload).unwrap();
                     if (!response?.success) {
                       toast.error(
                         response?.message || "Failed to add/update surge rule",

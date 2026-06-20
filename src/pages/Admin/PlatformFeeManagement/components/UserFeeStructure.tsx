@@ -10,6 +10,7 @@ import {
   UserFeeStructureProps,
 } from "@/types/userFeeStructureType";
 import { useGetServiceZonesQuery } from "@/redux/features/serviceZone/serviceZoneApi";
+import SelectReact from "react-select";
 
 // No longer using fixed order types
 
@@ -46,6 +47,28 @@ export default function UserFeeStructure({
     return isNaN(num) ? 0 : num;
   };
 
+  const getServiceAreaIds = (item: any) => {
+    if (Array.isArray(item.serviceAreas)) {
+      if (item.serviceAreas.length === 0) {
+        return ["ALL"];
+      }
+      return item.serviceAreas.map((sa: any) => Number(sa.service_area_id || sa.serviceArea?.id || sa.id));
+    }
+    if (Array.isArray(item.service_area_ids) && item.service_area_ids.length > 0) {
+      return item.service_area_ids.map(Number);
+    }
+    if (item.service_area_id) {
+      return [Number(item.service_area_id)];
+    }
+    if (Array.isArray(item.service_areas) && item.service_areas.length > 0) {
+      return item.service_areas.map((a: any) => Number(a.id || a.service_area_id || a));
+    }
+    if (Array.isArray(item.serviceZones) && item.serviceZones.length > 0) {
+      return item.serviceZones.map((z: any) => Number(z.id || z.serviceZoneId || z));
+    }
+    return ["ALL"];
+  };
+
   // Transform API data to match component state
   useEffect(() => {
     if (feeStructureData && Array.isArray(feeStructureData)) {
@@ -57,7 +80,7 @@ export default function UserFeeStructure({
           feeName: fee.fee_name,
           amount: fee.amount,
           displayAmount: fee.amount.toString(),
-          serviceAreaId: fee.service_area_id,
+          serviceAreaIds: getServiceAreaIds(fee),
           appliesTo: fee.applies_to,
           applicableUser: fee.applicable_user,
           conditionValue: fee.condition_value || 0,
@@ -80,7 +103,7 @@ export default function UserFeeStructure({
         feeName: "",
         amount: 0,
         displayAmount: "",
-        serviceAreaId: null,
+        serviceAreaIds: ["ALL"],
         appliesTo: "DELIVERY_TYPE",
         applicableUser: applicableUser,
         conditionValue: 0,
@@ -143,7 +166,7 @@ export default function UserFeeStructure({
   const handleFeeChange = (
     index: number,
     field: keyof FeeStructure,
-    value: string | number | null | boolean,
+    value: string | number | null | boolean | any,
   ) => {
     const newFees = [...fees];
 
@@ -163,13 +186,53 @@ export default function UserFeeStructure({
         ...newFees[index],
         [field]: value as string,
       };
-    } else if (field === "serviceAreaId") {
-      newFees[index] = { ...newFees[index], [field]: value as number | null };
-    } else {
+    } else if (field === "serviceAreaIds") {
       newFees[index] = { ...newFees[index], [field]: value };
+    } else {
+      newFees[index] = { ...newFees[index], [field]: value as any };
     }
 
     setFees(newFees);
+  };
+
+  const zoneOptions = [
+    { value: "ALL", label: "All Service Areas" },
+    ...serviceZones.map((zone: any) => ({
+      value: zone.id,
+      label: zone.name,
+    })),
+  ];
+
+  const getSelectValue = (ruleServiceAreaIds: (string | number)[]) => {
+    if (!ruleServiceAreaIds || ruleServiceAreaIds.length === 0 || ruleServiceAreaIds.includes("ALL")) {
+      return [{ value: "ALL", label: "All Service Areas" }];
+    }
+    return ruleServiceAreaIds.map((id) => {
+      const zone = serviceZones.find((z: any) => z.id === id);
+      return {
+        value: id,
+        label: zone ? zone.name : `Area ${id}`,
+      };
+    });
+  };
+
+  const handleZoneChange = (index: number, selectedOptions: any) => {
+    let values = selectedOptions ? selectedOptions.map((opt: any) => opt.value) : [];
+    
+    if (values.includes("ALL") && values.length > 1) {
+      const hadAll = (fees[index].serviceAreaIds || []).includes("ALL");
+      if (!hadAll) {
+        values = ["ALL"];
+      } else {
+        values = values.filter((val: any) => val !== "ALL");
+      }
+    }
+    
+    if (values.length === 0) {
+      values = ["ALL"];
+    }
+
+    handleFeeChange(index, "serviceAreaIds", values);
   };
 
   const handleDisplayAmountChange = (index: number, value: string) => {
@@ -235,11 +298,11 @@ export default function UserFeeStructure({
       let updateErrorCount = 0;
 
       for (const fee of newFees) {
-        if (fee.feeName.trim() && fee.amount > 0 && fee.serviceAreaId) {
+        if (fee.feeName.trim() && fee.amount > 0 && fee.serviceAreaIds) {
           const requestData: any = {
             fee_name: fee.feeName,
             amount: fee.amount,
-            service_area_id: fee.serviceAreaId,
+            serviceAreaIds: fee.serviceAreaIds,
             applies_to: fee.appliesTo,
             applicable_user: fee.applicableUser,
             rule_key: fee.ruleKey,
@@ -265,13 +328,13 @@ export default function UserFeeStructure({
           fee.id &&
           fee.feeName.trim() &&
           fee.amount > 0 &&
-          fee.serviceAreaId
+          fee.serviceAreaIds
         ) {
           const requestData: any = {
             id: fee.id,
             fee_name: fee.feeName,
             amount: fee.amount,
-            service_area_id: fee.serviceAreaId,
+            serviceAreaIds: fee.serviceAreaIds,
             applies_to: fee.appliesTo,
             applicable_user: fee.applicableUser,
             rule_key: fee.ruleKey,
@@ -412,26 +475,15 @@ export default function UserFeeStructure({
                       {/* <option value="PERCENTAGE">%</option> */}
                     </select>
 
-                    <select
-                      value={fee.serviceAreaId || ""}
-                      onChange={(e) =>
-                        handleFeeChange(
-                          index,
-                          "serviceAreaId",
-                          e.target.value ? Number(e.target.value) : null,
-                        )
-                      }
-                      className={selectClasses}
-                      required
-                      disabled={isLoading}
-                    >
-                      <option value="">Area</option>
-                      {serviceZones.map((zone: any) => (
-                        <option key={zone.id} value={zone.id}>
-                          {zone.name}
-                        </option>
-                      ))}
-                    </select>
+                    <SelectReact
+                      isMulti
+                      options={zoneOptions}
+                      value={getSelectValue(fee.serviceAreaIds)}
+                      onChange={(selected) => handleZoneChange(index, selected)}
+                      className="w-full text-sm min-w-[150px]"
+                      isDisabled={isLoading}
+                      placeholder="Select Service Areas"
+                    />
 
                     <div className="grid grid-cols-[1fr_45px_1fr] gap-1">
                       <input
