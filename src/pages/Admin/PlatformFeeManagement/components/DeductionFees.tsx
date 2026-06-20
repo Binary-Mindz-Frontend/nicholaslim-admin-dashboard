@@ -5,8 +5,9 @@ import LoadingSpinner from "@/components/Shared/LoadingSpinner/LoadingSpinner";
 import DeleteConfirmationModal from "@/components/Shared/DeleteConfirmationModal/DeleteConfirmationModal";
 import {
   DeductionFee,
-  // DeductionFeesProps,
 } from "@/types/raiderDeductionFeeType";
+import { useGetServiceZonesQuery } from "@/redux/features/serviceZone/serviceZoneApi";
+import SelectReact from "react-select";
 
 export default function DeductionFees({
   deductionFeesData,
@@ -29,6 +30,31 @@ export default function DeductionFees({
     feeName: "",
   });
 
+  const { data: serviceZonesData } = useGetServiceZonesQuery({});
+  const serviceZones = serviceZonesData?.data?.data?.data || [];
+
+  const getServiceAreaIds = (item: any) => {
+    if (Array.isArray(item.serviceAreas)) {
+      if (item.serviceAreas.length === 0) {
+        return ["ALL"];
+      }
+      return item.serviceAreas.map((sa: any) => Number(sa.service_area_id || sa.serviceArea?.id || sa.id));
+    }
+    if (Array.isArray(item.service_area_ids) && item.service_area_ids.length > 0) {
+      return item.service_area_ids.map(Number);
+    }
+    if (item.service_area_id) {
+      return [Number(item.service_area_id)];
+    }
+    if (Array.isArray(item.service_areas) && item.service_areas.length > 0) {
+      return item.service_areas.map((a: any) => Number(a.id || a.service_area_id || a));
+    }
+    if (Array.isArray(item.serviceZones) && item.serviceZones.length > 0) {
+      return item.serviceZones.map((z: any) => Number(z.id || z.serviceZoneId || z));
+    }
+    return ["ALL"];
+  };
+
   useEffect(() => {
     if (deductionFeesData && Array.isArray(deductionFeesData)) {
       setIsDataLoading(true);
@@ -40,6 +66,7 @@ export default function DeductionFees({
           amount: fee.amount.toString(), // Keep as string for input control
           type: fee.type,
           applicableUser: fee.applicable_user,
+          serviceAreaIds: getServiceAreaIds(fee),
         }));
 
       setFees(filteredFees);
@@ -55,6 +82,7 @@ export default function DeductionFees({
         amount: "",
         type: "Fixed Amount",
         applicableUser: "RAIDER",
+        serviceAreaIds: ["ALL"],
       },
     ]);
   };
@@ -106,11 +134,51 @@ export default function DeductionFees({
   const handleFeeChange = (
     index: number,
     field: keyof DeductionFee,
-    value: string,
+    value: any,
   ) => {
     const newFees = [...fees];
     newFees[index] = { ...newFees[index], [field]: value };
     setFees(newFees);
+  };
+
+  const zoneOptions = [
+    { value: "ALL", label: "All Service Areas" },
+    ...serviceZones.map((zone: any) => ({
+      value: zone.id,
+      label: zone.name,
+    })),
+  ];
+
+  const getSelectValue = (ruleServiceAreaIds: (string | number)[]) => {
+    if (!ruleServiceAreaIds || ruleServiceAreaIds.length === 0 || ruleServiceAreaIds.includes("ALL")) {
+      return [{ value: "ALL", label: "All Service Areas" }];
+    }
+    return ruleServiceAreaIds.map((id) => {
+      const zone = serviceZones.find((z: any) => z.id === id);
+      return {
+        value: id,
+        label: zone ? zone.name : `Area ${id}`,
+      };
+    });
+  };
+
+  const handleZoneChange = (index: number, selectedOptions: any) => {
+    let values = selectedOptions ? selectedOptions.map((opt: any) => opt.value) : [];
+    
+    if (values.includes("ALL") && values.length > 1) {
+      const hadAll = (fees[index].serviceAreaIds || []).includes("ALL");
+      if (!hadAll) {
+        values = ["ALL"];
+      } else {
+        values = values.filter((val: any) => val !== "ALL");
+      }
+    }
+    
+    if (values.length === 0) {
+      values = ["ALL"];
+    }
+
+    handleFeeChange(index, "serviceAreaIds", values);
   };
 
   const handleSaveAll = async (e: React.FormEvent) => {
@@ -129,6 +197,7 @@ export default function DeductionFees({
             amount: Number(fee.amount), // Converting string to Number for API
             type: fee.type,
             applicableUser: fee.applicableUser,
+            serviceAreaIds: fee.serviceAreaIds,
           });
         }
       }
@@ -142,6 +211,7 @@ export default function DeductionFees({
             amount: Number(fee.amount), // Converting string to Number for API
             type: fee.type,
             applicableUser: fee.applicableUser,
+            serviceAreaIds: fee.serviceAreaIds,
           });
         }
       }
@@ -186,17 +256,18 @@ export default function DeductionFees({
         </div>
 
         <form onSubmit={handleSaveAll} className="space-y-4">
-          <div className="hidden md:grid grid-cols-[1fr_1fr_1fr_40px] gap-4 mb-2 text-sm font-semibold text-gray-600">
+          <div className="hidden md:grid grid-cols-[1fr_0.8fr_0.8fr_1.2fr_40px] gap-4 mb-2 text-sm font-semibold text-gray-600">
             <div>Deduction Name</div>
             <div>Amount</div>
             <div>Type</div>
+            <div>Service Area</div>
             <div className="w-10"></div>
           </div>
 
           {fees.map((fee, index) => (
             <div
               key={fee.id || `new-${index}`}
-              className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_40px] gap-4 items-center"
+              className="grid grid-cols-1 md:grid-cols-[1fr_0.8fr_0.8fr_1.2fr_40px] gap-4 items-center"
             >
               <input
                 type="text"
@@ -227,6 +298,15 @@ export default function DeductionFees({
                 <option value="fixed_amount">Fixed Amount</option>
                 <option value="percentage">Percentage</option>
               </select>
+              <SelectReact
+                isMulti
+                options={zoneOptions}
+                value={getSelectValue(fee.serviceAreaIds)}
+                onChange={(selected) => handleZoneChange(index, selected)}
+                className="w-full text-sm"
+                isDisabled={isLoading}
+                placeholder="Select Service Areas"
+              />
               <button
                 type="button"
                 onClick={() => openDeleteModal(index)}

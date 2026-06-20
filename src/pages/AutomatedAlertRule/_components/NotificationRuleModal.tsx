@@ -1,11 +1,22 @@
-'use client';
+"use client";
 
 import { useForm } from "react-hook-form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
   useCreateNotificationRuleMutation,
@@ -13,17 +24,19 @@ import {
   useGetNotificationMergeTagsQuery,
 } from "@/redux/features/notificationRules/notificationRulesApi";
 import toast from "react-hot-toast";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 
-export default function NotificationRuleModal({ isOpen, onClose, initialData }: any) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    watch,
-  } = useForm({
+export default function NotificationRuleModal({
+  isOpen,
+  onClose,
+  initialData,
+}: any) {
+  const [lastFocused, setLastFocused] = useState<"title" | "message">("message");
+  const [titleSelectionStart, setTitleSelectionStart] = useState<number>(0);
+  const titleRef = useRef<HTMLInputElement | null>(null);
+
+  const { register, handleSubmit, reset, setValue, watch } = useForm({
     defaultValues: {
       name: "",
       triggerTag: "ETA_MINUTES",
@@ -42,10 +55,15 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
     },
   });
 
-  const [createRule, { isLoading: isCreating }] = useCreateNotificationRuleMutation();
-  const [updateRule, { isLoading: isUpdating }] = useUpdateNotificationRuleMutation();
+  const { ref: titleFormRef, ...titleRegister } = register("notifTitle", { required: true });
 
-  const { data: mergeTags = [], isLoading: isLoadingTags } = useGetNotificationMergeTagsQuery({});
+  const [createRule, { isLoading: isCreating }] =
+    useCreateNotificationRuleMutation();
+  const [updateRule, { isLoading: isUpdating }] =
+    useUpdateNotificationRuleMutation();
+
+  const { data: mergeTags = [], isLoading: isLoadingTags } =
+    useGetNotificationMergeTagsQuery({});
 
   const watchTriggerTag = watch("triggerTag");
   const watchStopScope = watch("stopScope");
@@ -55,7 +73,7 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
   const serializeHtmlToString = (html: string): string => {
     const temp = document.createElement("div");
     temp.innerHTML = html;
-    
+
     // Replace span chips with their actual merge tags e.g. {driver_name}
     const spans = temp.querySelectorAll("span[data-tag]");
     spans.forEach((span) => {
@@ -72,7 +90,7 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
       .replace(/<\/div>/gi, "")
       .replace(/<p>/gi, "\n")
       .replace(/<\/p>/gi, "");
-      
+
     const decoder = document.createElement("div");
     decoder.innerHTML = text;
     return decoder.textContent || decoder.innerText || "";
@@ -85,12 +103,12 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
-      
+
     // Replace plain-text tags with non-editable span tags
     tagsList.forEach((tagObj) => {
-      const escapedTag = tagObj.tag.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const regex = new RegExp(escapedTag, 'g');
-      const spanHtml = `<span contenteditable="false" data-tag="${tagObj.tag}" class="inline-flex items-center mx-0.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200 select-none cursor-default">${tagObj.label}</span>`;
+      const escapedTag = tagObj.tag.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+      const regex = new RegExp(escapedTag, "g");
+      const spanHtml = `<span contenteditable="false" data-tag="${tagObj.tag}" class="inline-flex items-center mx-0.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200 select-none cursor-default">${tagObj.tag}</span>`;
       html = html.replace(regex, spanHtml);
     });
 
@@ -123,7 +141,11 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
         operator: initialData.operator || "LTE",
         targetValue: initialData.targetValue || "",
         stopScope: initialData.stopScope || "DYNAMIC",
-        fixedStopIndex: initialData.fixedStopIndex !== undefined ? initialData.fixedStopIndex.toString() : "",
+        fixedStopIndex:
+          initialData.fixedStopIndex !== undefined &&
+          initialData.fixedStopIndex !== null
+            ? initialData.fixedStopIndex.toString()
+            : "",
         notifTitle: initialData.notifTitle || "",
         notifMessage: initialData.notifMessage || "",
         sendToSender: !!initialData.sendToSender,
@@ -131,7 +153,8 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
         viaPush: !!initialData.viaPush,
         viaWhatsApp: !!initialData.viaWhatsApp,
         viaSMS: !!initialData.viaSMS,
-        isActive: initialData.isActive !== undefined ? initialData.isActive : true,
+        isActive:
+          initialData.isActive !== undefined ? initialData.isActive : true,
       });
     } else {
       reset({
@@ -156,46 +179,63 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
     }
   }, [initialData, isOpen, reset]);
 
-  const insertMergeTag = (tag: string, label: string) => {
-    const spanHtml = `<span contenteditable="false" data-tag="${tag}" class="inline-flex items-center mx-0.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200 select-none cursor-default">${label}</span>&nbsp;`;
-    
-    let sel, range;
-    if (window.getSelection) {
-      sel = window.getSelection();
-      if (sel && sel.getRangeAt && sel.rangeCount) {
-        range = sel.getRangeAt(0);
-        const editor = editorRef.current;
-        if (editor && editor.contains(range.commonAncestorContainer)) {
-          range.deleteContents();
-          
-          const el = document.createElement("div");
-          el.innerHTML = spanHtml;
-          
-          const frag = document.createDocumentFragment();
-          let node, lastNode;
-          while ((node = el.firstChild)) {
-            lastNode = frag.appendChild(node);
+  const insertMergeTag = (tag: string) => {
+    if (lastFocused === "title") {
+      const currentTitle = watch("notifTitle") || "";
+      const before = currentTitle.substring(0, titleSelectionStart);
+      const after = currentTitle.substring(titleSelectionStart);
+      const newTitle = before + tag + after;
+      setValue("notifTitle", newTitle);
+      
+      const newCursorPos = titleSelectionStart + tag.length;
+      setTitleSelectionStart(newCursorPos);
+      setTimeout(() => {
+        if (titleRef.current) {
+          titleRef.current.focus();
+          titleRef.current.setSelectionRange(newCursorPos, newCursorPos);
+        }
+      }, 0);
+    } else {
+      const spanHtml = `<span contenteditable="false" data-tag="${tag}" class="inline-flex items-center mx-0.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200 select-none cursor-default">${tag}</span>&nbsp;`;
+
+      let sel, range;
+      if (window.getSelection) {
+        sel = window.getSelection();
+        if (sel && sel.getRangeAt && sel.rangeCount) {
+          range = sel.getRangeAt(0);
+          const editor = editorRef.current;
+          if (editor && editor.contains(range.commonAncestorContainer)) {
+            range.deleteContents();
+
+            const el = document.createElement("div");
+            el.innerHTML = spanHtml;
+
+            const frag = document.createDocumentFragment();
+            let node, lastNode;
+            while ((node = el.firstChild)) {
+              lastNode = frag.appendChild(node);
+            }
+            range.insertNode(frag);
+
+            if (lastNode) {
+              range = range.cloneRange();
+              range.setStartAfter(lastNode);
+              range.collapse(true);
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+
+            handleEditorChange();
+            return;
           }
-          range.insertNode(frag);
-          
-          if (lastNode) {
-            range = range.cloneRange();
-            range.setStartAfter(lastNode);
-            range.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(range);
-          }
-          
-          handleEditorChange();
-          return;
         }
       }
-    }
-    
-    // Fallback if editor is not focused
-    if (editorRef.current) {
-      editorRef.current.innerHTML += spanHtml;
-      handleEditorChange();
+
+      // Fallback if editor is not focused
+      if (editorRef.current) {
+        editorRef.current.innerHTML += spanHtml;
+        handleEditorChange();
+      }
     }
   };
 
@@ -207,7 +247,10 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
         operator: data.operator,
         targetValue: String(data.targetValue),
         stopScope: data.stopScope,
-        fixedStopIndex: data.stopScope === "FIXED" && data.fixedStopIndex ? Number(data.fixedStopIndex) : undefined,
+        fixedStopIndex:
+          data.stopScope === "FIXED" && data.fixedStopIndex
+            ? Number(data.fixedStopIndex)
+            : undefined,
         notifTitle: data.notifTitle,
         notifMessage: data.notifMessage,
         sendToSender: data.sendToSender,
@@ -230,7 +273,9 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
       }
 
       if (!res.success) {
-        toast.error(res?.error?.message || res?.message || "Failed to perform operation");
+        toast.error(
+          res?.error?.message || res?.message || "Failed to perform operation",
+        );
         return;
       }
 
@@ -254,9 +299,9 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
           {/* Rule Name */}
           <div className="space-y-1">
             <Label>Rule Name</Label>
-            <Input 
-              placeholder="e.g. Pickup Proximity Alert (SME Client)" 
-              {...register("name", { required: true })} 
+            <Input
+              placeholder="e.g. Pickup Proximity Alert (SME Client)"
+              {...register("name", { required: true })}
             />
           </div>
 
@@ -270,6 +315,7 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
                   setValue("triggerTag", val);
                   if (val === "ORDER_STATUS") {
                     setValue("targetValue", "LEG_DELIVERED");
+                    setValue("operator", "EQ");
                   } else {
                     setValue("targetValue", "");
                   }
@@ -297,9 +343,15 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
                   <SelectValue placeholder="Select Operator" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="LTE">LTE (Less Than/Equal)</SelectItem>
-                  <SelectItem value="GTE">GTE (Greater Than/Equal)</SelectItem>
-                  <SelectItem value="EQ">EQ (Equal)</SelectItem>
+                  {watchTriggerTag === "ORDER_STATUS" ? (
+                    <SelectItem value="EQ">EQ (Equal)</SelectItem>
+                  ) : (
+                    <>
+                      <SelectItem value="LTE">LTE (Less Than/Equal)</SelectItem>
+                      <SelectItem value="GTE">GTE (Greater Than/Equal)</SelectItem>
+                      <SelectItem value="EQ">EQ (Equal)</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -318,17 +370,19 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
                     <SelectValue placeholder="Select Target Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="LEG_DELIVERED">LEG_DELIVERED / DROP_COMPLETED</SelectItem>
+                    <SelectItem value="LEG_DELIVERED">
+                      LEG_DELIVERED / DROP_COMPLETED
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             ) : (
               <div className="space-y-1" key="target-value-input">
                 <Label>Target Value</Label>
-                <Input 
+                <Input
                   type="number"
-                  placeholder="e.g. 10" 
-                  {...register("targetValue", { required: true })} 
+                  placeholder="e.g. 10"
+                  {...register("targetValue", { required: true })}
                 />
               </div>
             )}
@@ -355,10 +409,10 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
           {watchStopScope === "FIXED" && (
             <div className="space-y-1">
               <Label>Fixed Stop Index</Label>
-              <Input 
-                type="number" 
-                placeholder="e.g. 1" 
-                {...register("fixedStopIndex", { required: true })} 
+              <Input
+                type="number"
+                placeholder="e.g. 1"
+                {...register("fixedStopIndex", { required: true })}
               />
             </div>
           )}
@@ -366,9 +420,18 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
           {/* Notification Title */}
           <div className="space-y-1">
             <Label>Notification Title</Label>
-            <Input 
-              placeholder="e.g. The Driver is 5 Mins from Pickup!" 
-              {...register("notifTitle", { required: true })} 
+            <Input
+              placeholder="e.g. The Driver is 5 Mins from Pickup!"
+              {...titleRegister}
+              ref={(e) => {
+                titleFormRef(e);
+                titleRef.current = e;
+              }}
+              onFocus={() => setLastFocused("title")}
+              onBlur={(e) => {
+                setTitleSelectionStart(e.target.selectionStart || 0);
+                titleRegister.onBlur(e);
+              }}
             />
           </div>
 
@@ -383,12 +446,15 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
                 className="min-h-[140px] max-h-[250px] overflow-y-auto w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none transition-all leading-relaxed"
                 onInput={handleEditorChange}
                 onBlur={handleEditorChange}
+                onFocus={() => setLastFocused("message")}
               />
             </div>
 
             {/* Merge Tags Helper */}
             <div className="space-y-1.5 bg-gray-50 border rounded-lg p-3">
-              <Label className="text-xs text-gray-500 font-semibold">Available Merge Tags (Click to Insert):</Label>
+              <Label className="text-xs text-gray-500 font-semibold">
+                Available Merge Tags (Click to Insert):
+              </Label>
               {isLoadingTags ? (
                 <div className="flex items-center space-x-2 text-xs text-gray-400 py-1">
                   <Loader2 className="animate-spin h-3.5 w-3.5 text-primary" />
@@ -400,10 +466,13 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
                     <button
                       key={tagObj.tag}
                       type="button"
-                      onClick={() => insertMergeTag(tagObj.tag, tagObj.label)}
+                      onClick={() => insertMergeTag(tagObj.tag)}
                       className="cursor-pointer inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border bg-white text-gray-700 hover:bg-primary/10 hover:border-primary transition-all duration-150 shadow-xs hover:shadow-sm"
                     >
-                      {tagObj.label} <span className="text-gray-400 font-normal ml-1">({tagObj.example})</span>
+                      {tagObj.label}{" "}
+                      <span className="text-gray-400 font-normal ml-1">
+                        ({tagObj.example})
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -413,19 +482,23 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
 
           {/* Recipients Config */}
           <div className="border rounded-lg p-4 bg-gray-50/50 space-y-3">
-            <Label className="text-sm font-semibold text-gray-700">Recipients</Label>
+            <Label className="text-sm font-semibold text-gray-700">
+              Recipients
+            </Label>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center space-x-3">
-                <Switch 
-                  checked={watch("sendToSender")} 
-                  onCheckedChange={(val) => setValue("sendToSender", val)} 
+                <Switch
+                  checked={watch("sendToSender")}
+                  onCheckedChange={(val) => setValue("sendToSender", val)}
                 />
-                <span className="text-sm text-gray-600">Send to SME Client (Sender)</span>
+                <span className="text-sm text-gray-600">
+                  Send to SME Client (Sender)
+                </span>
               </div>
               <div className="flex items-center space-x-3">
-                <Switch 
-                  checked={watch("sendToRecipient")} 
-                  onCheckedChange={(val) => setValue("sendToRecipient", val)} 
+                <Switch
+                  checked={watch("sendToRecipient")}
+                  onCheckedChange={(val) => setValue("sendToRecipient", val)}
                 />
                 <span className="text-sm text-gray-600">Send to Recipient</span>
               </div>
@@ -434,26 +507,28 @@ export default function NotificationRuleModal({ isOpen, onClose, initialData }: 
 
           {/* Channels Config */}
           <div className="border rounded-lg p-4 bg-gray-50/50 space-y-3">
-            <Label className="text-sm font-semibold text-gray-700">Notification Channels</Label>
+            <Label className="text-sm font-semibold text-gray-700">
+              Notification Channels
+            </Label>
             <div className="grid grid-cols-3 gap-4">
               <div className="flex items-center space-x-3">
-                <Switch 
-                  checked={watch("viaPush")} 
-                  onCheckedChange={(val) => setValue("viaPush", val)} 
+                <Switch
+                  checked={watch("viaPush")}
+                  onCheckedChange={(val) => setValue("viaPush", val)}
                 />
                 <span className="text-sm text-gray-600">Push Notification</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Switch 
-                  checked={watch("viaWhatsApp")} 
-                  onCheckedChange={(val) => setValue("viaWhatsApp", val)} 
+                <Switch
+                  checked={watch("viaWhatsApp")}
+                  onCheckedChange={(val) => setValue("viaWhatsApp", val)}
                 />
                 <span className="text-sm text-gray-600">WhatsApp</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Switch 
-                  checked={watch("viaSMS")} 
-                  onCheckedChange={(val) => setValue("viaSMS", val)} 
+                <Switch
+                  checked={watch("viaSMS")}
+                  onCheckedChange={(val) => setValue("viaSMS", val)}
                 />
                 <span className="text-sm text-gray-600">SMS</span>
               </div>

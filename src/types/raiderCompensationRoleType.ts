@@ -3,7 +3,7 @@ export interface CompensationRule {
   id?: number;
   scenario: string;
   percentage: number;
-  serviceAreaId: number | null;
+  serviceAreaIds: (string | number)[];
   applicableUser: "USER" | "RAIDER";
 }
 
@@ -12,17 +12,15 @@ export interface DriverCompensationRulesProps {
   onAddCompensationRule: (data: {
     scenario: string;
     percentage: number;
-    serviceAreaId: number;
+    serviceAreaIds: (string | number)[];
     applicableUser: "USER" | "RAIDER";
-  }) => Promise<void>;
+  }) => Promise<any>;
   onUpdateCompensationRule: (data: {
     id: number;
     scenario: string;
     percentage: number;
-    serviceAreaId: number;
+    serviceAreaIds: (string | number)[];
     applicableUser: "USER" | "RAIDER";
-  }) => Promise<{ success: boolean; message: string }>;
-  onDeleteCompensationRule: (
-    id: number,
-  ) => Promise<{ success: boolean; message: string }>;
+  }) => Promise<any>;
+  onDeleteCompensationRule: (id: number) => Promise<any>;
 }

@@ -8,45 +8,14 @@ interface RaiderTabContentProps {
   standardCommissionRateData: any[];
   raiderCompensationRoleData: any[];
   raiderDeductionFeeData: any[];
-  onAddCommissionRate: (data: {
-    ruleName: string;
-    percentage: number;
-    serviceAreaId: number;
-  }) => Promise<any>;
-  onUpdateCommissionRate: (data: {
-    id: number;
-    ruleName: string;
-    percentage: number;
-    serviceAreaId: number;
-  }) => Promise<any>;
+  onAddCommissionRate: (data: any) => Promise<any>;
+  onUpdateCommissionRate: (data: any) => Promise<any>;
   onDeleteCommissionRate: (id: number) => Promise<any>;
-  onAddCompensationRule: (data: {
-    scenario: string;
-    percentage: number;
-    serviceAreaId: number;
-    applicableUser: "USER" | "RAIDER";
-  }) => Promise<any>;
-  onUpdateCompensationRule: (data: {
-    id: number;
-    scenario: string;
-    percentage: number;
-    serviceAreaId: number;
-    applicableUser: "USER" | "RAIDER";
-  }) => Promise<any>;
+  onAddCompensationRule: (data: any) => Promise<any>;
+  onUpdateCompensationRule: (data: any) => Promise<any>;
   onDeleteCompensationRule: (id: number) => Promise<any>;
-  onAddDeductionFee: (data: {
-    deductionName: string;
-    amount: string;
-    type: string;
-    applicableUser: "USER" | "RAIDER";
-  }) => Promise<any>;
-  onUpdateDeductionFee: (data: {
-    id: number;
-    deductionName: string;
-    amount: string;
-    type: string;
-    applicableUser: "USER" | "RAIDER";
-  }) => Promise<any>;
+  onAddDeductionFee: (data: any) => Promise<any>;
+  onUpdateDeductionFee: (data: any) => Promise<any>;
   onDeleteDeductionFee: (id: number) => Promise<any>;
 }
 
