@@ -32,7 +32,9 @@ export default function NotificationRuleModal({
   onClose,
   initialData,
 }: any) {
-  const [lastFocused, setLastFocused] = useState<"title" | "message">("message");
+  const [lastFocused, setLastFocused] = useState<"title" | "message">(
+    "message",
+  );
   const [titleSelectionStart, setTitleSelectionStart] = useState<number>(0);
   const titleRef = useRef<HTMLInputElement | null>(null);
 
@@ -55,20 +57,35 @@ export default function NotificationRuleModal({
     },
   });
 
-  const { ref: titleFormRef, ...titleRegister } = register("notifTitle", { required: true });
+  const { ref: titleFormRef, ...titleRegister } = register("notifTitle", {
+    required: true,
+  });
 
   const [createRule, { isLoading: isCreating }] =
     useCreateNotificationRuleMutation();
   const [updateRule, { isLoading: isUpdating }] =
     useUpdateNotificationRuleMutation();
 
-  const { data: mergeTags = [], isLoading: isLoadingTags } =
+  const { data: mergeTagsData, isLoading: isLoadingTags } =
     useGetNotificationMergeTagsQuery({});
+
+  const tagsList = Array.isArray(mergeTagsData)
+    ? mergeTagsData
+    : (mergeTagsData && typeof mergeTagsData === "object" && "data" in mergeTagsData && Array.isArray((mergeTagsData as any).data))
+      ? (mergeTagsData as any).data
+      : [];
 
   const watchTriggerTag = watch("triggerTag");
   const watchStopScope = watch("stopScope");
   const watchIsActive = watch("isActive");
+  
   const editorRef = useRef<HTMLDivElement | null>(null);
+  const [editorMounted, setEditorMounted] = useState(false);
+
+  const setEditorRef = (node: HTMLDivElement | null) => {
+    editorRef.current = node;
+    setEditorMounted(node !== null);
+  };
 
   const serializeHtmlToString = (html: string): string => {
     const temp = document.createElement("div");
@@ -127,11 +144,11 @@ export default function NotificationRuleModal({
 
   // Sync initialData or reset to the contenteditable area when modal opens or tags load
   useEffect(() => {
-    if (isOpen && editorRef.current && mergeTags.length > 0) {
+    if (isOpen && editorRef.current) {
       const text = initialData?.notifMessage || "";
-      editorRef.current.innerHTML = deserializeStringToHtml(text, mergeTags);
+      editorRef.current.innerHTML = deserializeStringToHtml(text, tagsList);
     }
-  }, [isOpen, initialData, mergeTags]);
+  }, [isOpen, initialData, editorMounted, tagsList]);
 
   useEffect(() => {
     if (initialData && isOpen) {
@@ -186,7 +203,7 @@ export default function NotificationRuleModal({
       const after = currentTitle.substring(titleSelectionStart);
       const newTitle = before + tag + after;
       setValue("notifTitle", newTitle);
-      
+
       const newCursorPos = titleSelectionStart + tag.length;
       setTitleSelectionStart(newCursorPos);
       setTimeout(() => {
@@ -314,7 +331,7 @@ export default function NotificationRuleModal({
                 onValueChange={(val) => {
                   setValue("triggerTag", val);
                   if (val === "ORDER_STATUS") {
-                    setValue("targetValue", "LEG_DELIVERED");
+                    setValue("targetValue", "ORDER_PLACED");
                     setValue("operator", "EQ");
                   } else {
                     setValue("targetValue", "");
@@ -348,7 +365,9 @@ export default function NotificationRuleModal({
                   ) : (
                     <>
                       <SelectItem value="LTE">LTE (Less Than/Equal)</SelectItem>
-                      <SelectItem value="GTE">GTE (Greater Than/Equal)</SelectItem>
+                      <SelectItem value="GTE">
+                        GTE (Greater Than/Equal)
+                      </SelectItem>
                       <SelectItem value="EQ">EQ (Equal)</SelectItem>
                     </>
                   )}
@@ -369,10 +388,20 @@ export default function NotificationRuleModal({
                   <SelectTrigger>
                     <SelectValue placeholder="Select Target Status" />
                   </SelectTrigger>
-                  <SelectContent>
+                  {/* <SelectContent>
                     <SelectItem value="LEG_DELIVERED">
                       LEG_DELIVERED / DROP_COMPLETED
                     </SelectItem>
+                  </SelectContent> */}
+                  <SelectContent>
+                    <SelectItem value="ORDER_PLACED">Order Placed</SelectItem>
+                    <SelectItem value="ASSIGNED">Assigned</SelectItem>
+                    <SelectItem value="ARRIVED_AT_PICKUP">
+                      Arrived at Pickup
+                    </SelectItem>
+                    <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -440,7 +469,7 @@ export default function NotificationRuleModal({
             <Label>Notification Message</Label>
             <div className="relative">
               <div
-                ref={editorRef}
+                ref={setEditorRef}
                 contentEditable
                 data-placeholder="Write message template..."
                 className="min-h-[140px] max-h-[250px] overflow-y-auto w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none transition-all leading-relaxed"
@@ -462,7 +491,7 @@ export default function NotificationRuleModal({
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {mergeTags.map((tagObj: any) => (
+                  {tagsList.map((tagObj: any) => (
                     <button
                       key={tagObj.tag}
                       type="button"
