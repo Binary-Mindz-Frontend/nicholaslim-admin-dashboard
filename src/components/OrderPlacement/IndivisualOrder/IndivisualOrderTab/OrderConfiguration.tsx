@@ -41,18 +41,20 @@ const OrderConfiguration: React.FC<OrderConfigurationProps> = ({
   handleCollectTimeChange,
   handleScheduledDateChange,
 }) => {
+
+  // conssole.log("Selected Vehicle:", vehicleTypes);
   const dateInputRef = React.useRef<HTMLInputElement>(null);
 
-  const getVehicleDimension = (vehicle: any) => {
-    if (!vehicle) return "";
-    if (vehicle.dimension) return vehicle.dimension;
-    if (vehicle.dimension_width && vehicle.dimension_height) {
-      let dim = `${vehicle.dimension_height}m x ${vehicle.dimension_width}m`;
-      if (vehicle.dimension_length) dim += ` x ${vehicle.dimension_length}m`;
-      return dim;
-    }
-    return "N/A";
-  };
+  // const getVehicleDimension = (vehicle: any) => {
+  //   if (!vehicle) return "";
+  //   if (vehicle.dimension) return vehicle.dimension;
+  //   if (vehicle.dimension_width && vehicle.dimension_height) {
+  //     let dim = `${vehicle.dimension_height}m x ${vehicle.dimension_width}m`;
+  //     if (vehicle.dimension_length) dim += ` x ${vehicle.dimension_length}m`;
+  //     return dim;
+  //   }
+  //   return "N/A";
+  // };
 
   return (
     <>
@@ -64,7 +66,7 @@ const OrderConfiguration: React.FC<OrderConfigurationProps> = ({
               value={selectedDeliveryType?.id?.toString() || ""}
               onValueChange={(value) => {
                 const found = deliveryType?.find(
-                  (item: any) => String(item.id) === value
+                  (item: any) => String(item.id) === value,
                 );
                 if (found) {
                   setSelectedDeliveryType(found);
@@ -96,7 +98,10 @@ const OrderConfiguration: React.FC<OrderConfigurationProps> = ({
               value={formData.route_type === "ONE_WAY" ? "oneway" : "round"}
               onValueChange={(value) => {
                 const routeType = value === "oneway" ? "ONE_WAY" : "ROUND";
-                setFormData((prev: any) => ({ ...prev, route_type: routeType }));
+                setFormData((prev: any) => ({
+                  ...prev,
+                  route_type: routeType,
+                }));
               }}
             >
               <SelectTrigger className="w-full px-4 py-5 bg-[#FFFAE6] border border-gray-300 rounded">
@@ -121,7 +126,7 @@ const OrderConfiguration: React.FC<OrderConfigurationProps> = ({
               }
               onValueChange={(value) => {
                 const found = vehicleTypes?.find(
-                  (item: any) => String(item.id) === value
+                  (item: any) => String(item.id) === value,
                 );
                 if (found) {
                   setSelectedVehicle(found);
@@ -133,16 +138,17 @@ const OrderConfiguration: React.FC<OrderConfigurationProps> = ({
               }}
             >
               <SelectTrigger className="w-full px-4 py-5 bg-[#FFFAE6] border border-gray-300 rounded">
+                {/* (${getVehicleDimension(selectedVehicle)}) */}
                 <SelectValue placeholder="Select Vehicle">
                   {selectedVehicle
-                    ? `${selectedVehicle.vehicle_type} (${getVehicleDimension(selectedVehicle)})`
+                    ? `${selectedVehicle.vehicle_type} `
                     : "Select Vehicle"}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {vehicleTypes?.map((vehicle: any) => (
                   <SelectItem key={vehicle.id} value={String(vehicle.id)}>
-                    {vehicle.vehicle_type} ({getVehicleDimension(vehicle)})
+                    {vehicle.vehicle_type} {/* ({getVehicleDimension(vehicle)}) */}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -156,7 +162,10 @@ const OrderConfiguration: React.FC<OrderConfigurationProps> = ({
         <RadioGroup
           value={formData.isFixed ? "fixed" : "notfixed"}
           onValueChange={(value) => {
-            setFormData((prev: any) => ({ ...prev, isFixed: value === "fixed" }));
+            setFormData((prev: any) => ({
+              ...prev,
+              isFixed: value === "fixed",
+            }));
           }}
           className="grid grid-cols-2 gap-4 mb-8"
         >
