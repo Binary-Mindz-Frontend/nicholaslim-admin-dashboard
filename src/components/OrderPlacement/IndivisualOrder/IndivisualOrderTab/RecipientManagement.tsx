@@ -21,6 +21,7 @@ interface RecipientData {
   contact_name: string;
   contact_number: string;
   address: string;
+  shortName: string;
   floor_unit: string;
   note_to_driver: string;
   postal_code: string;
@@ -45,12 +46,14 @@ interface RecipientManagementProps {
 interface ResolvedAddress {
   postal_code: string;
   address: string;
+  shortName: string;
   lat: number;
   lng: number;
 }
 
 interface AddressSuggestion {
   label: string;
+  shortName: string;
   building: string;
   road: string;
   postal_code: string;
@@ -194,9 +197,12 @@ function toSuggestions(results: OneMapResult[]): AddressSuggestion[] {
       const label = formatOneMapAddressLine(r);
       if (seen.has(label)) return null;
       seen.add(label);
+      const building = r.BUILDING?.toUpperCase() === "NIL" ? "" : r.BUILDING;
+      const shortName = building || r.ROAD_NAME || "";
       return {
         label,
-        building: r.BUILDING?.toUpperCase() === "NIL" ? "" : r.BUILDING,
+        shortName,
+        building,
         road: r.ROAD_NAME,
         postal_code: r.POSTAL,
         lat: parseFloat(r.LATITUDE),
@@ -296,7 +302,9 @@ const MapModal: React.FC<MapModalProps> = ({
         const result = await reverseOneMap(lat, lng);
         if (result) {
           const address = formatOneMapAddressLine(result);
-          setPending({ postal_code: result.POSTAL, address, lat, lng });
+          const building = result.BUILDING?.toUpperCase() === "NIL" ? "" : result.BUILDING;
+          const shortName = building || result.ROAD_NAME || "";
+          setPending({ postal_code: result.POSTAL, address, shortName, lat, lng });
           setPostalInput(result.POSTAL || "");
         } else {
           setError("Couldn't detect address here. Try clicking nearby.");
@@ -356,6 +364,7 @@ const MapModal: React.FC<MapModalProps> = ({
       setPending({
         postal_code: first.postal_code,
         address: first.label,
+        shortName: first.shortName,
         lat: first.lat,
         lng: first.lng,
       });
@@ -371,6 +380,7 @@ const MapModal: React.FC<MapModalProps> = ({
     setPending({
       postal_code: s.postal_code,
       address: s.label,
+      shortName: s.shortName,
       lat: s.lat,
       lng: s.lng,
     });
@@ -734,9 +744,11 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
       if (target === "sender") {
         handleSenderInputChange(ev(resolved.postal_code), "postal_code");
         handleSenderInputChange(ev(resolved.address), "address");
+        handleSenderInputChange(ev(resolved.shortName), "shortName");
       } else {
         handleRecipientInputChange(ev(resolved.postal_code), target, "postal_code");
         handleRecipientInputChange(ev(resolved.address), target, "address");
+        handleRecipientInputChange(ev(resolved.shortName), target, "shortName");
       }
     },
     [handleSenderInputChange, handleRecipientInputChange],
@@ -775,8 +787,8 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
           </div>
         </div>
 
-        {/* ── Postal + Address + Floor row ── */}
-        <div className="grid grid-cols-3 gap-6 mb-6">
+        {/* ── Postal + Address + Short Name + Floor row ── */}
+        <div className="grid grid-cols-4 gap-6 mb-6">
           {/* Postal Code — shows spinner + "detecting" while locating */}
           <PostalCodeField
             postalCode={sender.postal_code}
@@ -800,6 +812,15 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
                 Fetching address…
               </p>
             )}
+          </div>
+
+          <div>
+            <Label className="mb-2">Short Name</Label>
+            <Input
+              value={sender.shortName}
+              onChange={(e) => handleSenderInputChange(e, "shortName")}
+              placeholder="Short Name"
+            />
           </div>
 
           <div>
@@ -868,7 +889,7 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
               />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-4 gap-6 mb-6">
             <PostalCodeField
               postalCode={recipient.postal_code}
               address={recipient.address}
@@ -884,6 +905,16 @@ const RecipientManagement: React.FC<RecipientManagementProps> = ({
                 }
                 placeholder="Auto-filled from map"
                 required
+              />
+            </div>
+            <div>
+              <Label className="mb-2">Short Name</Label>
+              <Input
+                value={recipient.shortName}
+                onChange={(e) =>
+                  handleRecipientInputChange(e, recipient.id, "shortName")
+                }
+                placeholder="Short Name"
               />
             </div>
             <div>
