@@ -310,7 +310,7 @@ export default function NotificationComposer() {
                 placeholder="Search Drivers..."
                 options={driverList.map((d) => ({
                   id: d.userId,
-                  name: `${d.raider_name || "Driver"} (User ID: ${d.userId})`,
+                  name: `${d.registrations[0].raider_name || "Driver"} (User ID: ${d.userId})`,
                 }))}
                 onValueChange={(_name, id) =>
                   !driverIds.includes(String(id)) &&

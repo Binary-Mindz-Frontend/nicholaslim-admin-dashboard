@@ -37,9 +37,10 @@ const PromoCodeDialog = ({
     if (open) {
       reset(
         defaultValues || {
+          title: "",
           promoCode: "",
           discountDesc: "",
-          redirectLink: "", // ✅ ডিফল্ট ভ্যালু
+          redirectLink: "",
           discountType: "FIXED",
           discountValue: "",
           isActive: true,
@@ -59,6 +60,14 @@ const PromoCodeDialog = ({
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
+            <Label>Title</Label>
+            <Input
+              {...register("title", { required: true })}
+              placeholder="Summer Offer"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label>Promo Code</Label>
             <Input
               {...register("promoCode", { required: true })}
@@ -74,7 +83,6 @@ const PromoCodeDialog = ({
             />
           </div>
 
-          {/* ✅ Redirect Link Field যোগ করা হয়েছে */}
           <div className="space-y-2">
             <Label>Redirect Link</Label>
             <Input
