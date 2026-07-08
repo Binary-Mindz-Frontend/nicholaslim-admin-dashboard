@@ -38,6 +38,7 @@ const PromoCode = () => {
     setDialogMode("edit");
     setSelectedId(row.id);
     setEditData({
+      title: row.title,
       promoCode: row.promoCode,
       discountDesc: row.discountDesc || "",
       redirectLink: row.redirectLink || "",
@@ -60,6 +61,10 @@ const PromoCode = () => {
         ...formData,
         discountValue: parseFloat(formData.discountValue) || 0,
       };
+
+      if (payload.redirectLink === "") {
+        delete payload.redirectLink;
+      }
 
       if (dialogMode === "add") {
         const res = await addPromo(payload).unwrap();
