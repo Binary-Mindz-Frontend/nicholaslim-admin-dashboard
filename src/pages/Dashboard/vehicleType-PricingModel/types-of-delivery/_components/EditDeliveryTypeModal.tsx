@@ -4,6 +4,7 @@ import {
   useGetVehicleTypesQuery 
 } from "@/redux/features/vehicleType/vehicleTypeApi";
 import toast from "react-hot-toast";
+import DeliveryTypeIconPicker from "./DeliveryTypeIconPicker";
 
 interface EditDeliveryTypeModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ const EditDeliveryTypeModal = ({
     priority: 1,
     vehicle_type_ids: [] as number[],
     is_active: true,
+    icon: "express_delivery.png",
   });
 
   useEffect(() => {
@@ -55,6 +57,7 @@ const EditDeliveryTypeModal = ({
         priority: initialData.priority,
         vehicle_type_ids: vehicleTypeIds,
         is_active: initialData.is_active,
+        icon: initialData.icon || "express_delivery.png",
       });
     }
   }, [initialData]);
@@ -123,6 +126,7 @@ const EditDeliveryTypeModal = ({
       priority: priorityVal,
       vehicle_type_ids: formData.vehicle_type_ids,
       is_active: formData.is_active,
+      icon: formData.icon,
     };
 
     onSubmit(submitData);
@@ -185,6 +189,15 @@ const EditDeliveryTypeModal = ({
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md min-h-[60px]"
                 required
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <DeliveryTypeIconPicker
+                selectedIcon={formData.icon}
+                onChange={(iconName) =>
+                  setFormData((prev) => ({ ...prev, icon: iconName }))
+                }
               />
             </div>
 

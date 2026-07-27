@@ -14,11 +14,13 @@ import {
 import toast from "react-hot-toast";
 import DeleteConfirmationModal from "@/components/Shared/DeleteConfirmationModal/DeleteConfirmationModal";
 import EditDeliveryTypeModal from "./EditDeliveryTypeModal";
+import { getDeliveryTypeIconSrc } from "./DeliveryTypeIconPicker";
 
 interface DeliveryType {
   id: string;
   name: string;
   description: string;
+  icon?: string;
   price_multiplier: string;
   collection_time: number;
   collection_unit: string;
@@ -163,6 +165,18 @@ const DeliveryTypesTable: React.FC<DeliveryTypesTableProps> = ({
   };
 
   const columns = [
+    {
+      key: "icon" as const,
+      label: "Icon",
+      render: (_: any, row: DeliveryType) => {
+        const src = getDeliveryTypeIconSrc(row.icon);
+        return src ? (
+          <img src={src} alt={row.name} className="w-8 h-8 object-contain" />
+        ) : (
+          <span className="text-xs text-gray-400">N/A</span>
+        );
+      },
+    },
     { key: "name" as const, label: "Name" },
     {
       key: "price_multiplier" as const,
