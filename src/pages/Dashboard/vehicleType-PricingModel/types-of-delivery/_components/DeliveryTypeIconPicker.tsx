@@ -1,0 +1,99 @@
+import React from "react";
+import expressIcon from "@/assets/images/icons/express_delivery.png";
+import walletIcon from "@/assets/images/icons/wallet_pricing.png";
+import packageIcon from "@/assets/images/icons/additional_package.png";
+import scheduleIcon from "@/assets/images/icons/scheduled_delivery.png";
+import helperIcon from "@/assets/images/icons/helper_team.png";
+
+export interface DeliveryTypeIconOption {
+  name: string;
+  label: string;
+  src: string;
+}
+
+export const DELIVERY_TYPE_ICONS: DeliveryTypeIconOption[] = [
+  {
+    name: "express_delivery.png",
+    label: "Express",
+    src: expressIcon,
+  },
+  {
+    name: "wallet_pricing.png",
+    label: "Wallet",
+    src: walletIcon,
+  },
+  {
+    name: "additional_package.png",
+    label: "Extra Package",
+    src: packageIcon,
+  },
+  {
+    name: "scheduled_delivery.png",
+    label: "Schedule",
+    src: scheduleIcon,
+  },
+  {
+    name: "helper_team.png",
+    label: "Helper Team",
+    src: helperIcon,
+  },
+];
+
+export const getDeliveryTypeIconSrc = (iconName?: string) => {
+  if (!iconName) return null;
+  const match = DELIVERY_TYPE_ICONS.find(
+    (item) => item.name === iconName || item.name.replace(".png", "") === iconName
+  );
+  return match ? match.src : null;
+};
+
+interface DeliveryTypeIconPickerProps {
+  selectedIcon: string;
+  onChange: (iconName: string) => void;
+}
+
+const DeliveryTypeIconPicker: React.FC<DeliveryTypeIconPickerProps> = ({
+  selectedIcon,
+  onChange,
+}) => {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Select Icon <span className="text-red-500">*</span>
+      </label>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {DELIVERY_TYPE_ICONS.map((item) => {
+          const isSelected =
+            selectedIcon === item.name || selectedIcon === item.name.replace(".png", "");
+          return (
+            <button
+              key={item.name}
+              type="button"
+              onClick={() => onChange(item.name)}
+              className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all cursor-pointer ${
+                isSelected
+                  ? "border-[#FFCC00] bg-yellow-50 shadow-sm ring-1 ring-[#FFCC00]"
+                  : "border-gray-200 hover:border-gray-300 bg-white"
+              }`}
+            >
+              <img
+                src={item.src}
+                alt={item.label}
+                className="w-10 h-10 object-contain mb-1"
+              />
+              <span
+                className={`text-xs font-medium ${
+                  isSelected ? "text-yellow-900 font-bold" : "text-gray-600"
+                }`}
+              >
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+export default DeliveryTypeIconPicker;

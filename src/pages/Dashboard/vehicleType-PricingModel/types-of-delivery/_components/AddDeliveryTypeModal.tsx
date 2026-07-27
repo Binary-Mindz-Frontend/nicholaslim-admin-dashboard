@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
 import toast from "react-hot-toast";
+import DeliveryTypeIconPicker from "./DeliveryTypeIconPicker";
 
 interface AddDeliveryTypeModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ const AddDeliveryTypeModal = ({
     priority: 1,
     vehicle_type_ids: [] as number[],
     is_active: true,
+    icon: "express_delivery.png",
   };
 
   const [formData, setFormData] = useState(initialState);
@@ -84,6 +86,10 @@ const AddDeliveryTypeModal = ({
       toast.error("Vehicle type is required");
       return;
     }
+    if (!formData.icon) {
+      toast.error("Icon selection is required");
+      return;
+    }
 
     const submitData = {
       name: formData.name,
@@ -98,6 +104,7 @@ const AddDeliveryTypeModal = ({
       priority: priorityVal,
       vehicle_type_ids: formData.vehicle_type_ids,
       is_active: formData.is_active,
+      icon: formData.icon,
     };
 
     onSubmit(submitData);
@@ -164,6 +171,15 @@ const AddDeliveryTypeModal = ({
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md min-h-[60px]"
                 required
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <DeliveryTypeIconPicker
+                selectedIcon={formData.icon}
+                onChange={(iconName) =>
+                  setFormData((prev) => ({ ...prev, icon: iconName }))
+                }
               />
             </div>
 
