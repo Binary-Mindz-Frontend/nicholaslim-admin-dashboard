@@ -178,14 +178,18 @@ export default function NotificationComposer() {
       }
 
       const result = await addNotification(payload).unwrap();
-      if (result.success) {
+
+      if (!result.success) {
         toast.dismiss(loadingToast);
-        toast.success(result.message || "Sent successfully!");
-        reset();
-        setUserIds([]);
-        setDriverIds([]);
-        setDate(undefined);
+        return toast.error(result.message || "Failed to send notification");
       }
+
+      toast.dismiss(loadingToast);
+      toast.success(result.message || "Sent successfully!");
+      reset();
+      setUserIds([]);
+      setDriverIds([]);
+      setDate(undefined);
     } catch (error: any) {
       toast.dismiss(loadingToast);
       toast.error(error?.data?.message || "Failed to send notification");
