@@ -46,6 +46,11 @@ const AutomatedAlertRule: React.FC = () => {
   const handleStatusChange = async (id: string) => {
     try {
       const res = await toggleStatus(id).unwrap();
+
+      if (!res.success) {
+        return toast.error(res.message || 'Failed to toggle status');
+      }
+
       toast.success(res.message || 'Status toggled successfully');
     } catch (error: any) {
       toast.error(error?.data?.message || 'Failed to toggle status');
