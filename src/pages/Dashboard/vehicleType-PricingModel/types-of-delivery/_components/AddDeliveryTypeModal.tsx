@@ -32,7 +32,7 @@ const AddDeliveryTypeModal = ({
     priority: 1,
     vehicle_type_ids: [] as number[],
     is_active: true,
-    icon: "express_delivery.png",
+    icon: "",
   };
 
   const [formData, setFormData] = useState(initialState);
@@ -86,10 +86,7 @@ const AddDeliveryTypeModal = ({
       toast.error("Vehicle type is required");
       return;
     }
-    if (!formData.icon) {
-      toast.error("Icon selection is required");
-      return;
-    }
+    // Icon is optional — "" means no icon assigned
 
     const submitData = {
       name: formData.name,
