@@ -36,7 +36,7 @@ const EditDeliveryTypeModal = ({
     priority: 1,
     vehicle_type_ids: [] as number[],
     is_active: true,
-    icon: "express_delivery.png",
+    icon: "",
   });
 
   useEffect(() => {
@@ -57,7 +57,7 @@ const EditDeliveryTypeModal = ({
         priority: initialData.priority,
         vehicle_type_ids: vehicleTypeIds,
         is_active: initialData.is_active,
-        icon: initialData.icon || "express_delivery.png",
+        icon: initialData.icon || "",
       });
     }
   }, [initialData]);
