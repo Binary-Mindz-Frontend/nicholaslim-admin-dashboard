@@ -34,8 +34,8 @@ const ViewTrackOrder = () => {
     // const [updateOrder, { isLoading: isUpdating }] = useUpdateOrderMutation();
 
     const order = response?.data;
-    // console.log("Order data:", order);
-    // console.log("Rider ID Value:", order?.assign_rider_id);
+    console.log("ViewTrackOrder API Response (GET /order/:id):", response);
+    console.log("Order data for ViewTrackOrder / OrderForm:", order);
 
     if (isLoading) return <div className="p-10 text-center">Loading...</div>;
     if (isError || !order) return <div className="p-10 text-center">Order not found.</div>;
@@ -54,14 +54,19 @@ const ViewTrackOrder = () => {
         status: order.order_status?.toLowerCase() || "pending",
     };
 
-    const trackingSteps = order.destinations?.map((dest: any) => ({
-        title: dest.type === "SENDER"
-            ? `Collected from (Sender: ${dest.contact_name})`
-            : `Deliver to (Recipient: ${dest.contact_name})`,
-        subtitle: dest.address,
-        date: new Date(order.created_at).toLocaleDateString("en-GB", { day: 'numeric', month: 'short' }),
-        time: new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    })) || [];
+    const stopsList = order?.orderStops || order?.destinations || [];
+    const trackingSteps = stopsList.map((dest: any) => {
+        const contactName = dest?.destination?.contact_name || dest?.contact_name || "N/A";
+        const isPickup = dest?.type === "PICKUP" || dest?.type === "SENDER" || dest?.destination?.type === "SENDER";
+        return {
+            title: isPickup
+                ? `Collected from (Sender: ${contactName})`
+                : `Deliver to (Recipient: ${contactName})`,
+            subtitle: dest?.address || dest?.destination?.address || "N/A",
+            date: order?.created_at ? new Date(order.created_at).toLocaleDateString("en-GB", { day: 'numeric', month: 'short' }) : "N/A",
+            time: order?.created_at ? new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "N/A",
+        };
+    });
 
     const finalSteps = [
         {
