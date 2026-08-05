@@ -107,13 +107,13 @@ const DeliveryTypeIconPicker: React.FC<DeliveryTypeIconPickerProps> = ({
                   className="w-10 h-10 object-contain mb-1"
                 />
               )}
-              <span
+              {/* <span
                 className={`text-xs font-medium text-center leading-tight ${
                   isSelected ? "text-yellow-900 font-bold" : "text-gray-600"
                 }`}
               >
                 {item.label}
-              </span>
+              </span> */}
             </button>
           );
         })}
