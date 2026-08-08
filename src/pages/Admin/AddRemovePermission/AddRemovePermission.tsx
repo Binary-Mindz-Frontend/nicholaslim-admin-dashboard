@@ -9,7 +9,15 @@ import {
 import { toast } from "react-hot-toast";
 import { PermissionFormData, Role } from "@/types/roleBasedAccessControlType";
 import RoleSelector from "@/components/Dashboard/AddRemovePermission/RoleSelector";
-import { ChevronDown, ChevronRight, Save, Check, Minus, Search, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Save,
+  Check,
+  Minus,
+  Search,
+  X,
+} from "lucide-react";
 
 // Import menu items and mapping
 import { menuItems, MenuItem } from "@/components/Shared/Sidebar/MenuItems";
@@ -55,9 +63,14 @@ const buildMenuTree = (
 const MENU_TREE = buildMenuTree(menuItems);
 
 // Get all backend modules for a menu item (including children recursively)
-const getAllBackendModulesForMenuItem = (menuId: string, isSelection: boolean = true): string[] => {
+const getAllBackendModulesForMenuItem = (
+  menuId: string,
+  isSelection: boolean = true,
+): string[] => {
   // Use getSelectionModules for selection, otherwise stick to direct mapping for deselection
-  const directModules = isSelection ? getSelectionModules(menuId) : (menuToPermissionMapping[menuId] || []);
+  const directModules = isSelection
+    ? getSelectionModules(menuId)
+    : menuToPermissionMapping[menuId] || [];
 
   // Find modules from children in menu tree
   const findChildModules = (nodes: MenuNode[], targetId: string): string[] => {
@@ -69,7 +82,9 @@ const getAllBackendModulesForMenuItem = (menuId: string, isSelection: boolean = 
           const collectModules = (childNodes: MenuNode[]) => {
             for (const child of childNodes) {
               // Same logic for child modules
-              const childDirect = isSelection ? getSelectionModules(child.id) : (menuToPermissionMapping[child.id] || []);
+              const childDirect = isSelection
+                ? getSelectionModules(child.id)
+                : menuToPermissionMapping[child.id] || [];
               childModules.push(...childDirect);
 
               if (child.children) {
@@ -94,18 +109,15 @@ const getAllBackendModulesForMenuItem = (menuId: string, isSelection: boolean = 
   const childModules = findChildModules(MENU_TREE, menuId);
 
   // Combine all modules and remove duplicates
-  return [
-    ...new Set([
-      ...directModules,
-      ...childModules,
-    ]),
-  ];
+  return [...new Set([...directModules, ...childModules])];
 };
 
 // Extract all unique modules currently mapped in the menu tree to prevent ghost permissions
 const ALL_ACTIVE_TREE_MODULES = new Set<string>();
-MENU_TREE.forEach(node => {
-  getAllBackendModulesForMenuItem(node.id).forEach(mod => ALL_ACTIVE_TREE_MODULES.add(mod));
+MENU_TREE.forEach((node) => {
+  getAllBackendModulesForMenuItem(node.id).forEach((mod) =>
+    ALL_ACTIVE_TREE_MODULES.add(mod),
+  );
 });
 
 // Get all permissions for a menu item (including children)
@@ -196,7 +208,14 @@ const CustomCheckbox: React.FC<{
   disabled?: boolean;
   className?: string;
   size?: "sm" | "md" | "lg";
-}> = ({ checked, indeterminate, onChange, disabled, className, size = "md" }) => {
+}> = ({
+  checked,
+  indeterminate,
+  onChange,
+  disabled,
+  className,
+  size = "md",
+}) => {
   const sizeClasses = {
     sm: "w-4 h-4",
     md: "w-5 h-5",
@@ -210,7 +229,7 @@ const CustomCheckbox: React.FC<{
   };
 
   return (
-    <div className={`relative inline-flex items-center ${className || ''}`}>
+    <div className={`relative inline-flex items-center ${className || ""}`}>
       <input
         type="checkbox"
         className="sr-only"
@@ -221,10 +240,11 @@ const CustomCheckbox: React.FC<{
       <div
         className={`
           ${sizeClasses[size]} rounded border-2 flex items-center justify-center transition-all duration-200
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
-          ${checked || indeterminate
-            ? 'bg-primary-600 border-primary-600 shadow-md'
-            : 'bg-white border-gray-300 hover:border-primary-400 hover:shadow-sm'
+          ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"}
+          ${
+            checked || indeterminate
+              ? "bg-primary-600 border-primary-600 shadow-md"
+              : "bg-white border-gray-300 hover:border-primary-400 hover:shadow-sm"
           }
         `}
         onClick={(e) => {
@@ -232,7 +252,7 @@ const CustomCheckbox: React.FC<{
           if (!disabled) {
             const syntheticEvent = {
               target: { checked: !checked },
-              stopPropagation: () => { },
+              stopPropagation: () => {},
             } as React.ChangeEvent<HTMLInputElement>;
             onChange(syntheticEvent);
           }
@@ -265,119 +285,124 @@ const MenuTreeItem: React.FC<{
   onToggleExpand,
   searchTerm = "",
 }) => {
-    const hasChildren = node.children && node.children.length > 0;
-    const isExpanded = expandedNodes.has(node.id);
+  const hasChildren = node.children && node.children.length > 0;
+  const isExpanded = expandedNodes.has(node.id);
 
-    const hasPermission = hasAnyPermission(node.id, selectedPermissions);
-    const hasAll = hasAllPermissions(node.id, selectedPermissions);
-    const hasPartial = hasPartialPermissions(node.id, selectedPermissions);
+  const hasPermission = hasAnyPermission(node.id, selectedPermissions);
+  const hasAll = hasAllPermissions(node.id, selectedPermissions);
+  const hasPartial = hasPartialPermissions(node.id, selectedPermissions);
 
-    // Highlight search term
-    const highlightText = (text: string) => {
-      if (!searchTerm) return text;
-      const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'));
-      return parts.map((part, i) =>
-        part.toLowerCase() === searchTerm.toLowerCase() ?
-          <span key={i} className="bg-yellow-200 font-medium">{part}</span> : part
-      );
-    };
+  // Highlight search term
+  const highlightText = (text: string) => {
+    if (!searchTerm) return text;
+    const parts = text.split(new RegExp(`(${searchTerm})`, "gi"));
+    return parts.map((part, i) =>
+      part.toLowerCase() === searchTerm.toLowerCase() ? (
+        <span key={i} className="bg-yellow-200 font-medium">
+          {part}
+        </span>
+      ) : (
+        part
+      ),
+    );
+  };
 
-    const getCheckboxState = () => {
-      if (hasAll) return "checked";
-      if (hasPartial) return "indeterminate";
-      return "unchecked";
-    };
+  const getCheckboxState = () => {
+    if (hasAll) return "checked";
+    if (hasPartial) return "indeterminate";
+    return "unchecked";
+  };
 
-    const checkboxState = getCheckboxState();
+  const checkboxState = getCheckboxState();
 
-    const handleToggle = () => {
-      if (hasChildren) {
-        onToggleExpand(node.id);
-      }
-    };
-
-    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      e.stopPropagation();
-      onToggle(node.id, e.target.checked);
-    };
-
-    const marginLeft = node.level ? `${node.level * 1.5}rem` : "0";
-
-    // Background color based on state
-    let bgColor = "bg-white";
-    let borderColor = "border-gray-200";
-    let textColor = "text-gray-700";
-
-    if (hasAll) {
-      bgColor = "bg-green-50";
-      borderColor = "border-green-200";
-    } else if (hasPartial) {
-      bgColor = "bg-primary-50";
-      borderColor = "border-primary-200";
+  const handleToggle = () => {
+    if (hasChildren) {
+      onToggleExpand(node.id);
     }
+  };
 
-    return (
-      <div className="select-none">
-        <div
-          className={`
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    onToggle(node.id, e.target.checked);
+  };
+
+  const marginLeft = node.level ? `${node.level * 1.5}rem` : "0";
+
+  // Background color based on state
+  let bgColor = "bg-white";
+  let borderColor = "border-gray-200";
+  let textColor = "text-gray-700";
+
+  if (hasAll) {
+    bgColor = "bg-green-50";
+    borderColor = "border-green-200";
+  } else if (hasPartial) {
+    bgColor = "bg-primary-50";
+    borderColor = "border-primary-200";
+  }
+
+  return (
+    <div className="select-none">
+      <div
+        className={`
           flex items-center py-2.5 px-3 rounded-xl transition-all duration-200
           ${bgColor} ${borderColor} border
           hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm
-          ${hasChildren ? 'cursor-pointer' : ''}
+          ${hasChildren ? "cursor-pointer" : ""}
         `}
-          style={{ marginLeft }}
-          onClick={handleToggle}
-        >
-          <div className="flex items-center flex-1 min-w-0">
-            {hasChildren && (
-              <div className="mr-1 shrink-0">
-                {isExpanded ? (
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 text-gray-500" />
-                )}
-              </div>
-            )}
-            {!hasChildren && <div className="w-5 mr-1 shrink-0" />}
+        style={{ marginLeft }}
+        onClick={handleToggle}
+      >
+        <div className="flex items-center flex-1 min-w-0">
+          {hasChildren && (
+            <div className="mr-1 shrink-0">
+              {isExpanded ? (
+                <ChevronDown className="w-4 h-4 text-gray-500" />
+              ) : (
+                <ChevronRight className="w-4 h-4 text-gray-500" />
+              )}
+            </div>
+          )}
+          {!hasChildren && <div className="w-5 mr-1 shrink-0" />}
 
-            <CustomCheckbox
-              checked={checkboxState === "checked"}
-              indeterminate={checkboxState === "indeterminate"}
-              onChange={handleCheckboxChange}
-              className="mr-3 shrink-0"
-              size="md"
-            />
+          <CustomCheckbox
+            checked={checkboxState === "checked"}
+            indeterminate={checkboxState === "indeterminate"}
+            onChange={handleCheckboxChange}
+            className="mr-3 shrink-0"
+            size="md"
+          />
 
-            <span className={`flex-1 text-sm font-medium ${textColor} truncate`}>
-              {highlightText(node.label)}
+          <span className={`flex-1 text-sm font-medium ${textColor} truncate`}>
+            {highlightText(node.label)}
+          </span>
+
+          {hasPermission && (
+            <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full shrink-0 font-medium">
+              {getAllBackendModulesForMenuItem(node.id).length}
             </span>
-
-            {hasPermission && (
-              <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full shrink-0 font-medium">
-                {getAllBackendModulesForMenuItem(node.id).length}
-              </span>
-            )}
-          </div>
+          )}
         </div>
-
-        {hasChildren && isExpanded && (
-          <div className="ml-4 border-l-2 border-primary-100 pl-2 mt-1 space-y-1">
-            {node.children?.map((child) => (
-              <MenuTreeItem
-                key={child.id}
-                node={child}
-                selectedPermissions={selectedPermissions}
-                onToggle={onToggle}
-                expandedNodes={expandedNodes}
-                onToggleExpand={onToggleExpand}
-                searchTerm={searchTerm}
-              />
-            ))}
-          </div>
-        )}
       </div>
-    );
-  };
+
+      {hasChildren && isExpanded && (
+        <div className="ml-4 border-l-2 border-primary-100 pl-2 mt-1 space-y-1">
+          {node.children?.map((child) => (
+            <MenuTreeItem
+              key={child.id}
+              node={child}
+              selectedPermissions={selectedPermissions}
+              onToggle={onToggle}
+              expandedNodes={expandedNodes}
+              onToggleExpand={onToggleExpand}
+              searchTerm={searchTerm}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function AddRemovePermission() {
   const { data: roleData = [], isLoading: isLoadingRoles } =
@@ -415,7 +440,13 @@ export default function AddRemovePermission() {
       setFormData({
         roleId: firstNonStaticRole.id.toString(),
         permissions: firstNonStaticRole.permissions
-          .filter((p) => p.action && p.action.trim() !== "" && !!MODULE_ACTIONS[p.module] && ALL_ACTIVE_TREE_MODULES.has(p.module))
+          .filter(
+            (p) =>
+              p.action &&
+              p.action.trim() !== "" &&
+              !!MODULE_ACTIONS[p.module] &&
+              ALL_ACTIVE_TREE_MODULES.has(p.module),
+          )
           .map((p) => ({
             module: p.module,
             action: p.action,
@@ -433,7 +464,13 @@ export default function AddRemovePermission() {
       setFormData({
         roleId,
         permissions: selectedRole.permissions
-          .filter((p) => p.action && p.action.trim() !== "" && !!MODULE_ACTIONS[p.module] && ALL_ACTIVE_TREE_MODULES.has(p.module))
+          .filter(
+            (p) =>
+              p.action &&
+              p.action.trim() !== "" &&
+              !!MODULE_ACTIONS[p.module] &&
+              ALL_ACTIVE_TREE_MODULES.has(p.module),
+          )
           .map((p) => ({
             module: p.module,
             action: p.action,
@@ -524,7 +561,7 @@ export default function AddRemovePermission() {
   const expandAll = () => {
     const allNodes = new Set<string>();
     const collectNodes = (nodes: MenuNode[]) => {
-      nodes.forEach(node => {
+      nodes.forEach((node) => {
         allNodes.add(node.id);
         if (node.children) collectNodes(node.children);
       });
@@ -549,7 +586,9 @@ export default function AddRemovePermission() {
     try {
       const updateData = {
         id: roleId,
-        permissions: formData.permissions.filter(p => p.action && p.action.trim() !== ""),
+        permissions: formData.permissions.filter(
+          (p) => p.action && p.action.trim() !== "",
+        ),
       };
 
       const response = await updateRoleBasedAccessControl(updateData).unwrap();
@@ -561,14 +600,14 @@ export default function AddRemovePermission() {
         prevRoles.map((role) =>
           role.id === roleId
             ? {
-              ...role,
-              permissions: formData.permissions.map((p) => ({
-                id: Math.random(),
-                module: p.module,
-                action: p.action,
-                roleId: roleId,
-              })),
-            }
+                ...role,
+                permissions: formData.permissions.map((p) => ({
+                  id: Math.random(),
+                  module: p.module,
+                  action: p.action,
+                  roleId: roleId,
+                })),
+              }
             : role,
         ),
       );
@@ -615,7 +654,9 @@ export default function AddRemovePermission() {
     }, []);
   };
 
-  const filteredMenuTree = searchTerm ? filterMenuItems(MENU_TREE, searchTerm) : MENU_TREE;
+  const filteredMenuTree = searchTerm
+    ? filterMenuItems(MENU_TREE, searchTerm)
+    : MENU_TREE;
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 px-4 sm:px-6 lg:px-8 py-6">
@@ -641,7 +682,8 @@ export default function AddRemovePermission() {
               </h2>
               <div className="flex items-center space-x-3">
                 <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-                  {getSelectedModuleCount()} modules • {getSelectedActionCount()} actions
+                  {getSelectedModuleCount()} modules •{" "}
+                  {getSelectedActionCount()} actions
                 </span>
               </div>
             </div>
@@ -690,7 +732,10 @@ export default function AddRemovePermission() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-primary-800">
-                    <span className="font-semibold">How it works:</span> Selecting a parent item grants all permissions for that section and its children. The number indicates total backend modules.
+                    <span className="font-semibold">How it works:</span>{" "}
+                    Selecting a parent item grants all permissions for that
+                    section and its children. The number indicates total backend
+                    modules.
                   </p>
                   <div className="flex flex-wrap items-center gap-4 mt-2">
                     <div className="flex items-center space-x-2">
@@ -703,7 +748,9 @@ export default function AddRemovePermission() {
                       <div className="w-5 h-5 bg-primary-500 rounded flex items-center justify-center shadow-sm">
                         <Minus className="w-3 h-3 text-white" />
                       </div>
-                      <span className="text-xs text-gray-600">Partial access</span>
+                      <span className="text-xs text-gray-600">
+                        Partial access
+                      </span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <div className="w-5 h-5 bg-white border-2 border-gray-300 rounded"></div>
@@ -864,8 +911,20 @@ const MODULE_ACTIONS: Record<string, string[]> = {
   ],
 
   // Driver Order Competition
-  driver_order_competition: ["create", "read", "delete", "update", "just_admin"],
-  driver_order_compitition: ["create", "read", "delete", "update", "just_admin"],
+  driver_order_competition: [
+    "create",
+    "read",
+    "delete",
+    "update",
+    "just_admin",
+  ],
+  driver_order_compitition: [
+    "create",
+    "read",
+    "delete",
+    "update",
+    "just_admin",
+  ],
 
   // Customer Order Confirmation
   customer_order_confirmation: [
@@ -959,7 +1018,14 @@ const MODULE_ACTIONS: Record<string, string[]> = {
   driver_incentive: ["create", "read", "update", "delete", "just_admin"],
 
   // Customer Rewards
-  customer_rewards: ["create", "read", "update", "delete", "reedom_coin", "just_admin"],
+  customer_rewards: [
+    "create",
+    "read",
+    "update",
+    "delete",
+    "reedom_coin",
+    "just_admin",
+  ],
 
   // Promo Code
   promo_code: ["create", "read", "update", "delete", "just_admin"],
@@ -1005,7 +1071,14 @@ const MODULE_ACTIONS: Record<string, string[]> = {
   admin_raider_wallet: ["read"],
   driver_tier_role: ["create", "read", "update", "delete", "just_admin"],
   eta: ["create", "read", "update", "delete", "get_one", "just_admin"],
-  notification_rule: ["create", "read", "update", "delete", "get_one", "just_admin"],
+  notification_rule: [
+    "create",
+    "read",
+    "update",
+    "delete",
+    "get_one",
+    "just_admin",
+  ],
 };
 
 // Keep for backward compatibility
@@ -1063,7 +1136,7 @@ const FRONTEND_TO_BACKEND_MODULES: Record<string, string> = {
   "Service Chat": "service_chat",
   "Dashboard Popup": "dashboard_popup",
   FAQ: "faq",
-  "Surge Pricing Role": "surge_pricing_role",
+  "Surge Pricing Rules": "surge_pricing_role",
   "User wallet (Admin)": "admin_user_wallet",
   "Driver wallet (Admin)": "admin_raider_wallet",
   "Driver Tier Role": "driver_tier_role",
