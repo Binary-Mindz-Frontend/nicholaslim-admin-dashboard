@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
+import { useGoogleMapsContext } from "@/context/GoogleMapsProvider";
 
 interface Vehicle {
   id: string;
@@ -42,6 +43,9 @@ export default function FleetMapHeader() {
   ]);
 
   const token = localStorage.getItem("accessToken");
+
+  // Wait for GoogleMapsProvider to signal that the script is fully loaded
+  const isMapsLoaded = useGoogleMapsContext();
 
   const initMap = () => {
     if (!mapRef.current || !window.google) return;
@@ -196,14 +200,13 @@ export default function FleetMapHeader() {
   }, []);
 
   useEffect(() => {
-    if (window.google) {
-      initMap();
-      initAdminSocket();
-    }
+    if (!isMapsLoaded) return;   // wait until GoogleMapsProvider confirms script is ready
+    initMap();
+    initAdminSocket();
     return () => {
       adminSocketRef.current?.disconnect();
     };
-  }, []);
+  }, [isMapsLoaded]);
 
   useEffect(() => {
     const counts: Record<string, number> = {};
