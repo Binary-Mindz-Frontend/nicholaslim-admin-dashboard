@@ -70,6 +70,9 @@ export default function NotificationComposer() {
   const [driverSearch, setDriverSearch] = useState("");
   const [driverList, setDriverList] = useState<any[]>([]);
 
+  const [hasMoreUsers, setHasMoreUsers] = useState(true);
+  const [hasMoreDrivers, setHasMoreDrivers] = useState(true);
+
   const [addNotification, { isLoading }] = useAddNotificationMutation();
 
   const { data: userData, isFetching: isUserFetching } = useGetUserTypesQuery({
@@ -86,16 +89,50 @@ export default function NotificationComposer() {
     });
 
   useEffect(() => {
-    if (userData?.data?.data) {
-      if (userPage === 1) setUserList(userData.data.data);
-      else setUserList((prev) => [...prev, ...userData.data.data]);
+    if (userData?.data) {
+      const items = userData.data.data || [];
+      const total = userData.data.total;
+
+      if (userPage === 1) {
+        setUserList(items);
+      } else {
+        setUserList((prev) => {
+          const newItems = items.filter(
+            (item: any) => !prev.some((p) => p.id === item.id)
+          );
+          return [...prev, ...newItems];
+        });
+      }
+
+      if (items.length === 0 || (total !== undefined && userList.length + items.length >= total)) {
+        setHasMoreUsers(false);
+      } else {
+        setHasMoreUsers(true);
+      }
     }
   }, [userData, userPage]);
 
   useEffect(() => {
-    if (driverData?.data?.data) {
-      if (driverPage === 1) setDriverList(driverData.data.data);
-      else setDriverList((prev) => [...prev, ...driverData.data.data]);
+    if (driverData?.data) {
+      const items = driverData.data.data || [];
+      const total = driverData.data.total;
+
+      if (driverPage === 1) {
+        setDriverList(items);
+      } else {
+        setDriverList((prev) => {
+          const newItems = items.filter(
+            (item: any) => !prev.some((p) => p.id === item.id)
+          );
+          return [...prev, ...newItems];
+        });
+      }
+
+      if (items.length === 0 || (total !== undefined && driverList.length + items.length >= total)) {
+        setHasMoreDrivers(false);
+      } else {
+        setHasMoreDrivers(true);
+      }
     }
   }, [driverData, driverPage]);
 
@@ -284,8 +321,13 @@ export default function NotificationComposer() {
                 onSearchChange={(q) => {
                   setUserSearch(q);
                   setUserPage(1);
+                  setHasMoreUsers(true);
                 }}
-                onScrollEnd={() => setUserPage((p) => p + 1)}
+                onScrollEnd={() => {
+                  if (hasMoreUsers && !isUserFetching) {
+                    setUserPage((p) => p + 1);
+                  }
+                }}
                 isLoading={isUserFetching}
                 value=""
               />
@@ -323,8 +365,13 @@ export default function NotificationComposer() {
                 onSearchChange={(q) => {
                   setDriverSearch(q);
                   setDriverPage(1);
+                  setHasMoreDrivers(true);
                 }}
-                onScrollEnd={() => setDriverPage((p) => p + 1)}
+                onScrollEnd={() => {
+                  if (hasMoreDrivers && !isDriverFetching) {
+                    setDriverPage((p) => p + 1);
+                  }
+                }}
                 isLoading={isDriverFetching}
                 value=""
               />

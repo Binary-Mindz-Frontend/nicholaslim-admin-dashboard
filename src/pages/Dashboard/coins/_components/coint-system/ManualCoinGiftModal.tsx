@@ -32,6 +32,7 @@ const ManualCoinGiftModal: React.FC<ManualCoinGiftModalProps> = ({ open, onClose
   const [userSearch, setUserSearch] = useState("");
   const [userPage, setUserPage] = useState(1);
   const [userList, setUserList] = useState<any[]>([]);
+  const [hasMoreUsers, setHasMoreUsers] = useState(true);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
   const [coins, setCoins] = useState<string>("");
@@ -51,9 +52,26 @@ const ManualCoinGiftModal: React.FC<ManualCoinGiftModalProps> = ({ open, onClose
   const basePrice = coinBasePriceData?.data ? parseFloat(coinBasePriceData.data) : 0;
 
   useEffect(() => {
-    if (userData?.data?.data) {
-      if (userPage === 1) setUserList(userData.data.data);
-      else setUserList((prev) => [...prev, ...userData.data.data]);
+    if (userData?.data) {
+      const items = userData.data.data || [];
+      const total = userData.data.total;
+
+      if (userPage === 1) {
+        setUserList(items);
+      } else {
+        setUserList((prev) => {
+          const newItems = items.filter(
+            (item: any) => !prev.some((p) => p.id === item.id)
+          );
+          return [...prev, ...newItems];
+        });
+      }
+
+      if (items.length === 0 || (total !== undefined && userList.length + items.length >= total)) {
+        setHasMoreUsers(false);
+      } else {
+        setHasMoreUsers(true);
+      }
     }
   }, [userData, userPage]);
 
@@ -88,13 +106,17 @@ const ManualCoinGiftModal: React.FC<ManualCoinGiftModalProps> = ({ open, onClose
       };
 
       const res = await createCoinGift(payload).unwrap();
-      if (res.success) {
+      if (res && res.success !== false) {
         toast.success(res.message || "Coins gifted successfully!");
-        onClose();
         resetForm();
+        onClose();
+      } else {
+        toast.error(res?.message || "Failed to gift coins");
       }
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to gift coins");
+      resetForm();
+      onClose();
     }
   };
 
@@ -135,8 +157,13 @@ const ManualCoinGiftModal: React.FC<ManualCoinGiftModalProps> = ({ open, onClose
                   onSearchChange={(q) => {
                     setUserSearch(q);
                     setUserPage(1);
+                    setHasMoreUsers(true);
                   }}
-                  onScrollEnd={() => setUserPage((p) => p + 1)}
+                  onScrollEnd={() => {
+                    if (hasMoreUsers && !isUserFetching) {
+                      setUserPage((p) => p + 1);
+                    }
+                  }}
                   isLoading={isUserFetching}
                   value={selectedUser ? selectedUser.name : ""}
                   className="rounded-r-none border-r-0"
