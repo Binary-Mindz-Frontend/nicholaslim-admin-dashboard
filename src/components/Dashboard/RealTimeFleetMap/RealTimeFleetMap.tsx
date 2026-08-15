@@ -113,47 +113,18 @@ export default function FleetMapHeader() {
         map: mapInstanceRef.current,
         icon: iconObj,
         cursor: "pointer",
+        title: `Rider #${vehicle.riderId} (${vehicle.vehicleName})`,
       });
 
       marker.addListener("click", () => {
         const currentVehicle = vehiclesMapRef.current.get(markerId) || vehicle;
-        const btnId = `view-rider-btn-${markerId}`;
-        const content = `
-          <div style="padding:14px;min-width:180px;font-family:sans-serif;box-sizing:border-box;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:6px;">
-              <h4 style="margin:0;color:#111827;font-size:15px;font-weight:700;">
-                Rider #${currentVehicle.riderId}
-              </h4>
-              <span style="background:#DCFCE7;color:#15803D;font-size:11px;font-weight:600;padding:2px 6px;border-radius:9999px;">
-                Active
-              </span>
-            </div>
-            <p style="margin:4px 0;font-size:13px;color:#374151;"><b>Vehicle:</b> ${currentVehicle.vehicleName}</p>
-            <p style="margin:4px 0;font-size:13px;color:#374151;"><b>Max Load:</b> ${currentVehicle.fullData?.vehicle_type?.max_load || "N/A"}</p>
-            <p style="margin:4px 0;font-size:13px;color:#374151;"><b>Base Price:</b> $${currentVehicle.fullData?.vehicle_type?.base_price || "0"}</p>
-            <p style="margin:6px 0 10px;font-size:11px;color:#6B7280;">Last sync: ${currentVehicle.lastUpdated}</p>
-            <button id="${btnId}" style="width:100%;background-color:#111827;color:#ffffff;font-weight:600;font-size:12px;padding:8px 12px;border:none;border-radius:8px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;">
-              <span>View Driver Profile</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            </button>
-          </div>`;
-
-        infoWindowRef.current?.setContent(content);
-        infoWindowRef.current?.open(mapInstanceRef.current, marker);
-
-        google.maps.event.addListenerOnce(infoWindowRef.current!, "domready", () => {
-          const btn = document.getElementById(btnId);
-          if (btn) {
-            btn.onclick = () => {
-              navigateRef.current(`/driver-list/${currentVehicle.riderId}`);
-            };
-          }
-        });
+        navigateRef.current(`/driver-list/${currentVehicle.riderId}`);
       });
 
       markersRef.current.set(markerId, marker);
     } else {
       marker.setPosition(position);
+      marker.setTitle(`Rider #${vehicle.riderId} (${vehicle.vehicleName})`);
     }
   };
 
