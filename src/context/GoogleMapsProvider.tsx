@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import LoadingSpinner from '@/components/Shared/LoadingSpinner/LoadingSpinner';
 
 const GoogleMapsContext = createContext<boolean>(false);
 
@@ -23,7 +24,11 @@ export const GoogleMapsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }, []);
 
     if (!isLoaded) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-[#0c1015]">
+                <LoadingSpinner />
+            </div>
+        );
     }
 
     return (
