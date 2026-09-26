@@ -76,6 +76,11 @@ const SurgePricingRole: React.FC = () => {
       render: (val: string) => `$${val}`,
     },
     {
+      key: "calculationIntervalMinutes" as const,
+      label: "Interval",
+      render: (val?: string | number) => <span className="font-semibold text-gray-700">{val ? `${val} mins` : '5 mins'}</span>,
+    },
+    {
       key: "status" as const,
       label: "Status",
       render: (status: string, row: SurgeRule) => (

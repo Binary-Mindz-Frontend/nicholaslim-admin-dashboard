@@ -32,6 +32,7 @@ export default function SurgeRuleModal({ isOpen, onClose, initialData }: any) {
       ratioTo: "",
       priceMultiplier: "",
       maxCap: "",
+      calculationIntervalMinutes: "5",
       status: "ACTIVE",
       serviceZoneIds: [],
       deliveryTypeIds: [],
@@ -65,9 +66,10 @@ export default function SurgeRuleModal({ isOpen, onClose, initialData }: any) {
       reset({
         ruleName: initialData.ruleName || "",
         ratioFrom: initialData.ratioFrom?.toString() || "",
-ratioTo: initialData.ratioTo?.toString() || "",
-priceMultiplier: initialData.priceMultiplier?.toString() || "",
-maxCap: initialData.maxCap?.toString() || "",
+        ratioTo: initialData.ratioTo?.toString() || "",
+        priceMultiplier: initialData.priceMultiplier?.toString() || "",
+        maxCap: initialData.maxCap?.toString() || "",
+        calculationIntervalMinutes: initialData.calculationIntervalMinutes?.toString() || "5",
         status: initialData.status || "ACTIVE",
         serviceZoneIds:
           initialData.serviceZones?.map((z: any) => ({
@@ -81,7 +83,17 @@ maxCap: initialData.maxCap?.toString() || "",
           })) || [],
       });
     } else {
-      reset();
+      reset({
+        ruleName: "",
+        ratioFrom: "",
+        ratioTo: "",
+        priceMultiplier: "",
+        maxCap: "",
+        calculationIntervalMinutes: "5",
+        status: "ACTIVE",
+        serviceZoneIds: [],
+        deliveryTypeIds: [],
+      });
     }
   }, [initialData, isOpen, reset]);
 
@@ -98,6 +110,7 @@ maxCap: initialData.maxCap?.toString() || "",
         ratioTo: Number(data.ratioTo),
         priceMultiplier: Number(data.priceMultiplier),
         maxCap: Number(data.maxCap),
+        calculationIntervalMinutes: Number(data.calculationIntervalMinutes || 5),
         status: data.status,
         serviceZoneIds: data.serviceZoneIds?.map((z: any) => z.value) || [],
         deliveryTypeIds: data.deliveryTypeIds?.map((d: any) => d.value) || [],
@@ -183,8 +196,8 @@ maxCap: initialData.maxCap?.toString() || "",
             />
           </div>
 
-          {/* Pricing */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Pricing & Calculation Interval */}
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <Label>Price Multiplier</Label>
               <Input type="number" step="0.1" {...register("priceMultiplier", { required: true })} />
@@ -192,6 +205,16 @@ maxCap: initialData.maxCap?.toString() || "",
             <div>
               <Label>Max Cap</Label>
               <Input type="number" step="0.1" {...register("maxCap", { required: true })} />
+            </div>
+            <div>
+              <Label className="text-xs">Interval (Mins)</Label>
+              <Input 
+                type="number" 
+                min="1" 
+                max="60" 
+                placeholder="5" 
+                {...register("calculationIntervalMinutes", { required: true })} 
+              />
             </div>
           </div>
 
