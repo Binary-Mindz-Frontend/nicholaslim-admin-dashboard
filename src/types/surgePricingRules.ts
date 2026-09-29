@@ -5,6 +5,7 @@ export interface SurgeRule {
   ratioTo: string;
   priceMultiplier: string;
   maxCap: string;
+  calculationIntervalMinutes?: string | number;
   status: 'ACTIVE' | 'INACTIVE';
   serviceZones: any[];
   deliveryTypes: any[];

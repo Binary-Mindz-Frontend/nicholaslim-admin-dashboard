@@ -31,6 +31,8 @@ const EditDeliveryTypeModal = ({
     collection_unit: "MINUTES",
     delivery_time: 0,
     delivery_unit: "MINUTES",
+    expiry_timeout: 0,
+    expiry_unit: "MINUTES",
     allow_stack: false,
     extra_stop_surcharge: 0,
     priority: 1,
@@ -52,6 +54,8 @@ const EditDeliveryTypeModal = ({
         collection_unit: initialData.collection_unit,
         delivery_time: initialData.delivery_time,
         delivery_unit: initialData.delivery_unit,
+        expiry_timeout: initialData.expiry_timeout ?? 0,
+        expiry_unit: initialData.expiry_unit || "MINUTES",
         allow_stack: initialData.allow_stack,
         extra_stop_surcharge: parseFloat(initialData.extra_stop_surcharge) || 0,
         priority: initialData.priority,
@@ -121,6 +125,8 @@ const EditDeliveryTypeModal = ({
       collection_unit: formData.collection_unit,
       delivery_time: Number(formData.delivery_time) || 0,
       delivery_unit: formData.delivery_unit,
+      expiry_timeout: Number(formData.expiry_timeout) || 0,
+      expiry_unit: formData.expiry_unit,
       allow_stack: formData.allow_stack,
       extra_stop_surcharge: Number(formData.extra_stop_surcharge) || 0,
       priority: priorityVal,
@@ -254,6 +260,37 @@ const EditDeliveryTypeModal = ({
                     <option value="HOURS">Hours</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Expiry Timeout */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Expiry Timeout
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    name="expiry_timeout"
+                    value={formData.expiry_timeout}
+                    onChange={handleInputChange}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                    placeholder="0"
+                    required
+                  />
+                  <select
+                    name="expiry_unit"
+                    value={formData.expiry_unit}
+                    onChange={handleInputChange}
+                    className="w-28 px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="MINUTES">Min</option>
+                    <option value="HOURS">Hours</option>
+                  </select>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  How long an unassigned order remains active after pickup time.
+                </p>
               </div>
             </div>
 
