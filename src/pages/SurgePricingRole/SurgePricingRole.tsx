@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Button } from '@/components/ui/button';
-import { Plus, Edit2, Loader2 } from 'lucide-react';
-import { FiTrash } from 'react-icons/fi';
-import React, { useState } from 'react';
-import { StatusSwitch } from '../Dashboard/vehicleType-PricingModel/vehicle-types/_components/StatusSwitch';
-import SCustomTable from '../Dashboard/_components/CutomTable';
-import toast from 'react-hot-toast';
+import { Button } from "@/components/ui/button";
+import { Plus, Edit2, Loader2 } from "lucide-react";
+import { FiTrash } from "react-icons/fi";
+import React, { useState } from "react";
+import { StatusSwitch } from "../Dashboard/vehicleType-PricingModel/vehicle-types/_components/StatusSwitch";
+import SCustomTable from "../Dashboard/_components/CutomTable";
+import toast from "react-hot-toast";
 import {
   useGetSurgePricingRulesQuery,
-  useToggleSurgePricingRuleStatusMutation
-} from '@/redux/features/surgePricingRules/surgePricingRulesApi';
-import { SurgeRule } from '@/types/surgePricingRules';
-import SurgeRuleModal from './_components/SurgeRuleModal';
-import DeleteConfirmModal from './_components/DeleteConfirmModal';
-import TablePagination from '../Dashboard/_components/TablePagination';
-import NewDynamicChangeLogTable from '@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable';
+  useToggleSurgePricingRuleStatusMutation,
+} from "@/redux/features/surgePricingRules/surgePricingRulesApi";
+import { SurgeRule } from "@/types/surgePricingRules";
+import SurgeRuleModal from "./_components/SurgeRuleModal";
+import DeleteConfirmModal from "./_components/DeleteConfirmModal";
+import TablePagination from "../Dashboard/_components/TablePagination";
+import NewDynamicChangeLogTable from "@/components/Shared/DynamicChangeLogTable/NewDynamicChangeLogTable";
 
 const SurgePricingRole: React.FC = () => {
   const [page, setPage] = useState(1);
@@ -25,7 +25,10 @@ const SurgePricingRole: React.FC = () => {
   const [selectedRule, setSelectedRule] = useState<SurgeRule | null>(null);
   const [ruleToDelete, setRuleToDelete] = useState<number | null>(null);
 
-  const { data: surgeData, isLoading } = useGetSurgePricingRulesQuery({ page, limit });
+  const { data: surgeData, isLoading } = useGetSurgePricingRulesQuery({
+    page,
+    limit,
+  });
   const [toggleStatus] = useToggleSurgePricingRuleStatusMutation();
 
   const totalItems = surgeData?.meta?.total || 0;
@@ -48,17 +51,17 @@ const SurgePricingRole: React.FC = () => {
   const handleStatusChange = async (id: number) => {
     try {
       const res = await toggleStatus(id).unwrap();
-      toast.success(res.message || 'Status updated');
+      toast.success(res.message || "Status updated");
     } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to update status');
+      toast.error(error?.data?.message || "Failed to update status");
     }
   };
 
   const columns = [
-    { 
-      key: "ruleName" as const, 
+    {
+      key: "ruleName" as const,
       label: "Rule Name",
-      render: (name: string) => <span className="font-medium">{name}</span>
+      render: (name: string) => <span className="font-medium">{name}</span>,
     },
     {
       key: "ratio" as const,
@@ -68,12 +71,23 @@ const SurgePricingRole: React.FC = () => {
     {
       key: "priceMultiplier" as const,
       label: "Multiplier",
-      render: (val: string) => <span className="text-blue-600 font-bold">{val}x</span>,
+      render: (val: string) => (
+        <span className="text-blue-600 font-bold">{val}x</span>
+      ),
     },
     {
       key: "maxCap" as const,
       label: "Max Cap",
       render: (val: string) => `$${val}`,
+    },
+    {
+      key: "calculationIntervalMinutes" as const,
+      label: "Interval",
+      render: (val?: string | number) => (
+        <span className="font-semibold text-gray-700">
+          {val ? `${val} mins` : "5 mins"}
+        </span>
+      ),
     },
     {
       key: "status" as const,
@@ -92,14 +106,16 @@ const SurgePricingRole: React.FC = () => {
       render: (_: any, row: SurgeRule) => (
         <div className="flex gap-2">
           <Button
-            variant="ghost" size="sm"
+            variant="ghost"
+            size="sm"
             className="p-2 h-auto cursor-pointer border border-[#00BFFF] hover:bg-blue-50"
             onClick={() => handleEditClick(row)}
           >
             <Edit2 size={16} className="text-[#00BFFF]" />
           </Button>
           <Button
-            variant="ghost" size="sm"
+            variant="ghost"
+            size="sm"
             className="p-2 h-auto cursor-pointer border border-[#FF4D4F] hover:bg-red-50"
             onClick={() => handleDeleteClick(row.id)}
           >

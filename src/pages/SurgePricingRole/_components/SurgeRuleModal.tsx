@@ -1,11 +1,22 @@
-'use client';
+"use client";
 
 import { useForm, Controller } from "react-hook-form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import SelectReact from "react-select";
 import {
   useCreateSurgePricingRuleMutation,
@@ -18,20 +29,14 @@ import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 export default function SurgeRuleModal({ isOpen, onClose, initialData }: any) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    control,
-    watch,
-  } = useForm({
+  const { register, handleSubmit, reset, setValue, control, watch } = useForm({
     defaultValues: {
       ruleName: "",
       ratioFrom: "",
       ratioTo: "",
       priceMultiplier: "",
       maxCap: "",
+      calculationIntervalMinutes: "5",
       status: "ACTIVE",
       serviceZoneIds: [],
       deliveryTypeIds: [],
@@ -65,9 +70,11 @@ export default function SurgeRuleModal({ isOpen, onClose, initialData }: any) {
       reset({
         ruleName: initialData.ruleName || "",
         ratioFrom: initialData.ratioFrom?.toString() || "",
-ratioTo: initialData.ratioTo?.toString() || "",
-priceMultiplier: initialData.priceMultiplier?.toString() || "",
-maxCap: initialData.maxCap?.toString() || "",
+        ratioTo: initialData.ratioTo?.toString() || "",
+        priceMultiplier: initialData.priceMultiplier?.toString() || "",
+        maxCap: initialData.maxCap?.toString() || "",
+        calculationIntervalMinutes:
+          initialData.calculationIntervalMinutes?.toString() || "5",
         status: initialData.status || "ACTIVE",
         serviceZoneIds:
           initialData.serviceZones?.map((z: any) => ({
@@ -81,7 +88,17 @@ maxCap: initialData.maxCap?.toString() || "",
           })) || [],
       });
     } else {
-      reset();
+      reset({
+        ruleName: "",
+        ratioFrom: "",
+        ratioTo: "",
+        priceMultiplier: "",
+        maxCap: "",
+        calculationIntervalMinutes: "5",
+        status: "ACTIVE",
+        serviceZoneIds: [],
+        deliveryTypeIds: [],
+      });
     }
   }, [initialData, isOpen, reset]);
 
@@ -98,6 +115,9 @@ maxCap: initialData.maxCap?.toString() || "",
         ratioTo: Number(data.ratioTo),
         priceMultiplier: Number(data.priceMultiplier),
         maxCap: Number(data.maxCap),
+        calculationIntervalMinutes: Number(
+          data.calculationIntervalMinutes || 5,
+        ),
         status: data.status,
         serviceZoneIds: data.serviceZoneIds?.map((z: any) => z.value) || [],
         deliveryTypeIds: data.deliveryTypeIds?.map((d: any) => d.value) || [],
@@ -141,11 +161,19 @@ maxCap: initialData.maxCap?.toString() || "",
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Ratio From</Label>
-              <Input type="number" step="0.01" {...register("ratioFrom", { required: true })} />
+              <Input
+                type="number"
+                step="0.01"
+                {...register("ratioFrom", { required: true })}
+              />
             </div>
             <div>
               <Label>Ratio To</Label>
-              <Input type="number" step="0.01" {...register("ratioTo", { required: true })} />
+              <Input
+                type="number"
+                step="0.01"
+                {...register("ratioTo", { required: true })}
+              />
             </div>
           </div>
 
@@ -183,15 +211,33 @@ maxCap: initialData.maxCap?.toString() || "",
             />
           </div>
 
-          {/* Pricing */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Pricing & Calculation Interval */}
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <Label>Price Multiplier</Label>
-              <Input type="number" step="0.1" {...register("priceMultiplier", { required: true })} />
+              <Input
+                type="number"
+                step="0.1"
+                {...register("priceMultiplier", { required: true })}
+              />
             </div>
             <div>
               <Label>Max Cap</Label>
-              <Input type="number" step="0.1" {...register("maxCap", { required: true })} />
+              <Input
+                type="number"
+                step="0.1"
+                {...register("maxCap", { required: true })}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Interval (Mins)</Label>
+              <Input
+                type="number"
+                min="1"
+                max="60"
+                placeholder="5"
+                {...register("calculationIntervalMinutes", { required: true })}
+              />
             </div>
           </div>
 

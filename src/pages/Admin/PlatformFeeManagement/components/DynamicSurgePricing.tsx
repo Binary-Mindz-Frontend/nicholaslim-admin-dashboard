@@ -14,6 +14,7 @@ interface SurgeRule {
   displayMultiplier: string;
   condition: string;
   timeRange: string;
+  calculationIntervalMinutes?: number;
   applicableUser: "USER" | "RAIDER";
   serviceAreaIds: (string | number)[];
 }
@@ -26,6 +27,7 @@ interface DynamicSurgePricingProps {
     priceMultiplier: number;
     condition: string;
     timeRange: string;
+    calculationIntervalMinutes?: number;
     applicableUser: "USER" | "RAIDER";
     serviceAreaIds: (string | number)[];
   }) => Promise<void>;
@@ -35,6 +37,7 @@ interface DynamicSurgePricingProps {
     priceMultiplier: number;
     condition: string;
     timeRange: string;
+    calculationIntervalMinutes?: number;
     applicableUser: "USER" | "RAIDER";
     serviceAreaIds: (string | number)[];
   }) => Promise<any>;
