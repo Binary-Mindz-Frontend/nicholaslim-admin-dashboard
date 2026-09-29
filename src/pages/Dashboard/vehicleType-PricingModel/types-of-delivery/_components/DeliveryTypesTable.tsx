@@ -26,6 +26,8 @@ interface DeliveryType {
   collection_unit: string;
   delivery_time: number;
   delivery_unit: string;
+  expiry_timeout?: number;
+  expiry_unit?: string;
   allow_stack: boolean;
   priority: number;
   is_active: boolean;
@@ -192,6 +194,14 @@ const DeliveryTypesTable: React.FC<DeliveryTypesTableProps> = ({
       key: "delivery_time" as const,
       label: "Delivery Time",
       render: (val: number, row: DeliveryType) => formatTime(val, row.delivery_unit),
+    },
+    {
+      key: "expiry_timeout" as const,
+      label: "Expiry Timeout",
+      render: (val: number, row: DeliveryType) =>
+        val !== undefined && val !== null
+          ? formatTime(val, row.expiry_unit || "MINUTES")
+          : "0 Min",
     },
     {
       key: "allow_stack" as const,
