@@ -184,12 +184,19 @@ const driversApi = baseApi.injectEndpoints({
         verifyRiderProfile: builder.mutation<
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             any,
-            { raiderId: string | number; verify: "APPROVED" | "REJECTED" | "PENDING" }
+            {
+                raiderId: string | number;
+                verify: "APPROVED" | "REJECTED" | "PENDING";
+                reason?: string;
+                notificationChannel?: "EMAIL" | "SMS" | "BOTH" | "NONE";
+                notifyEmail?: boolean;
+                notifySms?: boolean;
+            }
         >({
-            query: ({ raiderId, verify }) => ({
-
+            query: ({ raiderId, verify, ...bodyData }) => ({
                 url: `/raider-profile/verify-rider/${raiderId}/${verify}`,
                 method: "PATCH",
+                body: Object.keys(bodyData).length > 0 ? bodyData : undefined,
             }),
 
             invalidatesTags: ({ raiderId }) => [

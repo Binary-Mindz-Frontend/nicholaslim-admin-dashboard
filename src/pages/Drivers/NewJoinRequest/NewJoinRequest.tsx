@@ -46,7 +46,14 @@ export default function NewJoinRequest() {
   };
 
   // Pass pagination and filter params to the hook
-  const { requestColumns, requests, isLoading, isError, totalItems } = useRequestColumns({
+  const {
+    requestColumns,
+    requests,
+    isLoading,
+    isError,
+    totalItems,
+    VerifyModalComponent,
+  } = useRequestColumns({
     page: currentPage,
     limit: itemsPerPage,
     raiderId,
@@ -112,6 +119,7 @@ export default function NewJoinRequest() {
           <p className="text-lg text-gray-500">No requests found</p>
         </div>
       )}
+      <VerifyModalComponent />
       <NewDynamicChangeLogTable entityType="rider_approval" />
     </div>
   );

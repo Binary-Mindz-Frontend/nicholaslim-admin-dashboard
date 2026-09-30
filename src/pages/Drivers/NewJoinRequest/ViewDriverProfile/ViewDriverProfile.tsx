@@ -2,10 +2,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { useGetRiderProfileByIdQuery } from "@/redux/features/drivers/driversApi";
+import { useGetRiderProfileByIdQuery, useVerifyRiderProfileMutation } from "@/redux/features/drivers/driversApi";
 import { useGetVehicleTypesQuery } from "@/redux/features/vehicleType/vehicleTypeApi";
 
-import { Camera, ArrowLeft, Star, Medal, Wifi, AlertCircle } from "lucide-react";
+import { Camera, ArrowLeft, Star, Medal, Wifi, AlertCircle, Check, X, AlertTriangle } from "lucide-react";
+import toast from "react-hot-toast";
+import VerifyRiderModal from "../components/VerifyRiderModal";
 import {
   SectionTitle,
   InputWrapper,
@@ -71,9 +73,53 @@ export default function ViewDriverProfile() {
         { skip: !id }
     );
     const { data: vehicleTypesResponse } = useGetVehicleTypesQuery({});
+    const [verifyRiderProfile, { isLoading: isVerifying }] = useVerifyRiderProfileMutation();
+
+    const [verifyModal, setVerifyModal] = useState<{
+      isOpen: boolean;
+      verifyStatus: "APPROVED" | "REJECTED";
+    }>({
+      isOpen: false,
+      verifyStatus: "REJECTED",
+    });
 
     const { register, reset, watch } = useForm();
     const [profileImage, setProfileImage] = useState<string | null>(null);
+
+    const handleOpenModal = (status: "APPROVED" | "REJECTED") => {
+      setVerifyModal({
+        isOpen: true,
+        verifyStatus: status,
+      });
+    };
+
+    const handleConfirmVerify = async (modalData: {
+      reason: string;
+      notificationChannel: "EMAIL" | "SMS" | "BOTH" | "NONE";
+      notifyEmail: boolean;
+      notifySms: boolean;
+    }) => {
+      if (!id) return;
+
+      try {
+        const res = await verifyRiderProfile({
+          raiderId: id,
+          verify: verifyModal.verifyStatus,
+          reason: modalData.reason,
+          notificationChannel: modalData.notificationChannel,
+          notifyEmail: modalData.notifyEmail,
+          notifySms: modalData.notifySms,
+        }).unwrap();
+
+        toast.success(
+          res?.message || `Rider has been ${verifyModal.verifyStatus.toLowerCase()} successfully`
+        );
+        setVerifyModal((prev) => ({ ...prev, isOpen: false }));
+      } catch (error: any) {
+        console.error("Verification failed:", error);
+        toast.error(error?.data?.message || "Failed to update status.");
+      }
+    };
 
     const [documentUrls, setDocumentUrls] = useState({
         nricFront: "",
@@ -227,9 +273,44 @@ export default function ViewDriverProfile() {
             `,
                 }}
             />
-            <h1 onClick={() => navigate(-1)} className="flex items-center gap-2 cursor-pointer text-2xl font-semibold text-gray-900">
-                <ArrowLeft /> View Driver Profile
-            </h1>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h1 onClick={() => navigate(-1)} className="flex items-center gap-2 cursor-pointer text-2xl font-semibold text-gray-900">
+                  <ArrowLeft /> View Driver Profile
+              </h1>
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={() => handleOpenModal("APPROVED")}
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold px-5 py-2 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <Check size={18} /> Approve Driver
+                </Button>
+                <Button
+                  onClick={() => handleOpenModal("REJECTED")}
+                  className="bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-2 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <X size={18} /> Reject Driver
+                </Button>
+              </div>
+            </div>
+
+            {/* Rejection Reason Alert Banner if REJECTED */}
+            {(driverResponse?.data?.raider_verificationFromAdmin === "REJECTED" || driverResponse?.data?.rejectionReason) && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl shadow-sm space-y-1">
+                <div className="flex items-center gap-2 text-red-800 font-bold text-base">
+                  <AlertTriangle className="h-5 w-5 text-red-500" />
+                  Application Status: REJECTED
+                </div>
+                <p className="text-sm text-red-700 font-medium pl-7">
+                  <span className="font-semibold">Rejection Comment: </span>
+                  {driverResponse?.data?.rejectionReason || "No specific reason provided."}
+                </p>
+                {driverResponse?.data?.rejectedAt && (
+                  <p className="text-xs text-red-500 pl-7">
+                    Rejected on: {new Date(driverResponse.data.rejectedAt).toLocaleString()}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="border rounded-xl py-10 px-6 lg:px-32 bg-white shadow-sm relative">
                 <div className="flex flex-col items-center justify-center">
@@ -477,15 +558,36 @@ export default function ViewDriverProfile() {
                     </div>
                 </div>
 
-                <div className="flex justify-center mt-12 pb-6">
+                <div className="flex flex-wrap justify-center items-center gap-4 mt-12 pb-6 border-t pt-8">
                     <Button
-                        className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-12 py-3 text-lg rounded-xl shadow-md transition-all hover:shadow-lg active:scale-95"
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3 text-base rounded-xl shadow-md transition-all hover:shadow-lg cursor-pointer"
+                        onClick={() => handleOpenModal("APPROVED")}
+                    >
+                        <Check size={18} className="mr-2" /> Approve Application
+                    </Button>
+                    <Button
+                        className="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-3 text-base rounded-xl shadow-md transition-all hover:shadow-lg cursor-pointer"
+                        onClick={() => handleOpenModal("REJECTED")}
+                    >
+                        <X size={18} className="mr-2" /> Reject Application
+                    </Button>
+                    <Button
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-8 py-3 text-base rounded-xl shadow-sm cursor-pointer"
                         onClick={() => navigate(-1)}
                     >
                         Close Preview
                     </Button>
                 </div>
             </div>
+
+            <VerifyRiderModal
+                isOpen={verifyModal.isOpen}
+                onClose={() => setVerifyModal((prev) => ({ ...prev, isOpen: false }))}
+                onConfirm={handleConfirmVerify}
+                verifyStatus={verifyModal.verifyStatus}
+                driverName={watch("raider_name") || `Driver #${id}`}
+                isLoading={isVerifying}
+            />
         </div>
     );
 }

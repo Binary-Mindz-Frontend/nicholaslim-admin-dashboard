@@ -13,6 +13,8 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 
+import VerifyRiderModal from "../components/VerifyRiderModal";
+
 interface TRegistration {
   raider_name: string;
   contact_number: string;
@@ -21,15 +23,13 @@ interface TRegistration {
   email_address?: string;
   // ... add other fields as needed
 }
-// Declare the TRequest and Registration interfaces directly here
+
 interface TRequest {
   id: number;
   raider_status: string;
   raider_verificationFromAdmin: string;
-  created_at: string; // This is your "Requested Date"
+  created_at: string;
   registrations: TRegistration[];
-
-
 }
 
 interface UseRequestColumnsParams {
@@ -47,11 +47,24 @@ type RiderVerificationStatus = "APPROVED" | "REJECTED";
 export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
   const [requests, setRequests] = useState<TRequest[]>([]);
   const [totalItems, setTotalItems] = useState(0);
-  const [verifyRiderProfile] =
+  const [verifyRiderProfile, { isLoading: isVerifying }] =
     useVerifyRiderProfileMutation();
   const navigate = useNavigate();
 
-  // Build query params - only include defined values
+  // Verify Modal state
+  const [verifyModal, setVerifyModal] = useState<{
+    isOpen: boolean;
+    riderId: string | number | null;
+    verifyStatus: RiderVerificationStatus;
+    driverName?: string;
+  }>({
+    isOpen: false,
+    riderId: null,
+    verifyStatus: "REJECTED",
+    driverName: "",
+  });
+
+  // Build query params
   const queryParams: UseRequestColumnsParams = {
     page: params.page || 1,
     limit: params.limit || 10,
@@ -61,7 +74,6 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
   if (params.raiderVerificationFromAdmin !== undefined) {
     queryParams.raiderVerificationFromAdmin = params.raiderVerificationFromAdmin;
   }
-
   if (params.raiderId !== undefined) {
     queryParams.raiderId = params.raiderId;
   }
@@ -72,10 +84,7 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
     queryParams.search = params.search;
   }
 
-  // Fetch the data using useGetGoinReqestRiderProfilesQuery hook with filtered params
   const { data, isLoading, isError } = useGetGoinReqestRiderProfilesQuery(queryParams);
-
-  // console.log("join reques data ", data?.data?.data); 
 
   useEffect(() => {
     if (data?.data?.data) {
@@ -84,27 +93,50 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
     }
   }, [data]);
 
-  const handleUpdateStatus = async (
+  const handleOpenVerifyModal = (
     id: string | number,
     status: RiderVerificationStatus,
-    registrations: TRegistration[] // Add this parameter
+    registrations: TRegistration[]
   ) => {
-    // Check if user is NOT registered
     if (!registrations || registrations.length === 0) {
       toast.error("User not registered. Cannot approve/reject.");
       return;
     }
 
+    const name = registrations[0]?.raider_name || `Driver #${id}`;
+    setVerifyModal({
+      isOpen: true,
+      riderId: id,
+      verifyStatus: status,
+      driverName: name,
+    });
+  };
+
+  const handleConfirmVerify = async (modalData: {
+    reason: string;
+    notificationChannel: "EMAIL" | "SMS" | "BOTH" | "NONE";
+    notifyEmail: boolean;
+    notifySms: boolean;
+  }) => {
+    if (!verifyModal.riderId) return;
+
     try {
-      await verifyRiderProfile({
-        raiderId: id,
-        verify: status,
+      const res = await verifyRiderProfile({
+        raiderId: verifyModal.riderId,
+        verify: verifyModal.verifyStatus,
+        reason: modalData.reason,
+        notificationChannel: modalData.notificationChannel,
+        notifyEmail: modalData.notifyEmail,
+        notifySms: modalData.notifySms,
       }).unwrap();
 
-      toast.success(`Rider has been ${status.toLowerCase()} successfully`);
-    } catch (error) {
+      toast.success(
+        res?.message || `Rider has been ${verifyModal.verifyStatus.toLowerCase()} successfully`
+      );
+      setVerifyModal((prev) => ({ ...prev, isOpen: false }));
+    } catch (error: any) {
       console.error("Verification failed:", error);
-      toast.error("Failed to update status. Please try again.");
+      toast.error(error?.data?.message || "Failed to update status. Please try again.");
     }
   };
 
@@ -199,14 +231,14 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
                 <Eye className="h-4 w-4 mr-2" /> View
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleUpdateStatus(row.id, "APPROVED", row.registrations)}
-                className="text-green-600"
+                onClick={() => handleOpenVerifyModal(row.id, "APPROVED", row.registrations)}
+                className="text-green-600 cursor-pointer"
               >
                 <Check className="h-4 w-4 mr-2" /> Accept
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleUpdateStatus(row.id, "REJECTED", row.registrations)}
-                className="text-red-600"
+                onClick={() => handleOpenVerifyModal(row.id, "REJECTED", row.registrations)}
+                className="text-red-600 cursor-pointer"
               >
                 <X className="h-4 w-4 mr-2" /> Reject
               </DropdownMenuItem>
@@ -217,5 +249,16 @@ export const useRequestColumns = (params: UseRequestColumnsParams = {}) => {
     },
   ];
 
-  return { requestColumns, requests, isLoading, isError, totalItems };
+  const VerifyModalComponent = () => (
+    <VerifyRiderModal
+      isOpen={verifyModal.isOpen}
+      onClose={() => setVerifyModal((prev) => ({ ...prev, isOpen: false }))}
+      onConfirm={handleConfirmVerify}
+      verifyStatus={verifyModal.verifyStatus}
+      driverName={verifyModal.driverName}
+      isLoading={isVerifying}
+    />
+  );
+
+  return { requestColumns, requests, isLoading, isError, totalItems, VerifyModalComponent };
 };
