@@ -89,11 +89,11 @@ const NewDynamicChangeLogTable = ({
         ) : (
           <span
             className={`px-2 py-1 rounded text-[11px] font-bold uppercase whitespace-nowrap ${
-              row.action === "CREATE"
+              row.action === "CREATE" || row.action === "Approved" || row.action === "APPROVED"
                 ? "bg-green-100 text-green-700"
                 : row.action === "UPDATE"
                   ? "bg-blue-100 text-blue-700"
-                  : row.action === "DELETE"
+                  : row.action === "DELETE" || row.action === "Rejected" || row.action === "REJECTED"
                     ? "bg-red-100 text-red-700"
                     : "bg-gray-100 text-gray-700"
             }`}
@@ -153,6 +153,9 @@ const NewDynamicChangeLogTable = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Actions</SelectItem>
+                <SelectItem value="Approved">Approved</SelectItem>
+                <SelectItem value="Rejected">Rejected</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
                 <SelectItem value="CREATE">Create</SelectItem>
                 <SelectItem value="UPDATE">Update</SelectItem>
                 <SelectItem value="DELETE">Delete</SelectItem>
