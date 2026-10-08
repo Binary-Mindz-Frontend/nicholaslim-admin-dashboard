@@ -6,9 +6,38 @@ import CreateNewCampaign from "./components/CreateNewCampaign";
 import AdvertisementsTable from "./components/AdvertismentList";
 import { AdvertisementLogTable } from "@/components/Shared/DynamicChangeLogTable/AdvertisementLogTable";
 import PullToRefresh from "react-simple-pull-to-refresh";
+import { useGetAdvertisementsQuery } from "@/redux/features/advertise/advertiseApi";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Filter } from "lucide-react";
 
 export default function Advertisement() {
   const [activeTab, setActiveTab] = useState<"USER" | "RAIDER">("USER");
+  const [selectedAdId, setSelectedAdId] = useState<string>("ALL");
+
+  const { data: adsResponse } = useGetAdvertisementsQuery(undefined);
+  const adsList = adsResponse?.data?.data || adsResponse?.data || [];
+
+  // Filter ads for the current tab
+  const tabAds = Array.isArray(adsList)
+    ? adsList.filter((ad: any) => ad.create_for === activeTab)
+    : [];
+
+  // Find selected ad object to get its title
+  const selectedAdObj = tabAds.find(
+    (ad: any) => String(ad.id) === String(selectedAdId)
+  );
+  const selectedAdTitle = selectedAdObj ? selectedAdObj.ad_title : undefined;
+
+  const handleTabChange = (tab: "USER" | "RAIDER") => {
+    setActiveTab(tab);
+    setSelectedAdId("ALL");
+  };
 
   const advertiseLogColumns = [
     {
@@ -125,31 +154,82 @@ export default function Advertisement() {
           Advertise Management
         </h1>
 
-        {/* Tab Navigation */}
-        <div className="flex space-x-2 mb-10 ">
-          <span className="rounded-full p-2 md:border border-black flex gap-2 flex-col md:flex-row justify-center">
-            <button
-              onClick={() => setActiveTab("USER")}
-              className={getTabClasses("USER")}
+        {/* Controls Bar: Role Tab Navigation & Advertisement Selector */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8 bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+          {/* Tab Navigation */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-gray-700">Target Role:</span>
+            <span className="rounded-full p-1 border border-black flex gap-1 justify-center">
+              <button
+                onClick={() => handleTabChange("USER")}
+                className={getTabClasses("USER")}
+              >
+                User
+              </button>
+              <button
+                onClick={() => handleTabChange("RAIDER")}
+                className={getTabClasses("RAIDER")}
+              >
+                Driver
+              </button>
+            </span>
+          </div>
+
+          {/* Advertisement Filter Dropdown */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+              <Filter className="w-4 h-4 text-amber-500" />
+              <span>Select Advertisement:</span>
+            </div>
+            <Select
+              value={selectedAdId}
+              onValueChange={(val) => setSelectedAdId(val)}
             >
-              User
-            </button>
-            <button
-              onClick={() => setActiveTab("RAIDER")}
-              className={getTabClasses("RAIDER")}
-            >
-              Driver
-            </button>
-          </span>
+              <SelectTrigger className="w-64 md:w-80 bg-white border-gray-300">
+                <SelectValue placeholder="All Advertisements" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">
+                  All Advertisements (Aggregate)
+                </SelectItem>
+                {tabAds.map((ad: any) => (
+                  <SelectItem key={ad.id} value={String(ad.id)}>
+                    #{ad.id} - {ad.ad_title} {ad.status ? "(Active)" : "(Inactive)"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {selectedAdId !== "ALL" && (
+              <button
+                onClick={() => setSelectedAdId("ALL")}
+                className="text-xs text-blue-600 hover:text-blue-800 underline font-medium cursor-pointer ml-1"
+              >
+                Reset to All
+              </button>
+            )}
+          </div>
         </div>
 
-        <AdvertiseManagementTop activeTab={activeTab} />
-        <PerformanceTrendsChart activeTab={activeTab} />
+        <AdvertiseManagementTop
+          activeTab={activeTab}
+          selectedAdId={selectedAdId}
+          selectedAdTitle={selectedAdTitle}
+        />
+        <PerformanceTrendsChart
+          activeTab={activeTab}
+          selectedAdId={selectedAdId}
+          selectedAdTitle={selectedAdTitle}
+        />
         <div className="py-4">
           <CreateNewCampaign activeTab={activeTab} />
         </div>
 
-        <AdvertisementsTable activeTab={activeTab} />
+        <AdvertisementsTable
+          activeTab={activeTab}
+          selectedAdId={selectedAdId}
+          onSelectAd={(id: string) => setSelectedAdId(id)}
+        />
 
         <div className="mt-12">
           <AdvertisementLogTable
