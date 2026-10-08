@@ -71,16 +71,19 @@ export const advertiseApi = baseApi.injectEndpoints({
 
     getPerformanceTrends: builder.query<
       any,
-      { role: "USER" | "RAIDER"; months: number }
+      { role: "USER" | "RAIDER"; months: number; advertiseId?: string }
     >({
-      query: ({ role, months }) => ({
-        url: "/advertise/stats/performance-trends",
-        method: "GET",
-        params: {
-          role,
-          months,
-        },
-      }),
+      query: ({ role, months, advertiseId }) => {
+        const params: any = { role, months };
+        if (advertiseId && advertiseId !== "ALL") {
+          params.advertiseId = advertiseId;
+        }
+        return {
+          url: "/advertise/stats/performance-trends",
+          method: "GET",
+          params,
+        };
+      },
       providesTags: ["Advertisements"],
     }),
 
