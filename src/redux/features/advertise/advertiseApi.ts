@@ -59,22 +59,34 @@ export const advertiseApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // Get Global Advertisement Stats
-    // advertiseApi.ts
-    getGlobalStats: builder.query<any, { role: "USER" | "RAIDER" }>({
-      query: ({ role }) => ({
-        url: "/advertise/stats/global",
-        method: "GET",
-        params: { role },
-      }),
+    // Get Global / Individual Advertisement Stats
+    getGlobalStats: builder.query<
+      any,
+      { role?: "USER" | "RAIDER"; advertiseId?: string | number }
+    >({
+      query: ({ role, advertiseId }) => {
+        const params: any = {};
+        if (role) params.role = role;
+        if (advertiseId && advertiseId !== "ALL") {
+          params.advertiseId = advertiseId;
+        }
+        return {
+          url: "/advertise/stats/global",
+          method: "GET",
+          params,
+        };
+      },
+      providesTags: ["Advertisements"],
     }),
 
     getPerformanceTrends: builder.query<
       any,
-      { role: "USER" | "RAIDER"; months: number; advertiseId?: string }
+      { role?: "USER" | "RAIDER"; months?: number; advertiseId?: string | number }
     >({
       query: ({ role, months, advertiseId }) => {
-        const params: any = { role, months };
+        const params: any = {};
+        if (role) params.role = role;
+        if (months) params.months = months;
         if (advertiseId && advertiseId !== "ALL") {
           params.advertiseId = advertiseId;
         }
@@ -88,8 +100,19 @@ export const advertiseApi = baseApi.injectEndpoints({
     }),
 
     // Get Stats for Single Advertisement
-    getAdvertisementStats: builder.query({
-      query: (id) => `/advertise/${id}/stats`,
+    getAdvertisementStats: builder.query<
+      any,
+      string | number | { id: string | number; months?: number }
+    >({
+      query: (arg) => {
+        if (typeof arg === "object" && arg !== null) {
+          return {
+            url: `/advertise/${arg.id}/stats`,
+            params: arg.months ? { months: arg.months } : undefined,
+          };
+        }
+        return `/advertise/${arg}/stats`;
+      },
       providesTags: ["Advertisements"],
     }),
 

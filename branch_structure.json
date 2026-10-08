@@ -1,0 +1,21 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "main",
+    "nicholas",
+    "origin",
+    "ramjan2"
+  ],
+  "parent": {
+    "main": null,
+    "nicholas": "main",
+    "origin": "main",
+    "ramjan2": "main"
+  },
+  "order": [
+    "main",
+    "nicholas",
+    "origin",
+    "ramjan2"
+  ]
+}

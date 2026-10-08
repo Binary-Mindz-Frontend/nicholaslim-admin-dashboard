@@ -1,9 +1,6 @@
 import { Eye, Zap, TrendingUp, RotateCw } from "lucide-react";
 import { StatCard } from "./StatCard";
-import {
-  useGetGlobalStatsQuery,
-  useGetAdvertisementStatsQuery,
-} from "@/redux/features/advertise/advertiseApi";
+import { useGetGlobalStatsQuery } from "@/redux/features/advertise/advertiseApi";
 
 interface AdvertiseManagementTopProps {
   activeTab: "USER" | "RAIDER";
@@ -19,35 +16,16 @@ export default function AdvertiseManagementTop({
   const isGlobal = !selectedAdId || selectedAdId === "ALL";
 
   const {
-    data: globalData,
-    isLoading: isGlobalLoading,
-    isFetching: isGlobalFetching,
-    refetch: refetchGlobal,
-  } = useGetGlobalStatsQuery(
-    { role: activeTab },
-    { skip: !isGlobal }
-  );
-
-  const {
-    data: singleData,
-    isLoading: isSingleLoading,
-    isFetching: isSingleFetching,
-    refetch: refetchSingle,
-  } = useGetAdvertisementStatsQuery(selectedAdId, {
-    skip: isGlobal || !selectedAdId,
+    data,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useGetGlobalStatsQuery({
+    role: activeTab,
+    advertiseId: !isGlobal ? selectedAdId : undefined,
   });
 
-  const isLoading = isGlobal ? isGlobalLoading : isSingleLoading;
-  const isFetching = isGlobal ? isGlobalFetching : isSingleFetching;
-  const handleRefetch = () => {
-    if (isGlobal) {
-      refetchGlobal();
-    } else {
-      refetchSingle();
-    }
-  };
-
-  const stats = isGlobal ? globalData?.data : (singleData?.data || singleData);
+  const stats = data?.data;
 
   // Safe fallback
   const impressions = Number(stats?.totalImpression ?? stats?.impression ?? 0);
@@ -78,7 +56,7 @@ export default function AdvertiseManagementTop({
         </div>
 
         <button
-          onClick={handleRefetch}
+          onClick={() => refetch()}
           disabled={isLoading || isFetching}
           className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-all disabled:opacity-50 cursor-pointer"
         >

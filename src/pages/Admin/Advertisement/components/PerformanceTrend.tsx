@@ -53,6 +53,7 @@ export default function PerformanceTrendsChart({
     week: stat.week,
     impressions: stat.impression,
     clicks: stat.click,
+    ctr: stat.ctr !== undefined ? `${stat.ctr}%` : undefined,
   }));
 
   return (

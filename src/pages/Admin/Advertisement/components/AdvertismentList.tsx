@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
@@ -104,6 +103,9 @@ export default function AdvertisementsTable({
             <th className="px-4 py-2 border border-[#FFD52B]">ID</th>
             <th className="px-4 py-2 border border-[#FFD52B]">Title</th>
             <th className="px-4 py-2 border border-[#FFD52B]">Redirect Link</th>
+            <th className="px-4 py-2 border border-[#FFD52B]">Impressions</th>
+            <th className="px-4 py-2 border border-[#FFD52B]">Clicks</th>
+            <th className="px-4 py-2 border border-[#FFD52B]">CTR</th>
             <th className="px-4 py-2 border border-[#FFD52B]">Start Date</th>
             <th className="px-4 py-2 border border-[#FFD52B]">End Date</th>
             <th className="px-4 py-2 border border-[#FFD52B]">Status</th>
@@ -113,6 +115,12 @@ export default function AdvertisementsTable({
         <tbody>
           {paginatedAds.map((ad: any) => {
             const isSelected = String(ad.id) === String(selectedAdId);
+            const redirectUrl = ad.redirect_link
+              ? ad.redirect_link.startsWith("http")
+                ? ad.redirect_link
+                : `https://${ad.redirect_link}`
+              : null;
+
             return (
               <tr
                 key={ad.id}
@@ -130,12 +138,35 @@ export default function AdvertisementsTable({
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-2 border">{ad.ad_title}</td>
-                <td className="px-4 py-2 border">{ad.redirect_link || "-"}</td>
-                <td className="px-4 py-2 border">
+                <td className="px-4 py-2 border font-medium text-slate-900">{ad.ad_title}</td>
+                <td className="px-4 py-2 border max-w-xs truncate">
+                  {redirectUrl ? (
+                    <a
+                      href={redirectUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline inline-block truncate max-w-[180px]"
+                      title={redirectUrl}
+                    >
+                      {ad.redirect_link}
+                    </a>
+                  ) : (
+                    "-"
+                  )}
+                </td>
+                <td className="px-4 py-2 border font-semibold text-slate-700">
+                  {(ad.totalImpression ?? 0).toLocaleString()}
+                </td>
+                <td className="px-4 py-2 border font-semibold text-slate-700">
+                  {(ad.totalClick ?? 0).toLocaleString()}
+                </td>
+                <td className="px-4 py-2 border font-bold text-amber-600">
+                  {ad.ctr !== undefined ? `${ad.ctr}%` : "0%"}
+                </td>
+                <td className="px-4 py-2 border text-xs">
                   {new Date(ad.start_date).toLocaleDateString()}
                 </td>
-                <td className="px-4 py-2 border">
+                <td className="px-4 py-2 border text-xs">
                   {new Date(ad.end_date).toLocaleDateString()}
                 </td>
                 <td className="px-4 py-2 border">
