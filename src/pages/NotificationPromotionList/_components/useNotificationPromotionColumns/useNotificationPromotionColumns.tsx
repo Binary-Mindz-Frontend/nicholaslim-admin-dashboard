@@ -75,7 +75,9 @@ export const useNotificationPromotionColumns = ({
         if (status === "CANCELLED") color = "bg-gray-100 text-gray-700";
 
         return (
-          <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${color}`}>
+          <span
+            className={`text-[10px] px-2 py-0.5 rounded font-bold ${color}`}
+          >
             {status}
           </span>
         );

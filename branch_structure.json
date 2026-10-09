@@ -1,0 +1,45 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "Ridoy",
+    "chamon-ali",
+    "dev",
+    "hanif",
+    "haniful-sialm",
+    "kabirul",
+    "main",
+    "mizan",
+    "ramjan",
+    "ramjan2",
+    "seam",
+    "shazan"
+  ],
+  "parent": {
+    "Ridoy": "main",
+    "chamon-ali": "main",
+    "dev": "main",
+    "hanif": "main",
+    "haniful-sialm": "main",
+    "kabirul": "main",
+    "main": null,
+    "mizan": "main",
+    "ramjan": "main",
+    "ramjan2": "main",
+    "seam": "main",
+    "shazan": "main"
+  },
+  "order": [
+    "main",
+    "Ridoy",
+    "chamon-ali",
+    "dev",
+    "hanif",
+    "haniful-sialm",
+    "kabirul",
+    "mizan",
+    "ramjan",
+    "ramjan2",
+    "seam",
+    "shazan"
+  ]
+}

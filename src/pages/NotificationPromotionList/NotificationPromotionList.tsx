@@ -91,8 +91,8 @@ const NotificationPromotionList: React.FC = () => {
       }
       toast.success(res.message || "Notification deleted successfully");
       setIsDeleteModalOpen(false);
-    } catch (error) {
-      toast.error("Failed to delete notification");
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to delete notification");
     }
   };
 

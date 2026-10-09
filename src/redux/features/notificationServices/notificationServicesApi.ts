@@ -58,7 +58,10 @@ const notificationServicesApi = baseApi.injectEndpoints({
       invalidatesTags: ["Notification"],
     }),
 
-    resendNotification: build.mutation<any, { id: string | number; channels?: string[] }>({
+    resendNotification: build.mutation<
+      any,
+      { id: string | number; channels?: string[] }
+    >({
       query: ({ id, channels }) => ({
         url: `/notifications/${id}/resend`,
         method: "POST",
@@ -106,4 +109,3 @@ export const {
   useDeleteNotificationMutation,
   useBulkDeleteNotificationsMutation,
 } = notificationServicesApi;
-

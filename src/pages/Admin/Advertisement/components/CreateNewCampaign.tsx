@@ -1,7 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from "react";
-import { Upload, Calendar, X, Image as ImageIcon, Tag, Bell } from "lucide-react";
+import {
+  Upload,
+  Calendar,
+  X,
+  Image as ImageIcon,
+  Tag,
+  Bell,
+} from "lucide-react";
 import { useUploadFileMutation } from "@/redux/features/fileUpload/fileuploadApi";
 import { useCreateAdvertisementMutation } from "@/redux/features/advertise/advertiseApi";
 import { useGetPromoCodesQuery } from "@/redux/features/promoCode/promoCodeApi";
@@ -12,7 +19,9 @@ interface CreateNewCampaignProps {
   activeTab: "USER" | "RAIDER";
 }
 
-export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps) {
+export default function CreateNewCampaign({
+  activeTab,
+}: CreateNewCampaignProps) {
   const [campaignTitle, setCampaignTitle] = useState("");
   const [redirectLink, setRedirectLink] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -41,11 +50,11 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
     const now = new Date();
     // Format to YYYY-MM-DDThh:mm for datetime-local input
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+
     const minDate = `${year}-${month}-${day}T${hours}:${minutes}`;
     setMinStartDate(minDate);
   }, []);
@@ -54,15 +63,17 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
   const handlePromoCodeSelect = (codeStr: string) => {
     setSelectedPromoCode(codeStr);
     if (!codeStr) return;
-    const selectedPromo = promoCodesList.find((p: any) => p.promoCode === codeStr);
+    const selectedPromo = promoCodesList.find(
+      (p: any) => p.promoCode === codeStr,
+    );
     if (selectedPromo && selectedPromo.expires_at && !endDate) {
       try {
         const expDate = new Date(selectedPromo.expires_at);
         const year = expDate.getFullYear();
-        const month = String(expDate.getMonth() + 1).padStart(2, '0');
-        const day = String(expDate.getDate()).padStart(2, '0');
-        const hours = String(expDate.getHours()).padStart(2, '0');
-        const minutes = String(expDate.getMinutes()).padStart(2, '0');
+        const month = String(expDate.getMonth() + 1).padStart(2, "0");
+        const day = String(expDate.getDate()).padStart(2, "0");
+        const hours = String(expDate.getHours()).padStart(2, "0");
+        const minutes = String(expDate.getMinutes()).padStart(2, "0");
         setEndDate(`${year}-${month}-${day}T${hours}:${minutes}`);
       } catch (err) {
         console.error(err);
@@ -82,7 +93,7 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
     // Validate start date is greater than or equal to current date
     const currentDate = new Date();
     const selectedStartDate = new Date(startDate);
-    
+
     if (selectedStartDate < currentDate) {
       toast.error("Start date must be greater than or equal to current date.");
       return;
@@ -146,7 +157,9 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
       }
 
       if (result?.data?.success) {
-        toast.success(result.data.message || "Campaign and Promotion created successfully!");
+        toast.success(
+          result.data.message || "Campaign and Promotion created successfully!",
+        );
         // Reset form
         setCampaignTitle("");
         setStartDate("");
@@ -157,7 +170,9 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
         setRedirectLink("");
         setSelectedPromoCode("");
       } else {
-        toast.error(result?.data?.error?.message || "Failed to create campaign");
+        toast.error(
+          result?.data?.error?.message || "Failed to create campaign",
+        );
       }
     } catch (err) {
       console.error(err);
@@ -171,25 +186,25 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
     const selectedDate = e.target.value;
     const currentDate = new Date();
     const selectedDateObj = new Date(selectedDate);
-    
+
     if (selectedDateObj < currentDate) {
       toast.error("Start date must be greater than or equal to current date.");
       // You can choose to clear the field or keep it but show error
       // setStartDate("");
       // return;
     }
-    
+
     setStartDate(selectedDate);
   };
 
   const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedEndDate = e.target.value;
-    
+
     // Validate end date only if start date is already set
     if (startDate) {
       const startDateObj = new Date(startDate);
       const endDateObj = new Date(selectedEndDate);
-      
+
       if (endDateObj <= startDateObj) {
         toast.error("End date must be greater than start date.");
         // You can choose to clear the field or keep it but show error
@@ -197,14 +212,14 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
         // return;
       }
     }
-    
+
     setEndDate(selectedEndDate);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.length) {
       const file = e.target.files[0];
-      
+
       // Check file size (max 25MB)
       if (file.size > 25 * 1024 * 1024) {
         toast.error("File size exceeds 25 MB limit!");
@@ -212,19 +227,19 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
       }
 
       // Check file type
-      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
         toast.error("Please upload only image or video files!");
         return;
       }
 
       setUploadedFile(file);
-      
+
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setFilePreview(previewUrl);
-      
+
       // Set file type for rendering
-      setFileType(file.type.startsWith('video/') ? 'video' : 'image');
+      setFileType(file.type.startsWith("video/") ? "video" : "image");
     } else {
       handleRemoveFile();
     }
@@ -235,15 +250,17 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
     if (filePreview) {
       URL.revokeObjectURL(filePreview);
     }
-    
+
     setUploadedFile(null);
     setFilePreview(null);
     setFileType(null);
-    
+
     // Reset file input
-    const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+    const fileInput = document.getElementById(
+      "file-upload",
+    ) as HTMLInputElement;
     if (fileInput) {
-      fileInput.value = '';
+      fileInput.value = "";
     }
   };
 
@@ -255,10 +272,10 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (e.dataTransfer.files?.length) {
       const file = e.dataTransfer.files[0];
-      
+
       // Check file size (max 25MB)
       if (file.size > 25 * 1024 * 1024) {
         toast.error("File size exceeds 25 MB limit!");
@@ -266,19 +283,19 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
       }
 
       // Check file type
-      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
         toast.error("Please upload only image or video files!");
         return;
       }
 
       setUploadedFile(file);
-      
+
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setFilePreview(previewUrl);
-      
+
       // Set file type for rendering
-      setFileType(file.type.startsWith('video/') ? 'video' : 'image');
+      setFileType(file.type.startsWith("video/") ? "video" : "image");
     }
   };
 
@@ -328,7 +345,7 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
 
           {/* Optional Promo Code Selector */}
           <div>
-            <label className="block text-xl font-medium text-gray-800 mb-4 flex items-center gap-2">
+            <label className="block text-xl font-medium text-gray-800 mb-4 items-center gap-2">
               <Tag className="w-5 h-5 text-amber-500" />
               Attach Promo Code (Optional)
             </label>
@@ -340,18 +357,22 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
               <option value="">-- Select a Promo Code --</option>
               {promoCodesList.map((p: any) => (
                 <option key={p.id} value={p.promoCode}>
-                  {p.promoCode} — {p.title || p.discountDesc || `${p.discountValue}${p.discountType === "PERCENTAGE" ? "%" : "$"}`}
+                  {p.promoCode} —{" "}
+                  {p.title ||
+                    p.discountDesc ||
+                    `${p.discountValue}${p.discountType === "PERCENTAGE" ? "%" : "$"}`}
                 </option>
               ))}
             </select>
             <p className="text-sm text-gray-500 mt-2">
-              Selecting a promo code will link it to this campaign and auto-fill card discounts.
+              Selecting a promo code will link it to this campaign and auto-fill
+              card discounts.
             </p>
           </div>
 
           {/* Delivery Channels */}
           <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-            <label className="block text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <label className="block text-lg font-bold text-gray-800 mb-3 items-center gap-2">
               <Bell className="w-5 h-5 text-blue-500" />
               Broadcast Notification Channels
             </label>
@@ -363,7 +384,9 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
                   onChange={(e) => setInApp(e.target.checked)}
                   className="w-4 h-4 text-amber-500 rounded focus:ring-amber-400"
                 />
-                <span className="text-sm font-semibold text-gray-700">In-App Center</span>
+                <span className="text-sm font-semibold text-gray-700">
+                  In-App Center
+                </span>
               </label>
 
               <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-gray-200 hover:border-amber-400">
@@ -373,7 +396,9 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
                   onChange={(e) => setPushNotification(e.target.checked)}
                   className="w-4 h-4 text-amber-500 rounded focus:ring-amber-400"
                 />
-                <span className="text-sm font-semibold text-gray-700">Push (FCM)</span>
+                <span className="text-sm font-semibold text-gray-700">
+                  Push (FCM)
+                </span>
               </label>
 
               <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-gray-200 hover:border-amber-400">
@@ -383,7 +408,9 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
                   onChange={(e) => setEmailNotification(e.target.checked)}
                   className="w-4 h-4 text-amber-500 rounded focus:ring-amber-400"
                 />
-                <span className="text-sm font-semibold text-gray-700">Email</span>
+                <span className="text-sm font-semibold text-gray-700">
+                  Email
+                </span>
               </label>
 
               <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-gray-200 hover:border-amber-400">
