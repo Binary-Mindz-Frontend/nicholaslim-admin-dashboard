@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import {
   useDeleteNotificationMutation,
@@ -98,7 +99,7 @@ const NotificationPromotionList: React.FC = () => {
   const handleUpdateSubmit = async () => {
     if (!selectedNotification) return;
 
-    let loadingToast = toast.loading("Processing...");
+    const loadingToast = toast.loading("Processing...");
 
     try {
       let finalImageUrl = editData.image_url;
