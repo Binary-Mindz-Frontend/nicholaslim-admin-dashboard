@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
@@ -8,15 +7,21 @@ import {
   useGetAdvertisementsQuery,
   useUpdateStatusMutation,
 } from "@/redux/features/advertise/advertiseApi";
-import { ChevronLeft, ChevronRight, Edit, Trash } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit, Trash, BarChart2 } from "lucide-react";
 import Swal from "sweetalert2";
 import UpdateAdvertiseModal from "./UpdateAdvertiseModal";
 
+interface AdvertisementsTableProps {
+  activeTab: "USER" | "RAIDER";
+  selectedAdId?: string;
+  onSelectAd?: (id: string) => void;
+}
+
 export default function AdvertisementsTable({
   activeTab,
-}: {
-  activeTab: "USER" | "RAIDER";
-}) {
+  selectedAdId,
+  onSelectAd,
+}: AdvertisementsTableProps) {
   const { data, isLoading } = useGetAdvertisementsQuery(undefined);
   const [updateStatus] = useUpdateStatusMutation(); // hook from RTK Query
   const [deleteAdvertisement] = useDeleteAdvertisementMutation();
@@ -98,6 +103,9 @@ export default function AdvertisementsTable({
             <th className="px-4 py-2 border border-[#FFD52B]">ID</th>
             <th className="px-4 py-2 border border-[#FFD52B]">Title</th>
             <th className="px-4 py-2 border border-[#FFD52B]">Redirect Link</th>
+            <th className="px-4 py-2 border border-[#FFD52B]">Impressions</th>
+            <th className="px-4 py-2 border border-[#FFD52B]">Clicks</th>
+            <th className="px-4 py-2 border border-[#FFD52B]">CTR</th>
             <th className="px-4 py-2 border border-[#FFD52B]">Start Date</th>
             <th className="px-4 py-2 border border-[#FFD52B]">End Date</th>
             <th className="px-4 py-2 border border-[#FFD52B]">Status</th>
@@ -105,46 +113,107 @@ export default function AdvertisementsTable({
           </tr>
         </thead>
         <tbody>
-          {paginatedAds.map((ad: any) => (
-            <tr key={ad.id} className="text-center">
-              <td className="px-4 py-2 border border-[#FF7A00]">{ad.id}</td>
-              <td className="px-4 py-2 border">{ad.ad_title}</td>
-              <td className="px-4 py-2 border">{ad.redirect_link || "-"}</td>
-              <td className="px-4 py-2 border">
-                {new Date(ad.start_date).toLocaleDateString()}
-              </td>
-              <td className="px-4 py-2 border">
-                {new Date(ad.end_date).toLocaleDateString()}
-              </td>
-              <td className="px-4 py-2 border">
-                <Switch
-                  checked={ad.status}
-                  onClick={() => handleToggleStatus(ad)}
-                  className={`${
-                    ad.status ? "bg-green-500" : "bg-red-500"
-                  } relative inline-flex h-6 w-11 items-center rounded-full`}
-                />
-                <span className="ml-2">
-                  {ad.status ? "Active" : "Deactive"}
-                </span>
-              </td>
-              <td className="px-4 py-2 border space-x-2">
-                <Button
-                  className="cursor-pointer"
-                  onClick={() => handleEdit(ad)}
-                >
-                  <Edit />
-                </Button>
-                <Button
-                  variant="destructive"
-                  className="cursor-pointer"
-                  onClick={() => handleDelete(ad.id)}
-                >
-                  <Trash />
-                </Button>
-              </td>
-            </tr>
-          ))}
+          {paginatedAds.map((ad: any) => {
+            const isSelected = String(ad.id) === String(selectedAdId);
+            const redirectUrl = ad.redirect_link
+              ? ad.redirect_link.startsWith("http")
+                ? ad.redirect_link
+                : `https://${ad.redirect_link}`
+              : null;
+
+            return (
+              <tr
+                key={ad.id}
+                className={`text-center transition-colors ${
+                  isSelected ? "bg-amber-100/70 font-medium" : "hover:bg-slate-50"
+                }`}
+              >
+                <td className="px-4 py-2 border border-[#FF7A00]">
+                  <div className="flex items-center justify-center gap-1">
+                    <span>{ad.id}</span>
+                    {isSelected && (
+                      <span className="text-[10px] bg-amber-500 text-white px-1.5 py-0.2 rounded-full font-bold">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-4 py-2 border font-medium text-slate-900">{ad.ad_title}</td>
+                <td className="px-4 py-2 border max-w-xs truncate">
+                  {redirectUrl ? (
+                    <a
+                      href={redirectUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline inline-block truncate max-w-[180px]"
+                      title={redirectUrl}
+                    >
+                      {ad.redirect_link}
+                    </a>
+                  ) : (
+                    "-"
+                  )}
+                </td>
+                <td className="px-4 py-2 border font-semibold text-slate-700">
+                  {(ad.totalImpression ?? 0).toLocaleString()}
+                </td>
+                <td className="px-4 py-2 border font-semibold text-slate-700">
+                  {(ad.totalClick ?? 0).toLocaleString()}
+                </td>
+                <td className="px-4 py-2 border font-bold text-amber-600">
+                  {ad.ctr !== undefined ? `${ad.ctr}%` : "0%"}
+                </td>
+                <td className="px-4 py-2 border text-xs">
+                  {new Date(ad.start_date).toLocaleDateString()}
+                </td>
+                <td className="px-4 py-2 border text-xs">
+                  {new Date(ad.end_date).toLocaleDateString()}
+                </td>
+                <td className="px-4 py-2 border">
+                  <Switch
+                    checked={ad.status}
+                    onClick={() => handleToggleStatus(ad)}
+                    className={`${
+                      ad.status ? "bg-green-500" : "bg-red-500"
+                    } relative inline-flex h-6 w-11 items-center rounded-full`}
+                  />
+                  <span className="ml-2">
+                    {ad.status ? "Active" : "Deactive"}
+                  </span>
+                </td>
+                <td className="px-4 py-2 border space-x-2">
+                  <Button
+                    size="sm"
+                    variant={isSelected ? "default" : "outline"}
+                    className="cursor-pointer"
+                    title="View Analytics for this Ad"
+                    onClick={() => {
+                      onSelectAd?.(String(ad.id));
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                  >
+                    <BarChart2 className="w-4 h-4" />
+                    <span className="text-xs hidden md:inline ml-1">Stats</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="cursor-pointer"
+                    onClick={() => handleEdit(ad)}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="cursor-pointer"
+                    onClick={() => handleDelete(ad.id)}
+                  >
+                    <Trash className="w-4 h-4" />
+                  </Button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 

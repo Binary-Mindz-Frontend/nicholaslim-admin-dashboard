@@ -22,19 +22,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
 import { useGetPerformanceTrendsQuery } from "@/redux/features/advertise/advertiseApi";
 
+interface PerformanceTrendsChartProps {
+  activeTab: "USER" | "RAIDER";
+  selectedAdId?: string;
+  selectedAdTitle?: string;
+}
+
 export default function PerformanceTrendsChart({
   activeTab,
-}: {
-  activeTab: "USER" | "RAIDER";
-}) {
+  selectedAdId,
+  selectedAdTitle,
+}: PerformanceTrendsChartProps) {
   const [months, setMonths] = useState(1);
-   // or dynamically from props
+  const isGlobal = !selectedAdId || selectedAdId === "ALL";
 
   // Fetch weekly stats using RTK Query
-  const { data, isLoading } = useGetPerformanceTrendsQuery({ role:activeTab, months });
-  
+  const { data, isLoading } = useGetPerformanceTrendsQuery({
+    role: activeTab,
+    months,
+    advertiseId: !isGlobal ? selectedAdId : undefined,
+  });
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <p className="text-center py-6 text-gray-500">Loading trend chart...</p>;
 
   // Default to empty array if API returns nothing
   const weeklyStats = data?.data?.weeklyStats || [];  
@@ -44,15 +53,25 @@ export default function PerformanceTrendsChart({
     week: stat.week,
     impressions: stat.impression,
     clicks: stat.click,
+    ctr: stat.ctr !== undefined ? `${stat.ctr}%` : undefined,
   }));
 
   return (
     <Card className="mt-10 shadow-lg border-0">
       <CardHeader className="pb-4">
         <div className="flex items-center md:justify-between gap-2 flex-col md:flex-row justify-center">
-          <CardTitle className="text-2xl font-bold text-gray-900">
-            Performance Trends
-          </CardTitle>
+          <div className="flex flex-col">
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              Performance Trends
+            </CardTitle>
+            <span className="text-xs text-gray-500 mt-1">
+              {isGlobal ? (
+                <>Combined trends for all active {activeTab === "USER" ? "User" : "Driver"} ads</>
+              ) : (
+                <>Trends for: <strong className="text-amber-600">{selectedAdTitle || `Ad #${selectedAdId}`}</strong></>
+              )}
+            </span>
+          </div>
 
           {/* Month selector */}
           <Select
