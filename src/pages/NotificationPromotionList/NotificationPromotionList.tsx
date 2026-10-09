@@ -3,6 +3,8 @@ import {
   useDeleteNotificationMutation,
   useGetNotificationsListQuery,
   useUpdateNotificationMutation,
+  useResendNotificationMutation,
+  useCancelScheduledNotificationMutation,
 } from "@/redux/features/notificationServices/notificationServicesApi";
 import { useUploadFileMutation } from "@/redux/features/usersTypes/usersTypesApi";
 import CustomTable from "@/components/Dashboard/DataTable/DataTable";
@@ -53,6 +55,8 @@ const NotificationPromotionList: React.FC = () => {
     useDeleteNotificationMutation();
   const [updateNotification, { isLoading: isUpdating }] =
     useUpdateNotificationMutation();
+  const [resendNotification] = useResendNotificationMutation();
+  const [cancelScheduled] = useCancelScheduledNotificationMutation();
   const [uploadFile, { isLoading: isUploadingImage }] = useUploadFileMutation();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,9 +171,29 @@ const NotificationPromotionList: React.FC = () => {
     setIsDeleteModalOpen(true);
   };
 
+  const handleResend = async (notification: TNotification) => {
+    try {
+      const res = await resendNotification({ id: notification.id }).unwrap();
+      toast.success(res.message || "Promotion resent successfully!");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to resend promotion");
+    }
+  };
+
+  const handleCancelScheduled = async (notification: TNotification) => {
+    try {
+      const res = await cancelScheduled(notification.id).unwrap();
+      toast.success(res.message || "Scheduled promotion cancelled!");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to cancel scheduled promotion");
+    }
+  };
+
   const { notificationColumns } = useNotificationPromotionColumns({
     onEdit: handleEditClick,
     onDelete: handleDeleteClick,
+    onResend: handleResend,
+    onCancelScheduled: handleCancelScheduled,
   });
 
   const { data: response, isLoading } = useGetNotificationsListQuery({
