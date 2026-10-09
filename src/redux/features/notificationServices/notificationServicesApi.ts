@@ -1,6 +1,7 @@
 import { baseApi } from "@/redux/api/baseApi";
 
 const notificationServicesApi = baseApi.injectEndpoints({
+  overrideExisting: false,
   endpoints: (build) => ({
     addNotification: build.mutation<any, any>({
       query: (data) => ({
@@ -38,11 +39,37 @@ const notificationServicesApi = baseApi.injectEndpoints({
       providesTags: ["Notification"],
     }),
 
+    getNotificationAnalytics: build.query<any, any>({
+      query: (params) => ({
+        url: "/notifications/admin/analytics",
+        method: "GET",
+        params,
+      }),
+      providesTags: ["Notification"],
+    }),
+
     updateNotification: build.mutation<any, any>({
       query: ({ id, ...data }) => ({
-        url: `/notifications/admin/${id}`,
+        url: `/notifications/${id}`,
         method: "PATCH",
         body: data,
+      }),
+      invalidatesTags: ["Notification"],
+    }),
+
+    resendNotification: build.mutation<any, { id: string | number; channels?: string[] }>({
+      query: ({ id, channels }) => ({
+        url: `/notifications/${id}/resend`,
+        method: "POST",
+        body: { channels },
+      }),
+      invalidatesTags: ["Notification"],
+    }),
+
+    cancelScheduledNotification: build.mutation<any, string | number>({
+      query: (id) => ({
+        url: `/notifications/${id}/cancel`,
+        method: "PATCH",
       }),
       invalidatesTags: ["Notification"],
     }),
@@ -54,6 +81,15 @@ const notificationServicesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Notification"],
     }),
+
+    bulkDeleteNotifications: build.mutation<any, { ids: (string | number)[] }>({
+      query: (data) => ({
+        url: "/notifications/admin/bulk-delete",
+        method: "DELETE",
+        body: data,
+      }),
+      invalidatesTags: ["Notification"],
+    }),
   }),
 });
 
@@ -62,6 +98,11 @@ export const {
   useAddNotificationPromotionMutation,
   useGetNotificationsListQuery,
   useGetNotificationLogsQuery,
+  useGetNotificationAnalyticsQuery,
   useUpdateNotificationMutation,
+  useResendNotificationMutation,
+  useCancelScheduledNotificationMutation,
   useDeleteNotificationMutation,
+  useBulkDeleteNotificationsMutation,
 } = notificationServicesApi;
+

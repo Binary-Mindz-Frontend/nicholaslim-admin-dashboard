@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from "react";
-import { Upload, Calendar, X, Image as ImageIcon } from "lucide-react";
+import { Upload, Calendar, X, Image as ImageIcon, Tag, Bell } from "lucide-react";
 import { useUploadFileMutation } from "@/redux/features/fileUpload/fileuploadApi";
 import { useCreateAdvertisementMutation } from "@/redux/features/advertise/advertiseApi";
+import { useGetPromoCodesQuery } from "@/redux/features/promoCode/promoCodeApi";
+import { useAddNotificationPromotionMutation } from "@/redux/features/notificationServices/notificationServicesApi";
 import toast from "react-hot-toast";
 
 interface CreateNewCampaignProps {
@@ -21,8 +23,18 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [minStartDate, setMinStartDate] = useState("");
 
+  // Promo Code & Delivery Channel State
+  const [selectedPromoCode, setSelectedPromoCode] = useState("");
+  const [pushNotification, setPushNotification] = useState(true);
+  const [inApp, setInApp] = useState(true);
+  const [emailNotification, setEmailNotification] = useState(false);
+  const [smsNotification, setSmsNotification] = useState(false);
+
   const [uploadFile] = useUploadFileMutation();
   const [createAdvertisement] = useCreateAdvertisementMutation();
+  const [addNotificationPromotion] = useAddNotificationPromotionMutation();
+  const { data: promoResponse } = useGetPromoCodesQuery({});
+  const promoCodesList = promoResponse?.data || [];
 
   // Set minimum start date to current date/time on component mount
   useEffect(() => {
@@ -37,6 +49,26 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
     const minDate = `${year}-${month}-${day}T${hours}:${minutes}`;
     setMinStartDate(minDate);
   }, []);
+
+  // When promo code is selected, auto-fill expiration if available
+  const handlePromoCodeSelect = (codeStr: string) => {
+    setSelectedPromoCode(codeStr);
+    if (!codeStr) return;
+    const selectedPromo = promoCodesList.find((p: any) => p.promoCode === codeStr);
+    if (selectedPromo && selectedPromo.expires_at && !endDate) {
+      try {
+        const expDate = new Date(selectedPromo.expires_at);
+        const year = expDate.getFullYear();
+        const month = String(expDate.getMonth() + 1).padStart(2, '0');
+        const day = String(expDate.getDate()).padStart(2, '0');
+        const hours = String(expDate.getHours()).padStart(2, '0');
+        const minutes = String(expDate.getMinutes()).padStart(2, '0');
+        setEndDate(`${year}-${month}-${day}T${hours}:${minutes}`);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
 
   const handleCreateCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,22 +108,45 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
         return;
       }
 
-      // 2️⃣ Prepare payload with dynamic create_for
-      const payload = {
+      // 2️⃣ Prepare advertisement payload
+      const adPayload: any = {
         create_for: activeTab, // "USER" or "RAIDER"
         ad_title: campaignTitle,
         ad_image: uploadedUrl,
         start_date: new Date(startDate).toISOString(),
         end_date: new Date(endDate).toISOString(),
-        redirect_link: redirectLink
+        redirect_link: redirectLink,
+        ...(selectedPromoCode && { promo_code: selectedPromoCode }),
       };
 
       // 3️⃣ Create advertisement
-      const result: any = await createAdvertisement(payload);
-      console.log(result, "advertisment result");
+      const result: any = await createAdvertisement(adPayload);
+
+      // 4️⃣ Also create promotion broadcast if notification channels selected
+      if (pushNotification || inApp || emailNotification || smsNotification) {
+        const promoBroadcastPayload = {
+          title: campaignTitle,
+          message: `Special promotion: ${campaignTitle}${selectedPromoCode ? ` - Use code ${selectedPromoCode}` : ""}`,
+          promo_code: selectedPromoCode || undefined,
+          target_role: activeTab,
+          send_immediately: true,
+          expiry_date: new Date(endDate).toISOString(),
+          push_notification: pushNotification,
+          in_app: inApp,
+          email: emailNotification,
+          sms: smsNotification,
+          image_url: uploadedUrl,
+        };
+
+        try {
+          await addNotificationPromotion(promoBroadcastPayload).unwrap();
+        } catch (notifErr) {
+          console.error("Promotion broadcast notification error:", notifErr);
+        }
+      }
 
       if (result?.data?.success) {
-        toast.success(result.data.message);
+        toast.success(result.data.message || "Campaign and Promotion created successfully!");
         // Reset form
         setCampaignTitle("");
         setStartDate("");
@@ -100,8 +155,9 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
         setFilePreview(null);
         setFileType(null);
         setRedirectLink("");
+        setSelectedPromoCode("");
       } else {
-        toast.error(result?.data.error?.message);
+        toast.error(result?.data?.error?.message || "Failed to create campaign");
       }
     } catch (err) {
       console.error(err);
@@ -254,7 +310,7 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
           </div>
           <div>
             <label
-              htmlFor="campaign-title"
+              htmlFor="redirect_link"
               className="block text-xl font-medium text-gray-800 mb-4"
             >
               Redirect link
@@ -264,10 +320,82 @@ export default function CreateNewCampaign({ activeTab }: CreateNewCampaignProps)
               type="text"
               value={redirectLink}
               onChange={(e) => setRedirectLink(e.target.value)}
-              placeholder="Enter title for campaign"
+              placeholder="https://zipbee.sg/promotions/campaign"
               className="w-full px-5 py-4 border border-gray-300 rounded-xl text-lg focus:ring-yellow-500 focus:border-yellow-500"
               required
             />
+          </div>
+
+          {/* Optional Promo Code Selector */}
+          <div>
+            <label className="block text-xl font-medium text-gray-800 mb-4 flex items-center gap-2">
+              <Tag className="w-5 h-5 text-amber-500" />
+              Attach Promo Code (Optional)
+            </label>
+            <select
+              value={selectedPromoCode}
+              onChange={(e) => handlePromoCodeSelect(e.target.value)}
+              className="w-full px-5 py-4 border border-gray-300 rounded-xl text-lg bg-white focus:ring-yellow-500 focus:border-yellow-500 cursor-pointer"
+            >
+              <option value="">-- Select a Promo Code --</option>
+              {promoCodesList.map((p: any) => (
+                <option key={p.id} value={p.promoCode}>
+                  {p.promoCode} — {p.title || p.discountDesc || `${p.discountValue}${p.discountType === "PERCENTAGE" ? "%" : "$"}`}
+                </option>
+              ))}
+            </select>
+            <p className="text-sm text-gray-500 mt-2">
+              Selecting a promo code will link it to this campaign and auto-fill card discounts.
+            </p>
+          </div>
+
+          {/* Delivery Channels */}
+          <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+            <label className="block text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+              <Bell className="w-5 h-5 text-blue-500" />
+              Broadcast Notification Channels
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-gray-200 hover:border-amber-400">
+                <input
+                  type="checkbox"
+                  checked={inApp}
+                  onChange={(e) => setInApp(e.target.checked)}
+                  className="w-4 h-4 text-amber-500 rounded focus:ring-amber-400"
+                />
+                <span className="text-sm font-semibold text-gray-700">In-App Center</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-gray-200 hover:border-amber-400">
+                <input
+                  type="checkbox"
+                  checked={pushNotification}
+                  onChange={(e) => setPushNotification(e.target.checked)}
+                  className="w-4 h-4 text-amber-500 rounded focus:ring-amber-400"
+                />
+                <span className="text-sm font-semibold text-gray-700">Push (FCM)</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-gray-200 hover:border-amber-400">
+                <input
+                  type="checkbox"
+                  checked={emailNotification}
+                  onChange={(e) => setEmailNotification(e.target.checked)}
+                  className="w-4 h-4 text-amber-500 rounded focus:ring-amber-400"
+                />
+                <span className="text-sm font-semibold text-gray-700">Email</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-gray-200 hover:border-amber-400">
+                <input
+                  type="checkbox"
+                  checked={smsNotification}
+                  onChange={(e) => setSmsNotification(e.target.checked)}
+                  className="w-4 h-4 text-amber-500 rounded focus:ring-amber-400"
+                />
+                <span className="text-sm font-semibold text-gray-700">SMS</span>
+              </label>
+            </div>
           </div>
 
           {/* Upload Box or Preview */}

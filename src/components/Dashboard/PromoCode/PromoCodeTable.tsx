@@ -23,7 +23,7 @@ const PromoCodeTable = ({ data, onEdit, onDelete, isLoading }: any) => {
             <TableRow key={item.id}>
               <TableCell className="font-bold text-blue-600">{item.promoCode}</TableCell>
               <TableCell>
-                {item.discountType === "FIXED" ? `$${item.discountValue}` : `${item.discountValue}%`}
+                {item.discountType === "FIXED" || item.discountType === "FIXED_AMOUNT" ? `$${item.discountValue}` : `${item.discountValue}%`}
               </TableCell>
               <TableCell>{new Date(item.expires_at).toLocaleDateString()}</TableCell>
               <TableCell>

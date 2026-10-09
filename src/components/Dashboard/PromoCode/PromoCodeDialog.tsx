@@ -41,7 +41,7 @@ const PromoCodeDialog = ({
           promoCode: "",
           discountDesc: "",
           redirectLink: "",
-          discountType: "FIXED",
+          discountType: "FIXED_AMOUNT",
           discountValue: "",
           isActive: true,
           expires_at: "",
@@ -102,7 +102,7 @@ const PromoCodeDialog = ({
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="FIXED">Fixed Amount</SelectItem>
+                  <SelectItem value="FIXED_AMOUNT">Fixed Amount</SelectItem>
                   <SelectItem value="PERCENTAGE">Percentage</SelectItem>
                 </SelectContent>
               </Select>
