@@ -1,37 +1,64 @@
-"use client";
-
-import { Eye, Zap, TrendingUp, RotateCw } from "lucide-react"; // RotateCw ইমপোর্ট করুন
+import { Eye, Zap, TrendingUp, RotateCw } from "lucide-react";
 import { StatCard } from "./StatCard";
 import { useGetGlobalStatsQuery } from "@/redux/features/advertise/advertiseApi";
-// import { useState } from "react";
+
+interface AdvertiseManagementTopProps {
+  activeTab: "USER" | "RAIDER";
+  selectedAdId?: string;
+  selectedAdTitle?: string;
+}
 
 export default function AdvertiseManagementTop({
   activeTab,
-}: {
-  activeTab: "USER" | "RAIDER";
-}) {
-  // refetch ফাংশনটি বের করে আনুন
-  const { data, isLoading, isFetching, refetch } = useGetGlobalStatsQuery({
+  selectedAdId,
+  selectedAdTitle,
+}: AdvertiseManagementTopProps) {
+  const isGlobal = !selectedAdId || selectedAdId === "ALL";
+
+  const {
+    data,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useGetGlobalStatsQuery({
     role: activeTab,
+    advertiseId: !isGlobal ? selectedAdId : undefined,
   });
 
   const stats = data?.data;
 
   // Safe fallback
-  const impressions = stats?.totalImpression ?? 0;
-  const clicks = stats?.totalClick ?? 0;
-  const ctr = stats?.avgCtr ?? 0;
+  const impressions = Number(stats?.totalImpression ?? stats?.impression ?? 0);
+  const clicks = Number(stats?.totalClick ?? stats?.click ?? 0);
+  const ctr =
+    stats?.avgCtr !== undefined
+      ? stats.avgCtr
+      : stats?.ctr !== undefined
+      ? stats.ctr
+      : impressions > 0
+      ? Number(((clicks / impressions) * 100).toFixed(1))
+      : 0;
 
   return (
-    <div className="p-8">
-      {/* Header with Refresh Button */}
-      <div className="flex justify-end items-center max-w-4xl m-auto mb-6">
-        {/* <h2 className="text-lg font-semibold text-gray-700">Quick Stats</h2> */}
+    <div className="p-4 md:p-8">
+      {/* Header with Ad Info & Refresh Button */}
+      <div className="flex justify-between items-center max-w-4xl m-auto mb-6 flex-wrap gap-2">
+        <div className="text-sm font-medium text-gray-700 bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-xs">
+          {isGlobal ? (
+            <span>
+              Showing: <strong className="text-amber-600">All Advertisements ({activeTab === "USER" ? "User" : "Driver"})</strong>
+            </span>
+          ) : (
+            <span>
+              Showing Ad: <strong className="text-amber-600">{selectedAdTitle || `#${selectedAdId}`}</strong>
+            </span>
+          )}
+        </div>
 
         <button
           onClick={() => refetch()}
           disabled={isLoading || isFetching}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-all disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-all disabled:opacity-50 cursor-pointer"
         >
           <RotateCw
             className={`w-4 h-4 text-gray-600 ${isLoading || isFetching ? "animate-spin" : ""}`}
@@ -43,7 +70,7 @@ export default function AdvertiseManagementTop({
       </div>
 
       {isLoading ? (
-        <p className="text-center py-10">Loading...</p>
+        <p className="text-center py-10 text-gray-500 font-medium">Loading stats...</p>
       ) : (
         <div className="flex flex-wrap gap-6 max-w-4xl m-auto">
           <StatCard
