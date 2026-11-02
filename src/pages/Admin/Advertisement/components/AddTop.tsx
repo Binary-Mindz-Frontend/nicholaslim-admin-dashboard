@@ -1,17 +1,20 @@
 import { Eye, Zap, TrendingUp, RotateCw } from "lucide-react";
 import { StatCard } from "./StatCard";
 import { useGetGlobalStatsQuery } from "@/redux/features/advertise/advertiseApi";
+import { formatCtr, metricsFromAd } from "../adMetrics";
 
 interface AdvertiseManagementTopProps {
   activeTab: "USER" | "RAIDER";
   selectedAdId?: string;
   selectedAdTitle?: string;
+  selectedAd?: unknown;
 }
 
 export default function AdvertiseManagementTop({
   activeTab,
   selectedAdId,
   selectedAdTitle,
+  selectedAd,
 }: AdvertiseManagementTopProps) {
   const isGlobal = !selectedAdId || selectedAdId === "ALL";
 
@@ -20,24 +23,31 @@ export default function AdvertiseManagementTop({
     isLoading,
     isFetching,
     refetch,
-  } = useGetGlobalStatsQuery({
-    role: activeTab,
-    advertiseId: !isGlobal ? selectedAdId : undefined,
-  });
+  } = useGetGlobalStatsQuery(
+    { role: activeTab },
+    { skip: !isGlobal }
+  );
 
   const stats = data?.data;
+  const selectedMetrics = isGlobal
+    ? null
+    : metricsFromAd(selectedAd as Parameters<typeof metricsFromAd>[0]);
 
-  // Safe fallback
-  const impressions = Number(stats?.totalImpression ?? stats?.impression ?? 0);
-  const clicks = Number(stats?.totalClick ?? stats?.click ?? 0);
-  const ctr =
-    stats?.avgCtr !== undefined
+  const impressions = selectedMetrics
+    ? selectedMetrics.impressions
+    : Number(stats?.totalImpression ?? stats?.impression ?? 0);
+  const clicks = selectedMetrics
+    ? selectedMetrics.clicks
+    : Number(stats?.totalClick ?? stats?.click ?? 0);
+  const ctr = selectedMetrics
+    ? selectedMetrics.ctr
+    : stats?.avgCtr !== undefined
       ? stats.avgCtr
       : stats?.ctr !== undefined
-      ? stats.ctr
-      : impressions > 0
-      ? Number(((clicks / impressions) * 100).toFixed(1))
-      : 0;
+        ? stats.ctr
+        : impressions > 0
+          ? Number(((clicks / impressions) * 100).toFixed(2))
+          : 0;
 
   return (
     <div className="p-4 md:p-8">
@@ -91,7 +101,7 @@ export default function AdvertiseManagementTop({
 
           <StatCard
             title="Click Through Rate"
-            value={`${ctr}%`}
+            value={formatCtr(Number(ctr) || 0)}
             change=""
             icon={<TrendingUp className="w-5 h-5" />}
             color="text-yellow-600"

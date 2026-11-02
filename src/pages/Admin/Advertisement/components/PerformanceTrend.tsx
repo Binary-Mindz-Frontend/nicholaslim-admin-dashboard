@@ -21,40 +21,41 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
 import { useGetPerformanceTrendsQuery } from "@/redux/features/advertise/advertiseApi";
+import { weeklyTrends } from "../adMetrics";
 
 interface PerformanceTrendsChartProps {
   activeTab: "USER" | "RAIDER";
   selectedAdId?: string;
   selectedAdTitle?: string;
+  selectedAd?: unknown;
 }
 
 export default function PerformanceTrendsChart({
   activeTab,
   selectedAdId,
   selectedAdTitle,
+  selectedAd,
 }: PerformanceTrendsChartProps) {
   const [months, setMonths] = useState(1);
   const isGlobal = !selectedAdId || selectedAdId === "ALL";
 
-  // Fetch weekly stats using RTK Query
-  const { data, isLoading } = useGetPerformanceTrendsQuery({
-    role: activeTab,
-    months,
-    advertiseId: !isGlobal ? selectedAdId : undefined,
-  });
+  const { data, isLoading } = useGetPerformanceTrendsQuery(
+    { role: activeTab, months },
+    { skip: !isGlobal }
+  );
 
-  if (isLoading) return <p className="text-center py-6 text-gray-500">Loading trend chart...</p>;
+  if (isGlobal && isLoading) return <p className="text-center py-6 text-gray-500">Loading trend chart...</p>;
 
-  // Default to empty array if API returns nothing
-  const weeklyStats = data?.data?.weeklyStats || [];  
+  const weeklyStats = data?.data?.weeklyStats || [];
 
-  // Map data for recharts
-  const chartData = weeklyStats.map((stat: any) => ({
-    week: stat.week,
-    impressions: stat.impression,
-    clicks: stat.click,
-    ctr: stat.ctr !== undefined ? `${stat.ctr}%` : undefined,
-  }));
+  const chartData = isGlobal
+    ? weeklyStats.map((stat: any) => ({
+        week: stat.week,
+        impressions: stat.impression,
+        clicks: stat.click,
+        ctr: stat.ctr !== undefined ? `${stat.ctr}%` : undefined,
+      }))
+    : weeklyTrends(selectedAd as Parameters<typeof weeklyTrends>[0], months);
 
   return (
     <Card className="mt-10 shadow-lg border-0">

@@ -10,6 +10,7 @@ import {
 import { ChevronLeft, ChevronRight, Edit, Trash, BarChart2 } from "lucide-react";
 import Swal from "sweetalert2";
 import UpdateAdvertiseModal from "./UpdateAdvertiseModal";
+import { adRedirectUrl, formatCtr, metricsFromAd } from "../adMetrics";
 
 interface AdvertisementsTableProps {
   activeTab: "USER" | "RAIDER";
@@ -115,11 +116,8 @@ export default function AdvertisementsTable({
         <tbody>
           {paginatedAds.map((ad: any) => {
             const isSelected = String(ad.id) === String(selectedAdId);
-            const redirectUrl = ad.redirect_link
-              ? ad.redirect_link.startsWith("http")
-                ? ad.redirect_link
-                : `https://${ad.redirect_link}`
-              : null;
+            const metrics = metricsFromAd(ad);
+            const redirectUrl = adRedirectUrl(ad.redirect_link);
 
             return (
               <tr
@@ -147,6 +145,7 @@ export default function AdvertisementsTable({
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline inline-block truncate max-w-[180px]"
                       title={redirectUrl}
+                      onClick={(event) => event.stopPropagation()}
                     >
                       {ad.redirect_link}
                     </a>
@@ -155,13 +154,13 @@ export default function AdvertisementsTable({
                   )}
                 </td>
                 <td className="px-4 py-2 border font-semibold text-slate-700">
-                  {(ad.totalImpression ?? 0).toLocaleString()}
+                  {metrics.impressions.toLocaleString()}
                 </td>
                 <td className="px-4 py-2 border font-semibold text-slate-700">
-                  {(ad.totalClick ?? 0).toLocaleString()}
+                  {metrics.clicks.toLocaleString()}
                 </td>
                 <td className="px-4 py-2 border font-bold text-amber-600">
-                  {ad.ctr !== undefined ? `${ad.ctr}%` : "0%"}
+                  {formatCtr(metrics.ctr)}
                 </td>
                 <td className="px-4 py-2 border text-xs">
                   {new Date(ad.start_date).toLocaleDateString()}

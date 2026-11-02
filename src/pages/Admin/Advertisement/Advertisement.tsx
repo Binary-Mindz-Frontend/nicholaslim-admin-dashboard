@@ -215,11 +215,13 @@ export default function Advertisement() {
           activeTab={activeTab}
           selectedAdId={selectedAdId}
           selectedAdTitle={selectedAdTitle}
+          selectedAd={selectedAdObj}
         />
         <PerformanceTrendsChart
           activeTab={activeTab}
           selectedAdId={selectedAdId}
           selectedAdTitle={selectedAdTitle}
+          selectedAd={selectedAdObj}
         />
         <div className="py-4">
           <CreateNewCampaign activeTab={activeTab} />
