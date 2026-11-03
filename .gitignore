@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 *.md
+!docs/backend-issues-48-63.md
 
 # Editor directories and files
 .vscode/*
